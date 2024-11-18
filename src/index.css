@@ -11,3 +11,9 @@
   box-sizing: border-box;
   font-family: "Pretendard-Regular", sans-serif;
 }
+
+body,
+#root {
+  width: 100vw;
+  min-height: 100vh;
+}
