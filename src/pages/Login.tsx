@@ -131,7 +131,7 @@ const Login = () => {
     alert("클릭되었습니다!");
   };
 
-  const registerClick = () => navigate("/Registers");
+  const registerClick = () => navigate("/Register");
   
 
   const visibilityeye = () => {
