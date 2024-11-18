@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import BackgroundImage from "../assets/images/image01.png";
+import { useNavigate } from "react-router-dom";
 
 const Background = styled.div`
   background-image: url(${BackgroundImage});
@@ -12,7 +13,7 @@ const Background = styled.div`
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 0; // 음수가 아닌 양수로 설정
+  z-index: 0;
 `;
 
 const Background2 = styled.div`
@@ -21,7 +22,7 @@ const Background2 = styled.div`
   height: 100%;
   display: flex;
   position: absolute;
-  z-index: 0; // 음수가 아닌 양수로 설정
+  z-index: 0;
 `;
 
 const Overlay = styled.div`
@@ -35,7 +36,7 @@ const Overlay = styled.div`
   justify-content: flex-end;
   flex-direction: column;
   color: white;
-  z-index: 1; // 버튼과 다른 요소들이 클릭될 수 있도록 양수로 설정
+  z-index: 1;
   padding-bottom: 50px;
 `;
 
@@ -84,8 +85,10 @@ const Button = styled.button<{ width?: string; height?: string }>`
 `;
 
 const Main = () => {
-  const handleLoginClick = () => alert("로그인 버튼 클릭됨!");
-  const handleStartClick = () => alert("시작하기 버튼 클릭됨!");
+  const navigate = useNavigate();
+
+  const handleLoginClick = () => navigate("/login");
+  const handleStartClick = () => navigate("/Template");
 
   return (
     <>
