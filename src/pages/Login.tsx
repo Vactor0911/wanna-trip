@@ -151,7 +151,7 @@ const Login = () => {
     setIsPasswdVisible((prev) => !isPasswdVisible);
   }; //비밀번호 보이기/숨기기 끝
 
-// 아이디 저장 기능 시작 - 수정필요
+// 이메일 저장 기능 시작 - 수정필요
   const [isRememberMe, setIsRememberMe] = useState(false);
 
   const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,16 +159,16 @@ const Login = () => {
     setIsRememberMe(isChecked);
   
     if (isChecked) {
-      localStorage.setItem("sendID", sendID);
+      localStorage.setItem("email", email);
     } else {
-      localStorage.removeItem("sendID");
+      localStorage.removeItem("email");
     }
   };
 
   useEffect(() => {
-    const savedSendID = localStorage.getItem("sendID");
-    if (savedSendID) {
-      setSendID(savedSendID);
+    const savedEmail = localStorage.getItem("email");
+    if (savedEmail) {
+      setEmail(savedEmail);
       setIsRememberMe(true); // 복구 시 체크박스 활성화
     }
   }, []); // 아이디 저장 기능 끝
@@ -177,10 +177,10 @@ const Login = () => {
 
 
   
-  //const handleLoginClick = () => navigate("/template");
+//const handleLoginClick = () => navigate("/template");
 
 // 로그인 기능 추가
-const [sendID, setSendID] = useState(''); // 이메일 혹은 아이디 중 선택한 값
+const [email, setEmail] = useState(''); // 이메일 값
 const [password, setPassword] = useState(''); // 사용자 비밀번호
 const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
 const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
@@ -189,18 +189,18 @@ const handleLoginClick = async (e: React.FormEvent) => {
   e.preventDefault();
 
   // 입력값 검증
-  if (!sendID || !password) {
-    console.error('이메일/아이디 또는 비밀번호가 비어 있습니다.');
-    alert('이메일/아이디와 비밀번호를 입력해 주세요.');
+  if (!email || !password) {
+    console.error('이메일 비밀번호가 비어 있습니다.');
+    alert('이메일과 비밀번호를 입력해 주세요.');
     return;
   }
 
-  console.log('로그인 요청을 보냅니다:', { sendID, password });
+  console.log('로그인 요청을 보냅니다:', { email, password });
 
   try {
     // Axios POST 요청
     const response = await axios.post(`${HOST}:${PORT}/api/login`, {
-      sendID: sendID,
+      email: email,
       password: password
     });
 
@@ -209,7 +209,7 @@ const handleLoginClick = async (e: React.FormEvent) => {
 
     // GET 요청으로 환영 메시지 받아오기
     const welcomeResponse = await axios.get(`${HOST}:${PORT}/api/user-info`, {
-      params: { sendID: sendID }, // 이메일 기준으로 사용자 정보 요청
+      params: { email: email }, // 이메일 기준으로 사용자 정보 요청
     });
 
      // 서버에서 받은 닉네임
@@ -246,14 +246,14 @@ const handleLoginClick = async (e: React.FormEvent) => {
         <Title>여행갈래?</Title>
         <Subtitle>세상에서 제일 간단한 계획서</Subtitle>
 
-        {/* 아이디 입력 필드 */}
+        {/* 이메일 입력 필드 */}
         <InputContainer>
           <AccountCircleIcon />
           <Input
             type="text"
-            placeholder="이메일 / 아이디"
-            value={sendID}
-            onChange={(e) => setSendID(e.target.value)}
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
            />
         </InputContainer>

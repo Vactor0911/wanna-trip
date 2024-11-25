@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
-import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VisibilityOnIcon from "@mui/icons-material/Visibility";
 import EmailIcon from '@mui/icons-material/Email';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
 
 const SignupContainer = styled.div`
@@ -84,6 +84,7 @@ const InputContainer = styled.div`
 `;
 
 const Register = () => {
+  const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
   
   //비밀번호 보이기/숨기기 시작
   const [isPasswdVisible, setIsPasswdVisible] = useState(false);
@@ -99,10 +100,10 @@ const Register = () => {
 
 
   //회원가입 시작
-  const [userId, setUserId] = useState(''); // 사용자 아이디
-  const [password, setPassword] = useState(''); // 사용자 비밀번호
   const [email, setEmail] = useState(''); // 사용자 이메일
+  const [password, setPassword] = useState(''); // 사용자 비밀번호
   const [name, setName] = useState(''); // 사용자 이름
+
   const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
   const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
 
@@ -112,7 +113,7 @@ const Register = () => {
 
     // 전송 전 입력값 검증
     if (!email || !password) {
-        console.error('이메일 또는 비밀번호가 비어 있을 수 없습니다');
+        console.error('이메일 또는 비밀번호가 비어있으면 안됩니다.');
         return;
     }
 
@@ -121,11 +122,9 @@ const Register = () => {
     try {
         // Axios POST 요청
         const response = await axios.post(`${HOST}:${PORT}/api/register`, {
-          userId: userId,
-          password: password,
           email: email,
+          password: password,
           name: name
-          
         });
 
         // 서버로부터 성공 메시지를 받은 경우
@@ -133,7 +132,7 @@ const Register = () => {
 
         // 사용자에게 성공 메시지 보여주기 (UI 반영)
         alert('회원가입이 성공적으로 완료되었습니다!');
-        window.location.href = '/login'; // 로그인 페이지로 이동
+        navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
 
     } catch (error: any) {
         // 서버로부터 반환된 에러 메시지 확인
@@ -152,16 +151,16 @@ const Register = () => {
       <Title>여행갈래?</Title>
       <Subtitle>세상에서 제일 간단한 계획서</Subtitle>
       <Form>
-        <InputContainer> {/* userId 시작  */}
-        <PersonIcon style={{ color: "black" }} />
+      <InputContainer> {/* email 시작  */}
+        <EmailIcon style={{ color: "black" }} />
         <Input
-          type="text"
-          placeholder="아이디"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          type="email"
+          placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
         />
-        </InputContainer> {/* userId 끝  */}
+        </InputContainer>{/* 이메일 끝  */}
 
         <InputContainer> {/* password 시작  */}
         <LockIcon style={{ color: "black" }} />
@@ -204,17 +203,6 @@ const Register = () => {
             />
           )}
         </InputContainer> {/* password 재확인 끝  */}
-
-        <InputContainer> {/* email 시작  */}
-        <EmailIcon style={{ color: "black" }} />
-        <Input
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        </InputContainer>{/* 이메일 끝  */}
 
         <InputContainer> {/* name 시작  */}
         <LocalOfferIcon style={{ color: "black" }} />
