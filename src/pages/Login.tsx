@@ -7,6 +7,7 @@ import BackgroundImage from "../assets/images/image01.png";
 import naverImage from "../assets/images/naver.png"
 import googleImage from "../assets/images/google.png"
 import { useNavigate } from "react-router-dom";
+import { CottageSharp } from "@mui/icons-material";
 
 const BackgroundContainer = styled.div`
   width: 100vw;
@@ -29,7 +30,6 @@ const Background = styled.div`
 `;
 
 const LoginContainer = styled.div`
-  width: 40%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,7 +40,6 @@ const LoginContainer = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
   text-align: center;
@@ -142,6 +141,7 @@ const Login = () => {
   };
 
   const registerClick = () => navigate("/Register");
+  
 
   const visibilityeye = () => {
     alert("눈눈!");
