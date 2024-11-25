@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import { Button } from "@mui/material";
 import DownloadIcon from '@mui/icons-material/Download';
 import SaveIcon from '@mui/icons-material/Save';
+import { useNavigate } from "react-router-dom";
 
 const Style = styled.div`
   display: flex;
@@ -77,7 +78,14 @@ const Style = styled.div`
   }
 `;
 
+
+
+
 const NewTemplate = () => {
+  const navigate = useNavigate();
+
+  const handleLoginClick = () => navigate("/login");
+
   return (
     <Style>
       <header>
@@ -85,7 +93,9 @@ const NewTemplate = () => {
           <h2 className="title">여행갈래</h2>
         </div>
         <div className="container">
-          <Button variant="contained">로그인/회원가입</Button>
+          <Button variant="contained" onClick={handleLoginClick}>
+            로그인/회원가입
+          </Button>
         </div>
       </header>
       <div className="main-container">

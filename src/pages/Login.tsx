@@ -8,6 +8,8 @@ import naverImage from "../assets/images/naver.png"
 import googleImage from "../assets/images/google.png"
 import { useNavigate } from "react-router-dom";
 import { CottageSharp } from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const BackgroundContainer = styled.div`
   width: 100vw;
@@ -119,8 +121,7 @@ const FooterText = styled.p`
   color: #cbd5e1;
 `;
 
-const NaverImg = styled.div
-`
+const NaverImg = styled.div`
 background-image: url(${naverImage});
 background-repeat: no-repeat;
 background-position: center;
@@ -143,11 +144,100 @@ const Login = () => {
   const registerClick = () => navigate("/Register");
   
 
+  //비밀번호 보이기/숨기기 시작
+  const [isPasswdVisible, setIsPasswdVisible] = useState(false);
+
   const visibilityeye = () => {
-    alert("눈눈!");
+    setIsPasswdVisible((prev) => !isPasswdVisible);
+  }; //비밀번호 보이기/숨기기 끝
+
+// 아이디 저장 기능 시작 - 수정필요
+  const [isRememberMe, setIsRememberMe] = useState(false);
+
+  const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = e.target.checked;
+    setIsRememberMe(isChecked);
+  
+    if (isChecked) {
+      localStorage.setItem("sendID", sendID);
+    } else {
+      localStorage.removeItem("sendID");
+    }
   };
 
-  const handleLoginClick = () => navigate("/template");
+  useEffect(() => {
+    const savedSendID = localStorage.getItem("sendID");
+    if (savedSendID) {
+      setSendID(savedSendID);
+      setIsRememberMe(true); // 복구 시 체크박스 활성화
+    }
+  }, []); // 아이디 저장 기능 끝
+
+  
+
+
+  
+  //const handleLoginClick = () => navigate("/template");
+
+// 로그인 기능 추가
+const [sendID, setSendID] = useState(''); // 이메일 혹은 아이디 중 선택한 값
+const [password, setPassword] = useState(''); // 사용자 비밀번호
+const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+
+const handleLoginClick = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  // 입력값 검증
+  if (!sendID || !password) {
+    console.error('이메일/아이디 또는 비밀번호가 비어 있습니다.');
+    alert('이메일/아이디와 비밀번호를 입력해 주세요.');
+    return;
+  }
+
+  console.log('로그인 요청을 보냅니다:', { sendID, password });
+
+  try {
+    // Axios POST 요청
+    const response = await axios.post(`${HOST}:${PORT}/api/login`, {
+      sendID: sendID,
+      password: password
+    });
+
+
+    // GET 테스트 시작
+
+    // GET 요청으로 환영 메시지 받아오기
+    const welcomeResponse = await axios.get(`${HOST}:${PORT}/api/user-info`, {
+      params: { sendID: sendID }, // 이메일 기준으로 사용자 정보 요청
+    });
+
+     // 서버에서 받은 닉네임
+    const { nickname } = welcomeResponse.data;
+    
+    // 서버 응답 처리
+    console.log('Login successful:', response.data.message);
+
+    // 로그인 성공 후 닉네임 포함한 alert 메시지 표시
+    alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
+
+    // GET 테스트 끝
+
+    navigate("/template");  // 로그인 성공 시 이동할 페이지
+
+  } catch (error: any) {
+    // 에러 처리
+    if (error.response) {
+      console.error('서버가 오류를 반환했습니다:', error.response.data.message);
+      alert(error.response.data.message || '로그인 실패');
+    } else {
+      console.error('요청을 보내는 중 오류가 발생했습니다:', error.message);
+      alert('예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.');
+    }
+    // 로그인 실패 시 처리: 비밀번호 초기화
+    setPassword(''); // 비밀번호만 초기화
+  }
+};
 
   return (
     <BackgroundContainer>
@@ -159,22 +249,49 @@ const Login = () => {
         {/* 아이디 입력 필드 */}
         <InputContainer>
           <AccountCircleIcon />
-          <Input type="text" placeholder="이메일 / 아이디" />
+          <Input
+            type="text"
+            placeholder="이메일 / 아이디"
+            value={sendID}
+            onChange={(e) => setSendID(e.target.value)}
+            required
+           />
         </InputContainer>
 
-        {/* 비밀번호 입력 필드 */}
+        {/* 비밀번호 입력 필드 visibilityeye*/}
         <InputContainer>
           <LockIcon />
-          <Input type="password" placeholder="비밀번호" />
-          <VisibilityOffIcon onClick={visibilityeye} style={{ cursor: "pointer" }} />
+          <Input
+            type={isPasswdVisible ? "text" : "password"}
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          {isPasswdVisible ? (
+            <VisibilityOnIcon
+              onClick={visibilityeye}
+              style={{ cursor: "pointer", color: "black" }}
+            />
+          ) : (
+            <VisibilityOffIcon
+              onClick={visibilityeye}
+              style={{ cursor: "pointer", color: "black" }}
+            />
+          )}
         </InputContainer>
 
         {/* 옵션 체크박스 */}
         <OptionsContainer>
           <CheckboxContainer>
-            <Checkbox type="checkbox" />
-            아이디 저장
+          <Checkbox 
+              type="checkbox" 
+              checked={isRememberMe} 
+              onChange={handleRememberMeChange} 
+            /> 아이디 저장
           </CheckboxContainer>
+
           <CheckboxContainer>
             <Checkbox type="checkbox" defaultChecked />
             로그인 상태 유지
@@ -198,6 +315,8 @@ const Login = () => {
             <span role="img" style={{backgroundImage:naverImage}} aria-label="Naver" onClick={handleClick}/>
           </SocialIcon>
         </Footer>
+
+        
       </LoginContainer>
     </BackgroundContainer>
   );
