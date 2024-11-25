@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import styled from "@emotion/styled";
-import DayColumn from "./Day";
+import DayColumn from "./Day"; // 같은 폴더 내에 위치
 import AddIcon from '@mui/icons-material/Add'; // 플러스 아이콘 추가
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // 복사 아이콘 추가
 import DeleteIcon from '@mui/icons-material/Delete'; // 쓰레기통 아이콘 추가
@@ -22,7 +22,7 @@ interface DayPlans {
 
 const BoardContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  padding: 0px;
   background-color: #2f3b4e;
   min-height: 100vh;
   color: white;
@@ -32,18 +32,9 @@ const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
-  background-color: #1e293b;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-`;
-
-const Title = styled.div`
+  padding: 10px;
   font-size: 1.5rem;
+  color: #FFFFFF;
   font-weight: bold;
 `;
 
@@ -176,7 +167,7 @@ const day2Plans = [
 ];
 const day3Plans = [
   { time: "09:00 - 11:00", activity: "카페 탐방", image: "image_url6" },
-  { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" },
+  { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" }
 ];
 const day4Plans = [
   { time: "09:00 - 12:00", activity: "스터디", image: "image_url6" },

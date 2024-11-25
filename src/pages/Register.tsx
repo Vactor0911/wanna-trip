@@ -67,9 +67,9 @@ const LoginLink = styled.p`
 
 const Register = () => {
 
-    const registerClickbtn = () => {
+    const Registerbtn = () => {
         alert("눈눈!");
-      };
+    }
 
   return (
     <SignupContainer>
@@ -81,7 +81,7 @@ const Register = () => {
         <Input type="password" placeholder="비밀번호 확인" />
         <Input type="email" placeholder="이메일" />
         <Input type="text" placeholder="별명" />
-        <Button type="submit" onClick={registerClickbtn}>회원가입</Button>
+        <Button onClick={Registerbtn} type="submit">회원가입</Button>
       </Form>
       <LoginLink>
         이미 계정이 있으신가요? <a href="/login">로그인</a>

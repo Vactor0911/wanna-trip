@@ -1,78 +1,41 @@
-import React from "react";
+import React from 'react';
 import styled from "@emotion/styled";
+import PlanCard from './Plan';
 
-interface Plan {
-  time: string;
-  activity: string;
-  image: string;
-}
-
+// Props 타입 정의
 interface DayColumnProps {
   day: string;
-  plans: Plan[];
-  onAddPlan: () => void;
+  plans: {
+    time: string;
+    activity: string;
+    image: string;
+  }[];
 }
 
-const Column = styled.div`
-  background-color: #D9D9D9;
-  padding: 20px;
-  border-radius: 10px;
-  min-width: 250px;
-  flex-shrink: 0;
-
-  @media (max-width: 768px) {
-    min-width: 100%;
-  }
+const ColumnContainer = styled.div`
+  width: 300px;
+  background-color: #3F4C6B;
+  padding: 10px;
+  margin-right: 20px;
+  border-radius: 8px;
 `;
 
-const DayTitle = styled.h2`
+const DayHeader = styled.h2`
   font-size: 1.2rem;
+  color: #FFFFFF;
   margin-bottom: 10px;
-  color: #000;
 `;
 
-const PlanCard = styled.div`
-  background-color: #EBEBEB;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  color: #000;
-`;
-
-const PlanTime = styled.p`
-  font-size: 0.9rem;
-  color: #000;
-`;
-
-const PlanActivity = styled.p`
-  font-size: 1rem;
-  font-weight: bold;
-`;
-
-const AddPlanButton = styled.button`
-  background-color: #D9D9D9;
-  color: white;
-  border: none;
-  color: #000;
-  padding: 10px;
-  font-size: 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-`;
-
-const DayColumn: React.FC<DayColumnProps> = ({ day, plans, onAddPlan }) => {
+const Day: React.FC<DayColumnProps> = ({ day, plans }) => {
   return (
-    <Column>
-      <DayTitle>{day}</DayTitle>
+    <ColumnContainer>
+      <DayHeader>{day}</DayHeader>
       {plans.map((plan, index) => (
-        <PlanCard key={index}>
-          <PlanTime>{plan.time}</PlanTime>
-          <PlanActivity>{plan.activity}</PlanActivity>
-        </PlanCard>
+        <PlanCard key={index} time={plan.time} activity={plan.activity} image={plan.image} />
       ))}
-      <AddPlanButton onClick={onAddPlan}>+ 계획 추가하기</AddPlanButton>
-    </Column>
+      <button>+ 계획 추가하기</button>
+    </ColumnContainer>
   );
 };
 
-export default DayColumn;
+export default Day;

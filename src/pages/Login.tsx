@@ -4,6 +4,8 @@ import LockIcon from '@mui/icons-material/Lock';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityOnIcon from '@mui/icons-material/Visibility';
 import BackgroundImage from "../assets/images/image01.png";
+import naverImage from "../assets/images/naver.png"
+import googleImage from "../assets/images/google.png"
 import { useNavigate } from "react-router-dom";
 import { CottageSharp } from "@mui/icons-material";
 
@@ -117,6 +119,15 @@ const FooterText = styled.p`
   color: #cbd5e1;
 `;
 
+const NaverImg = styled.div
+`
+background-image: url(${naverImage});
+background-repeat: no-repeat;
+background-position: center;
+background-size: contain;
+width: 30px
+`;
+
 const SocialIcon = styled.div`
   font-size: 1.8rem;
   cursor: pointer;
@@ -135,7 +146,7 @@ const Login = () => {
   const visibilityeye = () => {
     alert("눈눈!");
   };
-  
+
   const handleLoginClick = () => navigate("/template");
 
   return (
@@ -181,14 +192,10 @@ const Login = () => {
         {/* 소셜 로그인 */}
         <Footer>
           <SocialIcon>
-            <span role="img" aria-label="Google" onClick={handleClick}>
-              🌐
-            </span>
+            <NaverImg aria-label="Google" onClick={handleClick}/>
           </SocialIcon>
           <SocialIcon>
-            <span role="img" aria-label="Naver" onClick={handleClick}>
-              🅽
-            </span>
+            <span role="img" style={{backgroundImage:naverImage}} aria-label="Naver" onClick={handleClick}/>
           </SocialIcon>
         </Footer>
       </LoginContainer>
