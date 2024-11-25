@@ -8,12 +8,12 @@ const SignupContainer = styled.div`
   justify-content: center;
   background-color: #2b3a52;
   height: 100vh;
-  color: white;
+  color: #fff;
   font-family: Arial, sans-serif;
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
+  font-size: 50px;
   margin-bottom: 0.5rem;
 `;
 
@@ -39,7 +39,7 @@ const Input = styled.input`
 
 const Button = styled.button`
   background-color: #3575f1;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 5px;
   padding: 10px;

@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import DayColumn from "./Day";
+import AddIcon from '@mui/icons-material/Add'; // 플러스 아이콘 추가
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'; // 복사 아이콘 추가
+import DeleteIcon from '@mui/icons-material/Delete'; // 쓰레기통 아이콘 추가
+import MenuIcon from '@mui/icons-material/Menu'; // 메뉴 아이콘 추가
+import PersonIcon from '@mui/icons-material/Person'; // 사람 아이콘 추가
 
 interface Plan {
   time: string;
@@ -47,13 +52,59 @@ const LoginButton = styled.button`
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 50px; /* Fully rounded corners */
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Adding shadow for depth */
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: #475569;
+    background-color: #475569; /* Slightly darker on hover */
+    transform: translateY(-2px); /* Subtle lifting effect */
+    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+  }
+
+  &:active {
+    transform: translateY(0); /* Reset the lifting effect */
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Reduce shadow on active */
   }
 `;
+
+const LoginButton2 = styled.button`
+  background-color: #64748b;
+  color: white;
+  border: none;
+  padding: 0; /* 내부 여백 제거 */
+  border-radius: 50%; /* 완전한 원 모양 */
+  width: 50px; /* 버튼 크기 설정 */
+  height: 50px; /* 버튼 크기 설정 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* 이미지가 버튼 외부로 넘어가지 않도록 설정 */
+  cursor: pointer;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* 버튼 그림자 추가 */
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.1); /* 호버 시 확대 효과 */
+    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  &:active {
+    transform: scale(1); /* 클릭 시 원래 크기로 */
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ButtonImage = styled.img`
+  width: 100%; /* 버튼 내부를 꽉 채움 */
+  height: 100%; /* 버튼 내부를 꽉 채움 */
+  object-fit: cover; /* 이미지 비율을 유지하며 채움 */
+`;
+
+
 
 const Body = styled.div`
   display: flex;
@@ -90,11 +141,16 @@ const Template = () => {
     }));
   };
 
+  const LoginButtonIcon = styled(PersonIcon)`
+  font-size: 35px; /* 아이콘 크기 조절 */
+  color: white; /* 아이콘 색상 */
+`;
+
   return (
     <BoardContainer>
       <Header>
         <Title>여행갈래</Title>
-        <LoginButton>로그인/회원가입</LoginButton>
+        <LoginButton2><LoginButtonIcon/></LoginButton2>
       </Header>
       <Body>
         <DayColumn day="Day 1" plans={dayPlans.day1} onAddPlan={() => handleAddPlan("day1")} />
@@ -112,6 +168,7 @@ const day1Plans = [
   { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑", image: "image_url1" },
   { time: "11:20 - 12:00", activity: "점심 식사", image: "image_url2" },
   { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
+  { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
 ];
 const day2Plans = [
   { time: "10:00 - 12:00", activity: "명동 쇼핑", image: "image_url4" },
