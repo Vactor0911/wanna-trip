@@ -7,10 +7,12 @@ const Background = styled.div`
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+
   opacity: 0.5;
   width: 100vw;
   height: 100vh;
   position: absolute;
+
   top: 0;
   left: 0;
   z-index: 0;
@@ -21,6 +23,7 @@ const Background2 = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
+
   position: absolute;
   z-index: 0;
 `;
@@ -30,27 +33,28 @@ const Overlay = styled.div`
   top: 0;
   left: 0;
   width: 100%;
+
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
+
   flex-direction: column;
-  color: white;
   z-index: 1;
-  padding-bottom: 50px;
+  color: #fff;
 `;
 
 const Title = styled.h1`
-  font-size: 2.5rem;
+  font-size: 120px;
   font-weight: bold;
   margin: 0;
   text-align: center;
 `;
 
 const Subtitle = styled.p`
-  font-size: 1.2rem;
-  margin-top: 10px;
+  font-size: 53px;
   text-align: center;
+  
 `;
 
 const Footertitle = styled.p`
@@ -64,14 +68,14 @@ const ButtonContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  margin: 30px 0 40px;
+  margin-top: 30px;
 `;
 
 const Button = styled.button<{ width?: string; height?: string }>`
-  width: ${(props) => props.width || "120px"};
-  height: ${(props) => props.height || "40px"};
-  font-size: 1rem;
-  color: white;
+  width: ${(props) => props.width};
+  height: ${(props) => props.height};
+  font-size: 35px;
+  color: #fff;
   background-color: #166eb7;
   border: none;
   border-radius: 4px;
@@ -98,10 +102,10 @@ const Main = () => {
           <Title>여행갈래?</Title>
           <Subtitle>세상에서 제일 간단한 계획서</Subtitle>
           <ButtonContainer>
-            <Button onClick={handleStartClick} width="100px" height="30px">
+            <Button onClick={handleStartClick} width="240px" height="60px">
               시작하기
             </Button>
-            <Button onClick={handleLoginClick} width="100px" height="30px">
+            <Button onClick={handleLoginClick} width="240px" height="60px">
               로그인
             </Button>
           </ButtonContainer>

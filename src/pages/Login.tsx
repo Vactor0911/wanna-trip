@@ -1,12 +1,11 @@
 import styled from "@emotion/styled";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import LockIcon from "@mui/icons-material/Lock";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import VisibilityOnIcon from "@mui/icons-material/Visibility";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LockIcon from '@mui/icons-material/Lock';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityOnIcon from '@mui/icons-material/Visibility';
 import BackgroundImage from "../assets/images/image01.png";
 import { useNavigate } from "react-router-dom";
 import { CottageSharp } from "@mui/icons-material";
-import { useState } from "react";
 
 const BackgroundContainer = styled.div`
   width: 100vw;
@@ -29,7 +28,6 @@ const Background = styled.div`
 `;
 
 const LoginContainer = styled.div`
-  width: 40%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -40,7 +38,6 @@ const LoginContainer = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 2rem;
   font-weight: bold;
   margin-bottom: 10px;
   text-align: center;
@@ -133,16 +130,12 @@ const Login = () => {
   };
 
   const registerClick = () => navigate("/Register");
+  
 
   const visibilityeye = () => {
     alert("눈눈!");
   };
-
-  const [isPasswdVisible, setIsPasswdVisible] = useState(false);
-  const passwdVisibilityHandle = () => {
-    setIsPasswdVisible((prev) => !isPasswdVisible);
-  };
-
+  
   const handleLoginClick = () => navigate("/template");
 
   return (
@@ -154,25 +147,15 @@ const Login = () => {
 
         {/* 아이디 입력 필드 */}
         <InputContainer>
-          <AccountCircleIcon style={{ color: "red" }} />
+          <AccountCircleIcon />
           <Input type="text" placeholder="이메일 / 아이디" />
         </InputContainer>
 
         {/* 비밀번호 입력 필드 */}
         <InputContainer>
           <LockIcon />
-          <Input type={isPasswdVisible ? "text" : "password"} placeholder="비밀번호" />
-          {isPasswdVisible ? (
-            <VisibilityOnIcon
-              onClick={passwdVisibilityHandle}
-              style={{ cursor: "pointer" }}
-            />
-          ) : (
-            <VisibilityOffIcon
-              onClick={passwdVisibilityHandle}
-              style={{ cursor: "pointer" }}
-            />
-          )}
+          <Input type="password" placeholder="비밀번호" />
+          <VisibilityOffIcon onClick={visibilityeye} style={{ cursor: "pointer" }} />
         </InputContainer>
 
         {/* 옵션 체크박스 */}
@@ -192,10 +175,7 @@ const Login = () => {
 
         {/* 회원가입 및 소셜 로그인 옵션 */}
         <FooterText>
-          계정이 아직 없으신가요?{" "}
-          <strong onClick={registerClick} style={{ cursor: "pointer" }}>
-            회원가입
-          </strong>
+          계정이 아직 없으신가요? <strong onClick={registerClick} style={{ cursor: "pointer" }}>회원가입</strong>
         </FooterText>
 
         {/* 소셜 로그인 */}
