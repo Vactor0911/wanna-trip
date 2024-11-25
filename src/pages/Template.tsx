@@ -12,6 +12,7 @@ interface DayPlans {
   day1: Plan[];
   day2: Plan[];
   day3: Plan[];
+  day4: Plan[];
 }
 
 const BoardContainer = styled.div`
@@ -56,14 +57,15 @@ const LoginButton = styled.button`
 
 const Body = styled.div`
   display: flex;
-  flex-wrap: nowrap;
-  gap: 20px;
+  flex-wrap: nowrap;            // 가로로 나란히 정렬
+  gap: 20px;                    // 컬럼 간 간격
   padding: 20px;
-  overflow-x: auto;
+  align-items: flex-start;      // 컬럼 높이를 각 내용에 맞춤
+  overflow-x: auto;             // 가로 스크롤 활성화
 
   @media (max-width: 768px) {
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: wrap;            // 모바일에서는 세로로 정렬
+    justify-content: center;    // 중앙 정렬
   }
 `;
 
@@ -72,6 +74,7 @@ const Template = () => {
     day1: day1Plans,
     day2: day2Plans,
     day3: day3Plans,
+    day4: day4Plans
   });
 
   const handleAddPlan = (dayKey: keyof DayPlans) => {
@@ -97,6 +100,7 @@ const Template = () => {
         <DayColumn day="Day 1" plans={dayPlans.day1} onAddPlan={() => handleAddPlan("day1")} />
         <DayColumn day="Day 2" plans={dayPlans.day2} onAddPlan={() => handleAddPlan("day2")} />
         <DayColumn day="Day 3" plans={dayPlans.day3} onAddPlan={() => handleAddPlan("day3")} />
+        <DayColumn day="Day 4" plans={dayPlans.day4} onAddPlan={() => handleAddPlan("day4")} />
       </Body>
     </BoardContainer>
   );
@@ -116,4 +120,8 @@ const day2Plans = [
 const day3Plans = [
   { time: "09:00 - 11:00", activity: "카페 탐방", image: "image_url6" },
   { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" },
+];
+const day4Plans = [
+  { time: "09:00 - 12:00", activity: "스터디", image: "image_url6" },
+  { time: "12:30 - 15:00", activity: "동아리", image: "image_url7" },
 ];
