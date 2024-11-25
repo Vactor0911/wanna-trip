@@ -7,71 +7,68 @@ const Background = styled.div`
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+
   opacity: 0.5;
   width: 100vw;
   height: 100vh;
   position: absolute;
+
   top: 0;
   left: 0;
   z-index: 0;
 `;
 
-const Background2 = styled.div`
+const Style = styled.div`
   background-color: #344056;
   width: 100%;
   height: 100%;
   display: flex;
+
   position: absolute;
   z-index: 0;
-`;
 
-const Overlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-direction: column;
-  color: white;
-  z-index: 1;
-  padding-bottom: 50px;
-`;
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin: 0;
-  text-align: center;
-`;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-const Subtitle = styled.p`
-  font-size: 1.2rem;
-  margin-top: 10px;
-  text-align: center;
-`;
+    flex-direction: column;
+    z-index: 1;
+    color: #fff;
+  }
 
-const Footertitle = styled.p`
-  font-size: 1.2rem;
-  margin-top: 10px;
-  text-align: center;
-`;
+  .title {
+    font-size: 120px;
+    font-weight: bold;
+    margin: 0;
+    text-align: center;
+  }
 
-const ButtonContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin: 30px 0 40px;
+  p.subtitle {
+    font-size: 53px;
+    text-align: center;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 30px;
+  }
 `;
 
 const Button = styled.button<{ width?: string; height?: string }>`
-  width: ${(props) => props.width || "120px"};
-  height: ${(props) => props.height || "40px"};
-  font-size: 1rem;
-  color: white;
+  width: ${(props) => props.width};
+  height: ${(props) => props.height};
+  font-size: 35px;
+  color: #fff;
   background-color: #166eb7;
   border: none;
   border-radius: 4px;
@@ -84,30 +81,33 @@ const Button = styled.button<{ width?: string; height?: string }>`
   }
 `;
 
-const Main = () => {
-  const navigate = useNavigate();
+// const Footertitle = styled.p`
+//   font-size: 1.2rem;
+//   margin-top: 10px;
+//   text-align: center;
+// `;
 
-  const handleLoginClick = () => navigate("/login");
-  const handleStartClick = () => navigate("/Template");
+const Main = () => {
+  const navigate = useNavigate(); // 페이지 주소 이동을 위한 navigate 함수 선언
+  const handleLoginClick = () => navigate("/login"); // 로그인 페이지로 이동
+  const handleStartClick = () => navigate("/template"); // 템플릿 페이지로 이동
 
   return (
-    <>
-      <Background2>
-        <Background />
-        <Overlay>
-          <Title>여행갈래?</Title>
-          <Subtitle>세상에서 제일 간단한 계획서</Subtitle>
-          <ButtonContainer>
-            <Button onClick={handleStartClick} width="100px" height="30px">
-              시작하기
-            </Button>
-            <Button onClick={handleLoginClick} width="100px" height="30px">
-              로그인
-            </Button>
-          </ButtonContainer>
-        </Overlay>
-      </Background2>
-    </>
+    <Style>
+      <Background />
+      <div className="overlay">
+        <h1 className="title">여행갈래?</h1>
+        <p className="subtitle">세상에서 제일 간단한 계획서</p>
+        <div className="button-container">
+          <Button onClick={handleStartClick} width="240px" height="60px">
+            시작하기
+          </Button>
+          <Button onClick={handleLoginClick} width="240px" height="60px">
+            로그인
+          </Button>
+        </div>
+      </div>
+    </Style>
   );
 };
 
