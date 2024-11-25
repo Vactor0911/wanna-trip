@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LockIcon from '@mui/icons-material/Lock';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOnIcon from '@mui/icons-material/Visibility';
 import BackgroundImage from "../assets/images/image01.png";
 import { useNavigate } from "react-router-dom";
 import { CottageSharp } from "@mui/icons-material";
