@@ -142,12 +142,11 @@ const Login = () => {
   };
 
   const registerClick = () => navigate("/Register");
-  
 
   const visibilityeye = () => {
     alert("눈눈!");
   };
-  
+
   const handleLoginClick = () => navigate("/template");
 
   return (

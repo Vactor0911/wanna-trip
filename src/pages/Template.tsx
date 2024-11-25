@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from "@emotion/styled";
 import DayColumn from './Day'; // 같은 폴더 내에 위치
 
 const BoardContainer = styled.div`
   display: flex;
   padding: 0px;
-  background-color: #2F3B4E;
+  background-color: #2f3b4e;
   min-height: 100vh;
   color: white;
 `;

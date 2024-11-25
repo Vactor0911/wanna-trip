@@ -70,6 +70,7 @@ const Register = () => {
     const Registerbtn = () => {
         alert("눈눈!");
     }
+
   return (
     <SignupContainer>
       <Title>여행갈래?</Title>
