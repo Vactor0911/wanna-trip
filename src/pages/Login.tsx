@@ -22,6 +22,9 @@ import KakaoIcon from "../assets/images/kakao.png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import { useSetAtom } from "jotai";     // useSetAtom 불러오기
+import { loginStateAtom } from "../state";  // loginStateAtom 불러오기
+
 const Style = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -170,63 +173,122 @@ const Login = () => {
   }, []); // 아이디 저장 기능 끝
 
   // 로그인 기능 추가
-const [email, setEmail] = useState(''); // 이메일 값
-const [password, setPassword] = useState(''); // 사용자 비밀번호
-const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+  const [email, setEmail] = useState(''); // 이메일 값
+  const [password, setPassword] = useState(''); // 사용자 비밀번호
+  const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+  const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
 
-const handleLoginClick = async (e: React.FormEvent) => {
-  e.preventDefault();
+  // // 카카오 앱 설정 정보
+  // const KAKAO_CLIENT_ID = process.env.KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
+  // const KAKAO_REDIRECT_URI = process.env.KAKAO_REDIRECT_URI // 등록한 Redirect URI
 
-  // 입력값 검증
-  if (!email || !password) {
-    console.error('이메일 비밀번호가 비어 있습니다.');
-    alert('이메일과 비밀번호를 입력해 주세요.');
-    return;
-  }
+  // const handleKakaoLogin = async () => {
+  //   const code = new URL(window.location.href).searchParams.get("code");
 
-  console.log('로그인 요청을 보냅니다:', { email, password });
+  //   if (!code) {
+  //     // 사용자에게 카카오 로그인 화면으로 이동
+  //     const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+  //     window.location.href = kakaoAuthUrl;
+  //   } else {
+  //     try {
+  //       // 카카오 서버에서 Access Token 요청
+  //       const response = await axios.post(
+  //         "https://kauth.kakao.com/oauth/token",
+  //         null,
+  //         {
+  //           params: {
+  //             grant_type: "authorization_code",
+  //             client_id: KAKAO_CLIENT_ID,
+  //             redirect_uri: KAKAO_REDIRECT_URI,
+  //             code: code,
+  //           },
+  //         }
+  //       );
 
-  try {
-    // Axios POST 요청
-    const response = await axios.post(`${HOST}:${PORT}/api/login`, {
-      email: email,
-      password: password
-    });
+  //       const accessToken = response.data.access_token;
 
+  //       // Access Token으로 사용자 정보 요청
+  //       const userInfoResponse = await axios.get(
+  //         "https://kapi.kakao.com/v2/user/me",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${accessToken}`,
+  //           },
+  //         }
+  //       );
 
-    // GET 테스트 시작
+  //       const { id, properties, kakao_account } = userInfoResponse.data;
+  //       console.log("카카오 사용자 정보:", { id, properties, kakao_account });
 
-    // GET 요청으로 환영 메시지 받아오기
-    const welcomeResponse = await axios.get(`${HOST}:${PORT}/api/user-info`, {
-      params: { email: email }, // 이메일 기준으로 사용자 정보 요청
-    });
+  //       alert(`카카오 로그인 성공! ${properties.nickname}님 환영합니다.`);
+  //       navigate("/template");
+  //     } catch (error) {
+  //       console.error("카카오 로그인 실패:", error);
+  //       alert("카카오 로그인에 실패했습니다.");
+  //     }
+  //   }
+  // };
 
-     // 서버에서 받은 닉네임
-    const { nickname } = welcomeResponse.data;
-    
-    // 서버 응답 처리
-    console.log('Login successful:', response.data.message);
+  const handleLoginClick = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    // 로그인 성공 후 닉네임 포함한 alert 메시지 표시
-    alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-    // GET 테스트 끝
-
-    navigate("/template");  // 로그인 성공 시 이동할 페이지
-
-  } catch (error: any) {
-    // 에러 처리
-    if (error.response) {
-      console.error('서버가 오류를 반환했습니다:', error.response.data.message);
-      alert(error.response.data.message || '로그인 실패');
-    } else {
-      console.error('요청을 보내는 중 오류가 발생했습니다:', error.message);
-      alert('예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.');
+    // 입력값 검증
+    if (!email || !password) {
+      console.error('이메일 비밀번호가 비어 있습니다.');
+      alert('이메일과 비밀번호를 입력해 주세요.');
+      return;
     }
-    // 로그인 실패 시 처리: 비밀번호 초기화
-    setPassword(''); // 비밀번호만 초기화
-  }
-};
+
+    console.log('로그인 요청을 보냅니다:', { email, password });
+
+    try {
+      // Axios POST 요청
+      const response = await axios.post(`${HOST}:${PORT}/api/login`, {
+        email: email,
+        password: password
+      });
+
+
+      // GET 테스트 시작
+
+      // GET 요청으로 환영 메시지 받아오기
+      const welcomeResponse = await axios.get(`${HOST}:${PORT}/api/user-info`, {
+        params: { email: email }, // 이메일 기준으로 사용자 정보 요청
+      });
+
+      // 서버에서 받은 닉네임
+      const { nickname } = welcomeResponse.data;
+      
+      // 서버 응답 처리
+      console.log('Login successful:', response.data.message);
+
+      // 로그인 성공 후 닉네임 포함한 alert 메시지 표시
+      alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
+      // GET 테스트 끝
+
+      // 로그인 상태 업데이트
+      setLoginState({
+        isLoggedIn: true,
+        email: email,
+        loginType: "null", // 일반 로그인
+      });
+
+      navigate("/template");  // 로그인 성공 시 이동할 페이지
+
+    } catch (error: any) {
+      // 에러 처리
+      if (error.response) {
+        console.error('서버가 오류를 반환했습니다:', error.response.data.message);
+        alert(error.response.data.message || '로그인 실패');
+      } else {
+        console.error('요청을 보내는 중 오류가 발생했습니다:', error.message);
+        alert('예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.');
+      }
+      // 로그인 실패 시 처리: 비밀번호 초기화
+      setPassword(''); // 비밀번호만 초기화
+    }
+  };
 
   
   
@@ -324,7 +386,6 @@ const handleLoginClick = async (e: React.FormEvent) => {
             <FormControlLabel
               control={
                 <Checkbox
-                  defaultChecked
                   size="large"
                   sx={{
                     color: "#EBEBEB",
@@ -363,6 +424,7 @@ const handleLoginClick = async (e: React.FormEvent) => {
         <div className="social-login">
         <IconButton>
             <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
+            {/* <Avatar onClick={handleKakaoLogin} src={KakaoIcon} sx={{ width: "60px", height: "60px" }} /> */}
           </IconButton>
           <IconButton>
             <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px" }} />

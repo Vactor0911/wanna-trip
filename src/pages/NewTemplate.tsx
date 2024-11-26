@@ -7,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
+import { useAtomValue, useSetAtom } from "jotai";   // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
+import { loginStateAtom } from "../state";  // loginState 불러오기
+
 const Style = styled.div`
   display: flex;
   flex-direction: column;
@@ -88,6 +91,8 @@ const NewTemplate = () => {
   const navigate = useNavigate();
 
   const handleLoginClick = () => navigate("/login");
+
+  
   
 
   // 임시 계정 탈퇴 기능 추가 시작
@@ -96,6 +101,7 @@ const NewTemplate = () => {
 
   const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
   const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
+  
 
   const handleAccountDeleteClick = async () => {
     // 계정 탈퇴 로직을 여기에 추가하세요
@@ -126,6 +132,34 @@ const NewTemplate = () => {
     
   } // 임시 계정 탈퇴 기능 추가 끝
 
+  const { isLoggedIn, email, loginType } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
+  const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
+
+  // 로그아웃 기능 구현 시작
+  const handleLogoutClick = async () => {
+    if (loginType === "null") {
+      try {
+        console.log("일반 로그인 상태에서 로그아웃 진행 중...");
+
+        // 상태 초기화
+        setLoginState({
+          isLoggedIn: false,
+          email: "",
+          loginType: "null",
+        });
+
+        alert("로그아웃이 성공적으로 완료되었습니다.");
+      } catch (error) {
+        console.error("로그아웃 처리 중 오류 발생:", error);
+        alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
+    } else {
+      alert("간편 로그인 사용자는 이 기능을 사용할 수 없습니다.");
+    }
+  }; // 로그아웃 기능 구현 끝
+
+  
+
   return (
     <Style>
       <header>
@@ -137,11 +171,15 @@ const NewTemplate = () => {
             {/* 임시 계정 탈퇴 기능 추가 시작 */}
             <Button variant="contained" onClick={handleAccountDeleteClick}>
               계정 탈퇴
-            </Button>
-            {/* 임시 계정 탈퇴 기능 추가 끝 */}
-            <Button variant="contained" onClick={handleLoginClick}>
-              로그인/회원가입
-            </Button>
+            </Button> {/* 임시 계정 탈퇴 기능 추가 끝 */}
+
+            {isLoggedIn ? (
+              // 로그아웃 기능 추가
+              <Button variant="contained" onClick={handleLogoutClick}>로그아웃</Button>
+            ) : (
+              <Button variant="contained" onClick={handleLoginClick}>로그인/회원가입</Button>
+            )}
+
             </div>
         </div>
       </header>
