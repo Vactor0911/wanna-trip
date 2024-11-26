@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Main from "./pages/Main";  // Main 컴포넌트
+import Main from "./pages/Main";
 import Login from "./pages/Login"; // Login 컴포넌트
+import Register from "./pages/Register"; // Register 컴포넌트
 import Template from "./pages/Template"; // Template 컴포넌트
-import Register from "./pages/Register"; // Template 컴포넌트
 import NewTemplate from "./pages/NewTemplate";
 
 function App() {
