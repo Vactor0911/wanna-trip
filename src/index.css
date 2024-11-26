@@ -23,6 +23,6 @@
 /* 모바일 환경 */
 @media (max-width: 480px) {
   body {
-    font-size: 12px;
+    font-size: 14px;
   }
 }
