@@ -146,6 +146,27 @@ const Register = () => {
     }
   };//회원가입 끝
 
+  //이메일 중복 검사 시작
+  const handleCheckEmail = async () => {
+    try {
+      const response = await axios.post(`${HOST}:${PORT}/api/emailCheck`, {
+        email: email, // 사용자가 입력한 이메일
+      });
+  
+      const { success, message } = response.data;
+  
+      if (success) {
+        alert(message); // "사용 가능한 이메일입니다."
+      } else {
+        alert(message); // "이미 사용 중인 이메일입니다."
+      }
+    } catch (error) {
+      console.error("이메일 중복 검사 오류:", error);
+      alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  };  //이메일 중복 검사 끝
+
+
   return (
     <SignupContainer>
       <Title>여행갈래?</Title>
@@ -160,6 +181,7 @@ const Register = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+        <Button type="submit" onClick={handleCheckEmail}>중복</Button>
         </InputContainer>{/* 이메일 끝  */}
 
         <InputContainer> {/* password 시작  */}
