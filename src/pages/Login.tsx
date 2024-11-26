@@ -61,10 +61,10 @@ const Style = styled.div`
     color: white;
   }
   .title h1 {
-    font-size: 2.5em;
+    font-size: 2.3em;
   }
   .title p {
-    font-size: 2em;
+    font-size: 1.6em;
   }
 
   .button-container {
