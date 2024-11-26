@@ -11,7 +11,7 @@ const Style = styled.div`
   align-items: center;
   width: 100%;
   height: 100vh;
-  gap: 2.5em;
+  gap: 1.5em;
   background-color: ${color.background_main};
   position: relative;
   z-index: 1;
@@ -31,13 +31,13 @@ const Style = styled.div`
     z-index: -1;
   }
 
-  // 제목 
+  // 제목
   h1 {
-    font-size: 5em;
+    font-size: 4em;
   }
   // 부제목
   p {
-    font-size: 2.8em;
+    font-size: 2.7em;
   }
 
   // 버튼 공간
@@ -45,15 +45,14 @@ const Style = styled.div`
     display: flex;
     flex-direction: column;
     width: 220px;
-    gap: 1.3em;
+    gap: 1.5em;
   }
 
   // 버튼
   Button {
-    font-size: 1.5em;
+    font-size: 1.65em;
     font-weight: bold;
   }
-
 `;
 
 const Main = () => {
