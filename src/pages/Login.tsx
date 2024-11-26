@@ -18,6 +18,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import NaverIcon from "../assets/images/naver.png";
 import GoogleIcon from "../assets/images/google.png";
+import KakaoIcon from "../assets/images/kakao.png";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -209,7 +210,6 @@ const handleLoginClick = async (e: React.FormEvent) => {
 
     // 로그인 성공 후 닉네임 포함한 alert 메시지 표시
     alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-
     // GET 테스트 끝
 
     navigate("/template");  // 로그인 성공 시 이동할 페이지
@@ -361,11 +361,14 @@ const handleLoginClick = async (e: React.FormEvent) => {
         </p>
 
         <div className="social-login">
-          <IconButton>
-            <Avatar src={NaverIcon} sx={{ width: "60px", height: "60px" }} />
+        <IconButton>
+            <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
           </IconButton>
           <IconButton>
             <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px" }} />
+          </IconButton>
+          <IconButton>
+            <Avatar src={NaverIcon} sx={{ width: "60px", height: "60px" }} />
           </IconButton>
         </div>
       </div>
