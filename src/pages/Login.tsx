@@ -11,6 +11,7 @@ import {
   IconButton,
   InputAdornment,
   OutlinedInput,
+  Typography,
 } from "@mui/material";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import LockIcon from "@mui/icons-material/Lock";
@@ -60,7 +61,7 @@ const Style = styled.div`
     color: white;
   }
   .title h1 {
-    font-size: 2em;
+    font-size: 2.5em;
   }
   .title p {
     font-size: 2em;
@@ -92,7 +93,12 @@ const Style = styled.div`
 
   p.register a {
     color: ${color.link};
-    margin-left: 20px;
+    margin-left: 5px;
+    text-decoration: none;
+  }
+
+  p.register a:hover {
+    text-decoration: underline;
   }
 
   .social-login {
@@ -224,14 +230,14 @@ const Login = () => {
                     size="large"
                     sx={{
                       color: "#EBEBEB",
+                      transform: "translateX(5px)",
                     }}
                   />
                 }
-                label="아이디 저장"
+                label={<Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>}
                 sx={{
                   color: "white",
-                  textDecoration: "underline",
-                  transform: "translateY(6px)",
+                  transform: "translate(-5px, 14px)",
                 }}
               />
               <FormControlLabel
@@ -241,14 +247,14 @@ const Login = () => {
                     size="large"
                     sx={{
                       color: "#EBEBEB",
+                      transform: "translateX(5px)",
                     }}
                   />
                 }
-                label="로그인 상태 유지"
+                label={<Typography sx={{ fontSize: "1em" }}>로그인 상태 유지</Typography>}
                 sx={{
                   color: "white",
-                  textDecoration: "underline",
-                  transform: "translateY(-6px)",
+                  transform: "translate(-5px, 6px)",
                 }}
               />
             </div>
