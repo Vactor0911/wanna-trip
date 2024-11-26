@@ -266,7 +266,7 @@ const Login = () => {
         });
     
         // 서버 응답에서 사용자 정보 추출
-        const { nickname, message } = response.data;
+        const { nickname } = response.data;
     
         // 로그인 성공 메시지
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
@@ -276,6 +276,7 @@ const Login = () => {
           isLoggedIn: true,
           email: email,
           loginType: "normal", // 일반 로그인
+          loginToken: response.data.token,
         });
     
         // 성공 후 페이지 이동

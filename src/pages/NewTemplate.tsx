@@ -95,7 +95,6 @@ const NewTemplate = () => {
   
   
 
-  // 임시 계정 탈퇴 기능 추가 시작
   // const [email, setEmail] = useState(''); // 사용자 이메일
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
@@ -103,36 +102,6 @@ const NewTemplate = () => {
   const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
   const { isLoggedIn, email, loginType, loginToken } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
-  
-
-  const handleAccountDeleteClick = async () => {
-    // 계정 탈퇴 로직을 여기에 추가하세요
-    try{
-        const response = await axios.post(`${HOST}:${PORT}/api/account-delete`, {
-          email: 'test@naver.com', //임시로 이메일을 넣어놨음
-          password: '1234' //임시로 비밀번호를 넣어놨음
-        });
-
-        // 서버 응답 처리
-        // 서버로부터 성공 메시지를 받은 경우
-        console.log('계정 탈퇴가 완료되었습니다.', response.data.message);
-
-        // 사용자에게 성공 메시지 보여주기 (UI 반영)
-        alert('계정 탈퇴가 완료되었습니다.');
-
-
-    }catch (error: any) {
-      // 서버로부터 반환된 에러 메시지 확인
-      if (error.response) {
-          console.error('서버가 오류를 반환했습니다:', error.response.data.message);
-          alert(`Error: ${error.response.data.message}`);
-      } else {
-          console.error('요청을 보내는 중 오류가 발생했습니다:', error.message);
-          alert('예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.');
-      }
-  }
-    
-  } // 임시 계정 탈퇴 기능 추가 끝
 
 
   // Access Token 갱신 함수
@@ -213,10 +182,6 @@ const NewTemplate = () => {
         </div>
         <div className="container">
             <div style={{ display: 'flex', gap: '20px' }}>
-            {/* 임시 계정 탈퇴 기능 추가 시작 */}
-            <Button variant="contained" onClick={handleAccountDeleteClick}>
-              계정 탈퇴
-            </Button> {/* 임시 계정 탈퇴 기능 추가 끝 */}
 
             {isLoggedIn ? (
               // 로그아웃 기능 추가

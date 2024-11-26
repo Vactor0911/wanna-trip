@@ -3,9 +3,5 @@
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
-  ],
-  "compilerOptions": {
-    "lib": ["dom", "es2015"], // 브라우저 DOM 타입 사용
-    "types": ["node"], // Node.js 타입 포함
-  }
+  ]
 }
