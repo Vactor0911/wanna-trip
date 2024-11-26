@@ -1,157 +1,152 @@
 import styled from "@emotion/styled";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import LockIcon from '@mui/icons-material/Lock';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import VisibilityOnIcon from '@mui/icons-material/Visibility';
-import BackgroundImage from "../assets/images/image01.png";
-import naverImage from "../assets/images/naver.png"
-import googleImage from "../assets/images/google.png"
-import { useNavigate } from "react-router-dom";
-import { CottageSharp } from "@mui/icons-material";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import BackgroundImage from "../assets/images/background.png";
+import { color } from "../utils/theme";
+import {
+  Avatar,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+} from "@mui/material";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import LockIcon from "@mui/icons-material/Lock";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import NaverIcon from "../assets/images/naver.png";
+import GoogleIcon from "../assets/images/google.png";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const BackgroundContainer = styled.div`
-  width: 100vw;
+const Style = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
   height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #344056;
   position: relative;
-`;
+  background-color: ${color.background_main};
+  z-index: 1;
 
-const Background = styled.div`
-  background-image: url(${BackgroundImage});
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.5;
-  width: 50%;
-  height: 100%;
-`;
-
-const LoginContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #344056;
-  padding: 40px;
-  color: white;
-  border-radius: 8px;
-`;
-
-const Title = styled.h1`
-  font-weight: bold;
-  margin-bottom: 10px;
-  text-align: center;
-`;
-
-const Subtitle = styled.p`
-  font-size: 1rem;
-  margin-bottom: 30px;
-  text-align: center;
-`;
-
-const InputContainer = styled.div`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  background-color: #d1d5db;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 15px;
-`;
-
-const Input = styled.input`
-  border: none;
-  outline: none;
-  background: none;
-  flex: 1;
-  margin-left: 10px;
-  font-size: 1rem;
-  color: #333;
-`;
-
-const OptionsContainer = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  color: #cbd5e1;
-`;
-
-const CheckboxContainer = styled.label`
-  display: flex;
-  align-items: center;
-  font-size: 0.9rem;
-`;
-
-const Checkbox = styled.input`
-  margin-right: 5px;
-`;
-
-const LoginButton = styled.button`
-  width: 100%;
-  height: 40px;
-  font-size: 1rem;
-  color: white;
-  background-color: #166eb7;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-weight: 600;
-  margin-bottom: 20px;
-
-  &:hover {
-    background-color: #0a4a7a;
+  &:before {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 100vh;
+    top: 0;
+    left: 5%;
+    background-image: url(${BackgroundImage});
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    z-index: -1;
   }
-`;
 
-const Footer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-`;
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 35%;
+    min-width: 400px;
+    height: 100%;
+    margin-right: 10%;
+    gap: 2em;
+  }
 
-const FooterText = styled.p`
-  font-size: 0.9rem;
-  color: #cbd5e1;
-`;
+  .title {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    color: white;
+  }
+  .title h1 {
+    font-size: 2em;
+  }
+  .title p {
+    font-size: 1.5em;
+  }
 
-const NaverImg = styled.div`
-background-image: url(${naverImage});
-background-repeat: no-repeat;
-background-position: center;
-background-size: contain;
-width: 30px
-`;
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
 
-const SocialIcon = styled.div`
-  font-size: 1.8rem;
-  cursor: pointer;
+  .checkbox-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .button-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  p.register {
+    align-self: center;
+    color: white;
+    word-spacing: 3px;
+    font-size: 1.3em;
+  }
+
+  p.register a {
+    color: #ebebeb;
+    margin-left: 20px;
+  }
+
+  .social-login {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+  }
+
+  @media (max-width: 768px) {
+    justify-content: center;
+
+    &:before {
+      width: 80%;
+      left: 10%;
+      opacity: 0.3;
+    }
+
+    .login-form {
+      margin: 0;
+      width: 70%;
+      min-width: 260px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    &:before {
+      width: 100%;
+      left: 0;
+      opacity: 0.3;
+    }
+
+    .button-container {
+      flex-direction: column;
+      align-items: center;
+      align-self: center;
+      width: auto;
+      gap: 1em;
+    }
+
+    .button-wrapper,
+    .button-wrapper #btn-login {
+      width: 100%;
+    }
+  }
 `;
 
 const Login = () => {
   const navigate = useNavigate();
-
-  const handleClick = (e: React.MouseEvent) => {
-    alert("클릭되었습니다!");
-  };
-
-  const registerClick = () => navigate("/Register");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   
-
-  //비밀번호 보이기/숨기기 시작
-  const [isPasswdVisible, setIsPasswdVisible] = useState(false);
-
-  const visibilityeye = () => {
-    setIsPasswdVisible((prev) => !isPasswdVisible);
-  }; //비밀번호 보이기/숨기기 끝
-
-// 이메일 저장 기능 시작 - 수정필요
+  
+  // 이메일 저장 기능 시작 - 수정필요
   const [isRememberMe, setIsRememberMe] = useState(false);
 
   const handleRememberMeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,13 +168,7 @@ const Login = () => {
     }
   }, []); // 아이디 저장 기능 끝
 
-  
-
-
-  
-//const handleLoginClick = () => navigate("/template");
-
-// 로그인 기능 추가
+  // 로그인 기능 추가
 const [email, setEmail] = useState(''); // 이메일 값
 const [password, setPassword] = useState(''); // 사용자 비밀번호
 const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
@@ -239,86 +228,148 @@ const handleLoginClick = async (e: React.FormEvent) => {
   }
 };
 
+  
+  
+  
   return (
-    <BackgroundContainer>
-      <Background />
-      <LoginContainer>
-        <Title>여행갈래?</Title>
-        <Subtitle>세상에서 제일 간단한 계획서</Subtitle>
+    <Style>
+      <div className="login-form">
+        <div className="title">
+          <h1>여행갈래?</h1>
+          <p>세상에서 가장 간단한 계획서</p>
+        </div>
 
-        {/* 이메일 입력 필드 */}
-        <InputContainer>
-          <AccountCircleIcon />
-          <Input
-            type="text"
-            placeholder="이메일"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-           />
-        </InputContainer>
+        <OutlinedInput
+          sx={{
+            backgroundColor: "#EBEBEB",
+            borderRadius: "10px",
+          }}
+          placeholder="이메일"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
 
-        {/* 비밀번호 입력 필드 visibilityeye*/}
-        <InputContainer>
-          <LockIcon />
-          <Input
-            type={isPasswdVisible ? "text" : "password"}
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
+          startAdornment={
+            <InputAdornment position="start">
+              <PersonRoundedIcon
+                sx={{
+                  color: "black",
+                  transform: "scale(1.5)",
+                  marginRight: "20px",
+                }}
+              />
+            </InputAdornment>
+          }
+        />
 
-          {isPasswdVisible ? (
-            <VisibilityOnIcon
-              onClick={visibilityeye}
-              style={{ cursor: "pointer", color: "black" }}
+        <OutlinedInput
+          sx={{
+            backgroundColor: "#EBEBEB",
+            borderRadius: "10px",
+          }}
+          type={isPasswordVisible ? "text" : "password"}
+          placeholder="비밀번호"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+
+          startAdornment={
+            <InputAdornment position="start">
+              <LockIcon
+                sx={{
+                  color: "black",
+                  transform: "scale(1.5)",
+                  marginRight: "20px",
+                }}
+              />
+            </InputAdornment>
+          }
+          endAdornment={
+            <InputAdornment position="end">
+              <IconButton
+                onClick={() => {
+                  setIsPasswordVisible(!isPasswordVisible);
+                }}
+              >
+                {isPasswordVisible ? (
+                  <VisibilityIcon sx={{ color: "black" }} />
+                ) : (
+                  <VisibilityOffIcon sx={{ color: "black" }} />
+                )}
+              </IconButton>
+            </InputAdornment>
+          }
+        />
+
+        <div className="button-container">
+          <div className="checkbox-container">
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="large"
+                  sx={{
+                    color: "#EBEBEB",
+                  }}
+                  checked={isRememberMe} 
+                  onChange={handleRememberMeChange}
+                />
+              }
+              label="아이디 저장"
+              sx={{
+                color: "white",
+                textDecoration: "underline",
+                transform: "translateY(6px)",
+              }}
             />
-          ) : (
-            <VisibilityOffIcon
-              onClick={visibilityeye}
-              style={{ cursor: "pointer", color: "black" }}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  defaultChecked
+                  size="large"
+                  sx={{
+                    color: "#EBEBEB",
+                  }}
+                />
+              }
+              label="로그인 상태 유지"
+              sx={{
+                color: "white",
+                textDecoration: "underline",
+                transform: "translateY(-6px)",
+              }}
             />
-          )}
-        </InputContainer>
+          </div>
+          <div className="button-wrapper">
+            <Button
+              id="btn-login"
+              variant="contained"
+              onClick={handleLoginClick}
+              sx={{
+                borderRadius: "50px",
+                fontWeight: "bold",
+                fontSize: "1.4em",
+                padding: "5px 30px",
+              }}
+            >
+              로그인
+            </Button>
+          </div>
+        </div>
 
-        {/* 옵션 체크박스 */}
-        <OptionsContainer>
-          <CheckboxContainer>
-          <Checkbox 
-              type="checkbox" 
-              checked={isRememberMe} 
-              onChange={handleRememberMeChange} 
-            /> 아이디 저장
-          </CheckboxContainer>
+        <p className="register">
+          계정이 아직 없으신가요? <Link to="/register">회원가입</Link>
+        </p>
 
-          <CheckboxContainer>
-            <Checkbox type="checkbox" defaultChecked />
-            로그인 상태 유지
-          </CheckboxContainer>
-        </OptionsContainer>
-
-        {/* 로그인 버튼 */}
-        <LoginButton onClick={handleLoginClick}>로그인</LoginButton>
-
-        {/* 회원가입 및 소셜 로그인 옵션 */}
-        <FooterText>
-          계정이 아직 없으신가요? <strong onClick={registerClick} style={{ cursor: "pointer" }}>회원가입</strong>
-        </FooterText>
-
-        {/* 소셜 로그인 */}
-        <Footer>
-          <SocialIcon>
-            <NaverImg aria-label="Google" onClick={handleClick}/>
-          </SocialIcon>
-          <SocialIcon>
-            <span role="img" style={{backgroundImage:naverImage}} aria-label="Naver" onClick={handleClick}/>
-          </SocialIcon>
-        </Footer>
-
-        
-      </LoginContainer>
-    </BackgroundContainer>
+        <div className="social-login">
+          <IconButton>
+            <Avatar src={NaverIcon} sx={{ width: "60px", height: "60px" }} />
+          </IconButton>
+          <IconButton>
+            <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px" }} />
+          </IconButton>
+        </div>
+      </div>
+    </Style>
   );
 };
 
