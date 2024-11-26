@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import { Link } from "react-router-dom";
 
 const SignupContainer = styled.div`
   display: flex;
@@ -84,7 +85,7 @@ const Register = () => {
         <Button onClick={Registerbtn} type="submit">회원가입</Button>
       </Form>
       <LoginLink>
-        이미 계정이 있으신가요? <a href="/login">로그인</a>
+        이미 계정이 있으신가요? <Link to="/login">로그인</Link>
       </LoginLink>
     </SignupContainer>
   );
