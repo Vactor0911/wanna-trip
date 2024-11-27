@@ -19,6 +19,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import NaverIcon from "../assets/images/naver.png";
 import GoogleIcon from "../assets/images/google.png";
+import EmailIcon from "@mui/icons-material/Email";
 
 const Style = styled.div`
   display: flex;
@@ -138,8 +139,6 @@ const Style = styled.div`
 
     .button-container {
       flex-direction: column;
-      align-items: center;
-      align-self: center;
       width: auto;
       gap: 1em;
     }
@@ -172,7 +171,7 @@ const Login = () => {
           placeholder="아이디"
           startAdornment={
             <InputAdornment position="start">
-              <PersonRoundedIcon
+              <EmailIcon
                 sx={{
                   color: "black",
                   transform: "scale(1.5)",
