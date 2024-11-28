@@ -63,7 +63,52 @@ const Style = styled.div`
     margin-right: 10%;
     gap: 1em;
   }
+  background-color: ${color.background_main};
+  z-index: 1;
 
+  &:before {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 100vh;
+    top: 0;
+    left: 5%;
+    background-image: url(${BackgroundImage});
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    z-index: -1;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 35%;
+    min-width: 400px;
+    height: 100%;
+    margin-right: 10%;
+    gap: 1em;
+  }
+
+  .title {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    color: white;
+  }
+  .title h1 {
+    font-size: 2.3em;
+  }
+  .title p {
+    font-size: 1.6em;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
   .title {
     display: flex;
     flex-direction: column;

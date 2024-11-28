@@ -1,13 +1,24 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
+<<<<<<< HEAD
+=======
+import { useState } from "react";
+>>>>>>> dev
 import { Link } from "react-router-dom";
 import { color } from "../utils/theme";
 import BackgroundImage from "../assets/images/background.png";
 import LockIcon from "@mui/icons-material/Lock";
+<<<<<<< HEAD
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import EmailIcon from '@mui/icons-material/Email';
+=======
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import EmailIcon from "@mui/icons-material/Email";
+>>>>>>> dev
 import {
   Avatar,
   Button,
@@ -18,8 +29,12 @@ import {
   OutlinedInput,
   Typography,
 } from "@mui/material";
+<<<<<<< HEAD
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
+=======
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+>>>>>>> dev
 
 const Style = styled.div`
   display: flex;
@@ -142,6 +157,7 @@ const Style = styled.div`
 `;
 
 const Register = () => {
+<<<<<<< HEAD
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
   
   //비밀번호 보이기/숨기기 시작
@@ -169,6 +185,10 @@ const Register = () => {
         alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
         return;
     }
+=======
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isPasswordCheckVisible, setIsPasswordCheckVisible] = useState(false);
+>>>>>>> dev
 
     if (!name) {
       console.error('닉네임을 입력해주세요.');
@@ -248,12 +268,16 @@ const Register = () => {
             backgroundColor: "#EBEBEB",
             borderRadius: "10px",
           }}
+<<<<<<< HEAD
           type="email"
           placeholder="이메일"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
 
+=======
+          placeholder="이메일"
+>>>>>>> dev
           startAdornment={
             <InputAdornment position="start">
               <EmailIcon
@@ -271,7 +295,10 @@ const Register = () => {
               <Button
                 id="btn-mailcheck"
                 variant="contained"
+<<<<<<< HEAD
                 onClick={handleCheckEmail}
+=======
+>>>>>>> dev
                 sx={{
                   borderRadius: "50px",
                   fontWeight: "bold",
@@ -292,10 +319,13 @@ const Register = () => {
           }}
           type={isPasswordVisible ? "text" : "password"}
           placeholder="비밀번호"
+<<<<<<< HEAD
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
 
+=======
+>>>>>>> dev
           startAdornment={
             <InputAdornment position="start">
               <LockIcon
@@ -332,10 +362,13 @@ const Register = () => {
           }}
           type={isPasswordCheckVisible ? "text" : "password"}
           placeholder="비밀번호 재입력"
+<<<<<<< HEAD
           value={password_comparison}
           onChange={(e) => setPassword_comparison(e.target.value)}
           required
 
+=======
+>>>>>>> dev
           startAdornment={
             <InputAdornment position="start">
               <LockIcon
@@ -370,12 +403,16 @@ const Register = () => {
             backgroundColor: "#EBEBEB",
             borderRadius: "10px",
           }}
+<<<<<<< HEAD
           type="text"
           placeholder="별명"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
 
+=======
+          placeholder="별명"
+>>>>>>> dev
           startAdornment={
             <InputAdornment position="start">
               <LocalOfferIcon
@@ -397,7 +434,10 @@ const Register = () => {
             <Button
               id="btn-login"
               variant="contained"
+<<<<<<< HEAD
               onClick={Registerbtn}
+=======
+>>>>>>> dev
               sx={{
                 borderRadius: "50px",
                 fontWeight: "bold",
