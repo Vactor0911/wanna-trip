@@ -10,10 +10,19 @@
   padding: 0;
   box-sizing: border-box;
   font-family: "Pretendard-Regular", sans-serif;
+  word-break: keep-all;
 }
 
-body,
-#root {
-  width: 100vw;
-  min-height: 100vh;
+/* 태블릿 환경 */
+@media (max-width: 768px) {
+  body {
+    font-size: 12px;
+  }
+}
+
+/* 모바일 환경 */
+@media (max-width: 480px) {
+  body {
+    font-size: 11px;
+  }
 }
