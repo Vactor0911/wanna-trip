@@ -21,8 +21,8 @@ const Style = styled.div`
   &:before {
     content: "";
     position: absolute;
-    width: 92%;
-    height: 92%;
+    width: 88%;
+    height: 88%;
     background-image: url(${BackgroundImage});
     background-repeat: no-repeat;
     background-position: center;
@@ -52,6 +52,13 @@ const Style = styled.div`
   Button {
     font-size: 1.65em;
     font-weight: bold;
+  }
+
+  @media (max-width: 768px) {
+    &:before {
+      width: 80%;
+      height: 80%;
+    }
   }
 `;
 
