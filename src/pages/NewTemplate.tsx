@@ -2,10 +2,6 @@ import styled from "@emotion/styled"; // 스타일 추가
 import { Button } from "@mui/material"; // 버튼 추가
 import DownloadIcon from "@mui/icons-material/Download"; // 다운로드 아이콘 추가
 import SaveIcon from "@mui/icons-material/Save"; // 저장 아이콘 추가
-import AddIcon from "@mui/icons-material/Add"; // 플러스 아이콘 추가
-import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // 복사 아이콘 추가
-import DeleteIcon from "@mui/icons-material/Delete"; // 쓰레기통 아이콘 추가
-import MenuIcon from "@mui/icons-material/Menu"; // 메뉴 아이콘 추가
 import { useState } from "react";
 import Card from "../components/Card"; // Card 컴포넌트 추가
 
@@ -83,7 +79,7 @@ const Style = styled.div`
   .left-menu {
     display: flex;
     position: absolute;
-    width: 25px;
+    width: 35px;
     height: 100%;
 
     top: 0;
@@ -170,11 +166,11 @@ const NewTemplate = () => {
           </div>
         </div>
         <div className="board-container">
-        <Card
-          day="Day 1"
-          plans={dayPlans.day1}
-          onAddPlan={() => addplanhandler("day1")}
-        />
+          <Card
+            day="Day 1"
+            plans={dayPlans.day1}
+            onAddPlan={() => addplanhandler("day1")}
+          />
         </div>
         <div className="left-menu"></div>
       </div>
