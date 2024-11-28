@@ -24,11 +24,8 @@ import EmailIcon from "@mui/icons-material/Email";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-import { useSetAtom } from "jotai";     // useSetAtom 불러오기
-import { loginStateAtom } from "../state";  // loginStateAtom 불러오기
-
-
-
+import { useSetAtom } from "jotai"; // useSetAtom 불러오기
+import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
 
 const Style = styled.div`
   display: flex;
@@ -42,7 +39,7 @@ const Style = styled.div`
   &:before {
     content: "";
     position: absolute;
-    width: 40%;
+    width: 20%;
     height: 100vh;
     top: 0;
     left: 5%;
@@ -69,10 +66,10 @@ const Style = styled.div`
   &:before {
     content: "";
     position: absolute;
-    width: 40%;
+    width: 35%;
     height: 100vh;
     top: 0;
-    left: 5%;
+    left: 9%;
     background-image: url(${BackgroundImage});
     background-repeat: no-repeat;
     background-position: center;
@@ -151,7 +148,7 @@ const Style = styled.div`
     margin-left: 5px;
     text-decoration: none;
   }
-  
+
   p.register a:hover {
     text-decoration: underline;
   }
@@ -186,8 +183,8 @@ const Style = styled.div`
 
   @media (max-width: 480px) {
     &:before {
-      width: 100%;
-      left: 0;
+      width: 88%;
+      left: 6%;
       opacity: 0.3;
     }
 
@@ -201,26 +198,23 @@ const Style = styled.div`
     .button-wrapper #btn-login {
       width: 100%;
     }
-  
   }
 `;
 
 const Login = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  
+
   // 아이디 저장 기능 추가- 필요
 
-  
-
   // 로그인 기능 추가
-  const [email, setEmail] = useState(''); // 이메일 값
-  const [password, setPassword] = useState(''); // 사용자 비밀번호
+  const [email, setEmail] = useState(""); // 이메일 값
+  const [password, setPassword] = useState(""); // 사용자 비밀번호
   const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+  const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
   const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
   const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  
+
   // URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
@@ -234,14 +228,14 @@ const Login = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
     const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
-  
+
     if (!code) {
       // 카카오 로그인 화면으로 이동
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
       window.location.href = kakaoAuthUrl;
       return;
     }
-  
+
     try {
       // Step 1: 카카오 서버에서 Access Token 발급
       const tokenResponse = await axios.post(
@@ -256,26 +250,32 @@ const Login = () => {
           },
         }
       );
-  
+
       const accessToken = tokenResponse.data.access_token;
-  
+
       // Step 2: 사용자 정보 가져오기
-      const userInfoResponse = await axios.get("https://kapi.kakao.com/v2/user/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-  
+      const userInfoResponse = await axios.get(
+        "https://kapi.kakao.com/v2/user/me",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
       const { id, properties, kakao_account } = userInfoResponse.data;
       const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
       const nickname = properties.nickname;
-  
+
       // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-      const serverResponse = await axios.post(`${HOST}:${PORT}/api/login/kakao`, {
-        email,
-        name: nickname,
-        loginType: "kakao", // 간편 로그인 타입 전달
-        token: accessToken,
-      });
-  
+      const serverResponse = await axios.post(
+        `${HOST}:${PORT}/api/login/kakao`,
+        {
+          email,
+          name: nickname,
+          loginType: "kakao", // 간편 로그인 타입 전달
+          token: accessToken,
+        }
+      );
+
       // Step 4: 로그인 상태 업데이트
       setLoginState({
         isLoggedIn: true,
@@ -294,67 +294,60 @@ const Login = () => {
       window.history.replaceState(null, "", "/login");
 
       navigate("/template"); // 성공 후 페이지 이동
-
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
+  }; // 카카오 간편 로그인 시작
 
-    
-  };// 카카오 간편 로그인 시작
-    
-  
-    //일반 로그인 기능 시작
-    const handleLoginClick = async (e: React.FormEvent) => {
-      e.preventDefault();
-    
-      // 입력값 검증
-      if (!email || !password) {
-        alert("이메일과 비밀번호를 입력해 주세요.");
-        return;
-      }
-    
-      setIsLoading(true); // 로딩 상태 활성화
-      try {
-        // POST /api/login 요청
-        const response = await axios.post(`${HOST}:${PORT}/api/login`, {
-          email: email,
-          password: password,
-        });
-    
-        // 서버 응답에서 사용자 정보 추출
-        const { nickname } = response.data;
-    
-        // 로그인 성공 메시지
-        alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-    
-        // 로그인 상태 업데이트 그냥 둬도 됨
-        setLoginState({
-          isLoggedIn: true,
-          email: email,
-          loginType: "normal", // 일반 로그인
-          loginToken: response.data.token,
-        });
-    
-        // 성공 후 페이지 이동
-        navigate("/template");
-      } catch (error: any) {
-        if (error.response) {
-          console.error("서버 오류:", error.response.data.message);
-          alert(error.response.data.message || "로그인 실패");
-        } else {
-          console.error("요청 오류:", error.message);
-          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
-        }
-        setPassword(""); // 로그인 실패 시 비밀번호 초기화
-      } finally {
-        setIsLoading(false); // 로딩 상태 비활성화
-      }
-    };  //일반 로그인 기능 끝
+  //일반 로그인 기능 시작
+  const handleLoginClick = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  
-  
-  
+    // 입력값 검증
+    if (!email || !password) {
+      alert("이메일과 비밀번호를 입력해 주세요.");
+      return;
+    }
+
+    setIsLoading(true); // 로딩 상태 활성화
+    try {
+      // POST /api/login 요청
+      const response = await axios.post(`${HOST}:${PORT}/api/login`, {
+        email: email,
+        password: password,
+      });
+
+      // 서버 응답에서 사용자 정보 추출
+      const { nickname } = response.data;
+
+      // 로그인 성공 메시지
+      alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
+
+      // 로그인 상태 업데이트 그냥 둬도 됨
+      setLoginState({
+        isLoggedIn: true,
+        email: email,
+        loginType: "normal", // 일반 로그인
+        loginToken: response.data.token,
+      });
+
+      // 성공 후 페이지 이동
+      navigate("/template");
+    } catch (error: any) {
+      if (error.response) {
+        console.error("서버 오류:", error.response.data.message);
+        alert(error.response.data.message || "로그인 실패");
+      } else {
+        console.error("요청 오류:", error.message);
+        alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+      }
+      setPassword(""); // 로그인 실패 시 비밀번호 초기화
+    } finally {
+      setIsLoading(false); // 로딩 상태 비활성화
+    }
+  }; //일반 로그인 기능 끝
+
   return (
     <Style>
       <div className="login-form">
@@ -374,7 +367,6 @@ const Login = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <EmailIcon
@@ -400,7 +392,6 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-
             startAdornment={
               <InputAdornment position="start">
                 <LockIcon
@@ -430,7 +421,6 @@ const Login = () => {
             }
           />
 
-        
           {/* 버튼과 체크박스 */}
           <div className="button-container">
             <div className="checkbox-container">
@@ -444,7 +434,9 @@ const Login = () => {
                     }}
                   />
                 }
-                label={<Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>}
+                label={
+                  <Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>
+                }
                 sx={{
                   color: "white",
                   transform: "translate(-5px, 14px)",
@@ -460,7 +452,11 @@ const Login = () => {
                     }}
                   />
                 }
-                label={<Typography sx={{ fontSize: "1em" }}>로그인 상태 유지</Typography>}
+                label={
+                  <Typography sx={{ fontSize: "1em" }}>
+                    로그인 상태 유지
+                  </Typography>
+                }
                 sx={{
                   color: "white",
                   transform: "translate(-5px, 6px)",

@@ -9,14 +9,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import EmailIcon from '@mui/icons-material/Email';
 import {
-  Avatar,
   Button,
-  Checkbox,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   OutlinedInput,
-  Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
@@ -33,10 +29,10 @@ const Style = styled.div`
   &:before {
     content: "";
     position: absolute;
-    width: 40%;
+    width: 35%;
     height: 100vh;
     top: 0;
-    left: 5%;
+    left: 9%;
     background-image: url(${BackgroundImage});
     background-repeat: no-repeat;
     background-position: center;
@@ -121,8 +117,8 @@ const Style = styled.div`
 
   @media (max-width: 480px) {
     &:before {
-      width: 100%;
-      left: 0;
+      width: 88%;
+      left: 6%;
       opacity: 0.3;
     }
 
