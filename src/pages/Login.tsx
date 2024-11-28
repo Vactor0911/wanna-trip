@@ -238,114 +238,118 @@ const Login = () => {
 
     try {
       // Step 1: 카카오 서버에서 Access Token 발급
-      const tokenResponse = await axios.post(
-        "https://kauth.kakao.com/oauth/token",
-        null,
-        {
+      await axios
+        .post("https://kauth.kakao.com/oauth/token", null, {
           params: {
             grant_type: "authorization_code",
             client_id: KAKAO_CLIENT_ID,
             redirect_uri: KAKAO_REDIRECT_URI,
             code: code,
           },
-        }
-      );
-
-      const accessToken = tokenResponse.data.access_token;
-
-      // Step 2: 사용자 정보 가져오기
-      const userInfoResponse = await axios.get(
-        "https://kapi.kakao.com/v2/user/me",
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      const { id, properties, kakao_account } = userInfoResponse.data;
-      const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
-      const nickname = properties.nickname;
-
-      // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-      const serverResponse = await axios.post(
-        `${HOST}:${PORT}/api/login/kakao`,
-        {
-          email,
-          name: nickname,
-          loginType: "kakao", // 간편 로그인 타입 전달
-          token: accessToken,
-        }
-      );
-
-      // Step 4: 로그인 상태 업데이트
-      setLoginState({
-        isLoggedIn: true,
-        email: email,
-        loginType: "kakao",
-        loginToken: accessToken,
-      });
-
-      // 서버 응답 처리
-      console.log("로그인 성공:", serverResponse.data.message);
-
-      // 로그인 성공 메시지 표시
-      alert(`${nickname}님 환영합니다!`);
-
-      // Step 5: URL의 code 제거
-      window.history.replaceState(null, "", "/login");
-
-      navigate("/template"); // 성공 후 페이지 이동
+        })
+        .then((tokenResponse) => {
+          const accessToken = tokenResponse.data.access_token;
+    
+          // Step 2: 사용자 정보 가져오기
+          return axios.get("https://kapi.kakao.com/v2/user/me", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }).then((userInfoResponse) => {
+            const { id, properties, kakao_account } = userInfoResponse.data;
+            const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
+            const nickname = properties.nickname;
+    
+            // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
+            return axios.post(`${HOST}:${PORT}/api/login/kakao`, {
+              email,
+              name: nickname,
+              loginType: "kakao", // 간편 로그인 타입 전달
+              token: accessToken,
+            }).then((serverResponse) => {
+              // Step 4: 로그인 상태 업데이트
+              setLoginState({
+                isLoggedIn: true,
+                email: email,
+                loginType: "kakao",
+                loginToken: accessToken,
+              });
+    
+              // 서버 응답 처리
+              console.log("로그인 성공:", serverResponse.data.message);
+    
+              // 로그인 성공 메시지 표시
+              alert(`${nickname}님 환영합니다!`);
+    
+              // Step 5: URL의 code 제거
+              window.history.replaceState(null, "", "/login");
+    
+              // 성공 후 페이지 이동
+              navigate("/template");
+            });
+          });
+        })
+        .catch((error) => {
+          // 각 단계에서 발생한 에러 처리
+          console.error("카카오 로그인 실패:", error);
+          alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+        });
     } catch (error) {
-      console.error("카카오 로그인 실패:", error);
-      alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+      // 예기치 않은 에러 처리
+      console.error("카카오 로그인 처리 중 오류:", error);
+      alert("로그인 처리 중 오류가 발생했습니다.");
     }
-  }; // 카카오 간편 로그인 시작
+    
+  }; // 카카오 간편 로그인 끝
 
   //일반 로그인 기능 시작
-  const handleLoginClick = async (e: React.FormEvent) => {
+  const handleLoginClick = (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     // 입력값 검증
     if (!email || !password) {
       alert("이메일과 비밀번호를 입력해 주세요.");
       return;
     }
-
+  
     setIsLoading(true); // 로딩 상태 활성화
-    try {
-      // POST /api/login 요청
-      const response = await axios.post(`${HOST}:${PORT}/api/login`, {
+  
+    // 서버에 로그인 요청
+    axios
+      .post(`${HOST}:${PORT}/api/login`, {
         email: email,
         password: password,
+      })
+      .then((response) => {
+        const { nickname, token } = response.data;
+  
+        // 로그인 성공 메시지
+        alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
+  
+        // 로그인 상태 업데이트
+        setLoginState({
+          isLoggedIn: true,
+          email: email,
+          loginType: "normal", // 일반 로그인
+          loginToken: token,
+        });
+  
+        // 성공 후 페이지 이동
+        navigate("/template");
+      })
+      .catch((error) => {
+        if (error.response) {
+          console.error("서버 오류:", error.response.data.message);
+          alert(error.response.data.message || "로그인 실패");
+        } else {
+          console.error("요청 오류:", error.message);
+          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+        }
+  
+        // 로그인 실패 시 비밀번호 초기화
+        setPassword("");
+      })
+      .finally(() => {
+        setIsLoading(false); // 로딩 상태 비활성화
       });
-
-      // 서버 응답에서 사용자 정보 추출
-      const { nickname } = response.data;
-
-      // 로그인 성공 메시지
-      alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-
-      // 로그인 상태 업데이트 그냥 둬도 됨
-      setLoginState({
-        isLoggedIn: true,
-        email: email,
-        loginType: "normal", // 일반 로그인
-        loginToken: response.data.token,
-      });
-
-      // 성공 후 페이지 이동
-      navigate("/template");
-    } catch (error: any) {
-      if (error.response) {
-        console.error("서버 오류:", error.response.data.message);
-        alert(error.response.data.message || "로그인 실패");
-      } else {
-        console.error("요청 오류:", error.message);
-        alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
-      }
-      setPassword(""); // 로그인 실패 시 비밀번호 초기화
-    } finally {
-      setIsLoading(false); // 로딩 상태 비활성화
-    }
   }; //일반 로그인 기능 끝
 
   return (

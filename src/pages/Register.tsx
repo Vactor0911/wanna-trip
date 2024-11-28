@@ -170,63 +170,62 @@ const Register = () => {
       console.error('닉네임을 입력해주세요.');
       alert("닉네임을 입력해주세요.");
       return;
-  }
-
+    }
 
     if (password !== password_comparison) {
       alert("비밀번호가 일치하지 않습니다.");
       return;
     }
 
-
-
     console.log('이메일과 비밀번호로 회원가입 요청을 보냅니다:', { email, password });
 
-    try {
-        // Axios POST 요청
-        const response = await axios.post(`${HOST}:${PORT}/api/register`, {
-          email: email,
-          password: password,
-          name: name
-        });
+    // 서버로 회원가입 요청 전송
+    axios
+    .post(`${HOST}:${PORT}/api/register`, {
+      email: email,
+      password: password,
+      name: name,
+    })
+    .then((response) => {
+      // 서버로부터 성공 메시지를 받은 경우
+      console.log("회원가입 성공:", response.data.message);
 
-        // 서버로부터 성공 메시지를 받은 경우
-        console.log('Signup successful:', response.data.message);
+      // 사용자에게 성공 메시지 보여주기 (UI 반영)
+      alert("회원가입이 성공적으로 완료되었습니다!");
+      navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
+    })
+    .catch((error) => {
+      // 서버로부터 반환된 에러 메시지 확인
+      if (error.response) {
+        console.error("서버가 오류를 반환했습니다:", error.response.data.message);
+        alert(`Error: ${error.response.data.message}`);
+      } else {
+        console.error("요청을 보내는 중 오류가 발생했습니다:", error.message);
+        alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+      }
+    });
 
-        // 사용자에게 성공 메시지 보여주기 (UI 반영)
-        alert('회원가입이 성공적으로 완료되었습니다!');
-        navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
-
-    } catch (error) {
-        // 서버로부터 반환된 에러 메시지 확인
-        if (error.response) {
-            console.error('서버가 오류를 반환했습니다:', error.response.data.message);
-            alert(`Error: ${error.response.data.message}`);
-        } else {
-            console.error('요청을 보내는 중 오류가 발생했습니다:', error.message);
-            alert('예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.');
-        }
-    }
-  };//회원가입 끝
+  };  //회원가입 끝
 
   //이메일 중복 검사 시작
   const handleCheckEmail = async () => {
-    try {
-      const response = await axios.post(`${HOST}:${PORT}/api/emailCheck`, {
-        email: email, // 사용자가 입력한 이메일
-      });
-  
+    axios
+    .post(`${HOST}:${PORT}/api/emailCheck`, {
+      email: email, // 사용자가 입력한 이메일
+    })
+    .then((response) => {
       const { success, message } = response.data;
-  
+
       if (success) {
         alert(message); // "사용 가능한 이메일입니다."
       } else {
         alert(message); // "이미 사용 중인 이메일입니다."
       }
-    } catch (error) {
+    })
+    .catch((error) => {
       console.error("이메일 중복 검사 오류:", error);
       alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-    }
+    });
   };  //이메일 중복 검사 끝
 
 
