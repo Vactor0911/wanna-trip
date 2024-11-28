@@ -1,7 +1,26 @@
-import styled from "@emotion/styled";
-import { Button } from "@mui/material";
-import DownloadIcon from '@mui/icons-material/Download';
-import SaveIcon from '@mui/icons-material/Save';
+import styled from "@emotion/styled"; // 스타일 추가
+import { Button } from "@mui/material"; // 버튼 추가
+import DownloadIcon from '@mui/icons-material/Download'; // 다운로드 아이콘 추가
+import SaveIcon from '@mui/icons-material/Save'; // 저장 아이콘 추가
+import AddIcon from "@mui/icons-material/Add"; // 플러스 아이콘 추가
+import ContentCopyIcon from "@mui/icons-material/ContentCopy"; // 복사 아이콘 추가
+import DeleteIcon from "@mui/icons-material/Delete"; // 쓰레기통 아이콘 추가
+import MenuIcon from "@mui/icons-material/Menu"; // 메뉴 아이콘 추가
+import { useState } from "react";
+
+interface Plan {
+  time: string;
+  activity: string;
+  image: string;
+}
+
+interface DayPlans {
+  day1: Plan[];
+  day2: Plan[];
+  day3: Plan[];
+  day4: Plan[];
+}
+
 
 const Style = styled.div`
   display: flex;
@@ -14,6 +33,7 @@ const Style = styled.div`
     justify-content: space-between;
     align-items: center;
     width: 100%;
+
     padding: 10px 20px;
     background-color: #47536b;
     height: 80px;
@@ -34,6 +54,7 @@ const Style = styled.div`
     flex-direction: column;
     width: calc(100% - 25px);
     height: 100%;
+
     background-color: #2d405e;
     position: relative;
   }
@@ -43,6 +64,7 @@ const Style = styled.div`
     justify-content: space-between;
     height: 100px;
     align-items: center;
+    
     padding: 10px 50px;
     padding-right: 20px;
     color: white;
@@ -66,6 +88,7 @@ const Style = styled.div`
     position: absolute;
     width: 25px;
     height: 100%;
+    
     top: 0;
     left: -25px;
     background-color: #4D5D77;
@@ -76,6 +99,14 @@ const Style = styled.div`
     width: 300px;
   }
 `;
+
+const savebtn = () => {
+  alert("저장되었습니다.");
+}
+
+const downloadbtn = () => {
+  alert("다운로드가 되었습니다.");
+}
 
 const NewTemplate = () => {
   return (
@@ -92,17 +123,19 @@ const NewTemplate = () => {
         <div className="template-title">
           <h2>MyBoard</h2>
           <div className="button-container">
-            <Button variant="contained" startIcon={<DownloadIcon />}>
+            <Button onClick={savebtn} variant="contained" startIcon={<DownloadIcon />}>
               저장하기
             </Button>
-            <Button variant="contained" startIcon={<SaveIcon />}>
+            <Button onClick={downloadbtn} variant="contained" startIcon={<SaveIcon />}>
               다운로드
             </Button>
           </div>
         </div>
-        <div className="board-container"></div>
+        <div className="board-container">
+          <div className="board-box"></div>
+          <div className="board-content"></div>
+        </div>
         <div className="left-menu">
-
         </div>
       </div>
     </Style>
