@@ -74,11 +74,6 @@ const Style = styled.div`
     width: 100%;
   }
 
-  .checkbox-container {
-    display: flex;
-    align-self: end;
-  }
-
   .button-wrapper {
     display: flex;
     justify-content: center;
@@ -100,12 +95,6 @@ const Style = styled.div`
 
   p.register a:hover {
     text-decoration: underline;
-  }
-
-  .social-login {
-    display: flex;
-    justify-content: center;
-    gap: 1.5em;
   }
 
   .wrapper {
@@ -154,7 +143,7 @@ const Style = styled.div`
 
 const Register = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isPasswordVisible2, setIsPasswordVisible2] = useState(false);
+  const [isPasswordCheckVisible, setIsPasswordCheckVisible] = useState(false);
 
   return (
     <Style>
@@ -242,7 +231,7 @@ const Register = () => {
             backgroundColor: "#EBEBEB",
             borderRadius: "10px",
           }}
-          type={isPasswordVisible ? "text" : "password"}
+          type={isPasswordCheckVisible ? "text" : "password"}
           placeholder="비밀번호 재입력"
           startAdornment={
             <InputAdornment position="start">
@@ -260,10 +249,10 @@ const Register = () => {
             <InputAdornment position="end">
               <IconButton
                 onClick={() => {
-                  setIsPasswordVisible2(!isPasswordVisible2);
+                  setIsPasswordCheckVisible(!isPasswordCheckVisible);
                 }}
               >
-                {isPasswordVisible2 ? (
+                {isPasswordCheckVisible ? (
                   <VisibilityIcon sx={{ color: "black" }} />
                 ) : (
                   <VisibilityOffIcon sx={{ color: "black" }} />
