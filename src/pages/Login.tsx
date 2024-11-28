@@ -11,14 +11,16 @@ import {
   IconButton,
   InputAdornment,
   OutlinedInput,
+  Typography,
 } from "@mui/material";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import NaverIcon from "../assets/images/naver.png";
 import GoogleIcon from "../assets/images/google.png";
 import KakaoIcon from "../assets/images/kakao.png";
+import EmailIcon from "@mui/icons-material/Email";
+
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -59,7 +61,7 @@ const Style = styled.div`
     min-width: 400px;
     height: 100%;
     margin-right: 10%;
-    gap: 2em;
+    gap: 1em;
   }
 
   .title {
@@ -69,10 +71,10 @@ const Style = styled.div`
     color: white;
   }
   .title h1 {
-    font-size: 2em;
+    font-size: 2.3em;
   }
   .title p {
-    font-size: 1.5em;
+    font-size: 1.6em;
   }
 
   .button-container {
@@ -100,14 +102,25 @@ const Style = styled.div`
   }
 
   p.register a {
-    color: #ebebeb;
-    margin-left: 20px;
+    color: ${color.link};
+    margin-left: 5px;
+    text-decoration: none;
+  }
+  
+  p.register a:hover {
+    text-decoration: underline;
   }
 
   .social-login {
     display: flex;
     justify-content: center;
-    gap: 1em;
+    gap: 1.5em;
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 
   @media (max-width: 768px) {
@@ -135,8 +148,6 @@ const Style = styled.div`
 
     .button-container {
       flex-direction: column;
-      align-items: center;
-      align-self: center;
       width: auto;
       gap: 1em;
     }
@@ -145,6 +156,7 @@ const Style = styled.div`
     .button-wrapper #btn-login {
       width: 100%;
     }
+  
   }
 `;
 
@@ -301,11 +313,13 @@ const Login = () => {
   return (
     <Style>
       <div className="login-form">
+        {/* 타이틀 */}
         <div className="title">
           <h1>여행갈래?</h1>
           <p>세상에서 가장 간단한 계획서</p>
         </div>
 
+        {/* 아이디 입력 */}
         <OutlinedInput
           sx={{
             backgroundColor: "#EBEBEB",
@@ -318,7 +332,7 @@ const Login = () => {
 
           startAdornment={
             <InputAdornment position="start">
-              <PersonRoundedIcon
+              <EmailIcon
                 sx={{
                   color: "black",
                   transform: "scale(1.5)",
@@ -329,101 +343,109 @@ const Login = () => {
           }
         />
 
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          type={isPasswordVisible ? "text" : "password"}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
+        <div className="wrapper">
+          {/* 비밀번호 입력 */}
+          <OutlinedInput
+            sx={{
+              backgroundColor: "#EBEBEB",
+              borderRadius: "10px",
+            }}
+            type={isPasswordVisible ? "text" : "password"}
+            placeholder="비밀번호"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
 
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon
+                  sx={{
+                    color: "black",
+                    transform: "scale(1.5)",
+                    marginRight: "20px",
+                  }}
+                />
+              </InputAdornment>
+            }
+            // 비밀번호 보임/안보임
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => {
+                    setIsPasswordVisible(!isPasswordVisible);
+                  }}
+                >
+                  {isPasswordVisible ? (
+                    <VisibilityIcon sx={{ color: "black" }} />
+                  ) : (
+                    <VisibilityOffIcon sx={{ color: "black" }} />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+
+        
+          {/* 버튼과 체크박스 */}
+          <div className="button-container">
+            <div className="checkbox-container">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="large"
+                    sx={{
+                      color: "#EBEBEB",
+                      transform: "translateX(5px)",
+                    }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>}
                 sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
+                  color: "white",
+                  transform: "translate(-5px, 14px)",
                 }}
               />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => {
-                  setIsPasswordVisible(!isPasswordVisible);
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    size="large"
+                    sx={{
+                      color: "#EBEBEB",
+                      transform: "translateX(5px)",
+                    }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: "1em" }}>로그인 상태 유지</Typography>}
+                sx={{
+                  color: "white",
+                  transform: "translate(-5px, 6px)",
+                }}
+              />
+            </div>
+            <div className="button-wrapper">
+              <Button
+                id="btn-login"
+                variant="contained"
+                onClick={handleLoginClick}
+                sx={{
+                  borderRadius: "50px",
+                  fontWeight: "bold",
+                  fontSize: "1.4em",
+                  padding: "5px 30px",
                 }}
               >
-                {isPasswordVisible ? (
-                  <VisibilityIcon sx={{ color: "black" }} />
-                ) : (
-                  <VisibilityOffIcon sx={{ color: "black" }} />
-                )}
-              </IconButton>
-            </InputAdornment>
-          }
-        />
-
-        <div className="button-container">
-          <div className="checkbox-container">
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="large"
-                  sx={{
-                    color: "#EBEBEB",
-                  }}
-                />
-              }
-              label="아이디 저장"
-              sx={{
-                color: "white",
-                textDecoration: "underline",
-                transform: "translateY(6px)",
-              }}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  size="large"
-                  sx={{
-                    color: "#EBEBEB",
-                  }}
-                />
-              }
-              label="로그인 상태 유지"
-              sx={{
-                color: "white",
-                textDecoration: "underline",
-                transform: "translateY(-6px)",
-              }}
-            />
-          </div>
-          <div className="button-wrapper">
-            <Button
-              id="btn-login"
-              variant="contained"
-              onClick={handleLoginClick}
-              sx={{
-                borderRadius: "50px",
-                fontWeight: "bold",
-                fontSize: "1.4em",
-                padding: "5px 30px",
-              }}
-            >
-              로그인
-            </Button>
+                로그인
+              </Button>
+            </div>
           </div>
         </div>
 
+        {/* 회원가입 링크 */}
         <p className="register">
           계정이 아직 없으신가요? <Link to="/register">회원가입</Link>
         </p>
 
+        {/* 소셜 로그인 */}
         <div className="social-login">
           <IconButton onClick={handleKakaoLogin}>
             <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
