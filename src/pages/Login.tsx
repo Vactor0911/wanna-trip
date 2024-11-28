@@ -312,6 +312,7 @@ const Login = () => {
   
     setIsLoading(true); // 로딩 상태 활성화
   
+    // 서버에 로그인 요청
     axios
       .post(`${HOST}:${PORT}/api/login`, {
         email: email,
