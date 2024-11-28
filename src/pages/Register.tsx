@@ -102,6 +102,7 @@ const Register = () => {
   //회원가입 시작
   const [email, setEmail] = useState(''); // 사용자 이메일
   const [password, setPassword] = useState(''); // 사용자 비밀번호
+  const [password_comparison, setPassword_comparison] = useState(''); // 사용자 비밀번호 재확인
   const [name, setName] = useState(''); // 사용자 이름
 
   const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
@@ -112,10 +113,25 @@ const Register = () => {
     e.preventDefault();
 
     // 전송 전 입력값 검증
-    if (!email || !password) {
+    if (!email || !password || !password_comparison) {
         console.error('이메일 또는 비밀번호가 비어있으면 안됩니다.');
+        alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
         return;
     }
+
+    if (!name) {
+      console.error('닉네임을 입력해주세요.');
+      alert("닉네임을 입력해주세요.");
+      return;
+  }
+
+
+    if (password !== password_comparison) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+
 
     console.log('이메일과 비밀번호로 회원가입 요청을 보냅니다:', { email, password });
 
@@ -210,7 +226,9 @@ const Register = () => {
         <LockIcon style={{ color: "black" }} />
         <Input 
           type={isConfirmPasswdVisible ? "text" : "password"}
-          placeholder="비밀번호 확인"
+          placeholder="비밀번호 재확인"
+          value={password_comparison}
+          onChange={(e) => setPassword_comparison(e.target.value)}
           required
         />
           {isConfirmPasswdVisible ? (
