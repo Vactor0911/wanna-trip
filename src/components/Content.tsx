@@ -10,7 +10,7 @@ interface ContentProps {
 const ContentStyle = styled.div`
   background-color: #f5f5f5;
   border-radius: 8px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -31,7 +31,6 @@ const ContentStyle = styled.div`
 
   img {
     width: 100%;
-    height: 100px;
     object-fit: cover;
     border-radius: 8px;
   }
