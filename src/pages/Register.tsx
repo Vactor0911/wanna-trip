@@ -209,6 +209,11 @@ const Register = () => {
 
   //이메일 중복 검사 시작
   const handleCheckEmail = async () => {
+    if (!email) {
+      alert("이메일을 입력해주세요.");
+      return;
+    }
+
     axios
     .post(`${HOST}:${PORT}/api/emailCheck`, {
       email: email, // 사용자가 입력한 이메일

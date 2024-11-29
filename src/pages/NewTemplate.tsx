@@ -104,17 +104,15 @@ const NewTemplate = () => {
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
 
 
-  // Access Token 갱신 함수 시작
+  // Access Token 갱신 함수
   const refreshAccessToken = () => {
     return axios
-      .post(`${HOST}:${PORT}/api/token/refresh`, {
-        email: email,
-      })
+      .post(`${HOST}:${PORT}/api/token/refresh`, { email })
       .then((response) => {
         const newToken = response.data.token;
         setLoginState((prevState) => ({
           ...prevState,
-          loginToken: newToken,
+          loginToken: newToken, // 갱신된 토큰 저장
         }));
         return newToken; // 갱신된 토큰 반환
       })
@@ -122,65 +120,60 @@ const NewTemplate = () => {
         console.error("Access Token 갱신 실패:", error);
         alert("세션이 만료되었습니다. 다시 로그인해주세요.");
         setLoginState({
-          isLoggedIn: false,
-          email: "",
-          loginType: "normal",
-          loginToken: "",
+          isLoggedIn: false, // 로그인 상태 초기화
+          email: "", // 이메일 초기화
+          loginType: "normal", // 로그인 타입 초기화
+          loginToken: "", // 토큰 초기화
         });
-        navigate("/login");
+        navigate("/login"); // 로그인 페이지로 이동
       });
-  };  // Access Token 갱신 함수 끝
-  
+  };
   
 
   // 로그아웃 기능 구현 시작
   const handleLogoutClick = () => {
     if (!isLoggedIn) {
-      alert("로그인이 필요합니다.");
+      alert("로그인이 필요합니다."); // 로그인 상태가 아닌 경우 알림
       return;
     }
-  
+
     let currentToken = loginToken;
-  
-    // Access Token 갱신 (간편 로그인 사용자만 처리)
+
+    // Access Token 갱신 (카카오 간편 로그인 사용자만 처리)
     const refreshTokenPromise =
       loginType === "kakao" && !currentToken
         ? refreshAccessToken().then((newToken) => {
-            currentToken = newToken;
+            currentToken = newToken; // 갱신된 토큰을 설정
           })
-        : Promise.resolve();
-  
+        : Promise.resolve(); // 일반 로그인 사용자는 바로 진행
+
     refreshTokenPromise
       .then(() => {
-        // 로그아웃 요청
+        // 로그아웃 요청 (카카오 간편 로그인 또는 일반 로그인 모두 처리)
         return axios.post(`${HOST}:${PORT}/api/logout`, {
           email: email,
-          token: loginType === "kakao" ? currentToken : null, // 일반 로그인은 null
+          token: loginType === "kakao" ? currentToken : null, // 카카오: 토큰 전달, 일반: null
         });
       })
       .then((response) => {
         if (response.data.success) {
-          alert("로그아웃이 성공적으로 완료되었습니다.");
-          console.log("로그아웃 성공:", response.data.message);
+          alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+          setLoginState({
+            isLoggedIn: false, // 로그인 상태 초기화
+            email: "", // 이메일 초기화
+            loginType: "normal", // 로그인 타입 초기화
+            loginToken: "", // 토큰 초기화
+          });
+          navigate("/login"); // 로그인 페이지로 이동
         } else {
-          console.error("로그아웃 실패:", response.data.message);
-          alert("로그아웃 처리에 실패했습니다.");
+          alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
         }
-  
-        // 상태 초기화
-        setLoginState({
-          isLoggedIn: false,
-          email: "",
-          loginType: "normal",
-          loginToken: "",
-        });
-        navigate("/login");
       })
       .catch((error) => {
-        console.error("로그아웃 처리 중 오류 발생:", error);
-        alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.");
+        alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
       });
-  };   // 로그아웃 기능 구현 끝
+  }; // 로그아웃 기능 구현 끝
+
 
   return (
     <Style>
