@@ -9,6 +9,7 @@ import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai";   // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
 import { loginStateAtom } from "../state";  // loginState 불러오기
+import LoginButton from "../components/LoginButton";
 
 const Style = styled.div`
   display: flex;
@@ -186,7 +187,7 @@ const NewTemplate = () => {
 
             {isLoggedIn ? (
               // 로그아웃 기능 추가
-              <Button variant="contained" onClick={handleLogoutClick}>로그아웃</Button>
+              <LoginButton onClick={handleLogoutClick} />
             ) : (
               <Button variant="contained" onClick={handleLoginClick}>로그인/회원가입</Button>
             )}

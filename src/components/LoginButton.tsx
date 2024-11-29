@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import PersonIcon from "@mui/icons-material/Person"; // 사람 아이콘 추가
+import React from "react";
 
 const LoginButtonStyle = styled.button`
   display: flex;
@@ -22,13 +23,15 @@ const LoginButtonStyle = styled.button`
   }
 `;
 
-const LoginButton = () => {
+const LoginButton = ({ onClick }: { onClick: () => void }) => {
   return (
-    <LoginButtonStyle>
-      <PersonIcon sx={{
-        fill: "white",
-        transform: "scale(1.5)"
-      }} />
+    <LoginButtonStyle onClick={onClick}>
+      <PersonIcon
+        sx={{
+          fill: "white",
+          transform: "scale(1.5)",
+        }}
+      />
     </LoginButtonStyle>
   );
 };
