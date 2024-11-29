@@ -224,81 +224,75 @@ const Login = () => {
   }, []);
 
   // 카카오 간편 로그인 시작
-  const handleKakaoLogin = async () => {
+  const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
     const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
-
+  
     if (!code) {
       // 카카오 로그인 화면으로 이동
-      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&prompt=login`;
       window.location.href = kakaoAuthUrl;
       return;
     }
-
-    try {
+  
+    axios
       // Step 1: 카카오 서버에서 Access Token 발급
-      await axios
-        .post("https://kauth.kakao.com/oauth/token", null, {
-          params: {
-            grant_type: "authorization_code",
-            client_id: KAKAO_CLIENT_ID,
-            redirect_uri: KAKAO_REDIRECT_URI,
-            code: code,
-          },
-        })
-        .then((tokenResponse) => {
-          const accessToken = tokenResponse.data.access_token;
-    
-          // Step 2: 사용자 정보 가져오기
-          return axios.get("https://kapi.kakao.com/v2/user/me", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          }).then((userInfoResponse) => {
-            const { id, properties, kakao_account } = userInfoResponse.data;
-            const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
-            const nickname = properties.nickname;
-    
-            // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-            return axios.post(`${HOST}:${PORT}/api/login/kakao`, {
-              email,
-              name: nickname,
-              loginType: "kakao", // 간편 로그인 타입 전달
-              token: accessToken,
-            }).then((serverResponse) => {
-              // Step 4: 로그인 상태 업데이트
-              setLoginState({
-                isLoggedIn: true,
-                email: email,
-                loginType: "kakao",
-                loginToken: accessToken,
-              });
-    
-              // 서버 응답 처리
-              console.log("로그인 성공:", serverResponse.data.message);
-    
-              // 로그인 성공 메시지 표시
-              alert(`${nickname}님 환영합니다!`);
-    
-              // Step 5: URL의 code 제거
-              window.history.replaceState(null, "", "/login");
-    
-              // 성공 후 페이지 이동
-              navigate("/template");
+      .post("https://kauth.kakao.com/oauth/token", null, {
+        params: {
+          grant_type: "authorization_code",
+          client_id: KAKAO_CLIENT_ID,
+          redirect_uri: KAKAO_REDIRECT_URI,
+          code: code,
+        },
+      })
+      .then((tokenResponse) => {
+        const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
+  
+        // Step 2: 사용자 정보 가져오기
+        return axios.get("https://kapi.kakao.com/v2/user/me", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }).then((userInfoResponse) => {
+          const { id, properties, kakao_account } = userInfoResponse.data; // 사용자 정보
+          const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
+          const nickname = properties.nickname; // 사용자 닉네임
+  
+          // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
+          return axios.post(`${HOST}:${PORT}/api/login/kakao`, {
+            email,
+            name: nickname,
+            loginType: "kakao", // 간편 로그인 타입 전달
+            token: accessToken,
+          }).then((serverResponse) => {
+            // Step 4: 로그인 상태 업데이트
+            setLoginState({
+              isLoggedIn: true,
+              email: email,
+              loginType: "kakao",
+              loginToken: accessToken,
             });
+  
+            // 서버 응답 처리
+            console.log("로그인 성공:", serverResponse.data.message);
+  
+            // 로그인 성공 메시지 표시
+            alert(`${nickname}님 환영합니다!`);
+  
+            // Step 5: URL의 code 제거
+            window.history.replaceState(null, "", "/login");
+  
+            // 성공 후 페이지 이동
+            navigate("/template");
           });
-        })
-        .catch((error) => {
-          // 각 단계에서 발생한 에러 처리
-          console.error("카카오 로그인 실패:", error);
-          alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
         });
-    } catch (error) {
-      // 예기치 않은 에러 처리
-      console.error("카카오 로그인 처리 중 오류:", error);
-      alert("로그인 처리 중 오류가 발생했습니다.");
-    }
-    
-  }; // 카카오 간편 로그인 끝
+      })
+      .catch((error) => {
+        // 각 단계에서 발생한 에러 처리
+        console.error("카카오 로그인 실패:", error);
+        alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+      });
+  };  // 카카오 간편 로그인 끝
+
 
   //일반 로그인 기능 시작
   const handleLoginClick = (e: React.FormEvent) => {
