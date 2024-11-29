@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled"; // 스타일 추가
 import { Button } from "@mui/material"; // 버튼 추가
-import DownloadIcon from '@mui/icons-material/Download'; // 다운로드 아이콘 추가
-import SaveIcon from '@mui/icons-material/Save'; // 저장 아이콘 추가
+import DownloadIcon from "@mui/icons-material/Download"; // 다운로드 아이콘 추가
+import SaveIcon from "@mui/icons-material/Save"; // 저장 아이콘 추가
 import { useNavigate } from "react-router-dom";
 import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
-import { useAtomValue, useSetAtom } from "jotai";   // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { loginStateAtom } from "../state";  // loginState 불러오기
+import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
+import { loginStateAtom } from "../state"; // loginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Card from "../components/Card"; // Card 컴포넌트 추가
@@ -118,10 +118,10 @@ const NewTemplate = () => {
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
   const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
-  const { isLoggedIn, email, loginType, loginToken } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
+  const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
+  const { isLoggedIn, email, loginType, loginToken } =
+    useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
-
 
   // Access Token 갱신 함수
   const refreshAccessToken = () => {
@@ -147,7 +147,6 @@ const NewTemplate = () => {
         navigate("/login"); // 로그인 페이지로 이동
       });
   };
-  
 
   // 로그아웃 기능 구현 시작
   const handleLogoutClick = () => {
@@ -193,6 +192,44 @@ const NewTemplate = () => {
       });
   }; // 로그아웃 기능 구현 끝
 
+  const [dayPlans, setDayPlans] = useState<DayPlans>({
+    day1: [
+      {
+        time: "09:00 - 11:00",
+        activity: "동대문 시장 쇼핑",
+        image: "image_url1",
+      },
+      { time: "11:20 - 12:00", activity: "점심 식사", image: "image_url2" },
+      { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
+      { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
+    ],
+    day2: [
+      { time: "10:00 - 12:00", activity: "명동 쇼핑", image: "image_url4" },
+      { time: "12:30 - 14:00", activity: "한식 식사", image: "image_url5" },
+    ],
+    day3: [
+      { time: "09:00 - 11:00", activity: "카페 탐방", image: "image_url6" },
+      { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" },
+    ],
+    day4: [
+      { time: "09:00 - 12:00", activity: "스터디", image: "image_url6" },
+      { time: "12:30 - 15:00", activity: "동아리", image: "image_url7" },
+    ],
+  });
+
+  const handleAddPlan = (dayKey: keyof DayPlans) => {
+    const newPlan = {
+      time: "시간 미정",
+      activity: "새로운 활동",
+      image: "image_url_new",
+    };
+
+    setDayPlans((prevPlans) => ({
+      ...prevPlans,
+      [dayKey]: [...prevPlans[dayKey], newPlan],
+    }));
+  };
+
   return (
     <Style>
       <header>
@@ -200,44 +237,51 @@ const NewTemplate = () => {
           <h2 className="title">여행갈래</h2>
         </div>
         <div className="container">
-            <div style={{ display: 'flex', gap: '20px' }}>
-
+          <div style={{ display: "flex", gap: "20px" }}>
             {isLoggedIn ? (
               // 로그아웃 기능 추가
               <LoginButton onClick={handleLogoutClick} />
             ) : (
-              <Button variant="contained" onClick={handleLoginClick}>로그인/회원가입</Button>
+              <Button variant="contained" onClick={handleLoginClick}>
+                로그인/회원가입
+              </Button>
             )}
-
-            </div>
+          </div>
         </div>
       </header>
       <div className="main-container">
         <div className="template-title">
           <h2>MyBoard</h2>
           <div className="button-container">
-            <Button
-              onClick={savebtn}
-              variant="contained"
-              startIcon={<DownloadIcon />}
-            >
+            <Button variant="contained" startIcon={<DownloadIcon />}>
               저장하기
             </Button>
-            <Button
-              onClick={downloadbtn}
-              variant="contained"
-              startIcon={<SaveIcon />}
-            >
+            <Button variant="contained" startIcon={<SaveIcon />}>
               다운로드
             </Button>
           </div>
         </div>
         <div className="board-container">
-          <Card
-            day="Day 1"
-            plans={dayPlans.day1}
-            onAddPlan={() => addplanhandler("day1")}
-          />
+        <Card
+          day="Day 1"
+          plans={dayPlans.day1}
+          onAddPlan={() => handleAddPlan("day1")}
+        />
+        <Card
+          day="Day 2"
+          plans={dayPlans.day2}
+          onAddPlan={() => handleAddPlan("day2")}
+        />
+        <Card
+          day="Day 3"
+          plans={dayPlans.day3}
+          onAddPlan={() => handleAddPlan("day3")}
+        />
+        <Card
+          day="Day 4"
+          plans={dayPlans.day4}
+          onAddPlan={() => handleAddPlan("day4")}
+        />
         </div>
         <div className="left-menu"></div>
       </div>
