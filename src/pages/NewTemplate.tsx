@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled"; // 스타일 추가
 import { Button } from "@mui/material"; // 버튼 추가
 import DownloadIcon from "@mui/icons-material/Download"; // 다운로드 아이콘 추가
@@ -122,39 +122,45 @@ const NewTemplate = () => {
   const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
   const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
+  useEffect(() => {
+    const savedLoginState = localStorage.getItem("loginState");
+    if (savedLoginState) {
+      setLoginState(JSON.parse(savedLoginState));
+    }
+  }, [setLoginState]);
 
   // Access Token 갱신 함수
-const refreshAccessToken = () => {
-  return axios
-    .post(`${HOST}:${PORT}/api/token/refresh`, { 
-      email, 
-      loginType,  
-      refreshToken: refreshToken, 
-    })
-    .then((response) => {
-      const newToken = response.data.token;
+  const refreshAccessToken = () => {
+    return axios
+      .post(`${HOST}:${PORT}/api/token/refresh`, { 
+        email, 
+        loginType,  
+        refreshToken: refreshToken, 
+      })
+      .then((response) => {
+        const newToken = response.data.token;
 
-      setLoginState((prevState) => ({
-        ...prevState,
-        loginToken: newToken, // 갱신된 토큰 저장
-      }));
+        setLoginState((prevState) => ({
+          ...prevState,
+          loginToken: newToken, // 갱신된 토큰 저장
+        }));
 
-      return newToken; // 갱신된 토큰 반환
-    })
-    .catch((error) => {
-      console.error("Access Token 갱신 실패:", error);
-      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-      setLoginState({
-        isLoggedIn: false, // 로그인 상태 초기화
-        email: "", // 이메일 초기화
-        loginType: "normal", // 로그인 타입 초기화
-        loginToken: "", // 토큰 초기화
-        refreshToken: "", // 리프레시 토큰 초기화
+        return newToken; // 갱신된 토큰 반환
+      })
+      .catch((error) => {
+        console.error("Access Token 갱신 실패:", error);
+        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+        setLoginState({
+          isLoggedIn: false, // 로그인 상태 초기화
+          email: "", // 이메일 초기화
+          loginType: "normal", // 로그인 타입 초기화
+          loginToken: "", // 토큰 초기화
+          refreshToken: "", // 리프레시 토큰 초기화
+        });
+
+        navigate("/login"); // 로그인 페이지로 이동
       });
-
-      navigate("/login"); // 로그인 페이지로 이동
-    });
-};
+  };
 
 
   // 로그아웃 기능 구현 시작
@@ -186,14 +192,21 @@ const refreshAccessToken = () => {
       })
       .then((response) => {
         if (response.data.success) {
-          alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+
+          // LocalStorage에서 로그인 상태 제거
+          localStorage.removeItem("loginState");
+
+          // Jotai 상태 초기화
           setLoginState({
             isLoggedIn: false, // 로그인 상태 초기화
-            email: "", // 이메일 초기화
+            email: "",  // 이메일 초기화
             loginType: "normal", // 로그인 타입 초기화
             loginToken: "", // 토큰 초기화
             refreshToken: "", // 리프레시 토큰 초기화
           });
+
+          alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+
           navigate("/login"); // 로그인 페이지로 이동
         } else {
           alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
@@ -267,30 +280,21 @@ const refreshAccessToken = () => {
         <div className="template-title">
           <h2>MyBoard</h2>
           <div className="button-container">
-
-            <Button
-              // onClick={savebtn}
-              variant="contained"
-              startIcon={<DownloadIcon />}
-            >
+            <Button variant="contained" startIcon={<DownloadIcon />}>
               저장하기
             </Button>
-            <Button
-              // onClick={downloadbtn}
-              variant="contained"
-              startIcon={<SaveIcon />}
-            >
+            <Button variant="contained" startIcon={<SaveIcon />}>
               다운로드
             </Button>
           </div>
         </div>
         <div className="board-container">
 
-          {/* <Card
+          <Card
             day="Day 1"
             plans={dayPlans.day1}
-            onAddPlan={() => addplanhandler("day1")}
-          /> */}
+            onAddPlan={() => handleAddPlan("day1")}
+          />
 
         </div>
         <div className="left-menu"></div>
