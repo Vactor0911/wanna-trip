@@ -80,7 +80,7 @@ const Style = styled.div`
     align-self: center;
     color: white;
     word-spacing: 3px;
-    font-size: 1.2em;
+    font-size: 1.32em;
   }
 
   p.register a {
@@ -401,7 +401,7 @@ const Register = () => {
               sx={{
                 borderRadius: "50px",
                 fontWeight: "bold",
-                fontSize: "1.6em",
+                fontSize: "1.36em",
                 padding: "7px 30px",
               }}
             >
