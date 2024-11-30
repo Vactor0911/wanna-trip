@@ -113,40 +113,49 @@ const Style = styled.div`
 const NewTemplate = () => {
   const navigate = useNavigate();
 
-  const handleLoginClick = () => navigate("/login");
+  const handleLoginClick = () => navigate("/login");  // 로그인 페이지로 이동
   // const [email, setEmail] = useState(''); // 사용자 이메일
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
   const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const { isLoggedIn, email, loginType, loginToken } =
-    useAtomValue(loginStateAtom); // 로그인 상태 읽기
+
+  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
+  const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
 
   // Access Token 갱신 함수
-  const refreshAccessToken = () => {
-    return axios
-      .post(`${HOST}:${PORT}/api/token/refresh`, { email })
-      .then((response) => {
-        const newToken = response.data.token;
-        setLoginState((prevState) => ({
-          ...prevState,
-          loginToken: newToken, // 갱신된 토큰 저장
-        }));
-        return newToken; // 갱신된 토큰 반환
-      })
-      .catch((error) => {
-        console.error("Access Token 갱신 실패:", error);
-        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-        setLoginState({
-          isLoggedIn: false, // 로그인 상태 초기화
-          email: "", // 이메일 초기화
-          loginType: "normal", // 로그인 타입 초기화
-          loginToken: "", // 토큰 초기화
-        });
-        navigate("/login"); // 로그인 페이지로 이동
+const refreshAccessToken = () => {
+  return axios
+    .post(`${HOST}:${PORT}/api/token/refresh`, { 
+      email, 
+      loginType,  
+      refreshToken: refreshToken, 
+    })
+    .then((response) => {
+      const newToken = response.data.token;
+
+      setLoginState((prevState) => ({
+        ...prevState,
+        loginToken: newToken, // 갱신된 토큰 저장
+      }));
+
+      return newToken; // 갱신된 토큰 반환
+    })
+    .catch((error) => {
+      console.error("Access Token 갱신 실패:", error);
+      alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+      setLoginState({
+        isLoggedIn: false, // 로그인 상태 초기화
+        email: "", // 이메일 초기화
+        loginType: "normal", // 로그인 타입 초기화
+        loginToken: "", // 토큰 초기화
+        refreshToken: "", // 리프레시 토큰 초기화
       });
-  };
+
+      navigate("/login"); // 로그인 페이지로 이동
+    });
+};
+
 
   // 로그아웃 기능 구현 시작
   const handleLogoutClick = () => {
@@ -159,7 +168,7 @@ const NewTemplate = () => {
 
     // Access Token 갱신 (카카오 간편 로그인 사용자만 처리)
     const refreshTokenPromise =
-      loginType === "kakao" && !currentToken
+      (loginType === "kakao" || loginType === "google") && !currentToken
         ? refreshAccessToken().then((newToken) => {
             currentToken = newToken; // 갱신된 토큰을 설정
           })
@@ -167,10 +176,12 @@ const NewTemplate = () => {
 
     refreshTokenPromise
       .then(() => {
-        // 로그아웃 요청 (카카오 간편 로그인 또는 일반 로그인 모두 처리)
+        console.log("로그아웃 요청: 사용 중인 token: ", currentToken); // 디버깅용 로그 추가
+
+        // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
         return axios.post(`${HOST}:${PORT}/api/logout`, {
-          email: email,
-          token: loginType === "kakao" ? currentToken : null, // 카카오: 토큰 전달, 일반: null
+          email,
+          token: currentToken, // 현재 AccessToken 전달
         });
       })
       .then((response) => {
@@ -181,6 +192,7 @@ const NewTemplate = () => {
             email: "", // 이메일 초기화
             loginType: "normal", // 로그인 타입 초기화
             loginToken: "", // 토큰 초기화
+            refreshToken: "", // 리프레시 토큰 초기화
           });
           navigate("/login"); // 로그인 페이지로 이동
         } else {
@@ -188,6 +200,8 @@ const NewTemplate = () => {
         }
       })
       .catch((error) => {
+        console.log("로그아웃 요청 응답:", error.response ? error.response.data : error.message);
+        console.error("로그아웃 중 오류 발생:", error);
         alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
       });
   }; // 로그아웃 기능 구현 끝
@@ -253,35 +267,31 @@ const NewTemplate = () => {
         <div className="template-title">
           <h2>MyBoard</h2>
           <div className="button-container">
-            <Button variant="contained" startIcon={<DownloadIcon />}>
+
+            <Button
+              // onClick={savebtn}
+              variant="contained"
+              startIcon={<DownloadIcon />}
+            >
               저장하기
             </Button>
-            <Button variant="contained" startIcon={<SaveIcon />}>
+            <Button
+              // onClick={downloadbtn}
+              variant="contained"
+              startIcon={<SaveIcon />}
+            >
               다운로드
             </Button>
           </div>
         </div>
         <div className="board-container">
-        <Card
-          day="Day 1"
-          plans={dayPlans.day1}
-          onAddPlan={() => handleAddPlan("day1")}
-        />
-        <Card
-          day="Day 2"
-          plans={dayPlans.day2}
-          onAddPlan={() => handleAddPlan("day2")}
-        />
-        <Card
-          day="Day 3"
-          plans={dayPlans.day3}
-          onAddPlan={() => handleAddPlan("day3")}
-        />
-        <Card
-          day="Day 4"
-          plans={dayPlans.day4}
-          onAddPlan={() => handleAddPlan("day4")}
-        />
+
+          {/* <Card
+            day="Day 1"
+            plans={dayPlans.day1}
+            onAddPlan={() => addplanhandler("day1")}
+          /> */}
+
         </div>
         <div className="left-menu"></div>
       </div>
