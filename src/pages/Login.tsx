@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
 import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
-import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
+//import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
   display: flex;
@@ -35,20 +35,6 @@ const Style = styled.div`
   position: relative;
   background-color: ${color.background_main};
   z-index: 1;
-
-  &:before {
-    content: "";
-    position: absolute;
-    width: 20%;
-    height: 100vh;
-    top: 0;
-    left: 5%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
 
   .login-form {
     display: flex;
@@ -60,8 +46,6 @@ const Style = styled.div`
     margin-right: 10%;
     gap: 1em;
   }
-  background-color: ${color.background_main};
-  z-index: 1;
 
   &:before {
     content: "";
@@ -77,30 +61,6 @@ const Style = styled.div`
     z-index: -1;
   }
 
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 35%;
-    min-width: 400px;
-    height: 100%;
-    margin-right: 10%;
-    gap: 1em;
-  }
-
-  .title {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    color: white;
-  }
-  .title h1 {
-    font-size: 2.3em;
-  }
-  .title p {
-    font-size: 1.6em;
-  }
-
   .button-container {
     display: flex;
     justify-content: space-between;
@@ -117,12 +77,6 @@ const Style = styled.div`
   }
   .title p {
     font-size: 1.6em;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
   }
 
   .checkbox-container {
@@ -134,6 +88,7 @@ const Style = styled.div`
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-top: 10px;
   }
 
   p.register {
@@ -214,8 +169,8 @@ const Login = () => {
   const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
   const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
   const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  const google = (window as any).google;  // 구글 간편 로그인 추가
-  
+  const google = (window as any).google; // 구글 간편 로그인 추가
+
   // URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
@@ -223,7 +178,6 @@ const Login = () => {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
   }, []);
-
 
   //구글 간편 로그인 시작
   const handleGoogleLogin = (credentialResponse: any) => {
@@ -236,13 +190,13 @@ const Login = () => {
       alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       return;
     }
-  
+
     // 사용자 정보 추출
     const email = decoded.email;
     const name = decoded.name;
-  
+
     console.log("구글 로그인 성공:", { email, name });
-  
+
     // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
     axios
       .post(`${HOST}:${PORT}/api/login/google`, {
@@ -252,7 +206,7 @@ const Login = () => {
       })
       .then((response) => {
         const { accessToken, refreshToken } = response.data;
-  
+
         // Step 2: 로그인 상태 업데이트
         const loginState = {
           isLoggedIn: true,
@@ -261,13 +215,12 @@ const Login = () => {
           loginToken: accessToken,
           refreshToken: refreshToken, // RefreshToken 저장
         };
-      
+
         // Jotai 상태 업데이트
         setLoginState(loginState);
-      
+
         // LocalStorage에 저장
         localStorage.setItem("loginState", JSON.stringify(loginState));
-        
       })
       .then(() => {
         // Step 3: 성공 메시지 및 페이지 이동
@@ -279,23 +232,21 @@ const Login = () => {
         console.error("구글 로그인 처리 중 오류:", error);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       });
-  };      //구글 간편 로그인 끝
-
-
+  }; //구글 간편 로그인 끝
 
   // 카카오 간편 로그인 시작
   const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
     const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
-  
+
     if (!code) {
       // 카카오 로그인 화면으로 이동
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&prompt=login`;
       window.location.href = kakaoAuthUrl;
       return;
     }
-  
+
     axios
       // Step 1: 카카오 서버에서 Access Token 발급
       .post("https://kauth.kakao.com/oauth/token", null, {
@@ -308,73 +259,76 @@ const Login = () => {
       })
       .then((tokenResponse) => {
         const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
-  
-        // Step 2: 사용자 정보 가져오기
-        return axios.get("https://kapi.kakao.com/v2/user/me", {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }).then((userInfoResponse) => {
-          const { id, properties, kakao_account } = userInfoResponse.data; // 사용자 정보
-          const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
-          const nickname = properties.nickname; // 사용자 닉네임
-  
-          // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-          return axios.post(`${HOST}:${PORT}/api/login/kakao`, {
-            email,
-            name: nickname,
-            loginType: "kakao", // 간편 로그인 타입 전달
-            token: accessToken,
-          }).then((serverResponse) => {
-            const { accessToken, refreshToken } = serverResponse.data;
 
-            // Step 4: 로그인 상태 업데이트
-            const loginState = {
-              isLoggedIn: true,
-              email: email,
-              loginType: "kakao", //카카오 로그인
-              loginToken: accessToken,
-              refreshToken: refreshToken, // RefreshToken 저장
-            };
-          
-            // Jotai 상태 업데이트
-            setLoginState(loginState);
-          
-            // LocalStorage에 저장
-            localStorage.setItem("loginState", JSON.stringify(loginState));
-  
-            // 서버 응답 처리
-            console.log("로그인 성공:", serverResponse.data.message);
-  
-            // 로그인 성공 메시지 표시
-            alert(`${nickname}님 환영합니다!`);
-  
-            // Step 5: URL의 code 제거
-            window.history.replaceState(null, "", "/login");
-  
-            // 성공 후 페이지 이동
-            navigate("/template");
+        // Step 2: 사용자 정보 가져오기
+        return axios
+          .get("https://kapi.kakao.com/v2/user/me", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          .then((userInfoResponse) => {
+            const { id, properties, kakao_account } = userInfoResponse.data; // 사용자 정보
+            const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
+            const nickname = properties.nickname; // 사용자 닉네임
+
+            // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
+            return axios
+              .post(`${HOST}:${PORT}/api/login/kakao`, {
+                email,
+                name: nickname,
+                loginType: "kakao", // 간편 로그인 타입 전달
+                token: accessToken,
+              })
+              .then((serverResponse) => {
+                const { accessToken, refreshToken } = serverResponse.data;
+
+                // Step 4: 로그인 상태 업데이트
+                const loginState = {
+                  isLoggedIn: true,
+                  email: email,
+                  loginType: "kakao", //카카오 로그인
+                  loginToken: accessToken,
+                  refreshToken: refreshToken, // RefreshToken 저장
+                };
+
+                // Jotai 상태 업데이트
+                setLoginState(loginState);
+
+                // LocalStorage에 저장
+                localStorage.setItem("loginState", JSON.stringify(loginState));
+
+                // 서버 응답 처리
+                console.log("로그인 성공:", serverResponse.data.message);
+
+                // 로그인 성공 메시지 표시
+                alert(`${nickname}님 환영합니다!`);
+
+                // Step 5: URL의 code 제거
+                window.history.replaceState(null, "", "/login");
+
+                // 성공 후 페이지 이동
+                navigate("/template");
+              });
           });
-        });
       })
       .catch((error) => {
         // 각 단계에서 발생한 에러 처리
         console.error("카카오 로그인 실패:", error);
         alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
       });
-  };  // 카카오 간편 로그인 끝
-
+  }; // 카카오 간편 로그인 끝
 
   //일반 로그인 기능 시작
   const handleLoginClick = (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     // 입력값 검증
     if (!email || !password) {
       alert("이메일과 비밀번호를 입력해 주세요.");
       return;
     }
-  
+
     setIsLoading(true); // 로딩 상태 활성화
-  
+
     // 서버에 로그인 요청
     axios
       .post(`${HOST}:${PORT}/api/login`, {
@@ -383,25 +337,25 @@ const Login = () => {
       })
       .then((response) => {
         const { nickname, token } = response.data;
-  
+
         // 로그인 성공 메시지
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-  
+
         // 로그인 상태 업데이트
         const loginState = {
           isLoggedIn: true,
           email: email,
-          loginType: "normal",  //일반 로그인
+          loginType: "normal", //일반 로그인
           loginToken: token,
           refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
         };
-      
+
         // Jotai 상태 업데이트
         setLoginState(loginState);
-      
+
         // LocalStorage에 저장
         localStorage.setItem("loginState", JSON.stringify(loginState));
-  
+
         // 성공 후 페이지 이동
         navigate("/template");
       })
@@ -413,7 +367,7 @@ const Login = () => {
           console.error("요청 오류:", error.message);
           alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
         }
-  
+
         // 로그인 실패 시 비밀번호 초기화
         setPassword("");
       })
@@ -573,8 +527,12 @@ const Login = () => {
                 callback: handleGoogleLogin,
               });
               google.accounts.id.prompt();
-            }}>
-            <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px", cursor: "pointer" }} />
+            }}
+          >
+            <Avatar
+              src={GoogleIcon}
+              sx={{ width: "60px", height: "60px", cursor: "pointer" }}
+            />
           </IconButton>
         </div>
       </div>
