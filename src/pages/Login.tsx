@@ -25,7 +25,6 @@ import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
 import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
-import { GoogleOAuthProvider } from "@react-oauth/google";  // 구글 간편 로그인 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -255,13 +254,20 @@ const Login = () => {
         const { accessToken, refreshToken } = response.data;
   
         // Step 2: 로그인 상태 업데이트
-        return setLoginState({
+        const loginState = {
           isLoggedIn: true,
           email: email,
           loginType: "google",
-          loginToken: accessToken, // JWT 저장
-          refreshToken: refreshToken, // 리프레시 토큰 저장
-        });
+          loginToken: accessToken,
+          refreshToken: refreshToken, // RefreshToken 저장
+        };
+      
+        // Jotai 상태 업데이트
+        setLoginState(loginState);
+      
+        // LocalStorage에 저장
+        localStorage.setItem("loginState", JSON.stringify(loginState));
+        
       })
       .then(() => {
         // Step 3: 성공 메시지 및 페이지 이동
@@ -321,13 +327,19 @@ const Login = () => {
             const { accessToken, refreshToken } = serverResponse.data;
 
             // Step 4: 로그인 상태 업데이트
-            setLoginState({
+            const loginState = {
               isLoggedIn: true,
               email: email,
-              loginType: "kakao",
+              loginType: "kakao", //카카오 로그인
               loginToken: accessToken,
-              refreshToken, // RefreshToken 저장
-            });
+              refreshToken: refreshToken, // RefreshToken 저장
+            };
+          
+            // Jotai 상태 업데이트
+            setLoginState(loginState);
+          
+            // LocalStorage에 저장
+            localStorage.setItem("loginState", JSON.stringify(loginState));
   
             // 서버 응답 처리
             console.log("로그인 성공:", serverResponse.data.message);
@@ -376,13 +388,19 @@ const Login = () => {
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
   
         // 로그인 상태 업데이트
-        setLoginState({
+        const loginState = {
           isLoggedIn: true,
           email: email,
-          loginType: "normal", // 일반 로그인
+          loginType: "normal",  //일반 로그인
           loginToken: token,
-          // 여긴 원래 이렇게 생기는 거임 그냥 둬도 괜찮아요.
-        });
+          refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
+        };
+      
+        // Jotai 상태 업데이트
+        setLoginState(loginState);
+      
+        // LocalStorage에 저장
+        localStorage.setItem("loginState", JSON.stringify(loginState));
   
         // 성공 후 페이지 이동
         navigate("/template");
