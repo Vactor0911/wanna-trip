@@ -16,7 +16,6 @@ import {
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import NaverIcon from "../assets/images/naver.png";
 import GoogleIcon from "../assets/images/google.png";
 import KakaoIcon from "../assets/images/kakao.png";
 import EmailIcon from "@mui/icons-material/Email";
@@ -26,6 +25,8 @@ import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
 import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
+import { GoogleOAuthProvider } from "@react-oauth/google";  // 구글 간편 로그인 불러오기
+import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
   display: flex;
@@ -205,7 +206,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  // 아이디 저장 기능 추가- 필요
+  // 이메일 저장 기능 추가- 필요
 
   // 로그인 기능 추가
   const [email, setEmail] = useState(""); // 이메일 값
@@ -214,7 +215,8 @@ const Login = () => {
   const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
   const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
   const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-
+  const google = (window as any).google;  // 구글 간편 로그인 추가
+  
   // URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
@@ -222,6 +224,58 @@ const Login = () => {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
   }, []);
+
+
+  //구글 간편 로그인 시작
+  const handleGoogleLogin = (credentialResponse: any) => {
+    // 구글에서 받은 Credential 디코딩
+    let decoded: any;
+    try {
+      decoded = jwtDecode(credentialResponse.credential);
+    } catch (error) {
+      console.error("구글 Credential 디코딩 실패:", error);
+      alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      return;
+    }
+  
+    // 사용자 정보 추출
+    const email = decoded.email;
+    const name = decoded.name;
+  
+    console.log("구글 로그인 성공:", { email, name });
+  
+    // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
+    axios
+      .post(`${HOST}:${PORT}/api/login/google`, {
+        email,
+        name,
+        loginType: "google",
+      })
+      .then((response) => {
+        const { accessToken, refreshToken } = response.data;
+  
+        // Step 2: 로그인 상태 업데이트
+        return setLoginState({
+          isLoggedIn: true,
+          email: email,
+          loginType: "google",
+          loginToken: accessToken, // JWT 저장
+          refreshToken: refreshToken, // 리프레시 토큰 저장
+        });
+      })
+      .then(() => {
+        // Step 3: 성공 메시지 및 페이지 이동
+        alert(`${name}님 환영합니다!`);
+        navigate("/template");
+      })
+      .catch((error) => {
+        // 에러 처리
+        console.error("구글 로그인 처리 중 오류:", error);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      });
+  };      //구글 간편 로그인 끝
+
+
 
   // 카카오 간편 로그인 시작
   const handleKakaoLogin = () => {
@@ -264,12 +318,15 @@ const Login = () => {
             loginType: "kakao", // 간편 로그인 타입 전달
             token: accessToken,
           }).then((serverResponse) => {
+            const { accessToken, refreshToken } = serverResponse.data;
+
             // Step 4: 로그인 상태 업데이트
             setLoginState({
               isLoggedIn: true,
               email: email,
               loginType: "kakao",
               loginToken: accessToken,
+              refreshToken, // RefreshToken 저장
             });
   
             // 서버 응답 처리
@@ -324,6 +381,7 @@ const Login = () => {
           email: email,
           loginType: "normal", // 일반 로그인
           loginToken: token,
+          // 여긴 원래 이렇게 생기는 거임 그냥 둬도 괜찮아요.
         });
   
         // 성공 후 페이지 이동
@@ -433,14 +491,15 @@ const Login = () => {
                   />
                 }
                 label={
-                  <Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>
+                  <Typography sx={{ fontSize: "1em" }}>이메일 저장</Typography>
                 }
                 sx={{
                   color: "white",
                   transform: "translate(-5px, 14px)",
                 }}
               />
-              <FormControlLabel
+              {/* 로그인 상태 유지는 다음 학기에 추가 예정 */}
+              {/* <FormControlLabel
                 control={
                   <Checkbox
                     size="large"
@@ -459,7 +518,7 @@ const Login = () => {
                   color: "white",
                   transform: "translate(-5px, 6px)",
                 }}
-              />
+              /> */}
             </div>
             <div className="button-wrapper">
               <Button
@@ -489,11 +548,15 @@ const Login = () => {
           <IconButton onClick={handleKakaoLogin}>
             <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
           </IconButton>
-          <IconButton>
-            <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px" }} />
-          </IconButton>
-          <IconButton>
-            <Avatar src={NaverIcon} sx={{ width: "60px", height: "60px" }} />
+          <IconButton
+            onClick={() => {
+              google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                callback: handleGoogleLogin,
+              });
+              google.accounts.id.prompt();
+            }}>
+            <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px", cursor: "pointer" }} />
           </IconButton>
         </div>
       </div>
