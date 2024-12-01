@@ -25,7 +25,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
 import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
-//import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
+import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
   display: flex;
@@ -64,7 +64,9 @@ const Style = styled.div`
   .button-container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
+    margin-top: 10px;
   }
   .title {
     display: flex;
@@ -82,13 +84,6 @@ const Style = styled.div`
   .checkbox-container {
     display: flex;
     flex-direction: column;
-  }
-
-  .button-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px;
   }
 
   p.register {
@@ -458,7 +453,6 @@ const Login = () => {
                     size="large"
                     sx={{
                       color: "#EBEBEB",
-                      transform: "translateX(5px)",
                     }}
                   />
                 }
@@ -467,9 +461,9 @@ const Login = () => {
                 }
                 sx={{
                   color: "white",
-                  transform: "translate(-5px, 14px)",
                 }}
               />
+
               {/* 로그인 상태 유지는 다음 학기에 추가 예정 */}
               {/* <FormControlLabel
                 control={
@@ -492,21 +486,19 @@ const Login = () => {
                 }}
               /> */}
             </div>
-            <div className="button-wrapper">
-              <Button
-                id="btn-login"
-                variant="contained"
-                onClick={handleLoginClick}
-                sx={{
-                  borderRadius: "50px",
-                  fontWeight: "bold",
-                  fontSize: "1.4em",
-                  padding: "5px 30px",
-                }}
-              >
-                로그인
-              </Button>
-            </div>
+            <Button
+              id="btn-login"
+              variant="contained"
+              onClick={handleLoginClick}
+              sx={{
+                borderRadius: "50px",
+                fontWeight: "bold",
+                fontSize: "1.4em",
+                padding: "5px 30px",
+              }}
+            >
+              로그인
+            </Button>
           </div>
         </div>
 
