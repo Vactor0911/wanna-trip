@@ -230,18 +230,6 @@ const NewTemplate = () => {
       { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
       { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
     ],
-    day2: [
-      { time: "10:00 - 12:00", activity: "명동 쇼핑", image: "image_url4" },
-      { time: "12:30 - 14:00", activity: "한식 식사", image: "image_url5" },
-    ],
-    day3: [
-      { time: "09:00 - 11:00", activity: "카페 탐방", image: "image_url6" },
-      { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" },
-    ],
-    day4: [
-      { time: "09:00 - 12:00", activity: "스터디", image: "image_url6" },
-      { time: "12:30 - 15:00", activity: "동아리", image: "image_url7" },
-    ],
   });
 
   const handleAddPlan = (dayKey: keyof DayPlans) => {
@@ -290,11 +278,7 @@ const NewTemplate = () => {
         </div>
         <div className="board-container">
 
-          <Card
-            day="Day 1"
-            plans={dayPlans.day1}
-            onAddPlan={() => handleAddPlan("day1")}
-          />
+         <Card/>
 
         </div>
         <div className="left-menu"></div>
