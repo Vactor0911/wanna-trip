@@ -4,7 +4,6 @@ import styled from "@emotion/styled";
 interface ContentProps {
   time: string;
   activity: string;
-  image: string;
 }
 
 const ContentStyle = styled.div`
@@ -36,12 +35,11 @@ const ContentStyle = styled.div`
   }
 `;
 
-const Content = ({ time, activity, image }: ContentProps) => {
+const Content = ({ time, activity}: ContentProps) => {
   return (
     <ContentStyle>
       <div className="time">{time}</div>
       <div className="activity">{activity}</div>
-      <img src={image} alt={activity} />
     </ContentStyle>
   );
 };

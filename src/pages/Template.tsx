@@ -154,6 +154,7 @@ const Template = () => {
           email: "", // 이메일 초기화
           loginType: "normal", // 로그인 타입 초기화
           loginToken: "", // 토큰 초기화
+          refreshToken: "", // 리프레시 토큰 초기화
         });
         navigate("/login"); // 로그인 페이지로 이동
       });
@@ -192,6 +193,7 @@ const Template = () => {
             email: "", // 이메일 초기화
             loginType: "normal", // 로그인 타입 초기화
             loginToken: "", // 토큰 초기화
+            refreshToken: "", // 리프레시 토큰 초기화
           });
           navigate("/login"); // 로그인 페이지로 이동
         } else {
@@ -214,25 +216,6 @@ const Template = () => {
       { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
       { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
     ],
-    day2: [
-      { time: "10:00 - 12:00", activity: "명동 쇼핑", image: "image_url4" },
-      { time: "12:30 - 14:00", activity: "한식 식사", image: "image_url5" },
-    ],
-    day3: [
-      { time: "09:00 - 11:00", activity: "카페 탐방", image: "image_url6" },
-      { time: "11:30 - 13:00", activity: "전통시장 구경", image: "image_url7" },
-    ],
-    day4: [
-      { time: "09:00 - 12:00", activity: "스터디", image: "image_url8" },
-      { time: "12:30 - 15:00", activity: "동아리", image: "image_url9" },
-    ],
-    day5: [],
-    day6: [],
-    day7: [],
-    day8: [],
-    day9: [],
-    day10: [],
-    day11: [],
   });
 
   const handleAddPlan = (dayKey: keyof DayPlans) => {
@@ -280,64 +263,9 @@ const Template = () => {
           </div>
         </div>
         <div className="board-container">
-          <Card
-            day="Day 1"
-            plans={dayPlans.day1}
-            onAddPlan={() => handleAddPlan("day1")}
-          />
-          <Card
-            day="Day 2"
-            plans={dayPlans.day2}
-            onAddPlan={() => handleAddPlan("day2")}
-          />
-          <Card
-            day="Day 3"
-            plans={dayPlans.day3}
-            onAddPlan={() => handleAddPlan("day3")}
-          />
-          <Card
-            day="Day 4"
-            plans={dayPlans.day4}
-            onAddPlan={() => handleAddPlan("day4")}
-          />
 
-          <Card
-            day="Day 5"
-            plans={dayPlans.day5}
-            onAddPlan={() => handleAddPlan("day5")}
-          />
-          <Card
-            day="Day 6"
-            plans={dayPlans.day6}
-            onAddPlan={() => handleAddPlan("day6")}
-          />
-          <Card
-            day="Day 7"
-            plans={dayPlans.day7}
-            onAddPlan={() => handleAddPlan("day7")}
-          />
+         <Card/>
 
-          <Card
-            day="Day 8"
-            plans={dayPlans.day8}
-            onAddPlan={() => handleAddPlan("day8")}
-          />
-          <Card
-            day="Day 9"
-            plans={dayPlans.day9}
-            onAddPlan={() => handleAddPlan("day9")}
-          />
-          <Card
-            day="Day 10"
-            plans={dayPlans.day10}
-            onAddPlan={() => handleAddPlan("day10")}
-          />
-
-          <Card
-            day="Day 11"
-            plans={dayPlans.day11}
-            onAddPlan={() => handleAddPlan("day11")}
-          />
         </div>
         <div className="left-menu"></div>
       </div>
