@@ -4,7 +4,7 @@ import Content from "./Content";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { IconButton, Button } from "@mui/material";
+import { IconButton, Button, TextField } from "@mui/material";
 
 // Plan 타입 정의
 interface Plan {
@@ -48,8 +48,39 @@ const CardStyle = styled.div`
   }
 
   .card-container {
+    display: flex;
+    flex-direction: column;
     overflow-y: scroll;
     max-height: 380px;
+    gap: 10px; /* 계획 간 여백 */
+  }
+
+  .add-plan-button {
+    align-self: flex-start; /* 왼쪽 위로 이동 */
+    margin-top: 10px;
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 텍스트 왼쪽 정렬 */
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    word-wrap: break-word; /* 긴 텍스트 줄바꿈 */
+    width: 100%;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .plan textarea {
+    width: 100%;
+    resize: none; /* 텍스트 영역 크기 조정 비활성화 */
+    border: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: break-word; /* 글씨 넘어가지 않도록 처리 */
+    background: none;
   }
 `;
 
@@ -60,90 +91,108 @@ const Card = () => {
       id: 1,
       day: "Day 1",
       plans: [
-        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑"},
-        { time: "11:20 - 12:00", activity: "점심 식사"},
+        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑" },
+        { time: "11:20 - 12:00", activity: "점심 식사" },
       ],
     },
   ]);
 
   // 카드 추가
   const handleAddCard = (id: number) => {
-    // 새로운 빈 카드 생성
     const newCard: CardData = {
-      id: cards.length + 1, // 임시 ID
-      day: "", // Day는 정렬 후 재설정
-      plans: [], // 빈 계획
+      id: cards.length + 1,
+      day: "",
+      plans: [],
     };
 
-    // 클릭한 카드의 인덱스 찾기
     const cardIndex = cards.findIndex((card) => card.id === id);
-
-    // 새 카드를 클릭한 카드의 오른쪽에 삽입
     const updatedCards = [
-      ...cards.slice(0, cardIndex + 1), // 클릭한 카드까지
-      newCard, // 새 카드 추가
-      ...cards.slice(cardIndex + 1), // 나머지 카드
+      ...cards.slice(0, cardIndex + 1),
+      newCard,
+      ...cards.slice(cardIndex + 1),
     ];
 
-    // Day와 ID를 정렬 및 재할당
     const reorderedCards = updatedCards.map((card, index) => ({
       ...card,
-      day: `Day ${index + 1}`, // 순서에 맞는 Day
-      id: index + 1, // 순서에 맞는 ID
+      day: `Day ${index + 1}`,
+      id: index + 1,
     }));
 
-    // 상태 업데이트
     setCards(reorderedCards);
   };
 
   // 카드 복사
   const handleCopyCard = (id: number) => {
-    // 클릭한 카드 찾기
     const cardToCopy = cards.find((card) => card.id === id);
 
     if (cardToCopy) {
-      // 클릭한 카드의 인덱스(위치) 찾기
       const cardIndex = cards.findIndex((card) => card.id === id);
-
-      // 복사된 카드 생성 (ID는 고유, 하지만 순서는 정렬되도록 수정)
       const copiedCard: CardData = {
         ...cardToCopy,
-        id: cards.length + 1, // 새로운 ID
-        day: "", // 복사 후 정렬하면서 순서를 다시 설정
+        id: cards.length + 1,
+        day: "",
       };
 
-      // 클릭한 카드 바로 오른쪽에 복사된 카드 삽입
       const updatedCards = [
-        ...cards.slice(0, cardIndex + 1), // 클릭한 카드까지의 배열
-        copiedCard, // 복사된 카드 추가
-        ...cards.slice(cardIndex + 1), // 나머지 카드
+        ...cards.slice(0, cardIndex + 1),
+        copiedCard,
+        ...cards.slice(cardIndex + 1),
       ];
 
-      // Day와 ID를 정렬 및 재할당
       const reorderedCards = updatedCards.map((card, index) => ({
         ...card,
-        day: `Day ${index + 1}`, // 순서에 맞는 Day
-        id: index + 1, // 순서에 맞는 ID
+        day: `Day ${index + 1}`,
+        id: index + 1,
       }));
 
-      // 상태 업데이트
       setCards(reorderedCards);
     }
   };
 
   // 카드 삭제
   const handleDeleteCard = (id: number) => {
-    // 해당 ID의 카드 제거
     const updatedCards = cards
-      .filter((card) => card.id !== id) // 클릭한 카드 제거
+      .filter((card) => card.id !== id)
       .map((card, index) => ({
         ...card,
-        day: `Day ${index + 1}`, // Day 이름 재할당
-        id: index + 1, // ID도 재설정
+        day: `Day ${index + 1}`,
+        id: index + 1,
       }));
 
-    // 상태 업데이트
     setCards(updatedCards);
+  };
+
+  // 계획 추가
+  const handleAddPlan = (id: number) => {
+    setCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              plans: [
+                ...card.plans,
+                { time: "시간 미정", activity: "새로운 활동" },
+              ],
+            }
+          : card
+      )
+    );
+  };
+
+  // 계획 내용 변경
+  const handlePlanChange = (cardId: number, planIndex: number, newActivity: string) => {
+    setCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === cardId
+          ? {
+              ...card,
+              plans: card.plans.map((plan, index) =>
+                index === planIndex ? { ...plan, activity: newActivity } : plan
+              ),
+            }
+          : card
+      )
+    );
   };
 
   return (
@@ -153,41 +202,43 @@ const Card = () => {
           <div className="card-menu-container">
             <div className="card-menu-title">{card.day}</div>
             <div className="icon-wrapper">
-              {/* 카드 추가 */}
               <IconButton size="small" onClick={() => handleAddCard(card.id)}>
                 <AddIcon sx={{ color: "black", transform: "scale(1.2)" }} />
               </IconButton>
-              {/* 카드 복사 */}
               <IconButton size="small" onClick={() => handleCopyCard(card.id)}>
                 <ContentCopyIcon sx={{ color: "black", transform: "scale(1)" }} />
               </IconButton>
-              {/* 카드 삭제 */}
               <IconButton size="small" onClick={() => handleDeleteCard(card.id)}>
-                <DeleteOutlineIcon sx={{ color: "black", transform: "scale(1.2)" }} />
+                <DeleteOutlineIcon
+                  sx={{ color: "black", transform: "scale(1.2)" }}
+                />
               </IconButton>
             </div>
           </div>
 
-          {/* 계획 내용 */}
           <div className="card-container">
-            {card.plans && card.plans.length > 0 ? (
-              card.plans.map((plan, index) => (
-                <Content
-                  key={index}
-                  time={plan.time}
-                  activity={plan.activity}
+            {card.plans.map((plan, index) => (
+              <div className="plan" key={index}>
+                <div>{plan.time}</div>
+                <textarea
+                  value={plan.activity}
+                  onChange={(e) => handlePlanChange(card.id, index, e.target.value)}
+                  rows={1}
                 />
-              ))
-            ) : (
-              <div>계획이 없습니다.</div>
-            )}
+              </div>
+            ))}
           </div>
 
           {/* 계획 추가 버튼 */}
           <Button
-            onClick={() => console.log("계획 추가하기")}
+            className="add-plan-button"
+            onClick={() => handleAddPlan(card.id)}
             startIcon={<AddIcon sx={{ color: "black", transform: "scale(1)" }} />}
-            sx={{ fontSize: "16px", color: "#1E1E1E", fontWeight: 650 }}
+            sx={{
+              fontSize: "16px",
+              color: "#1E1E1E",
+              fontWeight: 650,
+            }}
           >
             계획 추가하기
           </Button>
