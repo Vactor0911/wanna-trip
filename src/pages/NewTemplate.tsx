@@ -8,7 +8,7 @@ import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { loginStateAtom } from "../state"; // loginState 불러오기
+import { loginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Card from "../components/Card"; // Card 컴포넌트 추가
@@ -117,9 +117,6 @@ const NewTemplate = () => {
   // const [email, setEmail] = useState(''); // 사용자 이메일
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
-  const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
-
-  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨 
   const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
   useEffect(() => {
@@ -132,7 +129,7 @@ const NewTemplate = () => {
   // Access Token 갱신 함수
   const refreshAccessToken = () => {
     return axios
-      .post(`${HOST}:${PORT}/api/token/refresh`, { 
+      .post(`${SERVER_HOST}/api/token/refresh`, { 
         email, 
         loginType,  
         refreshToken: refreshToken, 
@@ -185,7 +182,7 @@ const NewTemplate = () => {
         console.log("로그아웃 요청: 사용 중인 token: ", currentToken); // 디버깅용 로그 추가
 
         // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
-        return axios.post(`${HOST}:${PORT}/api/logout`, {
+        return axios.post(`${SERVER_HOST}/api/logout`, {
           email,
           token: currentToken, // 현재 AccessToken 전달
         });

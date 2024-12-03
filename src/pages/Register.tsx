@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
+import { SERVER_HOST } from "../state";
 
 const Style = styled.div`
   display: flex;
@@ -152,10 +153,6 @@ const Register = () => {
   const [password_comparison, setPassword_comparison] = useState(''); // 사용자 비밀번호 재확인
   const [name, setName] = useState(''); // 사용자 이름
 
-  const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-
-
   const Registerbtn = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -181,7 +178,7 @@ const Register = () => {
 
     // 서버로 회원가입 요청 전송
     axios
-    .post(`${HOST}:${PORT}/api/register`, {
+    .post(`${SERVER_HOST}/api/register`, {
       email: email,
       password: password,
       name: name,
@@ -215,7 +212,7 @@ const Register = () => {
     }
 
     axios
-    .post(`${HOST}:${PORT}/api/emailCheck`, {
+    .post(`${SERVER_HOST}/api/emailCheck`, {
       email: email, // 사용자가 입력한 이메일
     })
     .then((response) => {

@@ -24,7 +24,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { loginStateAtom } from "../state"; // loginStateAtom 불러오기
+import { loginStateAtom, SERVER_HOST } from "../state"; // loginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -160,8 +160,6 @@ const Login = () => {
   // 로그인 기능 추가
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
-  const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
   const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
   const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
   const google = (window as any).google; // 구글 간편 로그인 추가
@@ -194,7 +192,7 @@ const Login = () => {
 
     // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
     axios
-      .post(`${HOST}:${PORT}/api/login/google`, {
+      .post(`${SERVER_HOST}/api/login/google`, {
         email,
         name,
         loginType: "google",
@@ -267,7 +265,7 @@ const Login = () => {
 
             // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
             return axios
-              .post(`${HOST}:${PORT}/api/login/kakao`, {
+              .post(`${SERVER_HOST}/api/login/kakao`, {
                 email,
                 name: nickname,
                 loginType: "kakao", // 간편 로그인 타입 전달
@@ -326,7 +324,7 @@ const Login = () => {
 
     // 서버에 로그인 요청
     axios
-      .post(`${HOST}:${PORT}/api/login`, {
+      .post(`${SERVER_HOST}/api/login`, {
         email: email,
         password: password,
       })
