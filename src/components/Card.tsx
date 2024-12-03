@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
-import Content from "./Content";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { IconButton, Button, TextField } from "@mui/material";
+import { IconButton, Button } from "@mui/material";
 
 // Plan 타입 정의
 interface Plan {
@@ -50,7 +49,7 @@ const CardStyle = styled.div`
   .card-container {
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    overflow-y: auto;
     max-height: 380px;
     gap: 10px; /* 계획 간 여백 */
   }
@@ -85,19 +84,18 @@ const CardStyle = styled.div`
 `;
 
 const Card = () => {
-  // 초기 카드 상태
   const [cards, setCards] = useState<CardData[]>([
     {
       id: 1,
       day: "Day 1",
       plans: [
-        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑" },
-        { time: "11:20 - 12:00", activity: "점심 식사" },
+        { time: "09:00 - 11:00", activity: "" },
+        { time: "11:20 - 12:00", activity: "" },
       ],
     },
   ]);
 
-  // 카드 추가
+  // 카드 추가 함수
   const handleAddCard = (id: number) => {
     const newCard: CardData = {
       id: cards.length + 1,
@@ -121,7 +119,7 @@ const Card = () => {
     setCards(reorderedCards);
   };
 
-  // 카드 복사
+  // 카드 복사 함수
   const handleCopyCard = (id: number) => {
     const cardToCopy = cards.find((card) => card.id === id);
 
@@ -149,7 +147,7 @@ const Card = () => {
     }
   };
 
-  // 카드 삭제
+  // 카드 삭제 함수
   const handleDeleteCard = (id: number) => {
     const updatedCards = cards
       .filter((card) => card.id !== id)
@@ -162,7 +160,7 @@ const Card = () => {
     setCards(updatedCards);
   };
 
-  // 계획 추가
+  // 계획 추가 함수
   const handleAddPlan = (id: number) => {
     setCards((prevCards) =>
       prevCards.map((card) =>
@@ -171,7 +169,7 @@ const Card = () => {
               ...card,
               plans: [
                 ...card.plans,
-                { time: "시간 미정", activity: "새로운 활동" },
+                { time: "시간 미정", activity: "" },
               ],
             }
           : card
@@ -179,8 +177,12 @@ const Card = () => {
     );
   };
 
-  // 계획 내용 변경
-  const handlePlanChange = (cardId: number, planIndex: number, newActivity: string) => {
+  // 계획 내용 변경 함수
+  const handlePlanChange = (
+    cardId: number,
+    planIndex: number,
+    newActivity: string
+  ) => {
     setCards((prevCards) =>
       prevCards.map((card) =>
         card.id === cardId
@@ -206,9 +208,14 @@ const Card = () => {
                 <AddIcon sx={{ color: "black", transform: "scale(1.2)" }} />
               </IconButton>
               <IconButton size="small" onClick={() => handleCopyCard(card.id)}>
-                <ContentCopyIcon sx={{ color: "black", transform: "scale(1)" }} />
+                <ContentCopyIcon
+                  sx={{ color: "black", transform: "scale(1)" }}
+                />
               </IconButton>
-              <IconButton size="small" onClick={() => handleDeleteCard(card.id)}>
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteCard(card.id)}
+              >
                 <DeleteOutlineIcon
                   sx={{ color: "black", transform: "scale(1.2)" }}
                 />
@@ -222,18 +229,34 @@ const Card = () => {
                 <div>{plan.time}</div>
                 <textarea
                   value={plan.activity}
-                  onChange={(e) => handlePlanChange(card.id, index, e.target.value)}
+                  placeholder="일정 내용"
+                  onChange={(e) =>
+                    handlePlanChange(card.id, index, e.target.value)
+                  }
                   rows={1}
+                  style={{
+                    width: "100%",
+                    padding: "5px",
+                    fontSize: "14px",
+                    lineHeight: "1.5",
+                    border: "1px solid #ccc",
+                    borderRadius: "5px",
+                    outline: "none",
+                    resize: "none",
+                    overflowWrap: "break-word",
+                    background: "#fff",
+                  }}
                 />
               </div>
             ))}
           </div>
 
-          {/* 계획 추가 버튼 */}
           <Button
             className="add-plan-button"
             onClick={() => handleAddPlan(card.id)}
-            startIcon={<AddIcon sx={{ color: "black", transform: "scale(1)" }} />}
+            startIcon={
+              <AddIcon sx={{ color: "black", transform: "scale(1)" }} />
+            }
             sx={{
               fontSize: "16px",
               color: "#1E1E1E",
