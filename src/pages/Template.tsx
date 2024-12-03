@@ -19,10 +19,6 @@ interface Plan {
   image: string;
 }
 
-interface DayPlans {
-  day1: Plan[];
-}
-
 const Style = styled.div`
   display: flex;
   flex-direction: column;
@@ -204,32 +200,6 @@ const Template = () => {
         alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
       });
   }; // 로그아웃 기능 구현 끝
-
-  const [dayPlans, setDayPlans] = useState<DayPlans>({
-    day1: [
-      {
-        time: "09:00 - 11:00",
-        activity: "동대문 시장 쇼핑",
-        image: "image_url1",
-      },
-      { time: "11:20 - 12:00", activity: "점심 식사", image: "image_url2" },
-      { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
-      { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
-    ],
-  });
-
-  const handleAddPlan = (dayKey: keyof DayPlans) => {
-    const newPlan = {
-      time: "시간 미정",
-      activity: "새로운 활동",
-      image: "image_url_new",
-    };
-
-    setDayPlans((prevPlans) => ({
-      ...prevPlans,
-      [dayKey]: [...prevPlans[dayKey], newPlan],
-    }));
-  };
 
   return (
     <Style>
