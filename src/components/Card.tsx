@@ -44,8 +44,39 @@ const CardStyle = styled.div`
   }
 
   .card-container {
+    display: flex;
+    flex-direction: column;
     overflow-y: scroll;
     max-height: 380px;
+    gap: 10px; /* 계획 간 여백 */
+  }
+
+  .add-plan-button {
+    align-self: flex-start; /* 왼쪽 위로 이동 */
+    margin-top: 10px;
+  }
+
+  .plan {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* 텍스트 왼쪽 정렬 */
+    padding: 10px;
+    background-color: white;
+    border-radius: 5px;
+    word-wrap: break-word; /* 긴 텍스트 줄바꿈 */
+    width: 100%;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .plan textarea {
+    width: 100%;
+    resize: none; /* 텍스트 영역 크기 조정 비활성화 */
+    border: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: break-word; /* 글씨 넘어가지 않도록 처리 */
+    background: none;
   }
 
   .add-plan-button {
@@ -199,6 +230,23 @@ const Card = () => {
     );
   };
 
+
+  // 계획 내용 변경
+  const handlePlanChange = (cardId: number, planIndex: number, newActivity: string) => {
+    setCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === cardId
+          ? {
+              ...card,
+              plans: card.plans.map((plan, index) =>
+                index === planIndex ? { ...plan, activity: newActivity } : plan
+              ),
+            }
+          : card
+      )
+    );
+  };
+
   return (
     <>
       {cards.map((card, index) => (
@@ -207,16 +255,15 @@ const Card = () => {
           <div className="card-menu-container">
             <Typography variant="h6">{card.day}</Typography>
             <div className="icon-wrapper">
-              {/* 카드 추가 */}
               <IconButton size="small" onClick={() => handleAddCard(card.id)}>
                 <AddIcon sx={{ color: "black", transform: "scale(1.2)" }} />
               </IconButton>
-              {/* 카드 복사 */}
               <IconButton size="small" onClick={() => handleCopyCard(card.id)}>
                 <ContentCopyIcon
                   sx={{ color: "black", transform: "scale(1)" }}
                 />
               </IconButton>
+
               {/* 카드 삭제 */}
               <IconButton
                 size="small"
@@ -232,6 +279,7 @@ const Card = () => {
                 onClick={(e) => handleMenuOpen(e, index)}
               >
                 <MenuIcon />
+
               </IconButton>
             </div>
           </div>
@@ -286,6 +334,7 @@ const Card = () => {
           <div className="card-container">
             {card.plans.map((plan, index) => (
               <Content key={index} time={plan.time} activity={plan.activity} />
+
             ))}
           </div>
 
@@ -293,9 +342,11 @@ const Card = () => {
           <Button
             className="add-plan-button"
             onClick={() => handleAddPlan(card.id)}
+
             startIcon={
               <AddIcon sx={{ color: "black", transform: "scale(1)" }} />
             }
+
             sx={{
               fontSize: "16px",
               color: "#1E1E1E",
