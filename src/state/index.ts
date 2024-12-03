@@ -1,7 +1,8 @@
 import { atom } from "jotai";
 
 // 서버 주소와 포트 번호를 설정합니다.
-export const SERVER_HOST = 'https://wanna-trip.vactor0911.dev'; // AXIOS 통신 할 서버 주소
+export const SERVER_HOST = 'http://localhost:3005'; // AXIOS 통신 할 서버 주소 http://localhost:3005
+
 
 // LocalStorage에서 상태를 불러옵니다.
 const savedLoginState = JSON.parse(localStorage.getItem("loginState") || "{}");

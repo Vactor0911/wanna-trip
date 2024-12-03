@@ -155,16 +155,53 @@ const Login = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  // 이메일 저장 기능 추가- 필요
+  
 
   // 로그인 기능 추가
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
+  const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
   const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
-  const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
+  const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
   const google = (window as any).google; // 구글 간편 로그인 추가
 
-  // URL의 code를 처리하기 위한 useEffect
+
+  // *** 이메일 저장 기능 시작 ***
+
+  // 이메일 저장 체크박스 상태 관리
+  const handleEmailSaveChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = event.target.checked;
+    setIsEmailSaved(isChecked);
+
+    if (isChecked) {
+      localStorage.setItem("savedEmail", email); // 이메일 저장
+    } else {
+      localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
+    }
+  };
+
+  // 이메일 입력 시 동기화
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = event.target.value;
+    setEmail(newEmail);
+
+    if (isEmailSaved) {
+      localStorage.setItem("savedEmail", newEmail); // 저장된 이메일 업데이트
+    }
+  };
+
+  // 초기화: 이메일 저장 상태 불러오기
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("savedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setIsEmailSaved(true);
+    }
+  }, []);
+
+  // *** 이메일 저장 기능 끝 ***
+
+  // 카카오 URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
     if (code) {
@@ -199,6 +236,9 @@ const Login = () => {
       })
       .then((response) => {
         const { accessToken, refreshToken } = response.data;
+
+        // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
+        localStorage.removeItem("savedEmail");
 
         // Step 2: 로그인 상태 업데이트
         const loginState = {
@@ -274,6 +314,9 @@ const Login = () => {
               .then((serverResponse) => {
                 const { accessToken, refreshToken } = serverResponse.data;
 
+                // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
+                localStorage.removeItem("savedEmail");
+
                 // Step 4: 로그인 상태 업데이트
                 const loginState = {
                   isLoggedIn: true,
@@ -346,6 +389,13 @@ const Login = () => {
         // Jotai 상태 업데이트
         setLoginState(loginState);
 
+        // LocalStorage 업데이트
+        if (isEmailSaved) {
+          localStorage.setItem("savedEmail", email); // 이메일 저장
+        } else {
+          localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
+        }
+
         // LocalStorage에 저장
         localStorage.setItem("loginState", JSON.stringify(loginState));
 
@@ -353,6 +403,14 @@ const Login = () => {
         navigate("/template");
       })
       .catch((error) => {
+        // 로그인 실패 시 처리
+        if (isEmailSaved) {
+          localStorage.setItem("savedEmail", email); // 저장된 이메일 유지
+        } else {
+          localStorage.removeItem("savedEmail"); // 이메일 저장 안 된 경우 삭제
+          setEmail(""); // 이메일 초기화
+        }
+
         if (error.response) {
           console.error("서버 오류:", error.response.data.message);
           alert(error.response.data.message || "로그인 실패");
@@ -386,7 +444,8 @@ const Login = () => {
           }}
           placeholder="이메일"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          // onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
           startAdornment={
             <InputAdornment position="start">
@@ -448,6 +507,8 @@ const Login = () => {
               <FormControlLabel
                 control={
                   <Checkbox
+                    checked={isEmailSaved}
+                    onChange={handleEmailSaveChange}
                     size="large"
                     sx={{
                       color: "#EBEBEB",
