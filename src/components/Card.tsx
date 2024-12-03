@@ -4,7 +4,9 @@ import Content from "./Content";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { IconButton, Button } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { IconButton, Button, Menu, MenuItem, Typography } from "@mui/material";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 // Plan 타입 정의
 interface Plan {
@@ -33,23 +35,22 @@ const CardStyle = styled.div`
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    position: relative;
-  }
-
-  .card-menu-title {
-    font-size: 1.25em;
-    font-weight: bold;
   }
 
   .icon-wrapper {
     display: flex;
-    gap: 1px;
+    gap: 2px;
     align-items: center;
   }
 
   .card-container {
     overflow-y: scroll;
     max-height: 380px;
+  }
+
+  .add-plan-button {
+    align-self: flex-start; /* 왼쪽 위로 이동 */
+    margin-top: 10px;
   }
 `;
 
@@ -60,98 +61,151 @@ const Card = () => {
       id: 1,
       day: "Day 1",
       plans: [
-        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑"},
-        { time: "11:20 - 12:00", activity: "점심 식사"},
+        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑" },
+        { time: "11:20 - 12:00", activity: "점심 식사" },
       ],
     },
   ]);
 
+  // 메뉴 관련 상태
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+  const [menuBoardIndex, setMenuBoardIndex] = useState<number | null>(null);
+  const [moveMenuAnchorEl, setMoveMenuAnchorEl] = useState<HTMLElement | null>(
+    null
+  );
+
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    index: number
+  ) => {
+    setMenuAnchorEl(event.currentTarget);
+    setMenuBoardIndex(index);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuBoardIndex(null);
+  };
+
+  const handleMoveMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    index: number
+  ) => {
+    setMoveMenuAnchorEl(event.currentTarget);
+    setMenuBoardIndex(index);
+  };
+
+  const handleMoveMenuClose = () => {
+    setMoveMenuAnchorEl(null);
+    setMenuBoardIndex(null);
+  };
+
   // 카드 추가
   const handleAddCard = (id: number) => {
-    // 새로운 빈 카드 생성
     const newCard: CardData = {
-      id: cards.length + 1, // 임시 ID
-      day: "", // Day는 정렬 후 재설정
-      plans: [], // 빈 계획
+      id: cards.length + 1,
+      day: "",
+      plans: [],
     };
 
-    // 클릭한 카드의 인덱스 찾기
     const cardIndex = cards.findIndex((card) => card.id === id);
-
-    // 새 카드를 클릭한 카드의 오른쪽에 삽입
     const updatedCards = [
-      ...cards.slice(0, cardIndex + 1), // 클릭한 카드까지
-      newCard, // 새 카드 추가
-      ...cards.slice(cardIndex + 1), // 나머지 카드
+      ...cards.slice(0, cardIndex + 1),
+      newCard,
+      ...cards.slice(cardIndex + 1),
     ];
 
-    // Day와 ID를 정렬 및 재할당
     const reorderedCards = updatedCards.map((card, index) => ({
       ...card,
-      day: `Day ${index + 1}`, // 순서에 맞는 Day
-      id: index + 1, // 순서에 맞는 ID
+      day: `Day ${index + 1}`,
+      id: index + 1,
     }));
 
-    // 상태 업데이트
     setCards(reorderedCards);
   };
 
   // 카드 복사
   const handleCopyCard = (id: number) => {
-    // 클릭한 카드 찾기
     const cardToCopy = cards.find((card) => card.id === id);
 
     if (cardToCopy) {
-      // 클릭한 카드의 인덱스(위치) 찾기
       const cardIndex = cards.findIndex((card) => card.id === id);
 
-      // 복사된 카드 생성 (ID는 고유, 하지만 순서는 정렬되도록 수정)
       const copiedCard: CardData = {
         ...cardToCopy,
-        id: cards.length + 1, // 새로운 ID
-        day: "", // 복사 후 정렬하면서 순서를 다시 설정
+        id: cards.length + 1,
+        day: "",
       };
 
-      // 클릭한 카드 바로 오른쪽에 복사된 카드 삽입
       const updatedCards = [
-        ...cards.slice(0, cardIndex + 1), // 클릭한 카드까지의 배열
-        copiedCard, // 복사된 카드 추가
-        ...cards.slice(cardIndex + 1), // 나머지 카드
+        ...cards.slice(0, cardIndex + 1),
+        copiedCard,
+        ...cards.slice(cardIndex + 1),
       ];
 
-      // Day와 ID를 정렬 및 재할당
       const reorderedCards = updatedCards.map((card, index) => ({
         ...card,
-        day: `Day ${index + 1}`, // 순서에 맞는 Day
-        id: index + 1, // 순서에 맞는 ID
+        day: `Day ${index + 1}`,
+        id: index + 1,
       }));
 
-      // 상태 업데이트
       setCards(reorderedCards);
     }
   };
 
   // 카드 삭제
   const handleDeleteCard = (id: number) => {
-    // 해당 ID의 카드 제거
     const updatedCards = cards
-      .filter((card) => card.id !== id) // 클릭한 카드 제거
+      .filter((card) => card.id !== id)
       .map((card, index) => ({
         ...card,
-        day: `Day ${index + 1}`, // Day 이름 재할당
-        id: index + 1, // ID도 재설정
+        day: `Day ${index + 1}`,
+        id: index + 1,
       }));
 
-    // 상태 업데이트
     setCards(updatedCards);
+  };
+
+  // 카드 이동
+  const moveCard = (currentIndex: number, targetIndex: number) => {
+    const updatedCards = [...cards];
+    const [movedCard] = updatedCards.splice(currentIndex, 1);
+    updatedCards.splice(targetIndex, 0, movedCard);
+
+    const reorderedCards = updatedCards.map((card, index) => ({
+      ...card,
+      day: `Day ${index + 1}`,
+      id: index + 1,
+    }));
+
+    setCards(reorderedCards);
+    handleMoveMenuClose();
+  };
+
+  // 계획 추가
+  const handleAddPlan = (id: number) => {
+    setCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
+          ? {
+              ...card,
+              plans: [
+                ...card.plans,
+                { time: "시간 미정", activity: "새로운 활동" },
+              ],
+            }
+          : card
+      )
+    );
   };
 
   return (
     <>
-      {cards.map((card) => (
+      {cards.map((card, index) => (
         <CardStyle key={card.id}>
+          {/* 기존 카드 컨트롤 영역 */}
           <div className="card-menu-container">
-            <div className="card-menu-title">{card.day}</div>
+            <Typography variant="h6">{card.day}</Typography>
             <div className="icon-wrapper">
               {/* 카드 추가 */}
               <IconButton size="small" onClick={() => handleAddCard(card.id)}>
@@ -159,35 +213,94 @@ const Card = () => {
               </IconButton>
               {/* 카드 복사 */}
               <IconButton size="small" onClick={() => handleCopyCard(card.id)}>
-                <ContentCopyIcon sx={{ color: "black", transform: "scale(1)" }} />
+                <ContentCopyIcon
+                  sx={{ color: "black", transform: "scale(1)" }}
+                />
               </IconButton>
               {/* 카드 삭제 */}
-              <IconButton size="small" onClick={() => handleDeleteCard(card.id)}>
-                <DeleteOutlineIcon sx={{ color: "black", transform: "scale(1.2)" }} />
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteCard(card.id)}
+              >
+                <DeleteOutlineIcon
+                  sx={{ color: "black", transform: "scale(1.2)" }}
+                />
+              </IconButton>
+              {/* 메뉴 버튼 */}
+              <IconButton
+                aria-label="menu"
+                onClick={(e) => handleMenuOpen(e, index)}
+              >
+                <MenuIcon />
               </IconButton>
             </div>
           </div>
 
-          {/* 계획 내용 */}
+          {/* Material-UI 메뉴 */}
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={menuBoardIndex === index}
+            onClose={handleMenuClose}
+          >
+            <MenuItem onClick={() => handleAddCard(card.id)}>
+              <AddIcon fontSize="small" sx={{ marginRight: 1 }} />
+              추가하기
+            </MenuItem>
+            <MenuItem onClick={() => handleCopyCard(card.id)}>
+              <ContentCopyIcon fontSize="small" sx={{ marginRight: 1 }} />
+              복사하기
+            </MenuItem>
+            <MenuItem onClick={(e) => handleMoveMenuOpen(e, index)}>
+              <SwapVertIcon fontSize="small" sx={{ marginRight: 1 }} />
+              이동하기
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleDeleteCard(card.id)}
+              sx={{ color: "red" }}
+            >
+              <DeleteOutlineIcon fontSize="small" sx={{ marginRight: 1 }} />
+              삭제하기
+            </MenuItem>
+          </Menu>
+          <Menu
+            anchorEl={moveMenuAnchorEl}
+            open={menuBoardIndex === index && Boolean(moveMenuAnchorEl)}
+            onClose={handleMoveMenuClose}
+          >
+            {cards.map((_, targetIndex) => {
+              if (targetIndex !== index) {
+                return (
+                  <MenuItem
+                    key={targetIndex}
+                    onClick={() => moveCard(index, targetIndex)}
+                  >
+                    {cards[targetIndex].day}
+                  </MenuItem>
+                );
+              }
+              return null;
+            })}
+          </Menu>
+
+          {/* 카드 내용 */}
           <div className="card-container">
-            {card.plans && card.plans.length > 0 ? (
-              card.plans.map((plan, index) => (
-                <Content
-                  key={index}
-                  time={plan.time}
-                  activity={plan.activity}
-                />
-              ))
-            ) : (
-              <div>계획이 없습니다.</div>
-            )}
+            {card.plans.map((plan, index) => (
+              <Content key={index} time={plan.time} activity={plan.activity} />
+            ))}
           </div>
 
           {/* 계획 추가 버튼 */}
           <Button
-            onClick={() => console.log("계획 추가하기")}
-            startIcon={<AddIcon sx={{ color: "black", transform: "scale(1)" }} />}
-            sx={{ fontSize: "16px", color: "#1E1E1E", fontWeight: 650 }}
+            className="add-plan-button"
+            onClick={() => handleAddPlan(card.id)}
+            startIcon={
+              <AddIcon sx={{ color: "black", transform: "scale(1)" }} />
+            }
+            sx={{
+              fontSize: "16px",
+              color: "#1E1E1E",
+              fontWeight: 650,
+            }}
           >
             계획 추가하기
           </Button>
