@@ -8,6 +8,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { IconButton, Button, Menu, MenuItem, Typography } from "@mui/material";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 
+
 // Plan 타입 정의
 interface Plan {
   time: string; // 계획 시간
@@ -46,7 +47,7 @@ const CardStyle = styled.div`
   .card-container {
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    overflow-y: auto;
     max-height: 380px;
     gap: 10px; /* 계획 간 여백 */
   }
@@ -86,17 +87,17 @@ const CardStyle = styled.div`
 `;
 
 const Card = () => {
-  // 초기 카드 상태
   const [cards, setCards] = useState<CardData[]>([
     {
       id: 1,
       day: "Day 1",
       plans: [
-        { time: "09:00 - 11:00", activity: "동대문 시장 쇼핑" },
-        { time: "11:20 - 12:00", activity: "점심 식사" },
+        { time: "09:00 - 11:00", activity: "" },
+        { time: "11:20 - 12:00", activity: "" },
       ],
     },
   ]);
+
 
   // 메뉴 관련 상태
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -156,7 +157,7 @@ const Card = () => {
     handleMenuClose();
   };
 
-  // 카드 복사
+  // 카드 복사 함수
   const handleCopyCard = (id: number) => {
     const cardToCopy = cards.find((card) => card.id === id);
 
@@ -186,7 +187,7 @@ const Card = () => {
     }
   };
 
-  // 카드 삭제
+  // 카드 삭제 함수
   const handleDeleteCard = (id: number) => {
     const updatedCards = cards
       .filter((card) => card.id !== id)
@@ -216,7 +217,7 @@ const Card = () => {
     handleMoveMenuClose();
   };
 
-  // 계획 추가
+  // 계획 추가 함수
   const handleAddPlan = (id: number) => {
     setCards((prevCards) =>
       prevCards.map((card) =>
@@ -225,13 +226,14 @@ const Card = () => {
               ...card,
               plans: [
                 ...card.plans,
-                { time: "시간 미정", activity: "새로운 활동" },
+                { time: "시간 미정", activity: "" },
               ],
             }
           : card
       )
     );
   };
+
 
 
   // 계획 내용 변경
@@ -266,6 +268,7 @@ const Card = () => {
                   sx={{ color: "black", transform: "scale(1)" }}
                 />
               </IconButton>
+
 
               {/* 카드 삭제 */}
               <IconButton
@@ -341,17 +344,32 @@ const Card = () => {
                 <div>{plan.time}</div>
                 <textarea
                   value={plan.activity}
-                  onChange={(e) => handlePlanChange(card.id, index, e.target.value)}
+                  placeholder="일정 내용"
+                  onChange={(e) =>
+                    handlePlanChange(card.id, index, e.target.value)
+                  }
                   rows={1}
+                  style={{
+                    width: "100%",
+                    padding: "5px",
+                    fontSize: "14px",
+                    lineHeight: "1.5",
+                    border: "1px solid #ccc",
+                    borderRadius: "5px",
+                    outline: "none",
+                    resize: "none",
+                    overflowWrap: "break-word",
+                    background: "#fff",
+                  }}
                 />
               </div>
             ))}
           </div>
 
-          {/* 계획 추가 버튼 */}
           <Button
             className="add-plan-button"
             onClick={() => handleAddPlan(card.id)}
+
 
             startIcon={
               <AddIcon sx={{ color: "black", transform: "scale(1)" }} />
