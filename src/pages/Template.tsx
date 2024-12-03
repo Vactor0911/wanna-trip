@@ -11,13 +11,7 @@ import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom �
 import { loginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
 import LoginButton from "../components/LoginButton";
 
-import Card from "../components/Card"; // Card 컴포넌트 추가
-
-interface Plan {
-  time: string;
-  activity: string;
-  image: string;
-}
+import Board from "../components/Board"; // Card 컴포넌트 추가
 
 const Style = styled.div`
   display: flex;
@@ -72,11 +66,14 @@ const Style = styled.div`
     gap: 1em;
   }
 
-  .board-container {
+  .boards-container {
     display: flex;
     padding: 20px 50px;
-    background-color: #344056;
-    width: 100%;
+  }
+
+  .boards-container {
+    overflow-x: auto; /* 가로 스크롤 허용 */
+    max-height: 1000px; /* 최대 높이 제한 */
     height: 100%;
   }
 
@@ -85,7 +82,6 @@ const Style = styled.div`
     position: absolute;
     width: 35px;
     height: 100%;
-
     top: 0;
     left: -25px;
     background-color: #4d5d77;
@@ -95,19 +91,6 @@ const Style = styled.div`
   .left-menu:hover {
     /* 예시 (호버로 만들거 아님; 알아서 버튼 클릭하면 토글되게 ㄱㄱ) */
     width: 300px;
-  }
-
-  .board-container .board-box {
-    display: flex;
-    flex-direction: column;
-    width: 25%;
-    height: 100%;
-    background-color: #344056;
-  }
-
-  .board-container {
-    overflow-x: auto; /* 가로 스크롤 허용 */
-    max-height: 1000px; /* 최대 높이 제한 */
   }
 
   @media (max-width: 768px) {
@@ -230,10 +213,8 @@ const Template = () => {
             </Button>
           </div>
         </div>
-        <div className="board-container">
-
-         <Card/>
-
+        <div className="boards-container">
+          <Board />
         </div>
         <div className="left-menu"></div>
       </div>
