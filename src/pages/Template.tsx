@@ -8,7 +8,7 @@ import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { loginStateAtom } from "../state"; // loginState 불러오기
+import { loginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Card from "../components/Card"; // Card 컴포넌트 추가
@@ -128,8 +128,6 @@ const Template = () => {
   // const [email, setEmail] = useState(''); // 사용자 이메일
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
-  const PORT = 3005; // server/index.js 에 설정한 포트 번호 - 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = "http://localhost"; // 임의로 로컬서버라 이건 알아서 수정하면 됨
   const { isLoggedIn, email, loginType, loginToken } =
     useAtomValue(loginStateAtom); // 로그인 상태 읽기
   const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
@@ -137,7 +135,7 @@ const Template = () => {
   // Access Token 갱신 함수
   const refreshAccessToken = () => {
     return axios
-      .post(`${HOST}:${PORT}/api/token/refresh`, { email })
+      .post(`${SERVER_HOST}/api/token/refresh`, { email })
       .then((response) => {
         const newToken = response.data.token;
         setLoginState((prevState) => ({
@@ -180,7 +178,7 @@ const Template = () => {
     refreshTokenPromise
       .then(() => {
         // 로그아웃 요청 (카카오 간편 로그인 또는 일반 로그인 모두 처리)
-        return axios.post(`${HOST}:${PORT}/api/logout`, {
+        return axios.post(`${SERVER_HOST}/api/logout`, {
           email: email,
           token: loginType === "kakao" ? currentToken : null, // 카카오: 토큰 전달, 일반: null
         });
