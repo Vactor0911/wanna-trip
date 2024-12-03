@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
-import Content from "./Content";
+import Content from "./Content"; // Card
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -153,6 +153,7 @@ const Card = () => {
     }));
 
     setCards(reorderedCards);
+    handleMenuClose();
   };
 
   // 카드 복사
@@ -181,6 +182,7 @@ const Card = () => {
       }));
 
       setCards(reorderedCards);
+      handleMenuClose();
     }
   };
 
@@ -195,6 +197,7 @@ const Card = () => {
       }));
 
     setCards(updatedCards);
+    handleMenuClose();
   };
 
   // 카드 이동
@@ -253,7 +256,7 @@ const Card = () => {
         <CardStyle key={card.id}>
           {/* 기존 카드 컨트롤 영역 */}
           <div className="card-menu-container">
-            <Typography variant="h6">{card.day}</Typography>
+            <Typography variant="h6" sx={{ fontWeight: "bold"}}>{card.day}</Typography>
             <div className="icon-wrapper">
               <IconButton size="small" onClick={() => handleAddCard(card.id)}>
                 <AddIcon sx={{ color: "black", transform: "scale(1.2)" }} />
@@ -277,6 +280,7 @@ const Card = () => {
               <IconButton
                 aria-label="menu"
                 onClick={(e) => handleMenuOpen(e, index)}
+                sx={{ color: "black" , transform: "scale(1.2)"}}
               >
                 <MenuIcon />
 
@@ -333,8 +337,14 @@ const Card = () => {
           {/* 카드 내용 */}
           <div className="card-container">
             {card.plans.map((plan, index) => (
-              <Content key={index} time={plan.time} activity={plan.activity} />
-
+              <div className="plan" key={index}>
+                <div>{plan.time}</div>
+                <textarea
+                  value={plan.activity}
+                  onChange={(e) => handlePlanChange(card.id, index, e.target.value)}
+                  rows={1}
+                />
+              </div>
             ))}
           </div>
 
