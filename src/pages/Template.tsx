@@ -8,7 +8,7 @@ import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { loginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
+import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Board from "../components/Board"; // Card 컴포넌트 추가
@@ -107,9 +107,8 @@ const Template = () => {
   // const [email, setEmail] = useState(''); // 사용자 이메일
   // const [password, setPassword] = useState(''); // 사용자 비밀번호
 
-  const { isLoggedIn, email, loginType, loginToken } =
-    useAtomValue(loginStateAtom); // 로그인 상태 읽기
-  const setLoginState = useSetAtom(loginStateAtom); // 상태 업데이트
+  const { isLoggedIn, email, loginType, loginToken } = useAtomValue(WannaTripLoginStateAtom); // 로그인 상태 읽기
+  const setWannaTripLoginState = useSetAtom(WannaTripLoginStateAtom); // 상태 업데이트
 
   // Access Token 갱신 함수
   const refreshAccessToken = () => {
@@ -117,7 +116,7 @@ const Template = () => {
       .post(`${SERVER_HOST}/api/token/refresh`, { email })
       .then((response) => {
         const newToken = response.data.token;
-        setLoginState((prevState) => ({
+        setWannaTripLoginState((prevState) => ({
           ...prevState,
           loginToken: newToken, // 갱신된 토큰 저장
         }));
@@ -126,7 +125,7 @@ const Template = () => {
       .catch((error) => {
         console.error("Access Token 갱신 실패:", error);
         alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-        setLoginState({
+        setWannaTripLoginState({
           isLoggedIn: false, // 로그인 상태 초기화
           email: "", // 이메일 초기화
           loginType: "normal", // 로그인 타입 초기화
@@ -165,7 +164,7 @@ const Template = () => {
       .then((response) => {
         if (response.data.success) {
           alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
-          setLoginState({
+          setWannaTripLoginState({
             isLoggedIn: false, // 로그인 상태 초기화
             email: "", // 이메일 초기화
             loginType: "normal", // 로그인 타입 초기화
