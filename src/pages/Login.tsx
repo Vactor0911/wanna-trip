@@ -24,7 +24,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import { useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { loginStateAtom, SERVER_HOST } from "../state"; // loginStateAtom 불러오기
+import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTripLoginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -161,7 +161,7 @@ const Login = () => {
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
-  const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
+  const setWannaTripLoginState = useSetAtom(WannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
   const google = (window as any).google; // 구글 간편 로그인 추가
 
@@ -250,7 +250,7 @@ const Login = () => {
         };
 
         // Jotai 상태 업데이트
-        setLoginState(loginState);
+        setWannaTripLoginState(loginState);
 
         // LocalStorage에 저장
         localStorage.setItem("loginState", JSON.stringify(loginState));
@@ -327,7 +327,7 @@ const Login = () => {
                 };
 
                 // Jotai 상태 업데이트
-                setLoginState(loginState);
+                setWannaTripLoginState(loginState);
 
                 // LocalStorage에 저장
                 localStorage.setItem("loginState", JSON.stringify(loginState));
@@ -387,7 +387,7 @@ const Login = () => {
         };
 
         // Jotai 상태 업데이트
-        setLoginState(loginState);
+        setWannaTripLoginState(loginState);
 
         // LocalStorage 업데이트
         if (isEmailSaved) {
