@@ -11,7 +11,7 @@ import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom �
 import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTriploginState 불러오기
 import LoginButton from "../components/LoginButton";
 
-import Card from "../components/Card"; // Card 컴포넌트 추가
+import Board from "../components/Board"; // Card 컴포넌트 추가
 
 interface Plan {
   time: string;
@@ -73,14 +73,17 @@ const Style = styled.div`
 
   .template-title .button-container {
     display: flex;
-    gap: 20px;
+    gap: 1em;
   }
 
-  .board-container {
+  .boards-container {
     display: flex;
     padding: 20px 50px;
-    background-color: #344056;
-    width: 100%;
+  }
+
+  .boards-container {
+    overflow-x: auto; /* 가로 스크롤 허용 */
+    max-height: 1000px; /* 최대 높이 제한 */
     height: 100%;
   }
 
@@ -89,7 +92,6 @@ const Style = styled.div`
     position: absolute;
     width: 35px;
     height: 100%;
-
     top: 0;
     left: -25px;
     background-color: #4d5d77;
@@ -101,12 +103,10 @@ const Style = styled.div`
     width: 300px;
   }
 
-  .board-container .board-box {
-    display: flex;
-    flex-direction: column;
-    width: 25%;
-    height: 100%;
-    background-color: #344056;
+  @media (max-width: 768px) {
+  }
+
+  @media (max-width: 480px) {
   }
 `;
 
@@ -216,31 +216,7 @@ const NewTemplate = () => {
       });
   }; // 로그아웃 기능 구현 끝
 
-  const [dayPlans, setDayPlans] = useState<DayPlans>({
-    day1: [
-      {
-        time: "09:00 - 11:00",
-        activity: "동대문 시장 쇼핑",
-        image: "image_url1",
-      },
-      { time: "11:20 - 12:00", activity: "점심 식사", image: "image_url2" },
-      { time: "12:30 - 14:00", activity: "박물관 방문", image: "image_url3" },
-      { time: "14:30 - 16:00", activity: "서울 구경", image: "image_url3" },
-    ],
-  });
 
-  const handleAddPlan = (dayKey: keyof DayPlans) => {
-    const newPlan = {
-      time: "시간 미정",
-      activity: "새로운 활동",
-      image: "image_url_new",
-    };
-
-    setDayPlans((prevPlans) => ({
-      ...prevPlans,
-      [dayKey]: [...prevPlans[dayKey], newPlan],
-    }));
-  };
 
   return (
     <Style>
@@ -273,10 +249,8 @@ const NewTemplate = () => {
             </Button>
           </div>
         </div>
-        <div className="board-container">
-
-         <Card/>
-
+        <div className="boards-container">
+          <Board/>
         </div>
         <div className="left-menu"></div>
       </div>
