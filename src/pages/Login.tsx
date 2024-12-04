@@ -241,7 +241,7 @@ const Login = () => {
         localStorage.removeItem("savedEmail");
 
         // Step 2: 로그인 상태 업데이트
-        const loginState = {
+        const WannaTriploginState = {
           isLoggedIn: true,
           email: email,
           loginType: "google",
@@ -250,10 +250,10 @@ const Login = () => {
         };
 
         // Jotai 상태 업데이트
-        setWannaTripLoginState(loginState);
+        setWannaTripLoginState(WannaTriploginState);
 
         // LocalStorage에 저장
-        localStorage.setItem("loginState", JSON.stringify(loginState));
+        localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
       })
       .then(() => {
         // Step 3: 성공 메시지 및 페이지 이동
@@ -318,7 +318,7 @@ const Login = () => {
                 localStorage.removeItem("savedEmail");
 
                 // Step 4: 로그인 상태 업데이트
-                const loginState = {
+                const WannaTriploginState = {
                   isLoggedIn: true,
                   email: email,
                   loginType: "kakao", //카카오 로그인
@@ -327,10 +327,10 @@ const Login = () => {
                 };
 
                 // Jotai 상태 업데이트
-                setWannaTripLoginState(loginState);
+                setWannaTripLoginState(WannaTriploginState);
 
                 // LocalStorage에 저장
-                localStorage.setItem("loginState", JSON.stringify(loginState));
+                localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
 
                 // 서버 응답 처리
                 console.log("로그인 성공:", serverResponse.data.message);
@@ -378,7 +378,7 @@ const Login = () => {
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
 
         // 로그인 상태 업데이트
-        const loginState = {
+        const WannaTriploginState = {
           isLoggedIn: true,
           email: email,
           loginType: "normal", //일반 로그인
@@ -387,7 +387,7 @@ const Login = () => {
         };
 
         // Jotai 상태 업데이트
-        setWannaTripLoginState(loginState);
+        setWannaTripLoginState(WannaTriploginState);
 
         // LocalStorage 업데이트
         if (isEmailSaved) {
@@ -397,7 +397,7 @@ const Login = () => {
         }
 
         // LocalStorage에 저장
-        localStorage.setItem("loginState", JSON.stringify(loginState));
+        localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
 
         // 성공 후 페이지 이동
         navigate("/template");

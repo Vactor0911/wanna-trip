@@ -8,7 +8,7 @@ import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
+import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTriploginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Card from "../components/Card"; // Card 컴포넌트 추가
@@ -120,7 +120,7 @@ const NewTemplate = () => {
   const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(WannaTripLoginStateAtom); // 로그인 상태 읽기
   const setWannaTripLoginState = useSetAtom(WannaTripLoginStateAtom); // 상태 업데이트
   useEffect(() => {
-    const savedLoginState = localStorage.getItem("loginState");
+    const savedLoginState = localStorage.getItem("WannaTriploginState");
     if (savedLoginState) {
       setWannaTripLoginState(JSON.parse(savedLoginState));
     }
@@ -191,7 +191,7 @@ const NewTemplate = () => {
         if (response.data.success) {
 
           // LocalStorage에서 로그인 상태 제거
-          localStorage.removeItem("loginState");
+          localStorage.removeItem("WannaTriploginState");
 
           // Jotai 상태 초기화
           setWannaTripLoginState({

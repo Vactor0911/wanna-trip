@@ -5,7 +5,7 @@ export const SERVER_HOST = 'http://localhost:3005'; // AXIOS 통신 할 서버 �
 
 
 // LocalStorage에서 상태를 불러옵니다.
-const savedLoginState = JSON.parse(localStorage.getItem("loginState") || "{}");
+const savedLoginState = JSON.parse(localStorage.getItem("WannaTriploginState") || "{}");
 
 export const WannaTripLoginStateAtom = atom({
   isLoggedIn: savedLoginState.isLoggedIn || false, // 로그인 상태
