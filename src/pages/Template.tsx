@@ -8,7 +8,7 @@ import { Margin } from "@mui/icons-material";
 import axios from "axios";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useAtomValue : useSetAtom 값 불러오기, useSetAtom : 값 설정하기
-import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // loginState 불러오기
+import { WannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTriploginState 불러오기
 import LoginButton from "../components/LoginButton";
 
 import Board from "../components/Board"; // Card 컴포넌트 추가
