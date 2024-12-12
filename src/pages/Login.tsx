@@ -33,7 +33,7 @@ const Style = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
-  background-color: ${color.background_main};
+  background-color: ${color.background};
   z-index: 1;
 
   .login-form {

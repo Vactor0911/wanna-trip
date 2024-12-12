@@ -12,7 +12,7 @@ const Style = styled.div`
   width: 100%;
   height: 100vh;
   gap: 1.5em;
-  background-color: ${color.background_main};
+  background-color: ${color.background};
   position: relative;
   z-index: 1;
   color: white;
