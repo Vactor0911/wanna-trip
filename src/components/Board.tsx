@@ -8,16 +8,18 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import React, { ReactElement, ReactNode } from "react";
 
 const Style = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 20%;
-  min-width: 280px;
-  padding: 10px 15px;
-  gap: 15px;
-  background-color: #d9d9d9;
-  border-radius: 5px;
+  .board {
+    display: flex;
+    flex-direction: column;
+    width: 20%;
+    min-width: 280px;
+    padding: 10px 15px;
+    gap: 15px;
+    background-color: #d9d9d9;
+    border-radius: 5px;
+  }
 
-  & > header {
+  .board > header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -52,43 +54,45 @@ interface BoardProps {
 
 const Board = ({ day }: BoardProps) => {
   return (
-    <Style className="board">
-      {/* 헤더 */}
-      <header>
-        {/* 제목 */}
-        <h2>DAY {day}</h2>
+    <Style>
+      <div className="board">
+        {/* 헤더 */}
+        <header>
+          {/* 제목 */}
+          <h2>DAY {day}</h2>
 
-        {/* 버튼 */}
-        <div className="btn-container">
-          <MyIconButton>
-            <AddRoundedIcon sx={{ transform: "scale(1.3)" }} />
-          </MyIconButton>
-          <MyIconButton>
-            <ContentCopyRoundedIcon />
-          </MyIconButton>
-          <MyIconButton>
-            <DeleteOutlineRoundedIcon sx={{ transform: "scale(1.15)" }} />
-          </MyIconButton>
-          <MyIconButton>
-            <MenuRoundedIcon sx={{ transform: "scale(1, 1.5)" }} />
-          </MyIconButton>
-        </div>
-      </header>
+          {/* 버튼 */}
+          <div className="btn-container">
+            <MyIconButton>
+              <AddRoundedIcon sx={{ transform: "scale(1.3)" }} />
+            </MyIconButton>
+            <MyIconButton>
+              <ContentCopyRoundedIcon />
+            </MyIconButton>
+            <MyIconButton>
+              <DeleteOutlineRoundedIcon sx={{ transform: "scale(1.15)" }} />
+            </MyIconButton>
+            <MyIconButton>
+              <MenuRoundedIcon sx={{ transform: "scale(1, 1.5)" }} />
+            </MyIconButton>
+          </div>
+        </header>
 
-      {/* 카드 표시 부분 */}
+        {/* 카드 표시 부분 */}
 
-      {/* 계획 추가 버튼 */}
-      <Button
-        startIcon={<AddRoundedIcon sx={{ color: "#4c4c4c" }} />}
-        sx={{
-          alignSelf: "flex-start",
-          color: "#4c4c4c",
-          fontWeight: "bold",
-          fontSize: "1.1em",
-        }}
-      >
-        계획 추가하기
-      </Button>
+        {/* 계획 추가 버튼 */}
+        <Button
+          startIcon={<AddRoundedIcon sx={{ color: "#4c4c4c" }} />}
+          sx={{
+            alignSelf: "flex-start",
+            color: "#4c4c4c",
+            fontWeight: "bold",
+            fontSize: "1.1em",
+          }}
+        >
+          계획 추가하기
+        </Button>
+      </div>
     </Style>
   );
 };

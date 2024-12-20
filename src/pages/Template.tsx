@@ -9,6 +9,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MyIconButton from "../components/MyIconButton";
 import Board from "../components/Board";
+import 'overlayscrollbars/overlayscrollbars.css';
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 
 const Style = styled.div`
   display: flex;
@@ -34,7 +36,7 @@ const Style = styled.div`
     justify-content: flex-end;
     position: relative;
     width: 100%;
-    height: calc(100% - 80px);
+    height: 100%;
   }
 
   .template-container {
@@ -63,12 +65,9 @@ const Style = styled.div`
 
   .template {
     display: flex;
-    min-width: 100%;
-    height: calc(100% - 80px);
+    height: 100%;
     padding: 20px 40px;
-    padding-right: 0;
-    gap: 30px;
-    overflow-x: scroll;
+    gap: 20px;
   }
 
   .flex-menu {
@@ -83,23 +82,27 @@ const Style = styled.div`
     background-color: ${color.primaryLight};
   }
 
+  #template-scrollbar {
+    width: 100%;
+    height: 100%;
+    display: flex;
+  }
+  #template-scrollbar > div {
+    display: flex;
+  }
+
   @media (max-width: 480px) {
     & > header,
     .template-container > header {
       height: 60px;
     }
 
-    .main-container,
-    .template {
+    .main-container {
       height: calc(100% - 60px);
     }
 
     .template-container {
       width: calc(100% - 25px);
-    }
-
-    .template {
-      padding: 10px 15px;
     }
 
     .template-container > header .btn-container button:not(#btn-template-menu) {
@@ -116,6 +119,13 @@ const Style = styled.div`
     .board {
       width: 100%;
     }
+  }
+
+  .os-scrollbar {
+    --os-size: 10px;
+    --os-handle-bg: white;
+    --os-handle-border-radius: 2px;
+    --os-handle-border: 1px solid #aaa;
   }
 `;
 
@@ -165,10 +175,12 @@ const Template = () => {
             </header>
 
             {/* 템플릿 내용 */}
-            <div className="template">
-              <Board day={1} />
-              <Board day={1} />
-            </div>
+            <OverlayScrollbarsComponent id="template-scrollbar" >
+              <div className="template">
+                <Board day={1} />
+                <Board day={2} />
+              </div>
+            </OverlayScrollbarsComponent>
           </div>
 
           {/* 좌측 확장 메뉴 */}
