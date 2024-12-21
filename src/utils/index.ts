@@ -1,3 +1,4 @@
+// 색상 테마
 export const color = {
   background: "#344056",
   primary: "#47536b",
