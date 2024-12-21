@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import { color } from "../utils/theme";
 import MyButton from "../components/MyButton";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Fade, Paper, Popper } from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
@@ -9,8 +9,16 @@ import SaveIcon from "@mui/icons-material/Save";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MyIconButton from "../components/MyIconButton";
 import Board from "../components/Board";
-import 'overlayscrollbars/overlayscrollbars.css';
+import "overlayscrollbars/overlayscrollbars.css";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { useAtom, useAtomValue } from "jotai";
+import {
+  SERVER_HOST,
+  templateDataAtom,
+  wannaTripLoginStateAtom,
+} from "../state";
+import axios from "axios";
+import { useNavigate } from "react-router";
 
 const Style = styled.div`
   display: flex;
@@ -130,6 +138,16 @@ const Style = styled.div`
 `;
 
 const Template = () => {
+  // 비로그인 상태일 경우 로그인 페이지로 리다이렉션
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!wannaTripLoginState.isLoggedIn) {
+      navigate("/login");
+    }
+  }, [navigate, wannaTripLoginState.isLoggedIn]);
+
   // 모바일용 템플릿 메뉴 팝업
   const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false); // 팝업 열림 여부
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트
@@ -138,6 +156,21 @@ const Template = () => {
     // 클릭 이벤트 핸들러
     setIsTemplateMenuOpen(!isTemplateMenuOpen);
   }, [isTemplateMenuOpen]);
+
+  // 템플릿 정보
+  const [templateData, setTemplateData] = useAtom(templateDataAtom);
+
+  // 최초 접속시 템플릿 정보 불러오기
+  useEffect(() => {
+    // 비로그인 상태일 경우 종료
+    if (!wannaTripLoginState.isLoggedIn) {
+      return;
+    }
+
+    axios.get(`${SERVER_HOST}/load-template`).then((res) => {
+      setTemplateData(res.data);
+    });
+  }, [setTemplateData, wannaTripLoginState]);
 
   return (
     <>
@@ -175,7 +208,7 @@ const Template = () => {
             </header>
 
             {/* 템플릿 내용 */}
-            <OverlayScrollbarsComponent id="template-scrollbar" >
+            <OverlayScrollbarsComponent id="template-scrollbar">
               <div className="template">
                 <Board day={1} />
                 <Board day={2} />
