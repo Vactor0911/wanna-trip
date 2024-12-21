@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";

@@ -5,14 +5,29 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import React, { ReactElement, ReactNode } from "react";
+import { useCallback, useRef } from "react";
+import {
+  boardDataAtom,
+  popupMenuStateAtom,
+  PopupMenuType,
+  SERVER_HOST,
+  templateDataAtom,
+} from "../state";
+import { useAtom, useAtomValue } from "jotai";
+import Card from "./Card";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
+import { CardType, timeStringToDayjs } from "../utils";
+import axios from "axios";
+
+import dayjs from "dayjs";
 
 const Style = styled.div`
   .board {
     display: flex;
     flex-direction: column;
-    width: 20%;
     min-width: 280px;
+    width: 20vw;
+    max-height: 100%;
     padding: 10px 15px;
     gap: 15px;
     background-color: #d9d9d9;
@@ -28,57 +43,219 @@ const Style = styled.div`
   header > .btn-container {
     display: flex;
   }
-`;
 
-// 헤더에 있는 아이콘 버튼 컴포넌트
-const MyIconButton = ({ children }: { children: ReactNode }) => {
-  return (
-    <IconButton
-      sx={{
-        color: "#4c4c4c",
-        padding: "3px",
-      }}
-    >
-      {React.isValidElement(children) && typeof children.type !== "string"
-        ? React.cloneElement(children as ReactElement, {
-            style: { ...(children.props.style || {}), fontSize: "1.25em" },
-          })
-        : children}
-    </IconButton>
-  );
-};
+  .board-scrollbar,
+  .card-container {
+    display: flex;
+  }
+
+  .card-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  @media (max-width: 480px) {
+    .board {
+      width: 90vw;
+    }
+  }
+`;
 
 interface BoardProps {
   day: number;
 }
 
 const Board = ({ day }: BoardProps) => {
+  const [boardData, setBoardData] = useAtom(boardDataAtom);
+  const templateData = useAtomValue(templateDataAtom);
+
+  // 카드 추가
+  const appendCard = useCallback(() => {
+    if (!templateData) {
+      return;
+    }
+
+    let startTime = dayjs().hour(0).minute(0);
+    if (boardData[day]) {
+      const cards = boardData[day];
+
+      if (cards.length > 0) {
+        startTime = timeStringToDayjs(cards[cards.length - 1].endTime);
+      }
+
+      // 23:59 이후로는 계획 추가 불가
+      if (startTime.isAfter(dayjs().hour(23).minute(59))) {
+        return;
+      }
+    }
+    const endTime = dayjs.min(
+      startTime.add(10, "minutes"),
+      dayjs().hour(23).minute(59)
+    );
+
+    axios
+      .post(`${SERVER_HOST}/api/card?type=append`, {
+        templateId: templateData.id,
+        startTime: startTime.format("HH:mm"),
+        endTime: endTime.format("HH:mm"),
+        board: day,
+      })
+      .then((res) => {
+        const newCardId = res.data.cardId;
+        const newCard = {
+          id: newCardId,
+          type: CardType.TEXT,
+          content: "새 계획",
+          startTime: startTime.format("HH:mm"),
+          endTime: endTime.format("HH:mm"),
+        };
+
+        // 보드에 카드가 없을 경우 새로 생성
+        if (!boardData[day]) {
+          setBoardData([...boardData, [newCard]]);
+          return;
+        }
+
+        // 보드에 카드가 있을 경우 추가
+        const newBoardData = [...boardData];
+        newBoardData[day].push(newCard);
+        setBoardData(newBoardData);
+      });
+  }, [boardData, day, setBoardData, templateData]);
+
+  // 카드 팝업 메뉴
+  const [popupMenuState, setPopupMenuState] = useAtom(popupMenuStateAtom);
+  const anchorBoardMenu = useRef<HTMLButtonElement>(null);
+  const handleMenuClicked = () => {
+    const newPopupMenuState = {
+      isOpen: !popupMenuState.isOpen,
+      type: PopupMenuType.BOARD,
+      anchor: anchorBoardMenu.current,
+      placement: "right-start",
+      board: day,
+      card: null,
+    };
+    setPopupMenuState(newPopupMenuState);
+  };
+
+  // 새 보드 추가
+  const addBoard = (day: number) => {
+    // 15일 이상은 추가 불가
+    if (boardData.length >= 15) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/board?type=insert`, {
+        templateId: templateData.id,
+        board: day,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newBoardData = [...boardData];
+          newBoardData.splice(day + 1, 0, []);
+          setBoardData(newBoardData);
+        }
+      });
+  };
+
+  // 보드 삭제
+  const deleteBoard = (day: number) => {
+    if (boardData.length <= 0) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/board?type=delete`, {
+        templateId: templateData.id,
+        board: day,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newBoardData = [...boardData];
+          newBoardData.splice(day, 1);
+          setBoardData(newBoardData);
+        }
+      });
+  };
+
+  // 보드 복사
+  const copyBoard = (day: number) => {
+    if (boardData.length >= 15) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/board?type=copy`, {
+        templateId: templateData.id,
+        board: day,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newBoardData = [...boardData];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const newCardData = res.data.cards.map((card: any) => {
+            return {
+              id: card.card_id,
+              type: card.type,
+              content: card.content,
+              startTime: timeStringToDayjs(card.startTime).format("HH:mm"),
+              endTime: timeStringToDayjs(card.endTime).format("HH:mm"),
+            };
+          });
+          newBoardData.splice(day + 1, 0, newCardData);
+          setBoardData(newBoardData);
+        }
+      });
+  };
+
   return (
     <Style>
       <div className="board">
         {/* 헤더 */}
         <header>
           {/* 제목 */}
-          <h2>DAY {day}</h2>
+          <h2>DAY {day + 1}</h2>
 
           {/* 버튼 */}
           <div className="btn-container">
-            <MyIconButton>
+            <IconButton
+              onClick={() => addBoard(day)}
+              disabled={boardData.length >= 15}
+            >
               <AddRoundedIcon sx={{ transform: "scale(1.3)" }} />
-            </MyIconButton>
-            <MyIconButton>
+            </IconButton>
+            <IconButton
+              disabled={boardData.length >= 15}
+              onClick={() => copyBoard(day)}
+            >
               <ContentCopyRoundedIcon />
-            </MyIconButton>
-            <MyIconButton>
+            </IconButton>
+            <IconButton onClick={() => deleteBoard(day)}>
               <DeleteOutlineRoundedIcon sx={{ transform: "scale(1.15)" }} />
-            </MyIconButton>
-            <MyIconButton>
+            </IconButton>
+            <IconButton ref={anchorBoardMenu} onClick={handleMenuClicked}>
               <MenuRoundedIcon sx={{ transform: "scale(1, 1.5)" }} />
-            </MyIconButton>
+            </IconButton>
           </div>
         </header>
 
         {/* 카드 표시 부분 */}
+        <OverlayScrollbarsComponent id="board-scrollbar">
+          <div className="card-container">
+            {boardData[day]
+              ?.sort(function (a, b) {
+                return a.endTime < b.endTime
+                  ? -1
+                  : a.endTime > b.endTime
+                  ? 1
+                  : 0;
+              })
+              .map((_card, index) => {
+                return <Card key={index} day={day} position={index} />;
+              })}
+          </div>
+        </OverlayScrollbarsComponent>
 
         {/* 계획 추가 버튼 */}
         <Button
@@ -89,6 +266,7 @@ const Board = ({ day }: BoardProps) => {
             fontWeight: "bold",
             fontSize: "1.1em",
           }}
+          onClick={appendCard}
         >
           계획 추가하기
         </Button>

@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BackgroundImage from "../assets/images/background.png";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import {
   Avatar,
   Button,
@@ -167,6 +167,7 @@ const Login = () => {
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
 
 
@@ -214,8 +215,10 @@ const Login = () => {
   }, []);
 
   //구글 간편 로그인 시작
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleGoogleLogin = (credentialResponse: any) => {
     // 구글에서 받은 Credential 디코딩
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let decoded: any;
     try {
       decoded = jwtDecode(credentialResponse.credential);
@@ -229,8 +232,6 @@ const Login = () => {
     const email = decoded.email;
     const name = decoded.name;
 
-    console.log("구글 로그인 성공:", { email, name });
-
     // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
     axios
       .post(`${SERVER_HOST}/api/login/google`, {
@@ -239,7 +240,7 @@ const Login = () => {
         loginType: "google",
       })
       .then((response) => {
-        const { accessToken, refreshToken } = response.data;
+        const { accessToken, refreshToken, userId } = response.data;
 
         // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
         localStorage.removeItem("savedEmail");
@@ -247,6 +248,7 @@ const Login = () => {
         // Step 2: 로그인 상태 업데이트
         const wannaTriploginState = {
           isLoggedIn: true,
+          userId: userId,
           email: email,
           loginType: "google",
           loginToken: accessToken,
@@ -316,7 +318,7 @@ const Login = () => {
                 token: accessToken,
               })
               .then((serverResponse) => {
-                const { accessToken, refreshToken } = serverResponse.data;
+                const { accessToken, refreshToken, userId } = serverResponse.data;
 
                 // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
                 localStorage.removeItem("savedEmail");
@@ -324,6 +326,7 @@ const Login = () => {
                 // Step 4: 로그인 상태 업데이트
                 const WannaTriploginState = {
                   isLoggedIn: true,
+                  userId: userId,
                   email: email,
                   loginType: "kakao", //카카오 로그인
                   loginToken: accessToken,
@@ -335,9 +338,6 @@ const Login = () => {
 
                 // LocalStorage에 저장
                 localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
-
-                // 서버 응답 처리
-                console.log("로그인 성공:", serverResponse.data.message);
 
                 // 로그인 성공 메시지 표시
                 alert(`${nickname}님 환영합니다!`);
@@ -376,7 +376,7 @@ const Login = () => {
         password: password,
       })
       .then((response) => {
-        const { nickname, token } = response.data;
+        const { nickname, token, userId } = response.data;
 
         // 로그인 성공 메시지
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
@@ -384,6 +384,7 @@ const Login = () => {
         // 로그인 상태 업데이트
         const WannaTriploginState = {
           isLoggedIn: true,
+          userId: userId,
           email: email,
           loginType: "normal", //일반 로그인
           loginToken: token,

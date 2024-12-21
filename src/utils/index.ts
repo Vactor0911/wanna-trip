@@ -1,3 +1,8 @@
+import dayjs from "dayjs";
+import minMax from "dayjs/plugin/minMax";
+
+dayjs.extend(minMax);
+
 // 색상 테마
 export const color = {
   background: "#344056",
@@ -7,150 +12,32 @@ export const color = {
   link: "#3575f1",
 };
 
-// 템플릿 클래스
-export class Template {
-  private id: number;
-  private title: string;
-  private boards: Board[];
-
-  constructor(
-    id: number,
-    title: string = "새 여행 계획",
-    boards: Board[] = []
-  ) {
-    this.id = id;
-    this.title = title;
-    this.boards = boards;
+// 시간 문자열을 dayjs 객체로 변환
+export const timeStringToDayjs = (time: string): dayjs.Dayjs => {
+  if (!time) {
+    return dayjs().hour(0).minute(0);
   }
+  return dayjs()
+    .hour(Number(time.split(":")[0]))
+    .minute(Number(time.split(":")[1]));
+};
 
-  // Getter
-  public getId(): number {
-    return this.id;
-  }
-
-  public getTitle(): string {
-    return this.title;
-  }
-
-  public getBoards(): Board[] {
-    return this.boards;
-  }
-
-  // Setter
-  public setTitle(title: string): void {
-    this.title = title;
-  }
-
-  public setBoards(boards: Board[]): void {
-    this.boards = boards;
-  }
+// 템플릿 속성
+export interface TemplateInterface {
+  id: number;
+  title: string;
 }
 
-// 보드 클래스
-export class Board {
-  private day: number;
-  private cards: Card[] = [];
-
-  constructor(day: number, cards: Card[] = []) {
-    this.day = day;
-    this.cards = cards;
-  }
-
-  // Getter
-  public getDay(): number {
-    return this.day;
-  }
-
-  public getCards(): Card[] {
-    return this.cards;
-  }
-
-  // Setter
-  public setDay(day: number): void {
-    this.day = day;
-  }
-
-  public setCards(cards: Card[]): void {
-    this.cards = cards;
-  }
-}
-
-// 카드 클래스
+// 카드 속성
 export enum CardType {
-  TEXT = 0,
-  PLACE = 1,
+  TEXT,
+  PLACE,
 }
 
-export class Card {
+export interface CardInterface {
   id: number;
   type: CardType;
   content: string;
-  startTime: Date;
-  endTime: Date;
-  position: {
-    board: number;
-    top: number;
-  };
-
-  constructor(
-    id: number,
-    type: CardType = CardType.TEXT,
-    content: string = "새 계획",
-    startTime: Date,
-    endTime: Date,
-    position: { board: number; top: number }
-  ) {
-    this.id = id;
-    this.type = type;
-    this.content = content;
-    this.startTime = startTime;
-    this.endTime = endTime;
-    this.position = position;
-  }
-
-  // Getter
-  public getId(): number {
-    return this.id;
-  }
-
-  public getType(): CardType {
-    return this.type;
-  }
-
-  public getContent(): string {
-    return this.content;
-  }
-
-  public getStartTime(): Date {
-    return this.startTime;
-  }
-
-  public getEndTime(): Date {
-    return this.endTime;
-  }
-
-  public getPosition(): { board: number; top: number } {
-    return this.position;
-  }
-
-  // Setter
-  public setType(type: CardType): void {
-    this.type = type;
-  }
-
-  public setContent(content: string): void {
-    this.content = content;
-  }
-
-  public setStartTime(startTime: Date): void {
-    this.startTime = startTime;
-  }
-
-  public setEndTime(endTime: Date): void {
-    this.endTime = endTime;
-  }
-
-  public setPosition(board: number, top: number): void {
-    this.position = { board, top };
-  }
+  startTime: string;
+  endTime: string;
 }

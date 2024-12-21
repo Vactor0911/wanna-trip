@@ -1,24 +1,27 @@
 import styled from "@emotion/styled";
-import { color } from "../utils/theme";
+import { CardInterface, color, timeStringToDayjs } from "../utils/index";
 import MyButton from "../components/MyButton";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Fade, Paper, Popper } from "@mui/material";
+import { useCallback, useEffect, useRef } from "react";
+import { Fade, Paper, Popper, PopperPlacementType } from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MyIconButton from "../components/MyIconButton";
-import Board from "../components/Board";
 import "overlayscrollbars/overlayscrollbars.css";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useAtom, useAtomValue } from "jotai";
 import {
+  boardDataAtom,
+  popupMenuStateAtom,
+  PopupMenuType,
   SERVER_HOST,
   templateDataAtom,
   wannaTripLoginStateAtom,
 } from "../state";
 import axios from "axios";
-import { useNavigate } from "react-router";
+import { BoardMenu, CardMenu, MobileMenu } from "../components/Popups";
+import Board from "../components/Board";
 
 const Style = styled.div`
   display: flex;
@@ -44,7 +47,7 @@ const Style = styled.div`
     justify-content: flex-end;
     position: relative;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 80px);
   }
 
   .template-container {
@@ -120,12 +123,12 @@ const Style = styled.div`
       display: inline-flex;
     }
 
-    .flex-menu {
-      width: 25px;
+    .template {
+      padding: 20px 1vw;
     }
 
-    .board {
-      width: 100%;
+    .flex-menu {
+      width: 25px;
     }
   }
 
@@ -138,39 +141,100 @@ const Style = styled.div`
 `;
 
 const Template = () => {
-  // 비로그인 상태일 경우 로그인 페이지로 리다이렉션
-  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!wannaTripLoginState.isLoggedIn) {
-      navigate("/login");
-    }
-  }, [navigate, wannaTripLoginState.isLoggedIn]);
-
   // 모바일용 템플릿 메뉴 팝업
-  const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false); // 팝업 열림 여부
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트
+
+  // 팝업 메뉴 상태
+  const [popupMenuState, setPopupMenuState] = useAtom(popupMenuStateAtom);
 
   const handleTemplateMenuClicked = useCallback(() => {
     // 클릭 이벤트 핸들러
-    setIsTemplateMenuOpen(!isTemplateMenuOpen);
-  }, [isTemplateMenuOpen]);
+    const newPopupMenuState = {
+      isOpen: !popupMenuState.isOpen,
+      type: PopupMenuType.MOBILE,
+      anchor: anchorTemplateMenu.current,
+      placement: "bottom-end",
+      board: null,
+      card: null,
+    };
 
-  // 템플릿 정보
+    setPopupMenuState(newPopupMenuState);
+  }, [popupMenuState.isOpen, setPopupMenuState]);
+
+  // 팝업 메뉴 외부 클릭시 닫기
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
+      if (
+        popupMenuState.isOpen &&
+        popupMenuState.anchor &&
+        !popupMenuState.anchor.contains(event.target as Node)
+      ) {
+        setPopupMenuState((prevState) => ({
+          ...prevState,
+          isOpen: false,
+        }));
+      }
+    },
+    [popupMenuState.anchor, popupMenuState.isOpen, setPopupMenuState]
+  );
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [handleClickOutside]);
+
+  // 보드 정보
   const [templateData, setTemplateData] = useAtom(templateDataAtom);
+  const [boardData, setBoardData] = useAtom(boardDataAtom);
 
   // 최초 접속시 템플릿 정보 불러오기
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
   useEffect(() => {
     // 비로그인 상태일 경우 종료
     if (!wannaTripLoginState.isLoggedIn) {
       return;
     }
 
-    axios.get(`${SERVER_HOST}/load-template`).then((res) => {
-      setTemplateData(res.data);
-    });
-  }, [setTemplateData, wannaTripLoginState]);
+    const userId = wannaTripLoginState.userId;
+    axios
+      .post(`${SERVER_HOST}/api/template`, { userId: userId })
+      .then((res) => {
+        const template = res.data.template;
+
+        setTemplateData({ id: template.template_id, title: template.title });
+      })
+      .then(() => {
+        const templateId = templateData.id;
+        axios
+          .post(`${SERVER_HOST}/api/card?type=load-all`, {
+            templateId: templateId,
+          })
+          .then((res) => {
+            const cards = res.data.cards;
+            const newBoardData = Array<CardInterface[]>();
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            cards.forEach((card: any) => {
+              const boardIndex = card.board;
+              const newCard = card as CardInterface;
+              newCard.startTime = timeStringToDayjs(card.startTime).format(
+                "HH:mm"
+              );
+              newCard.endTime = timeStringToDayjs(card.endTime).format("HH:mm");
+
+              if (!newBoardData[boardIndex]) {
+                newBoardData[boardIndex] = [newCard];
+              } else {
+                newBoardData[boardIndex].push(newCard);
+              }
+            });
+
+            setBoardData(newBoardData);
+          });
+      });
+  }, [setBoardData, setTemplateData, templateData.id, wannaTripLoginState]);
 
   return (
     <>
@@ -191,7 +255,7 @@ const Template = () => {
           <div className="template-container">
             {/* 템플릿 헤더 */}
             <header className="flex">
-              <h2 style={{ color: "white" }}>MyTemplate</h2>
+              <h2 style={{ color: "white" }}>{templateData.title}</h2>
               <div className="btn-container flex">
                 <MyButton startIcon={<DownloadIcon />}>저장하기</MyButton>
                 <MyButton startIcon={<SaveIcon />}>다운로드</MyButton>
@@ -210,8 +274,11 @@ const Template = () => {
             {/* 템플릿 내용 */}
             <OverlayScrollbarsComponent id="template-scrollbar">
               <div className="template">
-                <Board day={1} />
-                <Board day={2} />
+                {Array.from({ length: Math.max(boardData.length, 1) }).map(
+                  (_board, index) => (
+                    <Board key={index} day={index} />
+                  )
+                )}
               </div>
             </OverlayScrollbarsComponent>
           </div>
@@ -223,9 +290,9 @@ const Template = () => {
 
       {/* 모바일용 메뉴 팝업 */}
       <Popper
-        open={isTemplateMenuOpen}
-        anchorEl={anchorTemplateMenu.current}
-        placement="bottom-end"
+        open={popupMenuState.isOpen}
+        anchorEl={popupMenuState?.anchor}
+        placement={popupMenuState?.placement as PopperPlacementType}
         transition
       >
         {({ TransitionProps }) => (
@@ -237,12 +304,9 @@ const Template = () => {
                 flexDirection: "column",
               }}
             >
-              <MyButton size="large" startIcon={<DownloadIcon />}>
-                저장하기
-              </MyButton>
-              <MyButton size="large" startIcon={<SaveIcon />}>
-                다운로드
-              </MyButton>
+              {popupMenuState?.type === PopupMenuType.MOBILE && <MobileMenu />}
+              {popupMenuState?.type === PopupMenuType.BOARD && <BoardMenu />}
+              {popupMenuState?.type === PopupMenuType.CARD && <CardMenu />}
             </Paper>
           </Fade>
         )}

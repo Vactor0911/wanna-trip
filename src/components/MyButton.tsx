@@ -4,10 +4,11 @@ import { ButtonProps } from "@mui/material";
 
 interface MyButtonProps extends ButtonProps {
   startIcon?: React.ReactNode;
+  textColor?: string;
 }
 
 const MyButton = (props: MyButtonProps) => {
-  const { children, startIcon } = props;
+  const { children, startIcon, onClick, textColor } = props;
   return (
     <Button
       variant="contained"
@@ -21,8 +22,9 @@ const MyButton = (props: MyButtonProps) => {
       sx={{
         fontWeight: "bold",
         backgroundColor: "#dcdfe4",
-        color: "#4b6079",
+        color: textColor || "#4b6079",
       }}
+      onClick={onClick}
     >
       {children}
     </Button>

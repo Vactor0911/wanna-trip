@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import LockIcon from "@mui/icons-material/Lock";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -180,11 +180,6 @@ const Register = () => {
       return;
     }
 
-    console.log("이메일과 비밀번호로 회원가입 요청을 보냅니다:", {
-      email,
-      password,
-    });
-
     // 서버로 회원가입 요청 전송
     axios
       .post(`${SERVER_HOST}/api/register`, {
@@ -192,10 +187,7 @@ const Register = () => {
         password: password,
         name: name,
       })
-      .then((response) => {
-        // 서버로부터 성공 메시지를 받은 경우
-        console.log("회원가입 성공:", response.data.message);
-
+      .then(() => {
         // 사용자에게 성공 메시지 보여주기 (UI 반영)
         alert("회원가입이 성공적으로 완료되었습니다!");
         navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
