@@ -3,6 +3,8 @@ import { color } from "../utils/theme";
 import BackgroundImage from "../assets/images/background.png";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 
 const Style = styled.div`
   display: flex;
@@ -66,6 +68,12 @@ const Main = () => {
   const navigate = useNavigate(); // 페이지 주소 이동을 위한 navigate 함수 선언
   const handleLoginClick = () => navigate("/login"); // 로그인 페이지로 이동
   const handleStartClick = () => navigate("/template"); // 템플릿 페이지로 이동
+
+  // 로그인 된 상태면 템플릿 페이지로 이동
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  if (wannaTripLoginState.isLoggedIn) {
+    navigate("/template");
+  }
 
   return (
     <Style>
