@@ -3,8 +3,8 @@ import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAtomValue } from "jotai";
-import { wannaTripLoginStateAtom } from "../state";
+import { useAtomValue, useSetAtom } from "jotai";
+import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
 import { useEffect } from "react";
 
 const Style = styled.div`
@@ -76,16 +76,24 @@ const Main = () => {
     navigate("/template");
   }
 
+  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     // 카카오 로그인 완료용 코드
-    console.log(window.location.href.split("/?/"));
-    console.log(window.location.href.split("/?/").join("/"));
     if (window.location.href.split("/?/").length > 1) {
       console.log(
-        "다음으로 이동 >> ",
+        "추출한 경로 >> ",
         `/${window.location.href.split("/?/")[1]}`
       );
-      navigate(`/${window.location.href.split("/?/")[1]}`);
+      const link = window.location.href.split("/?/")[1];
+      const parsedLink = link.split("&")[0];
+      const pageLink = `/${parsedLink[0]}`;
+      console.log("다음으로 이동 >> ", pageLink);
+      navigate(pageLink);
+
+      // 카카오 로그인 코드 저장
+      const code = parsedLink[1].substring(5);
+      console.log("저장할 code >> ", code);
+      setKakaoLoginState(code);
     }
   }, []);
 

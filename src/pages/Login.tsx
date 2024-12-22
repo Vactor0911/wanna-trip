@@ -24,7 +24,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { wannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTripLoginStateAtom 불러오기
+import { wannaTripLoginStateAtom, SERVER_HOST, kakaoLoginStateAtom } from "../state"; // WannaTripLoginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -207,11 +207,9 @@ const Login = () => {
   // *** 이메일 저장 기능 끝 ***
 
   // 카카오 URL의 code를 처리하기 위한 useEffect
+  const kakaoLoginState = useAtomValue(kakaoLoginStateAtom); // 카카오 로그인 코드 상태
   useEffect(() => {
-    console.log(window.location.href.split("/?/"))
-    console.log(window.location.href.split("/?/").join("?"))
-    const code = new URL(window.location.href.split("/?/").join("?")).searchParams.get("code");
-    if (code) {
+    if (kakaoLoginState) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
