@@ -27,6 +27,7 @@ jobs:
     - name: Deploy to GitHub Pages
       run: npm run deploy
       env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
         VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
         VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
