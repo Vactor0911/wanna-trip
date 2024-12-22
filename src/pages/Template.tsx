@@ -2,7 +2,12 @@ import styled from "@emotion/styled";
 import { CardInterface, color, timeStringToDayjs } from "../utils/index";
 import MyButton from "../components/MyButton";
 import { useCallback, useEffect, useRef } from "react";
-import { Fade, Paper, Popper, PopperPlacementType } from "@mui/material";
+import {
+  Fade,
+  Paper,
+  Popper,
+  PopperPlacementType,
+} from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
@@ -22,6 +27,7 @@ import {
 import axios from "axios";
 import { BoardMenu, CardMenu, MobileMenu } from "../components/Popups";
 import Board from "../components/Board";
+import { BoardDeleteDialog, BoardSwapDialog, CardDeleteDialog, CardSwapDialog } from "../components/Dialogs";
 
 const Style = styled.div`
   display: flex;
@@ -313,6 +319,12 @@ const Template = () => {
           </Fade>
         )}
       </Popper>
+
+      {/* 대화상자 */}
+      <BoardDeleteDialog />
+      <CardDeleteDialog />
+      <BoardSwapDialog />
+      <CardSwapDialog />
     </>
   );
 };

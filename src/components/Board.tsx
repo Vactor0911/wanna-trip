@@ -8,12 +8,14 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import { useCallback, useRef } from "react";
 import {
   boardDataAtom,
+  dialogStateAtom,
+  DialogType,
   popupMenuStateAtom,
   PopupMenuType,
   SERVER_HOST,
   templateDataAtom,
 } from "../state";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import Card from "./Card";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { CardType, timeStringToDayjs } from "../utils";
@@ -160,23 +162,17 @@ const Board = ({ day }: BoardProps) => {
   };
 
   // 보드 삭제
-  const deleteBoard = (day: number) => {
-    if (boardData.length <= 0) {
+  const setDialogState = useSetAtom(dialogStateAtom);
+  const handleDeleteBoardClick = (day: number) => {
+    if (day === null) {
       return;
     }
 
-    axios
-      .post(`${SERVER_HOST}/api/board?type=delete`, {
-        templateId: templateData.id,
-        board: day,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          const newBoardData = [...boardData];
-          newBoardData.splice(day, 1);
-          setBoardData(newBoardData);
-        }
-      });
+    setDialogState({
+      type: DialogType.DELETE_BOARD,
+      from: day + 1,
+      to: null,
+    });
   };
 
   // 보드 복사
@@ -231,7 +227,7 @@ const Board = ({ day }: BoardProps) => {
             >
               <ContentCopyRoundedIcon />
             </IconButton>
-            <IconButton onClick={() => deleteBoard(day)}>
+            <IconButton onClick={() => handleDeleteBoardClick(day)}>
               <DeleteOutlineRoundedIcon sx={{ transform: "scale(1.15)" }} />
             </IconButton>
             <IconButton ref={anchorBoardMenu} onClick={handleMenuClicked}>

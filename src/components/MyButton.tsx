@@ -8,7 +8,7 @@ interface MyButtonProps extends ButtonProps {
 }
 
 const MyButton = (props: MyButtonProps) => {
-  const { children, startIcon, onClick, textColor } = props;
+  const { children, startIcon, onClick, disabled, textColor } = props;
   return (
     <Button
       variant="contained"
@@ -25,6 +25,7 @@ const MyButton = (props: MyButtonProps) => {
         color: textColor || "#4b6079",
       }}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </Button>

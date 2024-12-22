@@ -6,9 +6,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   boardDataAtom,
+  dialogStateAtom,
+  DialogType,
   popupMenuStateAtom,
   SERVER_HOST,
   templateDataAtom,
@@ -97,28 +99,34 @@ export const BoardMenu = () => {
   };
 
   // 보드 삭제
+  const setDialogState = useSetAtom(dialogStateAtom);
   const handleDeleteBoardClick = () => {
-    if (boardData.length <= 0) {
-      return;
-    }
-
     const day = popupMenuState.board;
+
     if (day === null) {
       return;
     }
 
-    axios
-      .post(`${SERVER_HOST}/api/board?type=delete`, {
-        templateId: templateData.id,
-        board: day,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          const newBoardData = [...boardData];
-          newBoardData.splice(day, 1);
-          setBoardData(newBoardData);
-        }
-      });
+    setDialogState({
+      type: DialogType.DELETE_BOARD,
+      from: day + 1,
+      to: null,
+    });
+  };
+
+  // 보드 교체
+  const handleSwapBoardClick = () => {
+    const day = popupMenuState.board;
+
+    if (day === null) {
+      return;
+    }
+
+    setDialogState({
+      type: DialogType.SWAP_BOARD,
+      from: day,
+      to: null,
+    });
   };
 
   return (
@@ -137,7 +145,12 @@ export const BoardMenu = () => {
       >
         복사하기
       </MyButton>
-      <MyButton size="large" startIcon={<SwapHorizIcon />}>
+      <MyButton
+        size="large"
+        startIcon={<SwapHorizIcon />}
+        onClick={handleSwapBoardClick}
+        disabled={boardData.length <= 1}
+      >
         교체하기
       </MyButton>
       <MyButton
@@ -261,9 +274,23 @@ export const CardMenu = () => {
       });
   };
 
-  const handleSwapCardClick = () => {};
+  const handleSwapCardClick = () => {
+    const day = popupMenuState.board;
+    const position = popupMenuState.card;
+
+    if (day === null || position === null) {
+      return;
+    }
+
+    setDialogState({
+      type: DialogType.SWAP_CARD,
+      from: day,
+      to: position,
+    });
+  };
 
   // 카드 삭제
+  const setDialogState = useSetAtom(dialogStateAtom);
   const handleDeleteCardClick = () => {
     const day = popupMenuState.board;
     const position = popupMenuState.card;
@@ -272,17 +299,14 @@ export const CardMenu = () => {
       return;
     }
 
-    axios
-      .post(`${SERVER_HOST}/api/card?type=delete`, {
-        cardId: boardData[day][position].id,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          const newBoardData = [...boardData];
-          newBoardData[day].splice(position, 1);
-          setBoardData(newBoardData);
-        }
-      });
+    setDialogState({
+      type: DialogType.DELETE_CARD,
+      from: day + 1,
+      to:
+        boardData[day][position].startTime +
+        " ~ " +
+        boardData[day][position].endTime,
+    });
   };
 
   return (
@@ -301,7 +325,11 @@ export const CardMenu = () => {
       >
         복사하기
       </MyButton>
-      <MyButton size="large" startIcon={<SwapHorizIcon />}>
+      <MyButton
+        size="large"
+        startIcon={<SwapHorizIcon />}
+        onClick={handleSwapCardClick}
+      >
         교체하기
       </MyButton>
       <MyButton

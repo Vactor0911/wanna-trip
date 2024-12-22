@@ -53,3 +53,19 @@ export const popupMenuStateAtom = atom<PopupMenuState>({
   board: null,
   card: null,
 });
+
+// 대화상자 상태
+export enum DialogType {
+  NONE,
+  DELETE_BOARD,
+  DELETE_CARD,
+  SWAP_BOARD,
+  SWAP_CARD,
+}
+export const dialogStateAtom = atom({
+  type: DialogType.NONE,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from: null as any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  to: null as any,
+});
