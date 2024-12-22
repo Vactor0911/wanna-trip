@@ -208,7 +208,7 @@ const Login = () => {
 
   // 카카오 URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
-    const code = new URL(window.location.href).searchParams.get("code");
+    const code = new URL(window.location.href.split("/?/").join("?")).searchParams.get("code");
     if (code) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
@@ -278,7 +278,7 @@ const Login = () => {
   const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
-    const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
+    const code = new URL(window.location.href.split("/?/").join("?")).searchParams.get("code"); // URL에서 code 추출
 
     if (!code) {
       // 카카오 로그인 화면으로 이동
