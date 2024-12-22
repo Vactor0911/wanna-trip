@@ -24,6 +24,10 @@ jobs:
     - name: Build the app
       run: npm run build
 
+    - name: Set up GitHub token for authentication
+      run: |
+        git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
     - name: Deploy to GitHub Pages
       run: npm run deploy -- --repo https://github.com/${{ github.repository }}.git
       env:
