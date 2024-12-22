@@ -2,12 +2,7 @@ import styled from "@emotion/styled";
 import { CardInterface, color, timeStringToDayjs } from "../utils/index";
 import MyButton from "../components/MyButton";
 import { useCallback, useEffect, useRef } from "react";
-import {
-  Fade,
-  Paper,
-  Popper,
-  PopperPlacementType,
-} from "@mui/material";
+import { Fade, Paper, Popper, PopperPlacementType } from "@mui/material";
 
 import DownloadIcon from "@mui/icons-material/Download";
 import SaveIcon from "@mui/icons-material/Save";
@@ -15,7 +10,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import MyIconButton from "../components/MyIconButton";
 import "overlayscrollbars/overlayscrollbars.css";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   boardDataAtom,
   popupMenuStateAtom,
@@ -27,7 +22,14 @@ import {
 import axios from "axios";
 import { BoardMenu, CardMenu, MobileMenu } from "../components/Popups";
 import Board from "../components/Board";
-import { BoardDeleteDialog, BoardSwapDialog, CardDeleteDialog, CardSwapDialog } from "../components/Dialogs";
+import {
+  BoardDeleteDialog,
+  BoardSwapDialog,
+  CardDeleteDialog,
+  CardSwapDialog,
+} from "../components/Dialogs";
+import { useNavigate } from "react-router";
+import LoginButton from "../components/LoginButton";
 
 const Style = styled.div`
   display: flex;
@@ -184,6 +186,109 @@ const Template = () => {
     [popupMenuState.anchor, popupMenuState.isOpen, setPopupMenuState]
   );
 
+  const navigate = useNavigate();
+  const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태 읽기
+  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
+  useEffect(() => {
+    const savedLoginState = localStorage.getItem("WannaTriploginState");
+    if (savedLoginState) {
+      setWannaTripLoginState(JSON.parse(savedLoginState));
+    }
+  }, [setWannaTripLoginState]);
+
+  // Access Token 갱신 함수
+  const refreshAccessToken = () => {
+    return axios
+      .post(`${SERVER_HOST}/api/token/refresh`, { 
+        email, 
+        loginType,  
+        refreshToken: refreshToken, 
+      })
+      .then((response) => {
+        const newToken = response.data.token;
+
+        setWannaTripLoginState((prevState) => ({
+          ...prevState,
+          loginToken: newToken, // 갱신된 토큰 저장
+        }));
+
+        return newToken; // 갱신된 토큰 반환
+      })
+      .catch((error) => {
+        console.error("Access Token 갱신 실패:", error);
+        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+        setWannaTripLoginState({
+          isLoggedIn: false, // 로그인 상태 초기화
+          userId: null, // userId 초기화
+          email: "", // 이메일 초기화
+          loginType: "normal", // 로그인 타입 초기화
+          loginToken: "", // 토큰 초기화
+          refreshToken: "", // 리프레시 토큰 초기화
+        });
+
+        navigate("/login"); // 로그인 페이지로 이동
+      });
+  };
+
+  // 로그아웃 기능 구현 시작
+  const handleLogoutClick = () => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요합니다."); // 로그인 상태가 아닌 경우 알림
+      return;
+    }
+
+    let currentToken = loginToken;
+
+    // Access Token 갱신 (카카오 간편 로그인 사용자만 처리)
+    const refreshTokenPromise =
+      (loginType === "kakao" || loginType === "google") && !currentToken
+        ? refreshAccessToken().then((newToken) => {
+            currentToken = newToken; // 갱신된 토큰을 설정
+          })
+        : Promise.resolve(); // 일반 로그인 사용자는 바로 진행
+
+    refreshTokenPromise
+      .then(() => {
+        console.log("로그아웃 요청: 사용 중인 token: ", currentToken); // 디버깅용 로그 추가
+
+        // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
+        return axios.post(`${SERVER_HOST}/api/logout`, {
+          email,
+          token: currentToken, // 현재 AccessToken 전달
+        });
+      })
+      .then((response) => {
+        if (response.data.success) {
+          // LocalStorage에서 로그인 상태 제거
+          localStorage.removeItem("WannaTriploginState");
+
+          // Jotai 상태 초기화
+          setWannaTripLoginState({
+            isLoggedIn: false, // 로그인 상태 초기화
+            userId: null, // userId 초기화
+            email: "", // 이메일 초기화
+            loginType: "normal", // 로그인 타입 초기화
+            loginToken: "", // 토큰 초기화
+            refreshToken: "", // 리프레시 토큰 초기화
+          });
+
+          alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+
+          navigate("/login"); // 로그인 페이지로 이동
+        } else {
+          alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
+        }
+      })
+      .catch((error) => {
+        console.log(
+          "로그아웃 요청 응답:",
+          error.response ? error.response.data : error.message
+        );
+        console.error("로그아웃 중 오류 발생:", error);
+        alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
+      });
+  }; // 로그아웃 기능 구현 끝
+
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -253,7 +358,14 @@ const Template = () => {
             <h1 style={{ color: "white" }}>여행갈래</h1>
           </div>
           <div className="btn-container flex">
-            <MyButton>로그인/회원가입</MyButton>
+          {isLoggedIn ? (
+              // 로그아웃 기능 추가
+              <LoginButton onClick={handleLogoutClick} />
+            ) : (
+              <MyButton variant="contained" onClick={() => navigate("/login")}>
+                로그인/회원가입
+              </MyButton>
+            )}
           </div>
         </header>
 
