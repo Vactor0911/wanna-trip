@@ -5,6 +5,7 @@ import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
+import { useEffect } from "react";
 
 const Style = styled.div`
   display: flex;
@@ -74,6 +75,15 @@ const Main = () => {
   if (wannaTripLoginState.isLoggedIn) {
     navigate("/template");
   }
+
+  useEffect(() => {
+    // 카카오 로그인 완료용 코드
+    console.log(window.location.href.split("/?/"));
+    console.log(window.location.href.split("/?/").join("?"));
+    if (window.location.href.split("/?/").length > 1) {
+      navigate(window.location.href.split("/?/").join("?"));
+    }
+  }, []);
 
   return (
     <Style>
