@@ -6,7 +6,7 @@ import Template from "./pages/Template"; // Template 컴포넌트
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/wanna-trip">
       <Routes>
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
