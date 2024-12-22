@@ -8,9 +8,7 @@
     "devLan": "vite --port 4000 --host",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emotion/react": "^11.13.3",
@@ -22,7 +20,6 @@
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
-    "gh-pages": "^6.2.0",
     "jotai": "^2.10.3",
     "jwt-decode": "^4.0.0",
     "overlayscrollbars": "^2.10.1",
@@ -45,6 +42,5 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  },
-  "homepage": "https://vactor0911.github.io/wanna-trip/"
+  }
 }
