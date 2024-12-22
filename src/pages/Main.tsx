@@ -78,22 +78,21 @@ const Main = () => {
 
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
-    // 카카오 로그인 완료용 코드
+    // 카카오 로그인 이어서 진행
     if (window.location.href.split("/?/").length > 1) {
-      console.log(
-        "추출한 경로 >> ",
-        `/${window.location.href.split("/?/")[1]}`
-      );
       const link = window.location.href.split("/?/")[1];
       const parsedLink = link.split("&");
       const pageLink = `/${parsedLink[0]}`;
-      console.log("다음으로 이동 >> ", pageLink);
+
+      // 원래의 로그인 페이지로 이동
       navigate(pageLink);
 
       // 카카오 로그인 코드 저장
       const code = parsedLink[1].substring(5);
-      console.log("저장할 code >> ", code);
       setKakaoLoginState(code);
+    }
+    else {
+      setKakaoLoginState(""); // 카카오 로그인 코드 초기화
     }
   }, []);
 

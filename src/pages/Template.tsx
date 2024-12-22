@@ -257,8 +257,6 @@ const Template = () => {
 
     refreshTokenPromise
       .then(() => {
-        console.log("로그아웃 요청: 사용 중인 token: ", currentToken); // 디버깅용 로그 추가
-
         // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
         return axios.post(`${SERVER_HOST}/api/logout`, {
           email,
@@ -288,10 +286,6 @@ const Template = () => {
         }
       })
       .catch((error) => {
-        console.log(
-          "로그아웃 요청 응답:",
-          error.response ? error.response.data : error.message
-        );
         console.error("로그아웃 중 오류 발생:", error);
         alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
       });
