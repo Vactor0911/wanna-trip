@@ -208,6 +208,8 @@ const Login = () => {
 
   // 카카오 URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
+    console.log(window.location.href.split("/?/"))
+    console.log(window.location.href.split("/?/").join("?"))
     const code = new URL(window.location.href.split("/?/").join("?")).searchParams.get("code");
     if (code) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
