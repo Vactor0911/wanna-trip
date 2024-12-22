@@ -85,7 +85,7 @@ const Main = () => {
         `/${window.location.href.split("/?/")[1]}`
       );
       const link = window.location.href.split("/?/")[1];
-      const parsedLink = link.split("&")[0];
+      const parsedLink = link.split("&");
       const pageLink = `/${parsedLink[0]}`;
       console.log("다음으로 이동 >> ", pageLink);
       navigate(pageLink);
