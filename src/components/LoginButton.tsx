@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 import PersonIcon from "@mui/icons-material/Person"; // 사람 아이콘 추가
-import React from "react";
 
 const LoginButtonStyle = styled.button`
   display: flex;

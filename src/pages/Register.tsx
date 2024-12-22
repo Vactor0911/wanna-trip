@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import LockIcon from "@mui/icons-material/Lock";
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import EmailIcon from '@mui/icons-material/Email';
+import EmailIcon from "@mui/icons-material/Email";
 import {
   Button,
   IconButton,
@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
-import { SERVER_HOST } from "../state";
+import { SERVER_HOST, wannaTripLoginStateAtom } from "../state";
+import { useAtomValue } from "jotai";
 
 const Style = styled.div`
   display: flex;
@@ -24,7 +25,7 @@ const Style = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
-  background-color: ${color.background_main};
+  background-color: ${color.background};
   z-index: 1;
 
   &:before {
@@ -140,31 +141,36 @@ const Style = styled.div`
 
 const Register = () => {
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
-  
+
+  // 로그인 된 상태면 템플릿 페이지로 이동
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  if (wannaTripLoginState.isLoggedIn) {
+    navigate("/template");
+  }
+
   //비밀번호 보이기/숨기기 시작
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isPasswordCheckVisible, setIsPasswordCheckVisible] = useState(false);
- //비밀번호 보이기/숨기기 끝
-
+  //비밀번호 보이기/숨기기 끝
 
   //회원가입 시작
-  const [email, setEmail] = useState(''); // 사용자 이메일
-  const [password, setPassword] = useState(''); // 사용자 비밀번호
-  const [password_comparison, setPassword_comparison] = useState(''); // 사용자 비밀번호 재확인
-  const [name, setName] = useState(''); // 사용자 이름
+  const [email, setEmail] = useState(""); // 사용자 이메일
+  const [password, setPassword] = useState(""); // 사용자 비밀번호
+  const [password_comparison, setPassword_comparison] = useState(""); // 사용자 비밀번호 재확인
+  const [name, setName] = useState(""); // 사용자 이름
 
   const Registerbtn = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 전송 전 입력값 검증
     if (!email || !password || !password_comparison) {
-        console.error('이메일 또는 비밀번호가 비어있으면 안됩니다.');
-        alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
-        return;
+      console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+      alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+      return;
     }
 
     if (!name) {
-      console.error('닉네임을 입력해주세요.');
+      console.error("닉네임을 입력해주세요.");
       alert("닉네임을 입력해주세요.");
       return;
     }
@@ -174,35 +180,32 @@ const Register = () => {
       return;
     }
 
-    console.log('이메일과 비밀번호로 회원가입 요청을 보냅니다:', { email, password });
-
     // 서버로 회원가입 요청 전송
     axios
-    .post(`${SERVER_HOST}/api/register`, {
-      email: email,
-      password: password,
-      name: name,
-    })
-    .then((response) => {
-      // 서버로부터 성공 메시지를 받은 경우
-      console.log("회원가입 성공:", response.data.message);
-
-      // 사용자에게 성공 메시지 보여주기 (UI 반영)
-      alert("회원가입이 성공적으로 완료되었습니다!");
-      navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
-    })
-    .catch((error) => {
-      // 서버로부터 반환된 에러 메시지 확인
-      if (error.response) {
-        console.error("서버가 오류를 반환했습니다:", error.response.data.message);
-        alert(`Error: ${error.response.data.message}`);
-      } else {
-        console.error("요청을 보내는 중 오류가 발생했습니다:", error.message);
-        alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
-      }
-    });
-
-  };  //회원가입 끝
+      .post(`${SERVER_HOST}/api/register`, {
+        email: email,
+        password: password,
+        name: name,
+      })
+      .then(() => {
+        // 사용자에게 성공 메시지 보여주기 (UI 반영)
+        alert("회원가입이 성공적으로 완료되었습니다!");
+        navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
+      })
+      .catch((error) => {
+        // 서버로부터 반환된 에러 메시지 확인
+        if (error.response) {
+          console.error(
+            "서버가 오류를 반환했습니다:",
+            error.response.data.message
+          );
+          alert(`Error: ${error.response.data.message}`);
+        } else {
+          console.error("요청을 보내는 중 오류가 발생했습니다:", error.message);
+          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+        }
+      });
+  }; //회원가입 끝
 
   //이메일 중복 검사 시작
   const handleCheckEmail = async () => {
@@ -212,24 +215,23 @@ const Register = () => {
     }
 
     axios
-    .post(`${SERVER_HOST}/api/emailCheck`, {
-      email: email, // 사용자가 입력한 이메일
-    })
-    .then((response) => {
-      const { success, message } = response.data;
+      .post(`${SERVER_HOST}/api/emailCheck`, {
+        email: email, // 사용자가 입력한 이메일
+      })
+      .then((response) => {
+        const { success, message } = response.data;
 
-      if (success) {
-        alert(message); // "사용 가능한 이메일입니다."
-      } else {
-        alert(message); // "이미 사용 중인 이메일입니다."
-      }
-    })
-    .catch((error) => {
-      console.error("이메일 중복 검사 오류:", error);
-      alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-    });
-  };  //이메일 중복 검사 끝
-
+        if (success) {
+          alert(message); // "사용 가능한 이메일입니다."
+        } else {
+          alert(message); // "이미 사용 중인 이메일입니다."
+        }
+      })
+      .catch((error) => {
+        console.error("이메일 중복 검사 오류:", error);
+        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      });
+  }; //이메일 중복 검사 끝
 
   return (
     <Style>
@@ -250,7 +252,6 @@ const Register = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <EmailIcon
@@ -272,7 +273,7 @@ const Register = () => {
                 sx={{
                   borderRadius: "50px",
                   fontWeight: "bold",
-                  fontSize: "0.8em"
+                  fontSize: "0.8em",
                 }}
               >
                 중복체크
@@ -292,7 +293,6 @@ const Register = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <LockIcon
@@ -332,7 +332,6 @@ const Register = () => {
           value={password_comparison}
           onChange={(e) => setPassword_comparison(e.target.value)}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <LockIcon
@@ -372,7 +371,6 @@ const Register = () => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <LocalOfferIcon
