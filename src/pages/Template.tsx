@@ -218,11 +218,13 @@ const Template = () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             cards.forEach((card: any) => {
               const boardIndex = card.board;
-              const newCard = card as CardInterface;
-              newCard.startTime = timeStringToDayjs(card.startTime).format(
-                "HH:mm"
-              );
-              newCard.endTime = timeStringToDayjs(card.endTime).format("HH:mm");
+              const newCard = {
+                id: card.card_id,
+                type: card.type,
+                content: card.content,
+                startTime: timeStringToDayjs(card.start_time).format("HH:mm"),
+                endTime: timeStringToDayjs(card.end_time).format("HH:mm"),
+              } as CardInterface;
 
               if (!newBoardData[boardIndex]) {
                 newBoardData[boardIndex] = [newCard];
@@ -288,7 +290,7 @@ const Template = () => {
         </div>
       </Style>
 
-      {/* 모바일용 메뉴 팝업 */}
+      {/* 팝업 메뉴 */}
       <Popper
         open={popupMenuState.isOpen}
         anchorEl={popupMenuState?.anchor}

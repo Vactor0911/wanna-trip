@@ -245,11 +245,7 @@ const Board = ({ day }: BoardProps) => {
           <div className="card-container">
             {boardData[day]
               ?.sort(function (a, b) {
-                return a.endTime < b.endTime
-                  ? -1
-                  : a.endTime > b.endTime
-                  ? 1
-                  : 0;
+                return a.endTime < b.endTime ? -1 : 1;
               })
               .map((_card, index) => {
                 return <Card key={index} day={day} position={index} />;

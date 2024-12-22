@@ -14,7 +14,8 @@ import {
   templateDataAtom,
 } from "../state";
 import axios from "axios";
-import { timeStringToDayjs } from "../utils";
+import { CardType, timeStringToDayjs } from "../utils";
+import dayjs from "dayjs";
 
 export const MobileMenu = () => {
   return (
@@ -152,12 +153,152 @@ export const BoardMenu = () => {
 };
 
 export const CardMenu = () => {
+  const templateData = useAtomValue(templateDataAtom);
+  const [boardData, setBoardData] = useAtom(boardDataAtom);
+  const popupMenuState = useAtomValue(popupMenuStateAtom);
+
+  // 카드 추가 (삽입)
+  const handleAddCardClick = () => {
+    const day = popupMenuState.board;
+    const position = popupMenuState.card;
+
+    if (day === null || position === null) {
+      return;
+    }
+
+    const prevEndTime = boardData[day][position].endTime;
+
+    let endTime = dayjs.min(
+      timeStringToDayjs(prevEndTime).add(10, "minutes"),
+      dayjs().hour(23).minute(59)
+    );
+    if (boardData[day][position + 1]) {
+      endTime = dayjs.min(
+        endTime,
+        timeStringToDayjs(boardData[day][position + 1].startTime)
+      );
+    }
+
+    if (prevEndTime === endTime.format("HH:mm")) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/card?type=insert`, {
+        templateId: templateData.id,
+        startTime: prevEndTime,
+        endTime: endTime.format("HH:mm"),
+        board: day,
+      })
+      .then((res) => {
+        const newCardId = res.data.cardId;
+        const newCard = {
+          id: newCardId,
+          type: CardType.TEXT,
+          content: "새 계획",
+          startTime: prevEndTime,
+          endTime: endTime.format("HH:mm"),
+        };
+
+        const newBoardData = [...boardData];
+        newBoardData[day].splice(position, 0, newCard).sort((a, b) => {
+          return a.endTime < b.endTime ? -1 : 1;
+        });
+        setBoardData(newBoardData);
+      });
+  };
+
+  // 카드 복사
+  const handleCopyCardClick = () => {
+    const day = popupMenuState.board;
+    const position = popupMenuState.card;
+
+    if (day === null || position === null) {
+      return;
+    }
+
+    const prevEndTime = boardData[day][position].endTime;
+    const prevContent = boardData[day][position].content;
+
+    let endTime = dayjs.min(
+      timeStringToDayjs(prevEndTime).add(10, "minutes"),
+      dayjs().hour(23).minute(59)
+    );
+    if (boardData[day][position + 1]) {
+      endTime = dayjs.min(
+        endTime,
+        timeStringToDayjs(boardData[day][position + 1].startTime)
+      );
+    }
+
+    if (prevEndTime === endTime.format("HH:mm")) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/card?type=copy`, {
+        cardId: boardData[day][position].id,
+        startTime: prevEndTime,
+        endTime: endTime.format("HH:mm"),
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newCardId = res.data.cardId;
+          const newCard = {
+            id: newCardId,
+            type: CardType.TEXT,
+            content: prevContent,
+            startTime: prevEndTime,
+            endTime: endTime.format("HH:mm"),
+          };
+
+          const newBoardData = [...boardData];
+          newBoardData[day].splice(position, 0, newCard).sort((a, b) => {
+            return a.endTime < b.endTime ? -1 : 1;
+          });
+          setBoardData(newBoardData);
+        }
+      });
+  };
+
+  const handleSwapCardClick = () => {};
+
+  // 카드 삭제
+  const handleDeleteCardClick = () => {
+    const day = popupMenuState.board;
+    const position = popupMenuState.card;
+
+    if (day === null || position === null) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/card?type=delete`, {
+        cardId: boardData[day][position].id,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newBoardData = [...boardData];
+          newBoardData[day].splice(position, 1);
+          setBoardData(newBoardData);
+        }
+      });
+  };
+
   return (
     <>
-      <MyButton size="large" startIcon={<AddRoundedIcon />}>
+      <MyButton
+        size="large"
+        startIcon={<AddRoundedIcon />}
+        onClick={handleAddCardClick}
+      >
         추가하기
       </MyButton>
-      <MyButton size="large" startIcon={<ContentCopyRoundedIcon />}>
+      <MyButton
+        size="large"
+        startIcon={<ContentCopyRoundedIcon />}
+        onClick={handleCopyCardClick}
+      >
         복사하기
       </MyButton>
       <MyButton size="large" startIcon={<SwapHorizIcon />}>
@@ -167,6 +308,7 @@ export const CardMenu = () => {
         size="large"
         startIcon={<DeleteOutlineRoundedIcon />}
         textColor={red[500]}
+        onClick={handleDeleteCardClick}
       >
         삭제하기
       </MyButton>
