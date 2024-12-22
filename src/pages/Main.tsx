@@ -78,11 +78,12 @@ const Main = () => {
 
   useEffect(() => {
     // 카카오 로그인 완료용 코드
-    console.log(window.location.href.split("/?/"));
-    console.log(window.location.href.split("/?/").join("/"));
-    if (window.location.href.split("/?/").length > 1) {
-      navigate(window.location.href.split("/?/").join("/"));
-    }
+    // console.log(window.location.href.split("/?/"));
+    // console.log(window.location.href.split("/?/").join("/"));
+    // if (window.location.href.split("/?/").length > 1) {
+    //   navigate(window.location.href.split("/?/").join("/"));
+    // }
+    navigate("/login");
   }, []);
 
   return (
