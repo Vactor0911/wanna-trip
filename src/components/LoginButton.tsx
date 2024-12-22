@@ -22,13 +22,15 @@ const LoginButtonStyle = styled.button`
   }
 `;
 
-const LoginButton = () => {
+const LoginButton = ({ onClick }: { onClick: () => void }) => {
   return (
-    <LoginButtonStyle>
-      <PersonIcon sx={{
-        fill: "white",
-        transform: "scale(1.5)"
-      }} />
+    <LoginButtonStyle onClick={onClick}>
+      <PersonIcon
+        sx={{
+          fill: "white",
+          transform: "scale(1.5)",
+        }}
+      />
     </LoginButtonStyle>
   );
 };

@@ -1,8 +1,10 @@
 import styled from "@emotion/styled";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 
 const Style = styled.div`
   display: flex;
@@ -12,7 +14,7 @@ const Style = styled.div`
   width: 100%;
   height: 100vh;
   gap: 1.5em;
-  background-color: ${color.background_main};
+  background-color: ${color.background};
   position: relative;
   z-index: 1;
   color: white;
@@ -21,8 +23,8 @@ const Style = styled.div`
   &:before {
     content: "";
     position: absolute;
-    width: 92%;
-    height: 92%;
+    width: 88%;
+    height: 88%;
     background-image: url(${BackgroundImage});
     background-repeat: no-repeat;
     background-position: center;
@@ -53,12 +55,25 @@ const Style = styled.div`
     font-size: 1.65em;
     font-weight: bold;
   }
+
+  @media (max-width: 768px) {
+    &:before {
+      width: 80%;
+      height: 80%;
+    }
+  }
 `;
 
 const Main = () => {
   const navigate = useNavigate(); // 페이지 주소 이동을 위한 navigate 함수 선언
   const handleLoginClick = () => navigate("/login"); // 로그인 페이지로 이동
   const handleStartClick = () => navigate("/template"); // 템플릿 페이지로 이동
+
+  // 로그인 된 상태면 템플릿 페이지로 이동
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  if (wannaTripLoginState.isLoggedIn) {
+    navigate("/template");
+  }
 
   return (
     <Style>

@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import BackgroundImage from "../assets/images/background.png";
-import { color } from "../utils/theme";
+import { color } from "../utils/index";
 import {
   Avatar,
   Button,
@@ -16,7 +16,6 @@ import {
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import NaverIcon from "../assets/images/naver.png";
 import GoogleIcon from "../assets/images/google.png";
 import KakaoIcon from "../assets/images/kakao.png";
 import EmailIcon from "@mui/icons-material/Email";
@@ -24,11 +23,9 @@ import EmailIcon from "@mui/icons-material/Email";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-import { useSetAtom } from "jotai";     // useSetAtom 불러오기
-import { loginStateAtom } from "../state";  // loginStateAtom 불러오기
-
-
-
+import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
+import { wannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTripLoginStateAtom 불러오기
+import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
   display: flex;
@@ -36,49 +33,8 @@ const Style = styled.div`
   width: 100%;
   height: 100vh;
   position: relative;
-  background-color: ${color.background_main};
+  background-color: ${color.background};
   z-index: 1;
-
-  &:before {
-    content: "";
-    position: absolute;
-    width: 40%;
-    height: 100vh;
-    top: 0;
-    left: 5%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
-
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 35%;
-    min-width: 400px;
-    height: 100%;
-    margin-right: 10%;
-    gap: 1em;
-  }
-  background-color: ${color.background_main};
-  z-index: 1;
-
-  &:before {
-    content: "";
-    position: absolute;
-    width: 40%;
-    height: 100vh;
-    top: 0;
-    left: 5%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
 
   .login-form {
     display: flex;
@@ -91,6 +47,27 @@ const Style = styled.div`
     gap: 1em;
   }
 
+  &:before {
+    content: "";
+    position: absolute;
+    width: 35%;
+    height: 100vh;
+    top: 0;
+    left: 9%;
+    background-image: url(${BackgroundImage});
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    z-index: -1;
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+  }
   .title {
     display: flex;
     flex-direction: column;
@@ -102,41 +79,11 @@ const Style = styled.div`
   }
   .title p {
     font-size: 1.6em;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-  }
-  .title {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    color: white;
-  }
-  .title h1 {
-    font-size: 2.3em;
-  }
-  .title p {
-    font-size: 1.6em;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
   }
 
   .checkbox-container {
     display: flex;
     flex-direction: column;
-  }
-
-  .button-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
   }
 
   p.register {
@@ -151,7 +98,7 @@ const Style = styled.div`
     margin-left: 5px;
     text-decoration: none;
   }
-  
+
   p.register a:hover {
     text-decoration: underline;
   }
@@ -186,8 +133,8 @@ const Style = styled.div`
 
   @media (max-width: 480px) {
     &:before {
-      width: 100%;
-      left: 0;
+      width: 88%;
+      left: 6%;
       opacity: 0.3;
     }
 
@@ -201,144 +148,275 @@ const Style = styled.div`
     .button-wrapper #btn-login {
       width: 100%;
     }
-  
   }
 `;
 
 const Login = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  
-  // 아이디 저장 기능 추가- 필요
 
-  
+  // 로그인 된 상태면 템플릿 페이지로 이동
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  if (wannaTripLoginState.isLoggedIn) {
+    navigate("/template");
+  }
 
   // 로그인 기능 추가
-  const [email, setEmail] = useState(''); // 이메일 값
-  const [password, setPassword] = useState(''); // 사용자 비밀번호
-  const PORT = 3005; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const HOST = 'http://localhost'; // 임의로 로컬서버라 이건 알아서 수정하면 됨
-  const setLoginState = useSetAtom(loginStateAtom); // useSetAtom 불러오기
-  const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  
-  // URL의 code를 처리하기 위한 useEffect
+  const [email, setEmail] = useState(""); // 이메일 값
+  const [password, setPassword] = useState(""); // 사용자 비밀번호
+  const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
+  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
+  const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const google = (window as any).google; // 구글 간편 로그인 추가
+
+
+  // *** 이메일 저장 기능 시작 ***
+
+  // 이메일 저장 체크박스 상태 관리
+  const handleEmailSaveChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const isChecked = event.target.checked;
+    setIsEmailSaved(isChecked);
+
+    if (isChecked) {
+      localStorage.setItem("savedEmail", email); // 이메일 저장
+    } else {
+      localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
+    }
+  };
+
+  // 이메일 입력 시 동기화
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = event.target.value;
+    setEmail(newEmail);
+
+    if (isEmailSaved) {
+      localStorage.setItem("savedEmail", newEmail); // 저장된 이메일 업데이트
+    }
+  };
+
+  // 초기화: 이메일 저장 상태 불러오기
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("savedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setIsEmailSaved(true);
+    }
+  }, []);
+
+  // *** 이메일 저장 기능 끝 ***
+
+  // 카카오 URL의 code를 처리하기 위한 useEffect
   useEffect(() => {
     const code = new URL(window.location.href).searchParams.get("code");
     if (code) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  //구글 간편 로그인 시작
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleGoogleLogin = (credentialResponse: any) => {
+    // 구글에서 받은 Credential 디코딩
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let decoded: any;
+    try {
+      decoded = jwtDecode(credentialResponse.credential);
+    } catch (error) {
+      console.error("구글 Credential 디코딩 실패:", error);
+      alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      return;
+    }
+
+    // 사용자 정보 추출
+    const email = decoded.email;
+    const name = decoded.name;
+
+    // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
+    axios
+      .post(`${SERVER_HOST}/api/login/google`, {
+        email,
+        name,
+        loginType: "google",
+      })
+      .then((response) => {
+        const { accessToken, refreshToken, userId } = response.data;
+
+        // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
+        localStorage.removeItem("savedEmail");
+
+        // Step 2: 로그인 상태 업데이트
+        const wannaTriploginState = {
+          isLoggedIn: true,
+          userId: userId,
+          email: email,
+          loginType: "google",
+          loginToken: accessToken,
+          refreshToken: refreshToken, // RefreshToken 저장
+        };
+
+        // Jotai 상태 업데이트
+        setWannaTripLoginState(wannaTriploginState);
+
+        // LocalStorage에 저장
+        localStorage.setItem("WannaTriploginState", JSON.stringify(wannaTriploginState));
+      })
+      .then(() => {
+        // Step 3: 성공 메시지 및 페이지 이동
+        alert(`${name}님 환영합니다!`);
+        navigate("/template");
+      })
+      .catch((error) => {
+        // 에러 처리
+        console.error("구글 로그인 처리 중 오류:", error);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      });
+  }; //구글 간편 로그인 끝
+
   // 카카오 간편 로그인 시작
-  const handleKakaoLogin = async () => {
+  const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
     const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
-  
+
     if (!code) {
       // 카카오 로그인 화면으로 이동
-      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code`;
+      const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&prompt=login`;
       window.location.href = kakaoAuthUrl;
       return;
     }
-  
-    try {
+
+    axios
       // Step 1: 카카오 서버에서 Access Token 발급
-      const tokenResponse = await axios.post(
-        "https://kauth.kakao.com/oauth/token",
-        null,
-        {
-          params: {
-            grant_type: "authorization_code",
-            client_id: KAKAO_CLIENT_ID,
-            redirect_uri: KAKAO_REDIRECT_URI,
-            code: code,
-          },
-        }
-      );
-  
-      const accessToken = tokenResponse.data.access_token;
-  
-      // Step 2: 사용자 정보 가져오기
-      const userInfoResponse = await axios.get("https://kapi.kakao.com/v2/user/me", {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      .post("https://kauth.kakao.com/oauth/token", null, {
+        params: {
+          grant_type: "authorization_code",
+          client_id: KAKAO_CLIENT_ID,
+          redirect_uri: KAKAO_REDIRECT_URI,
+          code: code,
+        },
+      })
+      .then((tokenResponse) => {
+        const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
+
+        // Step 2: 사용자 정보 가져오기
+        return axios
+          .get("https://kapi.kakao.com/v2/user/me", {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          .then((userInfoResponse) => {
+            const { id, properties, kakao_account } = userInfoResponse.data; // 사용자 정보
+            const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
+            const nickname = properties.nickname; // 사용자 닉네임
+
+            // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
+            return axios
+              .post(`${SERVER_HOST}/api/login/kakao`, {
+                email,
+                name: nickname,
+                loginType: "kakao", // 간편 로그인 타입 전달
+                token: accessToken,
+              })
+              .then((serverResponse) => {
+                const { accessToken, refreshToken, userId } = serverResponse.data;
+
+                // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
+                localStorage.removeItem("savedEmail");
+
+                // Step 4: 로그인 상태 업데이트
+                const WannaTriploginState = {
+                  isLoggedIn: true,
+                  userId: userId,
+                  email: email,
+                  loginType: "kakao", //카카오 로그인
+                  loginToken: accessToken,
+                  refreshToken: refreshToken, // RefreshToken 저장
+                };
+
+                // Jotai 상태 업데이트
+                setWannaTripLoginState(WannaTriploginState);
+
+                // LocalStorage에 저장
+                localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
+
+                // 로그인 성공 메시지 표시
+                alert(`${nickname}님 환영합니다!`);
+
+                // Step 5: URL의 code 제거
+                window.history.replaceState(null, "", "/login");
+
+                // 성공 후 페이지 이동
+                navigate("/template");
+              });
+          });
+      })
+      .catch((error) => {
+        // 각 단계에서 발생한 에러 처리
+        console.error("카카오 로그인 실패:", error);
+        alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
       });
-  
-      const { id, properties, kakao_account } = userInfoResponse.data;
-      const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
-      const nickname = properties.nickname;
-  
-      // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-      const serverResponse = await axios.post(`${HOST}:${PORT}/api/login/kakao`, {
-        email,
-        name: nickname,
-        loginType: "kakao", // 간편 로그인 타입 전달
-        token: accessToken,
-      });
-  
-      // Step 4: 로그인 상태 업데이트
-      setLoginState({
-        isLoggedIn: true,
-        email: email,
-        loginType: "kakao",
-        loginToken: accessToken,
-      });
+  }; // 카카오 간편 로그인 끝
 
-      // 서버 응답 처리
-      console.log("로그인 성공:", serverResponse.data.message);
+  //일반 로그인 기능 시작
+  const handleLoginClick = (e: React.FormEvent) => {
+    e.preventDefault();
 
-      // 로그인 성공 메시지 표시
-      alert(`${nickname}님 환영합니다!`);
-
-      // Step 5: URL의 code 제거
-      window.history.replaceState(null, "", "/login");
-
-      navigate("/template"); // 성공 후 페이지 이동
-
-    } catch (error) {
-      console.error("카카오 로그인 실패:", error);
-      alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+    // 입력값 검증
+    if (!email || !password) {
+      alert("이메일과 비밀번호를 입력해 주세요.");
+      return;
     }
 
-    
-  };// 카카오 간편 로그인 시작
-    
-  
-    //일반 로그인 기능 시작
-    const handleLoginClick = async (e: React.FormEvent) => {
-      e.preventDefault();
-    
-      // 입력값 검증
-      if (!email || !password) {
-        alert("이메일과 비밀번호를 입력해 주세요.");
-        return;
-      }
-    
-      setIsLoading(true); // 로딩 상태 활성화
-      try {
-        // POST /api/login 요청
-        const response = await axios.post(`${HOST}:${PORT}/api/login`, {
-          email: email,
-          password: password,
-        });
-    
-        // 서버 응답에서 사용자 정보 추출
-        const { nickname } = response.data;
-    
+    setIsLoading(true); // 로딩 상태 활성화
+
+    // 서버에 로그인 요청
+    axios
+      .post(`${SERVER_HOST}/api/login`, {
+        email: email,
+        password: password,
+      })
+      .then((response) => {
+        const { nickname, token, userId } = response.data;
+
         // 로그인 성공 메시지
         alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-    
-        // 로그인 상태 업데이트 그냥 둬도 됨
-        setLoginState({
+
+        // 로그인 상태 업데이트
+        const WannaTriploginState = {
           isLoggedIn: true,
+          userId: userId,
           email: email,
-          loginType: "normal", // 일반 로그인
-          loginToken: response.data.token,
-        });
-    
+          loginType: "normal", //일반 로그인
+          loginToken: token,
+          refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
+        };
+
+        // Jotai 상태 업데이트
+        setWannaTripLoginState(WannaTriploginState);
+
+        // LocalStorage 업데이트
+        if (isEmailSaved) {
+          localStorage.setItem("savedEmail", email); // 이메일 저장
+        } else {
+          localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
+        }
+
+        // LocalStorage에 저장
+        localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
+
         // 성공 후 페이지 이동
         navigate("/template");
-      } catch (error: any) {
+      })
+      .catch((error) => {
+        // 로그인 실패 시 처리
+        if (isEmailSaved) {
+          localStorage.setItem("savedEmail", email); // 저장된 이메일 유지
+        } else {
+          localStorage.removeItem("savedEmail"); // 이메일 저장 안 된 경우 삭제
+          setEmail(""); // 이메일 초기화
+        }
+
         if (error.response) {
           console.error("서버 오류:", error.response.data.message);
           alert(error.response.data.message || "로그인 실패");
@@ -346,15 +424,15 @@ const Login = () => {
           console.error("요청 오류:", error.message);
           alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
         }
-        setPassword(""); // 로그인 실패 시 비밀번호 초기화
-      } finally {
-        setIsLoading(false); // 로딩 상태 비활성화
-      }
-    };  //일반 로그인 기능 끝
 
-  
-  
-  
+        // 로그인 실패 시 비밀번호 초기화
+        setPassword("");
+      })
+      .finally(() => {
+        setIsLoading(false); // 로딩 상태 비활성화
+      });
+  }; //일반 로그인 기능 끝
+
   return (
     <Style>
       <div className="login-form">
@@ -372,9 +450,9 @@ const Login = () => {
           }}
           placeholder="이메일"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          // onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
-
           startAdornment={
             <InputAdornment position="start">
               <EmailIcon
@@ -400,7 +478,6 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-
             startAdornment={
               <InputAdornment position="start">
                 <LockIcon
@@ -430,27 +507,30 @@ const Login = () => {
             }
           />
 
-        
           {/* 버튼과 체크박스 */}
           <div className="button-container">
             <div className="checkbox-container">
               <FormControlLabel
                 control={
                   <Checkbox
+                    checked={isEmailSaved}
+                    onChange={handleEmailSaveChange}
                     size="large"
                     sx={{
                       color: "#EBEBEB",
-                      transform: "translateX(5px)",
                     }}
                   />
                 }
-                label={<Typography sx={{ fontSize: "1em" }}>아이디 저장</Typography>}
+                label={
+                  <Typography sx={{ fontSize: "1em" }}>이메일 저장</Typography>
+                }
                 sx={{
                   color: "white",
-                  transform: "translate(-5px, 14px)",
                 }}
               />
-              <FormControlLabel
+
+              {/* 로그인 상태 유지는 다음 학기에 추가 예정 */}
+              {/* <FormControlLabel
                 control={
                   <Checkbox
                     size="large"
@@ -460,28 +540,30 @@ const Login = () => {
                     }}
                   />
                 }
-                label={<Typography sx={{ fontSize: "1em" }}>로그인 상태 유지</Typography>}
+                label={
+                  <Typography sx={{ fontSize: "1em" }}>
+                    로그인 상태 유지
+                  </Typography>
+                }
                 sx={{
                   color: "white",
                   transform: "translate(-5px, 6px)",
                 }}
-              />
+              /> */}
             </div>
-            <div className="button-wrapper">
-              <Button
-                id="btn-login"
-                variant="contained"
-                onClick={handleLoginClick}
-                sx={{
-                  borderRadius: "50px",
-                  fontWeight: "bold",
-                  fontSize: "1.4em",
-                  padding: "5px 30px",
-                }}
-              >
-                로그인
-              </Button>
-            </div>
+            <Button
+              id="btn-login"
+              variant="contained"
+              onClick={handleLoginClick}
+              sx={{
+                borderRadius: "50px",
+                fontWeight: "bold",
+                fontSize: "1.4em",
+                padding: "5px 30px",
+              }}
+            >
+              로그인
+            </Button>
           </div>
         </div>
 
@@ -495,11 +577,19 @@ const Login = () => {
           <IconButton onClick={handleKakaoLogin}>
             <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
           </IconButton>
-          <IconButton>
-            <Avatar src={GoogleIcon} sx={{ width: "60px", height: "60px" }} />
-          </IconButton>
-          <IconButton>
-            <Avatar src={NaverIcon} sx={{ width: "60px", height: "60px" }} />
+          <IconButton
+            onClick={() => {
+              google.accounts.id.initialize({
+                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+                callback: handleGoogleLogin,
+              });
+              google.accounts.id.prompt();
+            }}
+          >
+            <Avatar
+              src={GoogleIcon}
+              sx={{ width: "60px", height: "60px", cursor: "pointer" }}
+            />
           </IconButton>
         </div>
       </div>
