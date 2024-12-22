@@ -80,10 +80,13 @@ const Main = () => {
     // 카카오 로그인 완료용 코드
     console.log(window.location.href.split("/?/"));
     console.log(window.location.href.split("/?/").join("/"));
-    // if (window.location.href.split("/?/").length > 1) {
-    //   navigate(window.location.href.split("/?/").join("/"));
-    // }
-    // navigate("/login");
+    if (window.location.href.split("/?/").length > 1) {
+      console.log(
+        "다음으로 이동 >> ",
+        `/${window.location.href.split("/?/")[1]}`
+      );
+      navigate(`/${window.location.href.split("/?/")[1]}`);
+    }
   }, []);
 
   return (
