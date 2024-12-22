@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -9,7 +10,6 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  Typography,
 } from "@mui/material";
 import {
   boardDataAtom,
@@ -21,7 +21,7 @@ import {
 } from "../state";
 import { useAtom, useAtomValue } from "jotai";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 
 export const BoardDeleteDialog = () => {
@@ -147,7 +147,7 @@ export const BoardSwapDialog = () => {
   const [dialogState, setDialogState] = useAtom(dialogStateAtom);
   const [boardData, setBoardData] = useAtom(boardDataAtom);
   const popupMenuState = useAtomValue(popupMenuStateAtom);
-  const [targetBoard, setTargetBoard] = useState<number | null>(null);
+  const [targetBoard, setTargetBoard] = useState(-1);
 
   const handleSwrapBoardClick = () => {
     const from = popupMenuState.board;
@@ -182,7 +182,7 @@ export const BoardSwapDialog = () => {
       <DialogTitle sx={{ textAlign: "center" }}>일정 교체하기</DialogTitle>
 
       <Select disabled sx={{ margin: "10px 20px" }} value={0}>
-        <MenuItem value={0} selected>
+        <MenuItem key={0} value={0} selected>
           {dialogState.from + 1}일차
         </MenuItem>
       </Select>
@@ -204,7 +204,11 @@ export const BoardSwapDialog = () => {
             if (index === popupMenuState.board) {
               return null;
             }
-            return <MenuItem value={index}>{index + 1}일차</MenuItem>;
+            return (
+              <MenuItem key={index} value={index}>
+                {index + 1}일차
+              </MenuItem>
+            );
           })}
         </Select>
       </FormControl>
@@ -233,13 +237,46 @@ export const BoardSwapDialog = () => {
 };
 
 export const CardSwapDialog = () => {
-  const templateData = useAtomValue(templateDataAtom);
   const [dialogState, setDialogState] = useAtom(dialogStateAtom);
   const [boardData, setBoardData] = useAtom(boardDataAtom);
   const popupMenuState = useAtomValue(popupMenuStateAtom);
-  const [targetBoard, setTargetBoard] = useState<number | null>(null);
+  const [targetBoard, setTargetBoard] = useState(0);
+  const [targetPosition, setTargetPosition] = useState(-1);
 
-  const handleSwrapBoardClick = () => {};
+  useEffect(() => {
+    setTargetPosition(-1);
+  }, [targetBoard]);
+
+  const handleSwrapCardClick = () => {
+    if (targetPosition === -1) {
+      return;
+    }
+
+    const from = popupMenuState.card;
+    const to = boardData[targetBoard][targetPosition];
+
+    if (from === null || to === null || popupMenuState.board === null) {
+      return;
+    }
+
+    axios
+      .post(`${SERVER_HOST}/api/card?type=swap`, {
+        from: boardData[popupMenuState.board][from].id,
+        to: boardData[targetBoard][targetPosition].id,
+      })
+      .then((res) => {
+        if (res.data.success) {
+          const newBoardData = [...boardData];
+          if (popupMenuState.board !== null && from !== null) {
+            const temp = newBoardData[popupMenuState.board][from].content;
+            newBoardData[popupMenuState.board][from].content =
+              newBoardData[targetBoard][targetPosition].content;
+            newBoardData[targetBoard][targetPosition].content = temp;
+          }
+          setBoardData(newBoardData);
+        }
+      });
+  };
 
   return (
     <Dialog
@@ -248,33 +285,71 @@ export const CardSwapDialog = () => {
     >
       <DialogTitle sx={{ textAlign: "center" }}>일정 교체하기</DialogTitle>
 
-      <Select disabled sx={{ margin: "10px 20px" }} value={0}>
-        <MenuItem value={0} selected>
-          {dialogState.from + 1}일차
-        </MenuItem>
-      </Select>
+      <Box>
+        <Select autoWidth disabled sx={{ margin: "10px" }} value={0}>
+          <MenuItem key={0} value={0} selected>
+            {dialogState.from + 1}일차
+          </MenuItem>
+        </Select>
+        <Select autoWidth disabled sx={{ margin: "10px" }} value={0}>
+          <MenuItem key={0} value={0} selected>
+            {dialogState.to + 1}번째
+          </MenuItem>
+        </Select>
+      </Box>
 
       <Icon sx={{ alignSelf: "center" }} fontSize="large">
         <SwapVertRoundedIcon fontSize="large" />
       </Icon>
 
-      <FormControl sx={{ margin: "10px 20px" }}>
-        <InputLabel>교체할 날짜</InputLabel>
-        <Select
-          value={targetBoard}
-          label="교체할 날짜a"
-          onChange={(e) => {
-            setTargetBoard(Number(e.target.value));
-          }}
-        >
-          {boardData.map((_, index) => {
-            if (index === popupMenuState.board) {
-              return null;
-            }
-            return <MenuItem value={index}>{index + 1}일차</MenuItem>;
-          })}
-        </Select>
-      </FormControl>
+      <Box>
+        <FormControl>
+          <InputLabel>날짜</InputLabel>
+          <Select
+            autoWidth
+            sx={{ margin: "10px" }}
+            value={targetBoard}
+            label="날짜a"
+            onChange={(e) => {
+              setTargetBoard(Number(e.target.value));
+            }}
+          >
+            {boardData.map((_, index) => {
+              return (
+                <MenuItem key={index} value={index}>
+                  {index + 1}일차
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </FormControl>
+        <FormControl>
+          <InputLabel>차례</InputLabel>
+          <Select
+            autoWidth
+            sx={{ margin: "10px" }}
+            value={targetPosition}
+            label="차례a"
+            onChange={(e) => {
+              setTargetPosition(Number(e.target.value));
+            }}
+          >
+            {boardData[targetBoard]?.map((_, index) => {
+              if (
+                targetBoard === popupMenuState.board &&
+                index === popupMenuState.card
+              ) {
+                return null;
+              }
+              return (
+                <MenuItem key={index} value={index}>
+                  {index + 1}번째
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </FormControl>
+      </Box>
 
       <DialogActions sx={{ justifyContent: "center", margin: "10px 20px" }}>
         <Button
@@ -289,7 +364,7 @@ export const CardSwapDialog = () => {
           variant="contained"
           onClick={() => {
             setDialogState({ ...dialogState, type: DialogType.NONE });
-            handleSwrapBoardClick();
+            handleSwrapCardClick();
           }}
         >
           교체하기

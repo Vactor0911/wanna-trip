@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
   boardDataAtom,
   popupMenuStateAtom,
@@ -51,7 +51,7 @@ interface CardProps {
 }
 
 const Card = ({ day, position }: CardProps) => {
-  const [boardData, setBoardData] = useAtom(boardDataAtom);
+  const boardData = useAtomValue(boardDataAtom);
   const card = boardData[day][position];
 
   const [startTime, setStartTime] = useState<dayjs.Dayjs>(

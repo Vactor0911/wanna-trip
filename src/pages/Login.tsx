@@ -212,6 +212,7 @@ const Login = () => {
     if (code) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   //구글 간편 로그인 시작
