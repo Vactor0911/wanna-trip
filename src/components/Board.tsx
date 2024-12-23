@@ -189,6 +189,7 @@ const Board = ({ day }: BoardProps) => {
       .then((res) => {
         if (res.data.success) {
           const newBoardData = [...boardData];
+          console.log("Res Data: ", res.data);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newCardData = res.data.cards.map((card: any) => {
             return {
