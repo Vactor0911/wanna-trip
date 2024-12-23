@@ -65,6 +65,7 @@ const Card = ({ day, position }: CardProps) => {
 
   useEffect(() => {
     if (!boardData[day][position]) {
+      console.log(`Error occured in ${day} / ${position}, ${boardData}`);
       return;
     }
 
