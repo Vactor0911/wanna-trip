@@ -199,6 +199,7 @@ const Board = ({ day }: BoardProps) => {
               endTime: timeStringToDayjs(card.endTime).format("HH:mm"),
             };
           });
+          console.log("New Card Data: ", newCardData);
           newBoardData.splice(day + 1, 0, newCardData);
           setBoardData(newBoardData);
         }
