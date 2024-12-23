@@ -189,7 +189,6 @@ const Board = ({ day }: BoardProps) => {
       .then((res) => {
         if (res.data.success) {
           const newBoardData = [...boardData];
-          console.log("Res Data: ", res.data);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newCardData = res.data.cards.map((card: any) => {
             return {
@@ -200,7 +199,6 @@ const Board = ({ day }: BoardProps) => {
               endTime: timeStringToDayjs(card.end_time).format("HH:mm"),
             };
           });
-          console.log("New Card Data: ", newCardData);
           newBoardData.splice(day + 1, 0, newCardData);
           setBoardData(newBoardData);
         }
