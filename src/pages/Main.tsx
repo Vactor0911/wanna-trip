@@ -80,18 +80,22 @@ const Main = () => {
   useEffect(() => {
     // 카카오 로그인 이어서 진행
     if (window.location.href.split("/?/").length > 1) {
-      const link = window.location.href.split("/?/")[1];
-      const parsedLink = link.split("&");
-      const pageLink = `/${parsedLink[0]}`;
+      try {
+        const link = window.location.href.split("/?/")[1];
+        const parsedLink = link.split("&");
+        const pageLink = `/${parsedLink[0]}`;
 
-      // 원래의 로그인 페이지로 이동
-      navigate(pageLink);
+        // 원래의 로그인 페이지로 이동
+        navigate(pageLink);
 
-      // 카카오 로그인 코드 저장
-      const code = parsedLink[1].substring(5);
-      setKakaoLoginState(code);
-    }
-    else {
+        // 카카오 로그인 코드 저장
+        const code = parsedLink[1].substring(5);
+        setKakaoLoginState(code);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        setKakaoLoginState(""); // 카카오 로그인 코드 초기화
+      }
+    } else {
       setKakaoLoginState(""); // 카카오 로그인 코드 초기화
     }
   }, []);
