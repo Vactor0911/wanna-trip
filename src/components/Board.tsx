@@ -195,8 +195,8 @@ const Board = ({ day }: BoardProps) => {
               id: card.card_id,
               type: card.type,
               content: card.content,
-              startTime: timeStringToDayjs(card.startTime).format("HH:mm"),
-              endTime: timeStringToDayjs(card.endTime).format("HH:mm"),
+              startTime: timeStringToDayjs(card.start_time).format("HH:mm"),
+              endTime: timeStringToDayjs(card.end_time).format("HH:mm"),
             };
           });
           console.log("New Card Data: ", newCardData);
