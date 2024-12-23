@@ -69,6 +69,10 @@ const Card = ({ day, position }: CardProps) => {
       return;
     }
 
+    console.log("StartTime >> ", timeStringToDayjs(boardData[day][position].startTime));
+    console.log("EndTime >> ", timeStringToDayjs(boardData[day][position].endTime));
+    console.log("Content >> ", boardData[day][position].content);
+
     setStartTime(timeStringToDayjs(boardData[day][position].startTime));
     setEndTime(timeStringToDayjs(boardData[day][position].endTime));
     setContent(boardData[day][position].content);
