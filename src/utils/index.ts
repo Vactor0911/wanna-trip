@@ -15,21 +15,27 @@ export const theme = createTheme({
     fontFamily: ["Noto Sans KR", "sans-serif"].join(","),
     h1: {
       fontSize: "2em",
+      fontWeight: "bold",
     },
     h2: {
       fontSize: "1.5em",
+      fontWeight: "bold",
     },
     h3: {
       fontSize: "1.17em",
+      fontWeight: "bold",
     },
     h4: {
       fontSize: "1em",
+      fontWeight: "bold",
     },
     h5: {
       fontSize: "0.83em",
+      fontWeight: "bold",
     },
     h6: {
       fontSize: "0.67em",
+      fontWeight: "bold",
     },
     subtitle1: {
       fontSize: "1em",
