@@ -4,12 +4,12 @@ import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 const Main = () => {
   const navigate = useNavigate(); // 페이지 주소 이동을 위한 navigate 함수 선언
-  const handleLoginClick = () => navigate("/login"); // 로그인 페이지로 이동
-  const handleStartClick = () => navigate("/template"); // 템플릿 페이지로 이동
+  const handleLoginButtonClick = useCallback(() => navigate("/login"), []); // 로그인 페이지로 이동
+  const handleStartButtonClick = useCallback(() => navigate("/template"), []); // 템플릿 페이지로 이동
 
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -80,7 +80,7 @@ const Main = () => {
       </Typography>
       <Stack width={{ md: "240px", xs: "180px" }} gap={3}>
         <Button
-          onClick={handleStartClick}
+          onClick={handleStartButtonClick}
           variant="contained"
           sx={{
             padding: "16px 0",
@@ -89,7 +89,7 @@ const Main = () => {
           <Typography variant="h1">시작하기</Typography>
         </Button>
         <Button
-          onClick={handleLoginClick}
+          onClick={handleLoginButtonClick}
           variant="contained"
           sx={{
             padding: "16px 0",
