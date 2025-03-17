@@ -5,4 +5,8 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   plugins: [react()],
   base: "/wanna-trip/",
+  server: {
+    port: 4000,
+    allowedHosts: ["0.tcp.jp.ngrok.io"],
+  },
 })
