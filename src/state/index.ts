@@ -21,6 +21,8 @@ export const wannaTripLoginStateAtom = atom({
   refreshToken: savedLoginState.refreshToken || "", // 리프레시 토큰
 });
 
+export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
+
 // 템플릿 정보
 export const templateDataAtom = atom<TemplateInterface>({
   id: -1,

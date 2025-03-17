@@ -13,6 +13,7 @@ import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   boardDataAtom,
+  kakaoLoginStateAtom,
   popupMenuStateAtom,
   PopupMenuType,
   SERVER_HOST,
@@ -149,6 +150,12 @@ const Style = styled.div`
 `;
 
 const Template = () => {
+  // 카카오 로그인 상태 초기화
+  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
+  useEffect(() => {
+    setKakaoLoginState(""); // 카카오 로그인 상태 초기화
+  }, []);
+
   // 모바일용 템플릿 메뉴 팝업
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트
 
@@ -187,7 +194,8 @@ const Template = () => {
   );
 
   const navigate = useNavigate();
-  const { isLoggedIn, email, loginType, loginToken, refreshToken } = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태 읽기
+  const { isLoggedIn, email, loginType, loginToken, refreshToken } =
+    useAtomValue(wannaTripLoginStateAtom); // 로그인 상태 읽기
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
   useEffect(() => {
     const savedLoginState = localStorage.getItem("WannaTriploginState");
@@ -199,10 +207,10 @@ const Template = () => {
   // Access Token 갱신 함수
   const refreshAccessToken = () => {
     return axios
-      .post(`${SERVER_HOST}/api/token/refresh`, { 
-        email, 
-        loginType,  
-        refreshToken: refreshToken, 
+      .post(`${SERVER_HOST}/api/token/refresh`, {
+        email,
+        loginType,
+        refreshToken: refreshToken,
       })
       .then((response) => {
         const newToken = response.data.token;
@@ -249,8 +257,6 @@ const Template = () => {
 
     refreshTokenPromise
       .then(() => {
-        console.log("로그아웃 요청: 사용 중인 token: ", currentToken); // 디버깅용 로그 추가
-
         // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
         return axios.post(`${SERVER_HOST}/api/logout`, {
           email,
@@ -280,10 +286,6 @@ const Template = () => {
         }
       })
       .catch((error) => {
-        console.log(
-          "로그아웃 요청 응답:",
-          error.response ? error.response.data : error.message
-        );
         console.error("로그아웃 중 오류 발생:", error);
         alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
       });
@@ -358,7 +360,7 @@ const Template = () => {
             <h1 style={{ color: "white" }}>여행갈래</h1>
           </div>
           <div className="btn-container flex">
-          {isLoggedIn ? (
+            {isLoggedIn ? (
               // 로그아웃 기능 추가
               <LoginButton onClick={handleLogoutClick} />
             ) : (

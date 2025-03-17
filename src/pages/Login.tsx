@@ -24,7 +24,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { wannaTripLoginStateAtom, SERVER_HOST } from "../state"; // WannaTripLoginStateAtom 불러오기
+import { wannaTripLoginStateAtom, SERVER_HOST, kakaoLoginStateAtom } from "../state"; // WannaTripLoginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -207,9 +207,9 @@ const Login = () => {
   // *** 이메일 저장 기능 끝 ***
 
   // 카카오 URL의 code를 처리하기 위한 useEffect
+  const kakaoLoginState = useAtomValue(kakaoLoginStateAtom); // 카카오 로그인 코드 상태
   useEffect(() => {
-    const code = new URL(window.location.href).searchParams.get("code");
-    if (code) {
+    if (kakaoLoginState) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -278,7 +278,7 @@ const Login = () => {
   const handleKakaoLogin = () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
-    const code = new URL(window.location.href).searchParams.get("code"); // URL에서 code 추출
+    const code = kakaoLoginState; // URL에서 code 추출
 
     if (!code) {
       // 카카오 로그인 화면으로 이동

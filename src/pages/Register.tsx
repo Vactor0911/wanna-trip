@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import { Link } from "react-router-dom";
 import { color } from "../utils/index";
@@ -16,8 +16,8 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
-import { SERVER_HOST, wannaTripLoginStateAtom } from "../state";
-import { useAtomValue } from "jotai";
+import { kakaoLoginStateAtom, SERVER_HOST, wannaTripLoginStateAtom } from "../state";
+import { useAtomValue, useSetAtom } from "jotai";
 
 const Style = styled.div`
   display: flex;
@@ -140,6 +140,12 @@ const Style = styled.div`
 `;
 
 const Register = () => {
+  // 카카오 로그인 상태 초기화
+  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
+  useEffect(() => {
+    setKakaoLoginState(""); // 카카오 로그인 상태 초기화
+  }, []);
+  
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
   // 로그인 된 상태면 템플릿 페이지로 이동

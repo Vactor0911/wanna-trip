@@ -67,7 +67,7 @@ const Card = ({ day, position }: CardProps) => {
     if (!boardData[day][position]) {
       return;
     }
-
+    
     setStartTime(timeStringToDayjs(boardData[day][position].startTime));
     setEndTime(timeStringToDayjs(boardData[day][position].endTime));
     setContent(boardData[day][position].content);
@@ -99,6 +99,7 @@ const Card = ({ day, position }: CardProps) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setContent(e.target.value);
+    boardData[day][position].content = e.target.value;
   };
 
   // 시간 범위 검증
