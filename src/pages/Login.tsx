@@ -24,7 +24,11 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { wannaTripLoginStateAtom, SERVER_HOST, kakaoLoginStateAtom } from "../state"; // WannaTripLoginStateAtom 불러오기
+import {
+  wannaTripLoginStateAtom,
+  SERVER_HOST,
+  kakaoLoginStateAtom,
+} from "../state"; // WannaTripLoginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
 
 const Style = styled.div`
@@ -167,14 +171,14 @@ const Login = () => {
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
-
 
   // *** 이메일 저장 기능 시작 ***
 
   // 이메일 저장 체크박스 상태 관리
-  const handleEmailSaveChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailSaveChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const isChecked = event.target.checked;
     setIsEmailSaved(isChecked);
 
@@ -212,14 +216,11 @@ const Login = () => {
     if (kakaoLoginState) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  //구글 간편 로그인 시작
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // 구글 간편 로그인 시작
   const handleGoogleLogin = (credentialResponse: any) => {
     // 구글에서 받은 Credential 디코딩
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let decoded: any;
     try {
       decoded = jwtDecode(credentialResponse.credential);
@@ -260,7 +261,10 @@ const Login = () => {
         setWannaTripLoginState(wannaTriploginState);
 
         // LocalStorage에 저장
-        localStorage.setItem("WannaTriploginState", JSON.stringify(wannaTriploginState));
+        localStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(wannaTriploginState)
+        );
       })
       .then(() => {
         // Step 3: 성공 메시지 및 페이지 이동
@@ -272,7 +276,7 @@ const Login = () => {
         console.error("구글 로그인 처리 중 오류:", error);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       });
-  }; //구글 간편 로그인 끝
+  }; // 구글 간편 로그인 끝
 
   // 카카오 간편 로그인 시작
   const handleKakaoLogin = () => {
@@ -319,7 +323,8 @@ const Login = () => {
                 token: accessToken,
               })
               .then((serverResponse) => {
-                const { accessToken, refreshToken, userId } = serverResponse.data;
+                const { accessToken, refreshToken, userId } =
+                  serverResponse.data;
 
                 // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
                 localStorage.removeItem("savedEmail");
@@ -338,7 +343,10 @@ const Login = () => {
                 setWannaTripLoginState(WannaTriploginState);
 
                 // LocalStorage에 저장
-                localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
+                localStorage.setItem(
+                  "WannaTriploginState",
+                  JSON.stringify(WannaTriploginState)
+                );
 
                 // 로그인 성공 메시지 표시
                 alert(`${nickname}님 환영합니다!`);
@@ -358,7 +366,7 @@ const Login = () => {
       });
   }; // 카카오 간편 로그인 끝
 
-  //일반 로그인 기능 시작
+  // 일반 로그인 기능 시작
   const handleLoginClick = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -387,7 +395,7 @@ const Login = () => {
           isLoggedIn: true,
           userId: userId,
           email: email,
-          loginType: "normal", //일반 로그인
+          loginType: "normal", // 일반 로그인
           loginToken: token,
           refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
         };
@@ -403,7 +411,10 @@ const Login = () => {
         }
 
         // LocalStorage에 저장
-        localStorage.setItem("WannaTriploginState", JSON.stringify(WannaTriploginState));
+        localStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(WannaTriploginState)
+        );
 
         // 성공 후 페이지 이동
         navigate("/template");
@@ -431,7 +442,7 @@ const Login = () => {
       .finally(() => {
         setIsLoading(false); // 로딩 상태 비활성화
       });
-  }; //일반 로그인 기능 끝
+  }; // 일반 로그인 기능 끝
 
   return (
     <Style>
@@ -450,7 +461,6 @@ const Login = () => {
           }}
           placeholder="이메일"
           value={email}
-          // onChange={(e) => setEmail(e.target.value)}
           onChange={handleEmailChange}
           required
           startAdornment={
@@ -530,7 +540,7 @@ const Login = () => {
               />
 
               {/* 로그인 상태 유지는 다음 학기에 추가 예정 */}
-              {/* <FormControlLabel
+              <FormControlLabel
                 control={
                   <Checkbox
                     size="large"
@@ -549,7 +559,7 @@ const Login = () => {
                   color: "white",
                   transform: "translate(-5px, 6px)",
                 }}
-              /> */}
+              />
             </div>
             <Button
               id="btn-login"
