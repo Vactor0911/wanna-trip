@@ -1,74 +1,15 @@
-import styled from "@emotion/styled";
-import { color } from "../utils/index";
+import { theme } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
-import { Button } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai";
 import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
-import { useEffect } from "react";
-
-const Style = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  height: 100vh;
-  gap: 1.5em;
-  background-color: ${color.background};
-  position: relative;
-  z-index: 1;
-  color: white;
-
-  // 배경 이미지
-  &:before {
-    content: "";
-    position: absolute;
-    width: 88%;
-    height: 88%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    opacity: 0.3;
-    z-index: -1;
-  }
-
-  // 제목
-  h1 {
-    font-size: 4em;
-  }
-  // 부제목
-  p {
-    font-size: 2.7em;
-  }
-
-  // 버튼 공간
-  .button-container {
-    display: flex;
-    flex-direction: column;
-    width: 220px;
-    gap: 1.5em;
-  }
-
-  // 버튼
-  Button {
-    font-size: 1.65em;
-    font-weight: bold;
-  }
-
-  @media (max-width: 768px) {
-    &:before {
-      width: 80%;
-      height: 80%;
-    }
-  }
-`;
+import { useCallback, useEffect } from "react";
 
 const Main = () => {
   const navigate = useNavigate(); // 페이지 주소 이동을 위한 navigate 함수 선언
-  const handleLoginClick = () => navigate("/login"); // 로그인 페이지로 이동
-  const handleStartClick = () => navigate("/template"); // 템플릿 페이지로 이동
+  const handleLoginButtonClick = useCallback(() => navigate("/login"), []); // 로그인 페이지로 이동
+  const handleStartButtonClick = useCallback(() => navigate("/template"), []); // 템플릿 페이지로 이동
 
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -91,7 +32,7 @@ const Main = () => {
         // 카카오 로그인 코드 저장
         const code = parsedLink[1].substring(5);
         setKakaoLoginState(code);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         setKakaoLoginState(""); // 카카오 로그인 코드 초기화
       }
@@ -101,18 +42,63 @@ const Main = () => {
   }, []);
 
   return (
-    <Style>
-      <h1>여행갈래?</h1>
-      <p>세상에서 가장 간단한 계획서</p>
-      <div className="button-container">
-        <Button onClick={handleStartClick} variant="contained">
-          시작하기
+    <Stack
+      width="100%"
+      minHeight="100vh"
+      justifyContent="center"
+      alignItems="center"
+      gap={3}
+      sx={{
+        backgroundColor: theme.palette.background.default,
+        position: "relative",
+        zIndex: 1,
+        "&:before": {
+          content: '""',
+          position: "absolute",
+          width: "88%",
+          height: "88%",
+          backgroundImage: `url(${BackgroundImage})`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "contain",
+          opacity: 0.3,
+          zIndex: -1,
+        },
+      }}
+    >
+      <Typography variant="h1" color="white" fontSize="4em">
+        여행갈래?
+      </Typography>
+      <Typography
+        variant="h2"
+        color="white"
+        fontSize="2.3em"
+        fontWeight={700}
+        textAlign="center"
+      >
+        세상에서 가장 간단한 계획서
+      </Typography>
+      <Stack width={{ md: "240px", xs: "180px" }} gap={3}>
+        <Button
+          onClick={handleStartButtonClick}
+          variant="contained"
+          sx={{
+            padding: "16px 0",
+          }}
+        >
+          <Typography variant="h1">시작하기</Typography>
         </Button>
-        <Button onClick={handleLoginClick} variant="contained">
-          로그인
+        <Button
+          onClick={handleLoginButtonClick}
+          variant="contained"
+          sx={{
+            padding: "16px 0",
+          }}
+        >
+          <Typography variant="h1">로그인</Typography>
         </Button>
-      </div>
-    </Style>
+      </Stack>
+    </Stack>
   );
 };
 
