@@ -1,8 +1,9 @@
-import styled from "@emotion/styled";
+import * as React from "react";
+import BackgroundImage from "../assets/images/background.png";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import BackgroundImage from "../assets/images/background.png";
-import { color } from "../utils/index";
+import { theme } from "../utils";
+
 import {
   Avatar,
   Button,
@@ -12,7 +13,9 @@ import {
   InputAdornment,
   OutlinedInput,
   Typography,
+  Stack,
 } from "@mui/material";
+
 import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -23,135 +26,14 @@ import EmailIcon from "@mui/icons-material/Email";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
-import { wannaTripLoginStateAtom, SERVER_HOST, kakaoLoginStateAtom } from "../state"; // WannaTripLoginStateAtom 불러오기
-import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
-
-const Style = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  background-color: ${color.background};
-  z-index: 1;
-
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 35%;
-    min-width: 400px;
-    height: 100%;
-    margin-right: 10%;
-    gap: 1em;
-  }
-
-  &:before {
-    content: "";
-    position: absolute;
-    width: 35%;
-    height: 100vh;
-    top: 0;
-    left: 9%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-top: 10px;
-  }
-  .title {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    color: white;
-  }
-  .title h1 {
-    font-size: 2.3em;
-  }
-  .title p {
-    font-size: 1.6em;
-  }
-
-  .checkbox-container {
-    display: flex;
-    flex-direction: column;
-  }
-
-  p.register {
-    align-self: center;
-    color: white;
-    word-spacing: 3px;
-    font-size: 1.3em;
-  }
-
-  p.register a {
-    color: ${color.link};
-    margin-left: 5px;
-    text-decoration: none;
-  }
-
-  p.register a:hover {
-    text-decoration: underline;
-  }
-
-  .social-login {
-    display: flex;
-    justify-content: center;
-    gap: 1.5em;
-  }
-
-  .wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  @media (max-width: 768px) {
-    justify-content: center;
-
-    &:before {
-      width: 80%;
-      left: 10%;
-      opacity: 0.3;
-    }
-
-    .login-form {
-      margin: 0;
-      width: 70%;
-      min-width: 260px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    &:before {
-      width: 88%;
-      left: 6%;
-      opacity: 0.3;
-    }
-
-    .button-container {
-      flex-direction: column;
-      width: auto;
-      gap: 1em;
-    }
-
-    .button-wrapper,
-    .button-wrapper #btn-login {
-      width: 100%;
-    }
-  }
-`;
-
-const Login = () => {
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  wannaTripLoginStateAtom,
+  SERVER_HOST,
+  kakaoLoginStateAtom,
+} from "../state";
+import { jwtDecode } from "jwt-decode";
+const Logintest = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -167,7 +49,6 @@ const Login = () => {
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
 
   // *** 이메일 저장 기능 시작 ***
@@ -176,8 +57,8 @@ const Login = () => {
   const handleEmailSaveChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const isChecked = event.target.checked;
-    setIsEmailSaved(isChecked);
+    const isChecked = event.target.checked; // 체크박스 상태 확인
+    setIsEmailSaved(isChecked); // 상태 업데이트
 
     if (isChecked) {
       localStorage.setItem("savedEmail", email); // 이메일 저장
@@ -188,20 +69,20 @@ const Login = () => {
 
   // 이메일 입력 시 동기화
   const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newEmail = event.target.value;
-    setEmail(newEmail);
+    const newEmail = event.target.value; // 입력된 이메일 값
+    setEmail(newEmail); // 상태 업데이트
 
     if (isEmailSaved) {
-      localStorage.setItem("savedEmail", newEmail); // 저장된 이메일 업데이트
+      localStorage.setItem("savedEmail", newEmail); // 이메일 저장
     }
   };
 
   // 초기화: 이메일 저장 상태 불러오기
   useEffect(() => {
-    const savedEmail = localStorage.getItem("savedEmail");
+    const savedEmail = localStorage.getItem("savedEmail"); // 저장된 이메일 가져오기
     if (savedEmail) {
-      setEmail(savedEmail);
-      setIsEmailSaved(true);
+      setEmail(savedEmail); // 이메일 상태 업데이트
+      setIsEmailSaved(true); // 이메일 저장 상태 업데이트
     }
   }, []);
 
@@ -213,20 +94,17 @@ const Login = () => {
     if (kakaoLoginState) {
       handleKakaoLogin(); // 카카오 로그인 함수 호출
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  //구글 간편 로그인 시작
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // 구글 간편 로그인 시작
   const handleGoogleLogin = (credentialResponse: any) => {
     // 구글에서 받은 Credential 디코딩
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let decoded: any;
     try {
-      decoded = jwtDecode(credentialResponse.credential);
+      decoded = jwtDecode(credentialResponse.credential); // 디코딩 시도
     } catch (error) {
-      console.error("구글 Credential 디코딩 실패:", error);
-      alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      console.error("구글 Credential 디코딩 실패:", error); // 디코딩 실패 로그
+      alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요."); // 오류 메시지
       return;
     }
 
@@ -445,167 +323,194 @@ const Login = () => {
   }; //일반 로그인 기능 끝
 
   return (
-    <Style>
-      <div className="login-form">
-        {/* 타이틀 */}
-        <div className="title">
-          <h1>여행갈래?</h1>
-          <p>세상에서 가장 간단한 계획서</p>
-        </div>
+    <Stack
+      direction="row"
+      width="100%"
+      minHeight="100vh"
+      sx={{
+        backgroundColor: theme.palette.background.default, // 배경 색상
+        px: 4, // 패딩
+      }}
+    >
+      {/* 배경 이미지 */}
+      <Stack
+        sx={{
+          display: { xs: "20%", sm: "flex" }, // 반응형 디스플레이
+          width: { sm: "40%", md: "60%" }, // 반응형 너비
+          minHeight: "100vh", // 최소 높이
+          backgroundImage: `url(${BackgroundImage})`, // 배경 이미지
+          backgroundRepeat: "no-repeat", // 배경 반복 없음
+          backgroundPosition: "center", // 배경 위치
+          backgroundSize: "80%", // 배경 크기
+        }}
+      />
 
-        {/* 아이디 입력 */}
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          placeholder="이메일"
-          value={email}
-          // onChange={(e) => setEmail(e.target.value)}
-          onChange={handleEmailChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
-            </InputAdornment>
-          }
-        />
+      {/* 텍스트와 폼 */}
+      <Stack
+        width="50%" // 화면의 나머지 절반 차지
+        justifyContent="center" // 수직 중앙 정렬
+        alignItems="center" // 수평 중앙 정렬
+        zIndex="1" // 배경보다 위에 위치
+        sx={{
+          position: "relative", // 상대 위치 설정
+        }}
+      >
+        {/* 메인 제목 */}
+        <Typography
+          variant="h1" // 제목 스타일
+          color="white" // 흰색 텍스트
+          fontSize="2.3em" // 글자 크기
+          textAlign="center" // 텍스트 중앙 정렬
+          width="100%" // 전체 너비
+          mb={1} // 아래 여백
+        >
+          여행갈래?
+        </Typography>
 
-        <div className="wrapper">
-          {/* 비밀번호 입력 */}
+        {/* 부제목 */}
+        <Typography
+          variant="h2" // 부제목 스타일
+          color="white" // 흰색 텍스트
+          fontSize="1.6em" // 글자 크기
+          textAlign="center" // 텍스트 중앙 정렬
+          mb={3} // 아래 여백
+        >
+          세상에서 가장 간단한 계획서
+        </Typography>
+
+        {/* 폼 컨테이너 */}
+        <Stack width={{ md: "240px", xs: "180px" }} gap={3}>
+          {/* 이메일 입력 */}
           <OutlinedInput
             sx={{
-              backgroundColor: "#EBEBEB",
-              borderRadius: "10px",
+              backgroundColor: "#EBEBEB", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
             }}
-            type={isPasswordVisible ? "text" : "password"}
-            placeholder="비밀번호"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
+            placeholder="이메일" // 입력 필드 힌트 텍스트
+            value={email} // email 상태와 바인딩
+            onChange={handleEmailChange} // email 상태 업데이트
+            required // 필수 입력 필드
             startAdornment={
               <InputAdornment position="start">
-                <LockIcon
+                <EmailIcon
                   sx={{
-                    color: "black",
-                    transform: "scale(1.5)",
-                    marginRight: "20px",
+                    color: "black", // 검은색 아이콘
+                    transform: "scale(1.5)", // 아이콘 크기 조정
+                    marginRight: "20px", // 오른쪽 여백
                   }}
                 />
               </InputAdornment>
             }
-            // 비밀번호 보임/안보임
+          />
+
+          {/* 비밀번호 입력 */}
+          <OutlinedInput
+            sx={{
+              backgroundColor: "#EBEBEB", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
+            }}
+            type={isPasswordVisible ? "text" : "password"} // 비밀번호 가시성 토글
+            placeholder="비밀번호" // 입력 필드 힌트 텍스트
+            value={password} // password 상태와 바인딩
+            onChange={(e) => setPassword(e.target.value)} // password 상태 업데이트
+            required // 필수 입력 필드
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon
+                  sx={{
+                    color: "black", // 검은색 아이콘
+                    transform: "scale(1.5)", // 아이콘 크기 조정
+                    marginRight: "20px", // 오른쪽 여백
+                  }}
+                />
+              </InputAdornment>
+            }
             endAdornment={
               <InputAdornment position="end">
                 <IconButton
                   onClick={() => {
-                    setIsPasswordVisible(!isPasswordVisible);
+                    setIsPasswordVisible(!isPasswordVisible); // 비밀번호 가시성 토글
                   }}
                 >
                   {isPasswordVisible ? (
-                    <VisibilityIcon sx={{ color: "black" }} />
+                    <VisibilityIcon sx={{ color: "black" }} /> // 비밀번호 보임 아이콘
                   ) : (
-                    <VisibilityOffIcon sx={{ color: "black" }} />
+                    <VisibilityOffIcon sx={{ color: "black" }} /> // 비밀번호 숨김 아이콘
                   )}
                 </IconButton>
               </InputAdornment>
             }
           />
 
-          {/* 버튼과 체크박스 */}
-          <div className="button-container">
-            <div className="checkbox-container">
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={isEmailSaved}
-                    onChange={handleEmailSaveChange}
-                    size="large"
-                    sx={{
-                      color: "#EBEBEB",
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: "1em" }}>이메일 저장</Typography>
-                }
+          {/* 이메일 저장 체크박스 */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isEmailSaved} // isEmailSaved 상태와 바인딩
+                onChange={handleEmailSaveChange} // isEmailSaved 상태 업데이트
+                size="large" // 큰 체크박스 크기
                 sx={{
-                  color: "white",
+                  color: "#EBEBEB", // 밝은 회색
                 }}
               />
+            }
+            label={
+              <Typography sx={{ fontSize: "1em" }}>이메일 저장</Typography> // 라벨 텍스트
+            }
+            sx={{
+              color: "white", // 흰색 텍스트
+            }}
+          />
 
-              {/* 로그인 상태 유지는 다음 학기에 추가 예정 */}
-              {/* <FormControlLabel
-                control={
-                  <Checkbox
-                    size="large"
-                    sx={{
-                      color: "#EBEBEB",
-                      transform: "translateX(5px)",
-                    }}
-                  />
-                }
-                label={
-                  <Typography sx={{ fontSize: "1em" }}>
-                    로그인 상태 유지
-                  </Typography>
-                }
-                sx={{
-                  color: "white",
-                  transform: "translate(-5px, 6px)",
-                }}
-              /> */}
-            </div>
-            <Button
-              id="btn-login"
-              variant="contained"
-              onClick={handleLoginClick}
-              sx={{
-                borderRadius: "50px",
-                fontWeight: "bold",
-                fontSize: "1.4em",
-                padding: "5px 30px",
-              }}
-            >
-              로그인
-            </Button>
-          </div>
-        </div>
-
-        {/* 회원가입 링크 */}
-        <p className="register">
-          계정이 아직 없으신가요? <Link to="/register">회원가입</Link>
-        </p>
-
-        {/* 소셜 로그인 */}
-        <div className="social-login">
-          <IconButton onClick={handleKakaoLogin}>
-            <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />
-          </IconButton>
-          <IconButton
-            onClick={() => {
-              google.accounts.id.initialize({
-                client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-                callback: handleGoogleLogin,
-              });
-              google.accounts.id.prompt();
+          {/* 로그인 버튼 */}
+          <Button
+            id="btn-login" // 버튼 ID
+            variant="contained" // 컨테이너 스타일 버튼
+            onClick={handleLoginClick} // 클릭 시 handleLoginClick 호출
+            sx={{
+              borderRadius: "50px", // 완전히 둥근 모서리
+              fontWeight: "bold", // 굵은 텍스트
+              fontSize: "1.4em", // 글자 크기
+              padding: "5px 30px", // 패딩
             }}
           >
-            <Avatar
-              src={GoogleIcon}
-              sx={{ width: "60px", height: "60px", cursor: "pointer" }}
-            />
-          </IconButton>
-        </div>
-      </div>
-    </Style>
+            로그인
+          </Button>
+
+          {/* 회원가입 링크 */}
+          <Typography color="white">
+            계정이 아직 없으신가요? <Link to="/register">회원가입</Link>{" "}
+            {/* 회원가입 페이지로 이동 */}
+          </Typography>
+
+          {/* 소셜 로그인 버튼 */}
+          <Stack direction="row" justifyContent="center" gap={2}>
+            {/* 카카오 로그인 */}
+            <IconButton onClick={handleKakaoLogin}>
+              <Avatar src={KakaoIcon} sx={{ width: "60px", height: "60px" }} />{" "}
+              {/* 카카오 아이콘 */}
+            </IconButton>
+
+            {/* 구글 로그인 */}
+            <IconButton
+              onClick={() => {
+                google.accounts.id.initialize({
+                  client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID, // 구글 클라이언트 ID
+                  callback: handleGoogleLogin, // 구글 로그인 콜백 함수
+                });
+                google.accounts.id.prompt(); // 구글 로그인 프롬프트
+              }}
+            >
+              <Avatar
+                src={GoogleIcon} // 구글 아이콘
+                sx={{ width: "60px", height: "60px", cursor: "pointer" }} // 아이콘 스타일
+              />
+            </IconButton>
+          </Stack>
+        </Stack>
+      </Stack>
+    </Stack>
   );
 };
 
-export default Login;
+export default Logintest;
