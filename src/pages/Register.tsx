@@ -1,152 +1,39 @@
-import React, { useEffect, useState } from "react";
-import styled from "@emotion/styled";
-import { Link } from "react-router-dom";
-import { color } from "../utils/index";
-import BackgroundImage from "../assets/images/background.png";
-import LockIcon from "@mui/icons-material/Lock";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import EmailIcon from "@mui/icons-material/Email";
-import {
-  Button,
-  IconButton,
-  InputAdornment,
-  OutlinedInput,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
-import axios from "axios";
-import { kakaoLoginStateAtom, SERVER_HOST, wannaTripLoginStateAtom } from "../state";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai";
+import axios from "axios";
 
-const Style = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  background-color: ${color.background};
-  z-index: 1;
+import {
+  Stack,
+  Typography,
+  TextField,
+  InputAdornment,
+  IconButton,
+  Button,
+} from "@mui/material";
 
-  &:before {
-    content: "";
-    position: absolute;
-    width: 35%;
-    height: 100vh;
-    top: 0;
-    left: 9%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
+import {
+  Email as EmailIcon,
+  Lock as LockIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+  LocalOffer as LocalOfferIcon,
+} from "@mui/icons-material";
 
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 35%;
-    min-width: 400px;
-    height: 100%;
-    margin-right: 10%;
-    gap: 1em;
-  }
-
-  .title {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    color: white;
-  }
-  .title h1 {
-    font-size: 2.3em;
-  }
-  .title p {
-    font-size: 1.7em;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .button-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  p.register {
-    align-self: center;
-    color: white;
-    word-spacing: 3px;
-    font-size: 1.32em;
-  }
-
-  p.register a {
-    color: ${color.link};
-    margin-left: 5px;
-    text-decoration: none;
-  }
-
-  p.register a:hover {
-    text-decoration: underline;
-  }
-
-  .wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  @media (max-width: 768px) {
-    justify-content: center;
-
-    &:before {
-      width: 80%;
-      left: 10%;
-      opacity: 0.3;
-    }
-
-    .login-form {
-      margin: 0;
-      width: 70%;
-      min-width: 260px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    &:before {
-      width: 88%;
-      left: 6%;
-      opacity: 0.3;
-    }
-
-    .button-container {
-      flex-direction: column;
-      align-items: center;
-      align-self: center;
-      width: auto;
-      gap: 1em;
-    }
-
-    .button-wrapper,
-    .button-wrapper #btn-login {
-      width: 100%;
-    }
-  }
-`;
+import {
+  kakaoLoginStateAtom,
+  SERVER_HOST,
+  wannaTripLoginStateAtom,
+} from "../state";
+import { theme } from "../utils/index";
+import BackgroundImage from "../assets/images/background.png";
 
 const Register = () => {
-  // 카카오 로그인 상태 초기화
+  const navigate = useNavigate();
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     setKakaoLoginState(""); // 카카오 로그인 상태 초기화
   }, []);
-  
-  const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -154,17 +41,17 @@ const Register = () => {
     navigate("/template");
   }
 
-  //비밀번호 보이기/숨기기 시작
+  // 비밀번호 보이기/숨기기 상태
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isPasswordCheckVisible, setIsPasswordCheckVisible] = useState(false);
-  //비밀번호 보이기/숨기기 끝
 
-  //회원가입 시작
+  // 회원가입 관련 상태
   const [email, setEmail] = useState(""); // 사용자 이메일
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [password_comparison, setPassword_comparison] = useState(""); // 사용자 비밀번호 재확인
   const [name, setName] = useState(""); // 사용자 이름
 
+  // 회원가입 버튼 클릭
   const Registerbtn = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -211,9 +98,9 @@ const Register = () => {
           alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
         }
       });
-  }; //회원가입 끝
+  };
 
-  //이메일 중복 검사 시작
+  // 이메일 중복 검사
   const handleCheckEmail = async () => {
     if (!email) {
       alert("이메일을 입력해주세요.");
@@ -240,178 +127,211 @@ const Register = () => {
   }; //이메일 중복 검사 끝
 
   return (
-    <Style>
-      <div className="login-form">
-        {/* 본/부제목 */}
-        <div className="title">
-          <h1>여행갈래?</h1>
-          <p>세상에서 가장 간단한 계획서</p>
-        </div>
-        {/* 이메일 */}
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
-            </InputAdornment>
-          }
-          // 중복체크
-          endAdornment={
-            <InputAdornment position="end">
-              <Button
-                id="btn-mailcheck"
-                variant="contained"
-                onClick={handleCheckEmail}
-                sx={{
-                  borderRadius: "50px",
-                  fontWeight: "bold",
-                  fontSize: "0.8em",
-                }}
-              >
-                중복체크
-              </Button>
-            </InputAdornment>
-          }
-        />
+    <Stack
+      direction="row"
+      width="100%"
+      minHeight="100vh"
+      sx={{
+        backgroundColor: theme.palette.background.default,
+        px: 4,
+      }}
+    >
+      {/* 왼쪽: 배경 이미지 영역
+          - 모바일(xs)에서는 display: "none" 처리 */}
+      <Stack
+        sx={{
+          display: { xs: "20%", sm: "flex" },
+          width: { sm: "40%", md: "60%" },
+          minHeight: "100vh",
+          backgroundImage: `url(${BackgroundImage})`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+          backgroundSize: "75%",
+          opacity: 0.7,
+        }}
+      />
 
-        {/* 비밀번호 입력 */}
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          type={isPasswordVisible ? "text" : "password"}
-          placeholder="비밀번호"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
-            </InputAdornment>
-          }
-          // 비밀번호 보임/안보임
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => {
-                  setIsPasswordVisible(!isPasswordVisible);
-                }}
-              >
-                {isPasswordVisible ? (
-                  <VisibilityIcon sx={{ color: "black" }} />
-                ) : (
-                  <VisibilityOffIcon sx={{ color: "black" }} />
-                )}
-              </IconButton>
-            </InputAdornment>
-          }
-        />
-        {/* 비밀번호 재입력 */}
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          type={isPasswordCheckVisible ? "text" : "password"}
-          placeholder="비밀번호 재입력"
-          value={password_comparison}
-          onChange={(e) => setPassword_comparison(e.target.value)}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
-            </InputAdornment>
-          }
-          // 비밀번호 재입력 보임/안보임
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton
-                onClick={() => {
-                  setIsPasswordCheckVisible(!isPasswordCheckVisible);
-                }}
-              >
-                {isPasswordCheckVisible ? (
-                  <VisibilityIcon sx={{ color: "black" }} />
-                ) : (
-                  <VisibilityOffIcon sx={{ color: "black" }} />
-                )}
-              </IconButton>
-            </InputAdornment>
-          }
-        />
-        {/* 별명 입력 */}
-        <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
-          type="text"
-          placeholder="별명"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LocalOfferIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
-            </InputAdornment>
-          }
-        />
-        {/* 로그인 버튼 & 회원가입 버튼  */}
-        <div className="button-container">
-          <p className="register">
-            이미 계정이 있으신가요? <Link to="/login">로그인</Link>
-          </p>
-          <div className="button-wrapper">
-            <Button
-              id="btn-login"
-              variant="contained"
-              onClick={Registerbtn}
-              sx={{
-                borderRadius: "50px",
-                fontWeight: "bold",
-                fontSize: "1.36em",
-                padding: "7px 30px",
-              }}
-            >
-              회원가입
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Style>
+      {/* 오른쪽: 회원가입 폼 영역
+          - 모바일에서는 전체 너비(100%) 사용 */}
+      <Stack
+        width={{ xs: "100%", sm: "60%", md: "55%" }}
+        minHeight="100vh"
+        justifyContent="center"
+        sx={{
+          backgroundColor: theme.palette.background.default,
+          px: { xs: 2, sm: 10 },
+        }}
+      >
+        <Typography
+          variant="h1"
+          color="white"
+          fontSize={{ xs: "1.8em", md: "2.2em" }}
+          textAlign="left"
+        >
+          여행갈래?
+        </Typography>
+        <Typography
+          variant="h6"
+          color="white"
+          fontSize={{ xs: "1.5em", md: "2.2em" }}
+          fontWeight={500}
+          textAlign="left"
+          mb={3}
+        >
+          세상에서 제일 간단한 계획서
+        </Typography>
+
+        {/* 회원가입 폼 */}
+        <Stack width="100%" gap={1.8} component="form" onSubmit={Registerbtn}>
+          {/* 이메일 입력 */}
+          <TextField
+            placeholder="이메일"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Button
+                    variant="contained"
+                    onClick={handleCheckEmail}
+                    sx={{
+                      borderRadius: "15px",
+                      fontWeight: "bold",
+                      fontSize: "0.8em",
+                      backgroundColor: "#3871CE",
+                      color: "white",
+                    }}
+                  >
+                    중복체크
+                  </Button>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+          />
+
+          {/* 비밀번호 입력 */}
+          <TextField
+            placeholder="비밀번호"
+            type={isPasswordVisible ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                    edge="end"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                    ) : (
+                      <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+          />
+
+          {/* 비밀번호 재입력 */}
+          <TextField
+            placeholder="비밀번호 재입력"
+            type={isPasswordCheckVisible ? "text" : "password"}
+            value={password_comparison}
+            onChange={(e) => setPassword_comparison(e.target.value)}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() =>
+                      setIsPasswordCheckVisible(!isPasswordCheckVisible)
+                    }
+                    edge="end"
+                  >
+                    {isPasswordCheckVisible ? (
+                      <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                    ) : (
+                      <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+          />
+
+          {/* 별명 입력 */}
+          <TextField
+            placeholder="별명"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LocalOfferIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+          />
+
+          {/* 회원가입 버튼 */}
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            sx={{
+              padding: "12px 0",
+              borderRadius: "5px",
+              backgroundColor: "#3871CE",
+              color: "white",
+              fontWeight: "bold",
+              fontSize: "1.1em",
+              mb: 1,
+            }}
+          >
+            회원가입
+          </Button>
+        </Stack>
+
+        <Typography color="white" textAlign="center" fontSize={16}>
+          이미 계정이 있으신가요?{" "}
+          <Link
+            to="/login"
+            style={{
+              color: "white",
+              textDecoration: "none",
+              textDecorationLine: "underline",
+            }}
+          >
+            로그인
+          </Link>
+        </Typography>
+      </Stack>
+    </Stack>
   );
 };
 
