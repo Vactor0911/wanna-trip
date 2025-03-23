@@ -5,7 +5,7 @@ import Register from "./pages/Register"; // Register 컴포넌트
 import Template from "./pages/Template"; // Template 컴포넌트
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils";
-import Logintest from "./pages/LoginTest";
+// import Logintest from "./pages/LoginTest";
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
       <BrowserRouter basename="/wanna-trip">
         <Routes>
           <Route path="/" element={<Main />} />
-          <Route path="/login" element={<Logintest />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/template" element={<Template />} />
           <Route path="/register" element={<Register />} />
           <Route path="*" element={<Navigate to="/" replace />} />
