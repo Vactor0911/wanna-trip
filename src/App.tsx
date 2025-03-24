@@ -5,7 +5,6 @@ import Register from "./pages/Register"; // Register 컴포넌트
 import Template from "./pages/Template"; // Template 컴포넌트
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils";
-// import Logintest from "./pages/LoginTest";
 
 function App() {
   return (
