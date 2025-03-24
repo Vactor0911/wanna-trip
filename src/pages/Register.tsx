@@ -6,10 +6,10 @@ import axios from "axios";
 import {
   Stack,
   Typography,
-  TextField,
   InputAdornment,
   IconButton,
   Button,
+  OutlinedInput,
 } from "@mui/material";
 
 import {
@@ -100,6 +100,12 @@ const Register = () => {
       });
   };
 
+  // 이메일 입력 시 동기화
+  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = event.target.value; // 입력된 이메일 값
+    setEmail(newEmail); // 상태 업데이트
+  };
+
   // 이메일 중복 검사
   const handleCheckEmail = async () => {
     if (!email) {
@@ -125,6 +131,12 @@ const Register = () => {
         alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       });
   }; //이메일 중복 검사 끝
+
+  // 이메일 입력 시 동기화
+  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = event.target.value; // 입력된 이메일 값
+    setName(newName); // 상태 업데이트
+  };
 
   return (
     <Stack
@@ -184,118 +196,146 @@ const Register = () => {
         {/* 회원가입 폼 */}
         <Stack width="100%" gap={1.8} component="form" onSubmit={Registerbtn}>
           {/* 이메일 입력 */}
-          <TextField
+          <OutlinedInput
+            sx={{
+              backgroundColor: "white", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
+            }}
             placeholder="이메일"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Button
-                    variant="contained"
-                    onClick={handleCheckEmail}
-                    sx={{
-                      borderRadius: "15px",
-                      fontWeight: "bold",
-                      fontSize: "0.8em",
-                      backgroundColor: "#3871CE",
-                      color: "white",
-                    }}
-                  >
-                    중복체크
-                  </Button>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+            startAdornment={
+              <InputAdornment position="start">
+                <EmailIcon
+                  sx={{
+                    color: "rgba(0, 0, 0, 0.54)", // 검은색 아이콘
+                    transform: "scale(1.2)", // 아이콘 크기 조정
+                    marginRight: "5px", // 오른쪽 여백
+                  }}
+                />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <Button
+                  variant="contained"
+                  onClick={handleCheckEmail}
+                  sx={{
+                    borderRadius: "15px",
+                    fontWeight: "bold",
+                    fontSize: "0.8em",
+                    backgroundColor: "#3871CE",
+                    color: "white",
+                  }}
+                >
+                  중복체크
+                </Button>
+              </InputAdornment>
+            }
           />
 
           {/* 비밀번호 입력 */}
-          <TextField
-            placeholder="비밀번호"
-            type={isPasswordVisible ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                    edge="end"
-                  >
-                    {isPasswordVisible ? (
-                      <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                    ) : (
-                      <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                    )}
-                  </IconButton>
-                </InputAdornment>
-              ),
+          <OutlinedInput
+            sx={{
+              backgroundColor: "white", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
             }}
-            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+            type={isPasswordVisible ? "text" : "password"} // 비밀번호 가시성 토글
+            placeholder="비밀번호" // 입력 필드 힌트 텍스트
+            value={password} // password 상태와 바인딩
+            onChange={(e) => setPassword(e.target.value)} // password 상태 업데이트
+            required // 필수 입력 필드
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon
+                  sx={{
+                    color: "rgba(0, 0, 0, 0.54)", // 검은색 아이콘
+                    transform: "scale(1.2)", // 아이콘 크기 조정
+                    marginRight: "5px", // 오른쪽 여백
+                  }}
+                />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => {
+                    setIsPasswordVisible(!isPasswordVisible); // 비밀번호 가시성 토글
+                  }}
+                >
+                  {isPasswordVisible ? (
+                    <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} /> // 비밀번호 보임 아이콘
+                  ) : (
+                    <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} /> // 비밀번호 숨김 아이콘
+                  )}
+                </IconButton>
+              </InputAdornment>
+            }
           />
 
           {/* 비밀번호 재입력 */}
-          <TextField
+          <OutlinedInput
+            sx={{
+              backgroundColor: "white", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
+            }}
             placeholder="비밀번호 재입력"
             type={isPasswordCheckVisible ? "text" : "password"}
             value={password_comparison}
             onChange={(e) => setPassword_comparison(e.target.value)}
             required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() =>
-                      setIsPasswordCheckVisible(!isPasswordCheckVisible)
-                    }
-                    edge="end"
-                  >
-                    {isPasswordCheckVisible ? (
-                      <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                    ) : (
-                      <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                    )}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon
+                  sx={{
+                    color: "rgba(0, 0, 0, 0.54)", // 검은색 아이콘
+                    transform: "scale(1.2)", // 아이콘 크기 조정
+                    marginRight: "5px", // 오른쪽 여백
+                  }}
+                />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => {
+                    setIsPasswordCheckVisible(!isPasswordCheckVisible); // 비밀번호 가시성 토글
+                  }}
+                >
+                  {isPasswordCheckVisible ? (
+                    <VisibilityIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} /> // 비밀번호 보임 아이콘
+                  ) : (
+                    <VisibilityOffIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} /> // 비밀번호 숨김 아이콘
+                  )}
+                </IconButton>
+              </InputAdornment>
+            }
           />
 
           {/* 별명 입력 */}
-          <TextField
+          <OutlinedInput
+            sx={{
+              backgroundColor: "white", // 밝은 회색 배경
+              borderRadius: "10px", // 둥근 모서리
+            }}
             placeholder="별명"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
             required
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LocalOfferIcon sx={{ color: "rgba(0, 0, 0, 0.54)" }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ backgroundColor: "white", borderRadius: "5px" }}
+            startAdornment={
+              <InputAdornment position="start">
+                <LocalOfferIcon
+                  sx={{
+                    color: "rgba(0, 0, 0, 0.54)", // 검은색 아이콘
+                    transform: "scale(1.2)", // 아이콘 크기 조정
+                    marginRight: "5px", // 오른쪽 여백
+                  }}
+                />
+              </InputAdornment>
+            }
           />
 
           {/* 회원가입 버튼 */}
@@ -305,12 +345,12 @@ const Register = () => {
             fullWidth
             sx={{
               padding: "12px 0",
-              borderRadius: "5px",
+              borderRadius: "10px",
               backgroundColor: "#3871CE",
               color: "white",
               fontWeight: "bold",
               fontSize: "1.1em",
-              mb: 1,
+              marginBottom: "1.2em",
             }}
           >
             회원가입
