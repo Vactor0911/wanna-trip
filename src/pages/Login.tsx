@@ -109,84 +109,80 @@ const Login = () => {
     []
   );
 
-  // 구글 간편 로그인 시작
+  // 구글 간편 로그인
+  const googleLoginCallback = useCallback(
+    (credentialResponse: any) => {
+      // 구글에서 받은 Credential 디코딩
+      let decoded: any;
+      try {
+        decoded = jwtDecode(credentialResponse.credential);
+      } catch (error) {
+        console.error("구글 Credential 디코딩 실패:", error);
+        console.log(credentialResponse.credential);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+        return;
+      }
+
+      // 사용자 정보 추출
+      const email = decoded.email;
+      const name = decoded.name;
+
+      // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
+      axios
+        .post(`${SERVER_HOST}/api/login/google`, {
+          email,
+          name,
+          loginType: "google",
+        })
+        .then((response) => {
+          const { accessToken, refreshToken, userId } = response.data;
+
+          // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
+          localStorage.removeItem("savedEmail");
+
+          // Step 2: 로그인 상태 업데이트
+          const wannaTriploginState = {
+            isLoggedIn: true,
+            userId: userId,
+            email: email,
+            loginType: "google",
+            loginToken: accessToken,
+            refreshToken: refreshToken, // RefreshToken 저장
+          };
+
+          // Jotai 상태 업데이트
+          setWannaTripLoginState(wannaTriploginState);
+
+          // LocalStorage에 저장
+          localStorage.setItem(
+            "WannaTriploginState",
+            JSON.stringify(wannaTriploginState)
+          );
+        })
+        .then(() => {
+          // Step 3: 성공 메시지 및 페이지 이동
+          alert(`${name}님 환영합니다!`);
+          navigate("/template");
+        })
+        .catch((error) => {
+          // 에러 처리
+          console.error("구글 로그인 처리 중 오류:", error);
+          alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+        });
+    },
+    [navigate, setWannaTripLoginState]
+  );
+
   const handleGoogleLogin = useCallback(() => {
     google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: googleLoginCallback,
     });
     google.accounts.id.prompt();
-  }, []);
+  }, [google.accounts.id, googleLoginCallback]);
 
-  const googleLoginCallback = useCallback((credentialResponse: any) => {
-    // 구글에서 받은 Credential 디코딩
-    let decoded: any;
-    try {
-      decoded = jwtDecode(credentialResponse.credential);
-    } catch (error) {
-      console.error("구글 Credential 디코딩 실패:", error);
-      console.log(credentialResponse.credential);
-      alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
-      return;
-    }
-
-    // 사용자 정보 추출
-    const email = decoded.email;
-    const name = decoded.name;
-
-    // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
-    axios
-      .post(`${SERVER_HOST}/api/login/google`, {
-        email,
-        name,
-        loginType: "google",
-      })
-      .then((response) => {
-        const { accessToken, refreshToken, userId } = response.data;
-
-        // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
-        localStorage.removeItem("savedEmail");
-
-        // Step 2: 로그인 상태 업데이트
-        const wannaTriploginState = {
-          isLoggedIn: true,
-          userId: userId,
-          email: email,
-          loginType: "google",
-          loginToken: accessToken,
-          refreshToken: refreshToken, // RefreshToken 저장
-        };
-
-        // Jotai 상태 업데이트
-        setWannaTripLoginState(wannaTriploginState);
-
-        // LocalStorage에 저장
-        localStorage.setItem(
-          "WannaTriploginState",
-          JSON.stringify(wannaTriploginState)
-        );
-      })
-      .then(() => {
-        // Step 3: 성공 메시지 및 페이지 이동
-        alert(`${name}님 환영합니다!`);
-        navigate("/template");
-      })
-      .catch((error) => {
-        // 에러 처리
-        console.error("구글 로그인 처리 중 오류:", error);
-        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
-      });
-  }, []); // 구글 간편 로그인 끝
-
-  // 카카오 URL의 code를 처리하기 위한 useEffect
+  // 카카오 간편 로그인
   const kakaoLoginState = useAtomValue(kakaoLoginStateAtom); // 카카오 로그인 코드 상태
-  useEffect(() => {
-    if (kakaoLoginState) {
-      handleKakaoLogin(); // 카카오 로그인 함수 호출
-    }
-  }, []);
-
-  // 카카오 간편 로그인 시작
   const handleKakaoLogin = useCallback(() => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
@@ -274,85 +270,97 @@ const Login = () => {
         console.error("카카오 로그인 실패:", error);
         alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
       });
-  }, [kakaoLoginState]); // 카카오 간편 로그인 끝
+  }, [kakaoLoginState, navigate, setWannaTripLoginState]);
+
+  // 카카오 URL내 코드 처리
+  useEffect(() => {
+    if (kakaoLoginState) {
+      handleKakaoLogin(); // 카카오 로그인 함수 호출
+    }
+  }, [handleKakaoLogin, kakaoLoginState]);
 
   // 일반 로그인 기능 시작
-  const handleLoginButtonClick = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLoginButtonClick = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    // 입력값 검증
-    if (!email || !password) {
-      alert("이메일과 비밀번호를 입력해 주세요.");
-      return;
-    }
+      // 입력값 검증
+      if (!email || !password) {
+        alert("이메일과 비밀번호를 입력해 주세요.");
+        return;
+      }
 
-    setIsLoading(true); // 로딩 상태 활성화
+      setIsLoading(true); // 로딩 상태 활성화
 
-    // 서버에 로그인 요청
-    axios
-      .post(`${SERVER_HOST}/api/login`, {
-        email: email,
-        password: password,
-      })
-      .then((response) => {
-        const { nickname, token, userId } = response.data;
-
-        // 로그인 성공 메시지
-        alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
-
-        // 로그인 상태 업데이트
-        const WannaTriploginState = {
-          isLoggedIn: true,
-          userId: userId,
+      // 서버에 로그인 요청
+      axios
+        .post(`${SERVER_HOST}/api/login`, {
           email: email,
-          loginType: "normal", // 일반 로그인
-          loginToken: token,
-          refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
-        };
+          password: password,
+        })
+        .then((response) => {
+          const { nickname, token, userId } = response.data;
 
-        // Jotai 상태 업데이트
-        setWannaTripLoginState(WannaTriploginState);
+          // 로그인 성공 메시지
+          alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
 
-        // LocalStorage 업데이트
-        if (isEmailSaved) {
-          localStorage.setItem("savedEmail", email); // 이메일 저장
-        } else {
-          localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
-        }
+          // 로그인 상태 업데이트
+          const WannaTriploginState = {
+            isLoggedIn: true,
+            userId: userId,
+            email: email,
+            loginType: "normal", // 일반 로그인
+            loginToken: token,
+            refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
+          };
 
-        // LocalStorage에 저장
-        localStorage.setItem(
-          "WannaTriploginState",
-          JSON.stringify(WannaTriploginState)
-        );
+          // Jotai 상태 업데이트
+          setWannaTripLoginState(WannaTriploginState);
 
-        // 성공 후 페이지 이동
-        navigate("/template");
-      })
-      .catch((error) => {
-        // 로그인 실패 시 처리
-        if (isEmailSaved) {
-          localStorage.setItem("savedEmail", email); // 저장된 이메일 유지
-        } else {
-          localStorage.removeItem("savedEmail"); // 이메일 저장 안 된 경우 삭제
-          setEmail(""); // 이메일 초기화
-        }
+          // LocalStorage 업데이트
+          if (isEmailSaved) {
+            localStorage.setItem("savedEmail", email); // 이메일 저장
+          } else {
+            localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
+          }
 
-        if (error.response) {
-          console.error("서버 오류:", error.response.data.message);
-          alert(error.response.data.message || "로그인 실패");
-        } else {
-          console.error("요청 오류:", error.message);
-          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
-        }
+          // LocalStorage에 저장
+          localStorage.setItem(
+            "WannaTriploginState",
+            JSON.stringify(WannaTriploginState)
+          );
 
-        // 로그인 실패 시 비밀번호 초기화
-        setPassword("");
-      })
-      .finally(() => {
-        setIsLoading(false); // 로딩 상태 비활성화
-      });
-  }, []); // 일반 로그인 기능 끝
+          // 성공 후 페이지 이동
+          navigate("/template");
+        })
+        .catch((error) => {
+          // 로그인 실패 시 처리
+          if (isEmailSaved) {
+            localStorage.setItem("savedEmail", email); // 저장된 이메일 유지
+          } else {
+            localStorage.removeItem("savedEmail"); // 이메일 저장 안 된 경우 삭제
+            setEmail(""); // 이메일 초기화
+          }
+
+          if (error.response) {
+            console.error("서버 오류:", error.response.data.message);
+            alert(error.response.data.message || "로그인 실패");
+          } else {
+            console.error("요청 오류:", error.message);
+            alert(
+              "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요."
+            );
+          }
+
+          // 로그인 실패 시 비밀번호 초기화
+          setPassword("");
+        })
+        .finally(() => {
+          setIsLoading(false); // 로딩 상태 비활성화
+        });
+    },
+    [email, isEmailSaved, navigate, password, setWannaTripLoginState]
+  ); // 일반 로그인 기능 끝
 
   return (
     <Stack
