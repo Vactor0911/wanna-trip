@@ -358,10 +358,14 @@ const Login = () => {
     <Stack
       minHeight="100vh"
       direction="row"
-      justifyContent="space-around"
+      justifyContent="center"
       alignItems="center"
       position="relative"
       padding={2}
+      gap={{
+        md: 10,
+        lg: 20,
+      }}
     >
       <Box
         component="img"
