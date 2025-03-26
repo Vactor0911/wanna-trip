@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
-import styled from "@emotion/styled";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { color } from "../utils/index";
 import BackgroundImage from "../assets/images/background.png";
 import LockIcon from "@mui/icons-material/Lock";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
@@ -9,144 +7,38 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import EmailIcon from "@mui/icons-material/Email";
 import {
+  Box,
   Button,
   IconButton,
   InputAdornment,
   OutlinedInput,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
 import axios from "axios";
-import { kakaoLoginStateAtom, SERVER_HOST, wannaTripLoginStateAtom } from "../state";
+import {
+  kakaoLoginStateAtom,
+  SERVER_HOST,
+  wannaTripLoginStateAtom,
+} from "../state";
 import { useAtomValue, useSetAtom } from "jotai";
 
-const Style = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  height: 100vh;
-  position: relative;
-  background-color: ${color.background};
-  z-index: 1;
-
-  &:before {
-    content: "";
-    position: absolute;
-    width: 35%;
-    height: 100vh;
-    top: 0;
-    left: 9%;
-    background-image: url(${BackgroundImage});
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    z-index: -1;
-  }
-
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width: 35%;
-    min-width: 400px;
-    height: 100%;
-    margin-right: 10%;
-    gap: 1em;
-  }
-
-  .title {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    color: white;
-  }
-  .title h1 {
-    font-size: 2.3em;
-  }
-  .title p {
-    font-size: 1.7em;
-  }
-
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .button-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  p.register {
-    align-self: center;
-    color: white;
-    word-spacing: 3px;
-    font-size: 1.32em;
-  }
-
-  p.register a {
-    color: ${color.link};
-    margin-left: 5px;
-    text-decoration: none;
-  }
-
-  p.register a:hover {
-    text-decoration: underline;
-  }
-
-  .wrapper {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-  }
-
-  @media (max-width: 768px) {
-    justify-content: center;
-
-    &:before {
-      width: 80%;
-      left: 10%;
-      opacity: 0.3;
-    }
-
-    .login-form {
-      margin: 0;
-      width: 70%;
-      min-width: 260px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    &:before {
-      width: 88%;
-      left: 6%;
-      opacity: 0.3;
-    }
-
-    .button-container {
-      flex-direction: column;
-      align-items: center;
-      align-self: center;
-      width: auto;
-      gap: 1em;
-    }
-
-    .button-wrapper,
-    .button-wrapper #btn-login {
-      width: 100%;
-    }
-  }
-`;
-
 const Register = () => {
+  const [email, setEmail] = useState(""); // 사용자 이메일
+  const [password, setPassword] = useState(""); // 사용자 비밀번호
+  const [passwordConfirm, setPasswordConfirm] = useState(""); // 사용자 비밀번호 재확인
+  const [name, setName] = useState(""); // 사용자 별명
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false); // 비밀번호 보임/숨김
+  const [isPasswordConfirmVisible, setIsPasswordCheckVisible] = useState(false); // 비밀번호 확인 보임/숨김
+
+  const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
+
   // 카카오 로그인 상태 초기화
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, []);
-  
-  const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
+  }, [setKakaoLoginState]);
 
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -154,67 +46,50 @@ const Register = () => {
     navigate("/template");
   }
 
-  //비밀번호 보이기/숨기기 시작
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const [isPasswordCheckVisible, setIsPasswordCheckVisible] = useState(false);
-  //비밀번호 보이기/숨기기 끝
+  // 이메일 입력
+  const handleEmailChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEmail(e.target.value);
+    },
+    []
+  );
 
-  //회원가입 시작
-  const [email, setEmail] = useState(""); // 사용자 이메일
-  const [password, setPassword] = useState(""); // 사용자 비밀번호
-  const [password_comparison, setPassword_comparison] = useState(""); // 사용자 비밀번호 재확인
-  const [name, setName] = useState(""); // 사용자 이름
+  // 비밀번호 입력
+  const handlePasswordChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPassword(e.target.value);
+    },
+    []
+  );
 
-  const Registerbtn = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 비밀번호 재입력 입력
+  const handlePasswordConfirmChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPasswordConfirm(e.target.value);
+    },
+    []
+  );
 
-    // 전송 전 입력값 검증
-    if (!email || !password || !password_comparison) {
-      console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
-      alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
-      return;
-    }
+  // 비밀번호 보임/숨김
+  const handlePasswordVisibilityChange = useCallback(() => {
+    setIsPasswordVisible(!isPasswordVisible);
+  }, [isPasswordVisible]);
 
-    if (!name) {
-      console.error("닉네임을 입력해주세요.");
-      alert("닉네임을 입력해주세요.");
-      return;
-    }
+  // 비밀번호 확인 보임/숨김
+  const handlePasswordConfirmVisibilityChange = useCallback(() => {
+    setIsPasswordCheckVisible(!isPasswordConfirmVisible);
+  }, [isPasswordConfirmVisible]);
 
-    if (password !== password_comparison) {
-      alert("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+  // 별명 입력
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setName(e.target.value);
+    },
+    []
+  );
 
-    // 서버로 회원가입 요청 전송
-    axios
-      .post(`${SERVER_HOST}/api/register`, {
-        email: email,
-        password: password,
-        name: name,
-      })
-      .then(() => {
-        // 사용자에게 성공 메시지 보여주기 (UI 반영)
-        alert("회원가입이 성공적으로 완료되었습니다!");
-        navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
-      })
-      .catch((error) => {
-        // 서버로부터 반환된 에러 메시지 확인
-        if (error.response) {
-          console.error(
-            "서버가 오류를 반환했습니다:",
-            error.response.data.message
-          );
-          alert(`Error: ${error.response.data.message}`);
-        } else {
-          console.error("요청을 보내는 중 오류가 발생했습니다:", error.message);
-          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
-        }
-      });
-  }; //회원가입 끝
-
-  //이메일 중복 검사 시작
-  const handleCheckEmail = async () => {
+  // 이메일 중복 검사
+  const handleCheckEmail = useCallback(async () => {
     if (!email) {
       alert("이메일을 입력해주세요.");
       return;
@@ -237,181 +112,283 @@ const Register = () => {
         console.error("이메일 중복 검사 오류:", error);
         alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       });
-  }; //이메일 중복 검사 끝
+  }, [email]);
+
+  // 회원가입 버튼 클릭
+  const handleRegisterButtonClick = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      // 전송 전 입력값 검증
+      if (!email || !password || !passwordConfirm) {
+        console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+        alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+        return;
+      }
+
+      if (!name) {
+        console.error("닉네임을 입력해주세요.");
+        alert("닉네임을 입력해주세요.");
+        return;
+      }
+
+      if (password !== passwordConfirm) {
+        alert("비밀번호가 일치하지 않습니다.");
+        return;
+      }
+
+      // 서버로 회원가입 요청 전송
+      axios
+        .post(`${SERVER_HOST}/api/register`, {
+          email: email,
+          password: password,
+          name: name,
+        })
+        .then(() => {
+          // 사용자에게 성공 메시지 보여주기 (UI 반영)
+          alert("회원가입이 성공적으로 완료되었습니다!");
+          navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
+        })
+        .catch((error) => {
+          // 서버로부터 반환된 에러 메시지 확인
+          if (error.response) {
+            console.error(
+              "서버가 오류를 반환했습니다:",
+              error.response.data.message
+            );
+            alert(`Error: ${error.response.data.message}`);
+          } else {
+            console.error(
+              "요청을 보내는 중 오류가 발생했습니다:",
+              error.message
+            );
+            alert(
+              "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요."
+            );
+          }
+        });
+    },
+    [email, password, passwordConfirm, name, navigate]
+  );
 
   return (
-    <Style>
-      <div className="login-form">
-        {/* 본/부제목 */}
-        <div className="title">
-          <h1>여행갈래?</h1>
-          <p>세상에서 가장 간단한 계획서</p>
-        </div>
-        {/* 이메일 */}
+    <Stack
+      minHeight="100vh"
+      direction="row"
+      justifyContent="center"
+      alignItems="center"
+      position="relative"
+      padding={2}
+      gap={{
+        md: 10,
+        lg: 20,
+      }}
+    >
+      <Box
+        component="img"
+        src={BackgroundImage}
+        alt="logo"
+        width={{
+          xs: "75%",
+          sm: "60%",
+          md: "40%",
+        }}
+        maxWidth="600px"
+        position={{
+          xs: "absolute",
+          md: "relative",
+        }}
+        zIndex={-1}
+        sx={{
+          aspectRatio: "1/1",
+          opacity: {
+            xs: "0.25",
+            md: "1",
+          },
+        }}
+      />
+
+      <Stack
+        width={{
+          xs: "90%",
+          sm: "60%",
+          md: "50%",
+        }}
+        maxWidth="500px"
+        justifyContent="center"
+        gap={2}
+      >
+        <Stack>
+          {/* 제목 */}
+          <Typography variant="h1" color="white">
+            여행갈래?
+          </Typography>
+          <Typography variant="h2" color="white" fontWeight={500}>
+            세상에서 가장 간단한 계획서
+          </Typography>
+        </Stack>
+
+        {/* 이메일 입력란 */}
         <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
+          fullWidth
           type="email"
           placeholder="이메일"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           required
           startAdornment={
             <InputAdornment position="start">
-              <EmailIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
+              <EmailIcon />
             </InputAdornment>
           }
-          // 중복체크
           endAdornment={
             <InputAdornment position="end">
               <Button
-                id="btn-mailcheck"
                 variant="contained"
                 onClick={handleCheckEmail}
                 sx={{
+                  px: 2,
                   borderRadius: "50px",
-                  fontWeight: "bold",
-                  fontSize: "0.8em",
                 }}
               >
-                중복체크
+                <Typography variant="subtitle1">중복 확인</Typography>
               </Button>
             </InputAdornment>
           }
+          sx={{
+            borderRadius: "10px",
+            background: "white",
+          }}
         />
 
-        {/* 비밀번호 입력 */}
+        {/* 비밀번호 입력란 */}
         <OutlinedInput
-          sx={{
-            backgroundColor: "#EBEBEB",
-            borderRadius: "10px",
-          }}
+          fullWidth
           type={isPasswordVisible ? "text" : "password"}
           placeholder="비밀번호"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={handlePasswordChange}
           required
           startAdornment={
             <InputAdornment position="start">
-              <LockIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
+              <LockIcon />
             </InputAdornment>
           }
-          // 비밀번호 보임/안보임
           endAdornment={
             <InputAdornment position="end">
-              <IconButton
-                onClick={() => {
-                  setIsPasswordVisible(!isPasswordVisible);
-                }}
-              >
-                {isPasswordVisible ? (
-                  <VisibilityIcon sx={{ color: "black" }} />
-                ) : (
-                  <VisibilityOffIcon sx={{ color: "black" }} />
-                )}
+              <IconButton onClick={handlePasswordVisibilityChange}>
+                {isPasswordVisible ? <VisibilityIcon /> : <VisibilityOffIcon />}
               </IconButton>
             </InputAdornment>
           }
-        />
-        {/* 비밀번호 재입력 */}
-        <OutlinedInput
           sx={{
-            backgroundColor: "#EBEBEB",
             borderRadius: "10px",
+            background: "white",
           }}
-          type={isPasswordCheckVisible ? "text" : "password"}
+        />
+
+        {/* 비밀번호 재입력 입력란 */}
+        <OutlinedInput
+          fullWidth
+          type={isPasswordConfirmVisible ? "text" : "password"}
           placeholder="비밀번호 재입력"
-          value={password_comparison}
-          onChange={(e) => setPassword_comparison(e.target.value)}
+          value={passwordConfirm}
+          onChange={handlePasswordConfirmChange}
           required
           startAdornment={
             <InputAdornment position="start">
-              <LockIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
+              <LockIcon />
             </InputAdornment>
           }
-          // 비밀번호 재입력 보임/안보임
           endAdornment={
             <InputAdornment position="end">
-              <IconButton
-                onClick={() => {
-                  setIsPasswordCheckVisible(!isPasswordCheckVisible);
-                }}
-              >
-                {isPasswordCheckVisible ? (
-                  <VisibilityIcon sx={{ color: "black" }} />
+              <IconButton onClick={handlePasswordConfirmVisibilityChange}>
+                {isPasswordConfirmVisible ? (
+                  <VisibilityIcon />
                 ) : (
-                  <VisibilityOffIcon sx={{ color: "black" }} />
+                  <VisibilityOffIcon />
                 )}
               </IconButton>
             </InputAdornment>
           }
-        />
-        {/* 별명 입력 */}
-        <OutlinedInput
           sx={{
-            backgroundColor: "#EBEBEB",
             borderRadius: "10px",
+            background: "white",
           }}
+        />
+
+        {/* 병명 입력란 */}
+        <OutlinedInput
+          fullWidth
           type="text"
           placeholder="별명"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={handleNameChange}
           required
           startAdornment={
             <InputAdornment position="start">
-              <LocalOfferIcon
-                sx={{
-                  color: "black",
-                  transform: "scale(1.5)",
-                  marginRight: "20px",
-                }}
-              />
+              <LocalOfferIcon />
             </InputAdornment>
           }
+          sx={{
+            borderRadius: "10px",
+            background: "white",
+          }}
         />
-        {/* 로그인 버튼 & 회원가입 버튼  */}
-        <div className="button-container">
-          <p className="register">
-            이미 계정이 있으신가요? <Link to="/login">로그인</Link>
-          </p>
-          <div className="button-wrapper">
-            <Button
-              id="btn-login"
-              variant="contained"
-              onClick={Registerbtn}
-              sx={{
-                borderRadius: "50px",
-                fontWeight: "bold",
-                fontSize: "1.36em",
-                padding: "7px 30px",
+
+        <Stack
+          direction={{
+            xs: "column",
+            md: "row",
+          }}
+          justifyContent="space-between"
+          alignItems="center"
+          gap={2}
+        >
+          {/* 로그인 페이지 링크 */}
+          <Stack direction="row" gap={2}>
+            <Typography variant="subtitle1" color="white">
+              계정이 이미 있으신가요?
+            </Typography>
+            <Link
+              to="/login"
+              style={{
+                textDecoration: "none",
               }}
             >
-              회원가입
-            </Button>
-          </div>
-        </div>
-      </div>
-    </Style>
+              <Typography
+                variant="subtitle1"
+                color="primary"
+                fontWeight="bold"
+                sx={{
+                  "&:hover": {
+                    textDecoration: "underline",
+                  },
+                }}
+              >
+                로그인
+              </Typography>
+            </Link>
+          </Stack>
+
+          {/* 회원가입 버튼 */}
+          <Button
+            variant="contained"
+            onClick={handleRegisterButtonClick}
+            sx={{
+              padding: 2,
+              px: {
+                xs: 8,
+                md: 4,
+              },
+              borderRadius: "50px",
+            }}
+          >
+            <Typography variant="h2">회원가입</Typography>
+          </Button>
+        </Stack>
+      </Stack>
+    </Stack>
   );
 };
 
