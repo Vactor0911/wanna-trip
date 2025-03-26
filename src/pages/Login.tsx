@@ -48,6 +48,7 @@ const Login = () => {
   const [isPasswordSaved, setIsPasswordSaved] = useState(false); // 비밀번호호 저장 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
 
   // 이메일 입력값 변경
@@ -111,8 +112,10 @@ const Login = () => {
 
   // 구글 간편 로그인
   const googleLoginCallback = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (credentialResponse: any) => {
       // 구글에서 받은 Credential 디코딩
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let decoded: any;
       try {
         decoded = jwtDecode(credentialResponse.credential);
