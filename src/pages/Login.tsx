@@ -186,12 +186,12 @@ const Login = () => {
 
   // 카카오 간편 로그인
   const kakaoLoginState = useAtomValue(kakaoLoginStateAtom); // 카카오 로그인 코드 상태
+  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom); // 카카오 로그인 코드 상태 업데이트
   const handleKakaoLogin = useCallback(() => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
+    
     const code = kakaoLoginState; // URL에서 code 추출
-
-    console.log(code);
 
     if (!code) {
       // 카카오 로그인 화면으로 이동
@@ -199,7 +199,6 @@ const Login = () => {
       window.location.href = kakaoAuthUrl;
       return;
     }
-
     axios
       // Step 1: 카카오 서버에서 Access Token 발급
       .post("https://kauth.kakao.com/oauth/token", null, {
@@ -275,6 +274,16 @@ const Login = () => {
       });
   }, [kakaoLoginState, navigate, setWannaTripLoginState]);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    if (code) {
+      setKakaoLoginState(code); // 상태에 저장
+      // URL의 code 제거 (새로고침이나 공유 대비)
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [setKakaoLoginState]);
+  
   // 카카오 URL내 코드 처리
   useEffect(() => {
     if (kakaoLoginState) {
