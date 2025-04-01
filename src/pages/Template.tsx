@@ -258,7 +258,7 @@ const Template = () => {
     refreshTokenPromise
       .then(() => {
         // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
-        return axios.post(`${SERVER_HOST}/api/logout`, {
+        return axios.post(`${SERVER_HOST}/api/auth/logout`, {
           email,
           token: currentToken, // 현재 AccessToken 전달
         });

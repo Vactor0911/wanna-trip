@@ -132,7 +132,7 @@ const Login = () => {
 
       // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
       axios
-        .post(`${SERVER_HOST}/api/login/google`, {
+        .post(`${SERVER_HOST}/api/auth/login/google`, {
           email,
           name,
           loginType: "google",
@@ -224,7 +224,7 @@ const Login = () => {
 
             // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
             return axios
-              .post(`${SERVER_HOST}/api/login/kakao`, {
+              .post(`${SERVER_HOST}/api/auth/login/kakao`, {
                 email,
                 name: nickname,
                 loginType: "kakao", // 간편 로그인 타입 전달
@@ -306,7 +306,7 @@ const Login = () => {
 
       // 서버에 로그인 요청
       axios
-        .post(`${SERVER_HOST}/api/login`, {
+        .post(`${SERVER_HOST}/api/auth/login`, {
           email: email,
           password: password,
         })
