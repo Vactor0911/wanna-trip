@@ -13,6 +13,16 @@ const savedLoginState = JSON.parse(
   localStorage.getItem("WannaTriploginState") || "{}"
 );
 
+export interface LoginState {
+  isLoggedIn: boolean;
+  userId?: string | number | null; // 로그인된 사용자의 ID
+  userName?: string;
+  email: string;
+  loginType: string; // ENUM(normal, kakao, google)
+  loginToken: string; // 로그인 토큰
+  refreshToken: string; // 리프레시 토큰
+}
+
 export const wannaTripLoginStateAtom = atom({
   isLoggedIn: savedLoginState.isLoggedIn || false, // 로그인 상태
   userId: savedLoginState.userId || -1, // 로그인된 사용자의 ID
@@ -20,7 +30,7 @@ export const wannaTripLoginStateAtom = atom({
   loginType: savedLoginState.loginType || "normal", // 로그인 타입 ; ENUM(normal, kakao, google)
   loginToken: savedLoginState.loginToken || "", // 로그인 토큰
   refreshToken: savedLoginState.refreshToken || "", // 리프레시 토큰
-});
+} as LoginState);
 
 export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
 
