@@ -122,3 +122,11 @@ export const useResetStates = () => {
     setLoginState,
   };
 };
+
+// 일반 함수 버전의 resetStates 추가 (useCallback 내에서 사용 가능)
+export const resetStates = (setLoginState: (state: LoginState) => void) => {
+  setLoginState({} as LoginState); // 로그인 상태 초기화
+  setAccessToken(""); // 토큰 초기화
+  sessionStorage.removeItem("WannaTriploginState"); // 세션 스토리지 제거
+  localStorage.removeItem("WannaTriploginState"); // 로컬 스토리지 제거
+};
