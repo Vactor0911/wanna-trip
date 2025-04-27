@@ -13,14 +13,20 @@ const savedLoginState = JSON.parse(
   localStorage.getItem("WannaTriploginState") || "{}"
 );
 
+// 로그인 상태
+export enum Permission {
+  USER = "user",
+  ADMIN = "admin",
+  SUPER_ADMIN = "superadmin",
+}
+
 export interface LoginState {
   isLoggedIn: boolean;
   userId?: string | number | null; // 로그인된 사용자의 ID
   userName?: string;
-  email: string;
+  // email: string;
+  permission?: Permission; // 사용자의 권한 (user, admin, superadmin)
   loginType: string; // ENUM(normal, kakao, google)
-  loginToken: string; // 로그인 토큰
-  refreshToken: string; // 리프레시 토큰
 }
 
 export const wannaTripLoginStateAtom = atom({
