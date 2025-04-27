@@ -7,11 +7,8 @@ import {
 // 백엔드 서버 주소
 // export const SERVER_HOST = "https://wanna-trip.vactor0911.dev"; // AXIOS 통신 할 서버 주소
 export const SERVER_HOST = "http://localhost:3000"; // AXIOS 통신 할 서버 주소
+// 이거 다 .env 파일로 옮겨야함
 
-// LocalStorage에서 상태를 불러오기
-const savedLoginState = JSON.parse(
-  localStorage.getItem("WannaTriploginState") || "{}"
-);
 
 // 로그인 상태
 export enum Permission {
@@ -24,18 +21,19 @@ export interface LoginState {
   isLoggedIn: boolean;
   userId?: string | number | null; // 로그인된 사용자의 ID
   userName?: string;
-  // email: string;
   permission?: Permission; // 사용자의 권한 (user, admin, superadmin)
   loginType: string; // ENUM(normal, kakao, google)
 }
 
+// LocalStorage에서 상태를 불러오기
+const savedLoginState = JSON.parse(
+  localStorage.getItem("WannaTriploginState") || "{}"
+);
+
 export const wannaTripLoginStateAtom = atom({
   isLoggedIn: savedLoginState.isLoggedIn || false, // 로그인 상태
-  userId: savedLoginState.userId || -1, // 로그인된 사용자의 ID
-  email: savedLoginState.email || "", // 로그인된 사용자의 이메일
+  userId: savedLoginState.userId || "", // 로그인된 사용자의 ID
   loginType: savedLoginState.loginType || "normal", // 로그인 타입 ; ENUM(normal, kakao, google)
-  loginToken: savedLoginState.loginToken || "", // 로그인 토큰
-  refreshToken: savedLoginState.refreshToken || "", // 리프레시 토큰
 } as LoginState);
 
 export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
