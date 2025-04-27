@@ -139,7 +139,7 @@ const Register = () => {
 
       // 서버로 회원가입 요청 전송
       axios
-        .post(`${SERVER_HOST}/api/register`, {
+        .post(`${SERVER_HOST}/api/auth/register`, {
           email: email,
           password: password,
           name: name,
