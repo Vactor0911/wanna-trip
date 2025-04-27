@@ -7,7 +7,7 @@ export const SERVER_HOST = import.meta.env.VITE_SERVER_HOST;
 
 const axiosInstance = axios.create({
   baseURL: SERVER_HOST,
-  withCredentials: true, // Refresh Token민 쿠키로 포함
+  withCredentials: true, // Refresh Token만 쿠키로 포함
 });
 
 /**
@@ -16,7 +16,7 @@ const axiosInstance = axios.create({
  */
 export const getCsrfToken = async () => {
   try {
-    const response = await axiosInstance.get("/csrf-token");
+    const response = await axiosInstance.get("/api/csrf/csrfToken");
     return response.data.csrfToken;
   } catch (error) {
     console.error("CSRF 토큰을 가져오는 중 오류 발생:", error);
@@ -59,7 +59,7 @@ export const setupAxiosInterceptors = (navigate: NavigateFunction) => {
 
           // RefreshToken으로 AccessToken 재발급 요청
           const { data } = await axios.post(
-            `${SERVER_HOST}/users/token/refresh`,
+            `${SERVER_HOST}/api/auth/token/refresh`,
             {},
             {
               withCredentials: true,
