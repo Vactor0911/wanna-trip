@@ -28,8 +28,12 @@ import {
   wannaTripLoginStateAtom,
   SERVER_HOST,
   kakaoLoginStateAtom,
+  Permission,
 } from "../state"; // WannaTripLoginStateAtom 불러오기
 import { jwtDecode } from "jwt-decode"; // named export로 가져오기 // 토큰 디코딩을 위해 설치 필요: npm install jwt-decode - 구글은 필요한 듯
+
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { setAccessToken } from "../utils/accessToken";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -45,11 +49,12 @@ const Login = () => {
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
-  const [isPasswordSaved, setIsPasswordSaved] = useState(false); // 비밀번호호 저장 여부
-  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // useSetAtom 불러오기
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
+
+  const [isLoginStateSave, setIsLoginStateSave] = useState(false); // 로그인 상태 유지 여부
+  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태
 
   // 이메일 입력값 변경
   const handleEmailChange = useCallback(
@@ -101,15 +106,6 @@ const Login = () => {
     [email]
   );
 
-  // 비밀번호 저장 체크박스 변경
-  const handlePasswordSaveChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const isChecked = event.target.checked;
-      setIsPasswordSaved(isChecked);
-    },
-    []
-  );
-
   // 구글 간편 로그인
   const googleLoginCallback = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,7 +128,7 @@ const Login = () => {
 
       // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
       axios
-        .post(`${SERVER_HOST}/api/login/google`, {
+        .post(`${SERVER_HOST}/api/auth/login/google`, {
           email,
           name,
           loginType: "google",
@@ -187,91 +183,118 @@ const Login = () => {
   // 카카오 간편 로그인
   const kakaoLoginState = useAtomValue(kakaoLoginStateAtom); // 카카오 로그인 코드 상태
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom); // 카카오 로그인 코드 상태 업데이트
-  const handleKakaoLogin = useCallback(() => {
+
+  const handleKakaoLogin = useCallback(async () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID; // 카카오에서 발급받은 Client ID
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI; // 카카오에서 등록한 Redirect URI
-    
+
     const code = kakaoLoginState; // URL에서 code 추출
 
     if (!code) {
       // 카카오 로그인 화면으로 이동
       const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${KAKAO_REDIRECT_URI}&response_type=code&prompt=login`;
+
       window.location.href = kakaoAuthUrl;
       return;
     }
-    axios
+
+    try {
       // Step 1: 카카오 서버에서 Access Token 발급
-      .post("https://kauth.kakao.com/oauth/token", null, {
-        params: {
-          grant_type: "authorization_code",
-          client_id: KAKAO_CLIENT_ID,
-          redirect_uri: KAKAO_REDIRECT_URI,
-          code: code,
+      const tokenResponse = await axios.post(
+        "https://kauth.kakao.com/oauth/token",
+        null,
+        {
+          params: {
+            // 카카오 서버에서 받아야 하는 필수 정보들
+            grant_type: "authorization_code",
+            client_id: KAKAO_CLIENT_ID,
+            redirect_uri: KAKAO_REDIRECT_URI,
+            code: code,
+          },
+        }
+      );
+
+      const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
+
+      // Step 2: 사용자 정보 가져오기
+      const userInfoResponse = await axios.get(
+        "https://kapi.kakao.com/v2/user/me",
+        {
+          // 사용자 정보를 가져오려면 카카오 서버에서 발급한 엑세스 토큰이 필요함.
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      const { properties, kakao_account } = userInfoResponse.data; // 사용자 정보
+      const email = kakao_account.email; // 이메일
+      const nickname = properties.nickname; // 사용자 닉네임
+
+      const csrfToken = await getCsrfToken();
+
+      // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
+      const serverResponse = await axiosInstance.post(
+        "/api/auth/login/kakao",
+        {
+          email,
+          name: nickname,
+          KaKaoAccessToken: accessToken,
         },
-      })
-      .then((tokenResponse) => {
-        const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
+        {
+          headers: {
+            "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
+          },
+        }
+      );
 
-        // Step 2: 사용자 정보 가져오기
-        return axios
-          .get("https://kapi.kakao.com/v2/user/me", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          })
-          .then((userInfoResponse) => {
-            const { id, properties, kakao_account } = userInfoResponse.data; // 사용자 정보
-            const email = kakao_account.email || `${id}@kakao.com`; // 이메일이 없으면 ID 기반으로 생성
-            const nickname = properties.nickname; // 사용자 닉네임
+      const {
+        accessToken: serverAccessToken,
+        userId,
+        permissions,
+        name,
+      } = serverResponse.data;
+      setAccessToken(serverAccessToken); // Access Token 업데이트
 
-            // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
-            return axios
-              .post(`${SERVER_HOST}/api/login/kakao`, {
-                email,
-                name: nickname,
-                loginType: "kakao", // 간편 로그인 타입 전달
-                token: accessToken,
-              })
-              .then((serverResponse) => {
-                const { accessToken, refreshToken, userId } =
-                  serverResponse.data;
+      let enumPermission = Permission.USER;
+      switch (permissions) {
+        case "admin":
+          enumPermission = Permission.ADMIN;
+          break;
+        case "superadmin":
+          enumPermission = Permission.SUPER_ADMIN;
+          break;
+      }
 
-                // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
-                localStorage.removeItem("savedEmail");
+      // Step 4: 로그인 상태 업데이트
+      const newWannaTriploginState = {
+        isLoggedIn: true, // 로그인 상태 boolean
+        userId: userId,
+        email: email,
+        loginType: "kakao", // 카카오 로그인
+        permission: enumPermission, // 사용자 권한 string
+      };
 
-                // Step 4: 로그인 상태 업데이트
-                const WannaTriploginState = {
-                  isLoggedIn: true,
-                  userId: userId,
-                  email: email,
-                  loginType: "kakao", //카카오 로그인
-                  loginToken: accessToken,
-                  refreshToken: refreshToken, // RefreshToken 저장
-                };
+      // Jotai 상태 업데이트
+      setWannaTripLoginState(newWannaTriploginState);
 
-                // Jotai 상태 업데이트
-                setWannaTripLoginState(WannaTriploginState);
+      // 일단 카카오는 로그인 상태 유지로 저장. 추가적인 기능구현 해야함
+      localStorage.setItem(
+        "WannaTriploginState",
+        JSON.stringify(newWannaTriploginState)
+      );
 
-                // LocalStorage에 저장
-                localStorage.setItem(
-                  "WannaTriploginState",
-                  JSON.stringify(WannaTriploginState)
-                );
+      // Step 5: URL의 code 제거
+      window.history.replaceState(null, "", "/login");
 
-                // 로그인 성공 메시지 표시
-                alert(`${nickname}님 환영합니다!`);
+      // 로그인 성공 메시지
+      alert(`[ ${name} ]님 환영합니다!`);
 
-                // Step 5: URL의 code 제거
-                window.history.replaceState(null, "", "/login");
-
-                // 성공 후 페이지 이동
-                navigate("/template");
-              });
-          });
-      })
-      .catch((error) => {
-        // 각 단계에서 발생한 에러 처리
-        console.error("카카오 로그인 실패:", error);
-        alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
-      });
+      // 성공 후 페이지 이동
+      navigate("/template");
+    } catch (error) {
+      // 각 단계에서 발생한 에러 처리
+      console.error("카카오 로그인 실패:", error);
+      alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+    }
   }, [kakaoLoginState, navigate, setWannaTripLoginState]);
 
   useEffect(() => {
@@ -283,7 +306,7 @@ const Login = () => {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, [setKakaoLoginState]);
-  
+
   // 카카오 URL내 코드 처리
   useEffect(() => {
     if (kakaoLoginState) {
@@ -291,88 +314,103 @@ const Login = () => {
     }
   }, [handleKakaoLogin, kakaoLoginState]);
 
+  // 로그인 상태 유지/해제
+  const handleLoginStateSaveChange = useCallback(() => {
+    setIsLoginStateSave((prev) => !prev);
+  }, []);
+
   // 일반 로그인 기능 시작
-  const handleLoginButtonClick = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleLoginButtonClick = useCallback(async () => {
+    // 입력값 검증
+    if (!email || !password) {
+      alert("이메일과 비밀번호를 입력해 주세요.");
+      return;
+    }
 
-      // 입력값 검증
-      if (!email || !password) {
-        alert("이메일과 비밀번호를 입력해 주세요.");
-        return;
-      }
+    setIsLoading(true); // 로딩 상태 활성화
 
-      setIsLoading(true); // 로딩 상태 활성화
+    try {
+      // Step 1: CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
 
-      // 서버에 로그인 요청
-      axios
-        .post(`${SERVER_HOST}/api/login`, {
+      // Step 2: 서버에 로그인 요청
+      const response = await axiosInstance.post(
+        "/api/auth/login",
+        {
           email: email,
           password: password,
-        })
-        .then((response) => {
-          const { nickname, token, userId } = response.data;
+        },
+        {
+          headers: {
+            "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
+          },
+        }
+      );
 
-          // 로그인 성공 메시지
-          alert(`[ ${nickname} ]님 로그인에 성공했습니다!`);
+      // Step 3: 로그인 성공 처리
+      const { name, userId, permissions } = response.data;
+      setAccessToken(response.data.accessToken); // Access Token 저장
+      // Log refresh token (check browser's Network tab if it's an HTTP-only cookie)
+      console.log("Refresh token response:", response.data.refreshToken);
+      console.log("All cookies:", document.cookie);
+      
+      // For HTTP-only cookies, you'll need to check the Network tab in DevTools
+      // as JavaScript cannot directly access them for security reasons
 
-          // 로그인 상태 업데이트
-          const WannaTriploginState = {
-            isLoggedIn: true,
-            userId: userId,
-            email: email,
-            loginType: "normal", // 일반 로그인
-            loginToken: token,
-            refreshToken: "", // 일반 로그인은 RefreshToken이 없을 수도 있음
-          };
+      let enumPermission = Permission.USER;
+      switch (permissions) {
+        case "admin":
+          enumPermission = Permission.ADMIN;
+          break;
+        case "superadmin":
+          enumPermission = Permission.SUPER_ADMIN;
+          break;
+      }
 
-          // Jotai 상태 업데이트
-          setWannaTripLoginState(WannaTriploginState);
+      // 로그인 상태 업데이트
+      const newWannaTriploginState = {
+        isLoggedIn: true, // 로그인 상태 boolean
+        userId: userId,
+        email: email,
+        loginType: "normal", // 일반 로그인
+        permission: enumPermission, // 사용자 권한 string
+      };
 
-          // LocalStorage 업데이트
-          if (isEmailSaved) {
-            localStorage.setItem("savedEmail", email); // 이메일 저장
-          } else {
-            localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
-          }
+      // Jotai 상태 업데이트
+      setWannaTripLoginState(newWannaTriploginState);
 
-          // LocalStorage에 저장
-          localStorage.setItem(
-            "WannaTriploginState",
-            JSON.stringify(WannaTriploginState)
-          );
+      //  로그인 상태 유지 체크 시 localStorage, 아니면 sessionStorage 에 저장
+      if (isLoginStateSave) {
+        localStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
+        );
+      } else {
+        sessionStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
+        );
+      }
 
-          // 성공 후 페이지 이동
-          navigate("/template");
-        })
-        .catch((error) => {
-          // 로그인 실패 시 처리
-          if (isEmailSaved) {
-            localStorage.setItem("savedEmail", email); // 저장된 이메일 유지
-          } else {
-            localStorage.removeItem("savedEmail"); // 이메일 저장 안 된 경우 삭제
-            setEmail(""); // 이메일 초기화
-          }
+      // 로그인 성공 메시지
+      alert(`[ ${name} ]님 환영합니다!`);
 
-          if (error.response) {
-            console.error("서버 오류:", error.response.data.message);
-            alert(error.response.data.message || "로그인 실패");
-          } else {
-            console.error("요청 오류:", error.message);
-            alert(
-              "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요."
-            );
-          }
+      // 성공 후 페이지 이동
+      navigate("/template");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("서버 오류:", error.response.data.message);
+        alert(error.response.data.message || "로그인 실패");
+      } else {
+        console.error("요청 오류:", (error as Error).message);
+        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
 
-          // 로그인 실패 시 비밀번호 초기화
-          setPassword("");
-        })
-        .finally(() => {
-          setIsLoading(false); // 로딩 상태 비활성화
-        });
-    },
-    [email, isEmailSaved, navigate, password, setWannaTripLoginState]
-  ); // 일반 로그인 기능 끝
+      // 로그인 실패 시 비밀번호 초기화
+      setPassword("");
+    }
+  }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
+  // 일반 로그인 기능 끝
 
   return (
     <Stack
@@ -517,8 +555,8 @@ const Login = () => {
                 control={
                   <Checkbox
                     size="small"
-                    checked={isPasswordSaved}
-                    onChange={handlePasswordSaveChange}
+                    checked={isLoginStateSave}
+                    onChange={handleLoginStateSaveChange}
                   />
                 }
                 label="로그인 상태 유지"
