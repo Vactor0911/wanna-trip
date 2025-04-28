@@ -232,6 +232,7 @@ const Template = () => {
     try {
       if (response.data.success) {
         // Jotai 상태
+        //TODO: 이거 리셋 함수 해줘요
         resetStates(setWannaTripLoginState); // 상태 초기화
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
