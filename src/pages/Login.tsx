@@ -230,27 +230,12 @@ const Login = () => {
 
       const accessToken = tokenResponse.data.access_token; // 발급된 Access Token
 
-      // Step 2: 사용자 정보 가져오기
-      const userInfoResponse = await axios.get(
-        "https://kapi.kakao.com/v2/user/me",
-        {
-          // 사용자 정보를 가져오려면 카카오 서버에서 발급한 엑세스 토큰이 필요함.
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      const { properties, kakao_account } = userInfoResponse.data; // 사용자 정보
-      const email = kakao_account.email; // 이메일
-      const nickname = properties.nickname; // 사용자 닉네임
-
       const csrfToken = await getCsrfToken();
 
       // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
       const serverResponse = await axiosInstance.post(
         "/api/auth/login/kakao",
         {
-          email,
-          name: nickname,
           KaKaoAccessToken: accessToken,
         },
         {
