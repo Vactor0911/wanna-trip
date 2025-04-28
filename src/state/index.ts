@@ -33,6 +33,7 @@ const savedLoginState = JSON.parse(
 export const wannaTripLoginStateAtom = atom({
   isLoggedIn: savedLoginState.isLoggedIn || false, // 로그인 상태
   userId: savedLoginState.userId || "", // 로그인된 사용자의 ID
+  userName: savedLoginState.userName || "", // 로그인된 사용자의 이름
   loginType: savedLoginState.loginType || "normal", // 로그인 타입 ; ENUM(normal, kakao, google)
 } as LoginState);
 
