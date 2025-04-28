@@ -156,7 +156,7 @@ const Template = () => {
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, []);
+  }, [setKakaoLoginState]);
 
   // 모바일용 템플릿 메뉴 팝업
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트

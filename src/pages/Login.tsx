@@ -161,6 +161,7 @@ const Login = () => {
           isLoggedIn: true, // 로그인 상태 boolean
           userId: userId,
           email: email,
+          name: name,
           loginType: "google", // 구글글 로그인
           permission: enumPermission, // 사용자 권한 string
         };
@@ -268,6 +269,7 @@ const Login = () => {
         isLoggedIn: true, // 로그인 상태 boolean
         userId: userId,
         email: email,
+        name: name,
         loginType: "kakao", // 카카오 로그인
         permission: enumPermission, // 사용자 권한 string
       };
@@ -294,7 +296,7 @@ const Login = () => {
       console.error("카카오 로그인 실패:", error);
       alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
-  }, [kakaoLoginState, navigate, setWannaTripLoginState]);
+  }, [email, kakaoLoginState, navigate, setWannaTripLoginState]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -365,6 +367,7 @@ const Login = () => {
         isLoggedIn: true, // 로그인 상태 boolean
         userId: userId,
         email: email,
+        name: name,
         loginType: "normal", // 일반 로그인
         permission: enumPermission, // 사용자 권한 string
       };
