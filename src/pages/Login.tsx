@@ -26,7 +26,6 @@ import { useNavigate } from "react-router-dom";
 import { useAtomValue, useSetAtom } from "jotai"; // useSetAtom 불러오기
 import {
   wannaTripLoginStateAtom,
-  SERVER_HOST,
   kakaoLoginStateAtom,
   Permission,
 } from "../state"; // WannaTripLoginStateAtom 불러오기
@@ -50,8 +49,6 @@ const Login = () => {
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
   const [, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const google = (window as any).google; // 구글 간편 로그인 추가
 
   const [isLoginStateSave, setIsLoginStateSave] = useState(false); // 로그인 상태 유지 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태
@@ -107,9 +104,12 @@ const Login = () => {
   );
 
   // 구글 간편 로그인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const google = (window as any).google; // 구글 간편 로그인 추가
+
   const googleLoginCallback = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (credentialResponse: any) => {
+    async (credentialResponse: any) => {
       // 구글에서 받은 Credential 디코딩
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let decoded: any;
@@ -117,59 +117,73 @@ const Login = () => {
         decoded = jwtDecode(credentialResponse.credential);
       } catch (error) {
         console.error("구글 Credential 디코딩 실패:", error);
-        console.log(credentialResponse.credential);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
         return;
       }
 
       // 사용자 정보 추출
-      const email = decoded.email;
-      const name = decoded.name;
+      const googleEmail = decoded.email;
+      const googleName = decoded.name;
 
-      // Step 1: 사용자 정보를 백엔드로 전달하여 로그인 처리
-      axios
-        .post(`${SERVER_HOST}/api/auth/login/google`, {
-          email,
-          name,
-          loginType: "google",
-        })
-        .then((response) => {
-          const { accessToken, refreshToken, userId } = response.data;
+      try {
+        // Step 1: CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
 
-          // 간편 로그인 성공 시 저장된 일반 로그인 이메일 삭제
-          localStorage.removeItem("savedEmail");
+        // Step 2: 사용자 정보를 백엔드로 전달하여 로그인 처리
+        const response = await axiosInstance.post(
+          "/api/auth/login/google",
+          {
+            googleEmail,
+            googleName,
+          },
+          {
+            headers: {
+              "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
+            },
+          }
+        );
 
-          // Step 2: 로그인 상태 업데이트
-          const wannaTriploginState = {
-            isLoggedIn: true,
-            userId: userId,
-            email: email,
-            loginType: "google",
-            loginToken: accessToken,
-            refreshToken: refreshToken, // RefreshToken 저장
-          };
+        const { accessToken, permissions, name, userId } = response.data;
+        setAccessToken(accessToken); // Access Token 업데이트
 
-          // Jotai 상태 업데이트
-          setWannaTripLoginState(wannaTriploginState);
+        let enumPermission = Permission.USER;
+        switch (permissions) {
+          case "admin":
+            enumPermission = Permission.ADMIN;
+            break;
+          case "superadmin":
+            enumPermission = Permission.SUPER_ADMIN;
+            break;
+        }
 
-          // LocalStorage에 저장
-          localStorage.setItem(
-            "WannaTriploginState",
-            JSON.stringify(wannaTriploginState)
-          );
-        })
-        .then(() => {
-          // Step 3: 성공 메시지 및 페이지 이동
-          alert(`${name}님 환영합니다!`);
-          navigate("/template");
-        })
-        .catch((error) => {
-          // 에러 처리
-          console.error("구글 로그인 처리 중 오류:", error);
-          alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
-        });
+        // Step 3: 로그인 상태 업데이트
+        const newWannaTriploginState = {
+          isLoggedIn: true, // 로그인 상태 boolean
+          userId: userId,
+          email: email,
+          loginType: "google", // 구글글 로그인
+          permission: enumPermission, // 사용자 권한 string
+        };
+
+        // Jotai 상태 업데이트
+        setWannaTripLoginState(newWannaTriploginState);
+
+        // 일단 구글은 로그인 상태 유지로 저장. 추가적인 기능구현 해야함
+        localStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
+        );
+
+        // Step 4: 성공 메시지 및 페이지 이동
+        alert(`${name}님 환영합니다!`);
+        navigate("/template");
+      } catch (error) {
+        // 에러 처리
+        console.error("구글 로그인 처리 중 오류:", error);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+      }
     },
-    [navigate, setWannaTripLoginState]
+    [email, navigate, setWannaTripLoginState]
   );
 
   const handleGoogleLogin = useCallback(() => {
@@ -350,12 +364,6 @@ const Login = () => {
       // Step 3: 로그인 성공 처리
       const { name, userId, permissions } = response.data;
       setAccessToken(response.data.accessToken); // Access Token 저장
-      // Log refresh token (check browser's Network tab if it's an HTTP-only cookie)
-      console.log("Refresh token response:", response.data.refreshToken);
-      console.log("All cookies:", document.cookie);
-      
-      // For HTTP-only cookies, you'll need to check the Network tab in DevTools
-      // as JavaScript cannot directly access them for security reasons
 
       let enumPermission = Permission.USER;
       switch (permissions) {
