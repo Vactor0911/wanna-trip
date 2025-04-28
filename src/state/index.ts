@@ -7,7 +7,7 @@ import {
 // 백엔드 서버 주소
 // export const SERVER_HOST = "https://wanna-trip.vactor0911.dev"; // AXIOS 통신 할 서버 주소
 export const SERVER_HOST = "http://localhost:3000"; // AXIOS 통신 할 서버 주소
-// 이거 다 .env 파일로 옮겨야함
+// 이거 다 .env 파일로 옮겨야함 API 싹다 axiosInstance 로 수정하면 삭제 예정
 
 
 // 로그인 상태
