@@ -1,18 +1,16 @@
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
 import {
-  LoginState,
   wannaTripLoginStateAtom,
   Permission,
 } from "../state";
-import {
+import axiosInstance, {
   getCsrfToken,
-  SERVER_HOST,
   setupAxiosInterceptors,
 } from "../utils/axiosInstance";
 import { useNavigate } from "react-router";
 import { setAccessToken } from "../utils/accessToken";
-import axios from "axios";
+import { resetStates } from "../utils";
 
 interface TokenRefresherProps {
   children: ReactNode;
@@ -22,13 +20,14 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
   const [loginState, setLoginState] = useAtom(wannaTripLoginStateAtom);
   const [isInitialized, setIsInitialized] = useState(false); // 로그인 정보 복구 완료 여부
   const navigate = useNavigate();
+  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
 
 
   useEffect(() => {
     // 1. sessionStorage or localStorage에서 로그인 정보 복구
     const storedLoginState =
-      localStorage.getItem("wannaTripLoginState") ||
-      sessionStorage.getItem("wannaTripLoginState");
+      localStorage.getItem("WannaTriploginState") ||
+      sessionStorage.getItem("WannaTriploginState");
 
     if (storedLoginState) {
       const parsedLoginState = JSON.parse(storedLoginState);
@@ -52,11 +51,10 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
       try {
         // CSRF 토큰 가져오기
         const csrfToken = await getCsrfToken();
-        const response = await axios.post(
-          `${SERVER_HOST}/users/token/refresh`,
+        const response = await axiosInstance.post(
+          `/api/auth/token/refresh`,
           {},
           {
-            withCredentials: true,
             headers: {
               "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
             },
@@ -66,7 +64,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         if (response.data.success) {
           setAccessToken(response.data.accessToken);
 
-          const { userId, name, permission } = response.data;
+          const { userId, email, name, permission } = response.data;
           let enumPermission = Permission.USER;
           if (permission === "admin") {
             enumPermission = Permission.ADMIN;
@@ -77,9 +75,10 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
           const updatedLoginState = {
             isLoggedIn: true,
             userId,
-            permission: enumPermission,
+            email,
             userName: name,
             loginType: loginState.loginType || "normal", // 로그인 타입 ; ENUM(normal, kakao, google)
+            permission: enumPermission,
           };
 
           // 기존 상태와 다를 때만 업데이트
@@ -90,14 +89,14 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
           }
 
           // localStorage 또는 sessionStorage에 로그인 상태 저장
-          if (localStorage.getItem("FabLabLoginState")) {
+          if (localStorage.getItem("WannaTriploginState")) {
             localStorage.setItem(
-              "FabLabLoginState",
+              "WannaTriploginState",
               JSON.stringify(updatedLoginState)
             );
           } else {
             sessionStorage.setItem(
-              "FabLabLoginState",
+              "WannaTriploginState",
               JSON.stringify(updatedLoginState)
             );
           }
@@ -105,13 +104,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
       } catch (error) {
         console.error("자동 로그인 유지 실패, 로그아웃 처리:", error);
 
-        // 상태 초기화
-        // Jotai 상태
-        setLoginState({} as LoginState); // 로그인 상태 초기화
-
-        setAccessToken(""); // 토큰 초기화
-        sessionStorage.removeItem("wannaTripLoginState"); // 세션 스토리지 제거
-        localStorage.removeItem("wannaTripLoginState"); // 로컬 스토리지 제거
+        resetStates(setWannaTripLoginState); // 상태 초기화
 
         navigate("/login"); // 로그인 페이지로 이동
       } finally {
@@ -126,7 +119,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
 
     // Axios Interceptor 설정 (자동 토큰 갱신)
     setupAxiosInterceptors(navigate);
-  }, [setLoginState, navigate, loginState]);
+  }, [setLoginState, navigate, loginState, setWannaTripLoginState]);
 
   //  로그인 정보가 복구될 때까지 UI 렌더링 방지
   if (!isInitialized) {
