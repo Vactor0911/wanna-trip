@@ -48,7 +48,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         // CSRF 토큰 가져오기
         const csrfToken = await getCsrfToken();
         const response = await axiosInstance.post(
-          `/api/auth/token/refresh`,
+          `/auth/token/refresh`,
           {},
           {
             headers: {

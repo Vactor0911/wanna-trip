@@ -218,7 +218,7 @@ const Template = () => {
     const csrfToken = await getCsrfToken();
 
     const response = await axiosInstance.post(
-      "/api/auth/logout",
+      "/auth/logout",
       {
 
       },
@@ -269,7 +269,7 @@ const Template = () => {
 
     const userUuid = wannaTripLoginState.userUuid;
     axios
-      .post(`${SERVER_HOST}/api/template`, { userUuid: userUuid })
+      .post(`${SERVER_HOST}/template`, { userUuid: userUuid })
       .then((res) => {
         const template = res.data.template;
 
@@ -278,7 +278,7 @@ const Template = () => {
       .then(() => {
         const templateId = templateData.id;
         axios
-          .post(`${SERVER_HOST}/api/card?type=load-all`, {
+          .post(`${SERVER_HOST}/card?type=load-all`, {
             templateId: templateId,
           })
           .then((res) => {

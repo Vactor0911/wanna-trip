@@ -19,7 +19,6 @@ import { useNavigate } from "react-router-dom"; //네이게이트를 사용하�
 import axios from "axios";
 import {
   kakaoLoginStateAtom,
-  SERVER_HOST,
   wannaTripLoginStateAtom,
 } from "../state";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -121,36 +120,44 @@ const Register = () => {
         return;
       }
 
-      // 서버로 회원가입 요청 전송
-      axios
-        .post(`${SERVER_HOST}/api/auth/register`, {
-          email: email,
-          password: password,
-          name: name,
-        })
-        .then(() => {
-          // 사용자에게 성공 메시지 보여주기 (UI 반영)
-          alert("회원가입이 성공적으로 완료되었습니다!");
-          navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
-        })
-        .catch((error) => {
-          // 서버로부터 반환된 에러 메시지 확인
-          if (error.response) {
-            console.error(
-              "서버가 오류를 반환했습니다:",
-              error.response.data.message
-            );
-            alert(`Error: ${error.response.data.message}`);
-          } else {
-            console.error(
-              "요청을 보내는 중 오류가 발생했습니다:",
-              error.message
-            );
-            alert(
-              "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요."
-            );
+      try {
+        // CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
+
+        // 서버로 회원가입 요청 전송
+        await axiosInstance.post(
+          "/auth/register",
+          {
+            email: email,
+            password: password,
+            name: name,
+          },
+          {
+            headers: {
+              "X-CSRF-Token": csrfToken, // CSRF 토큰 추가
+            },
           }
-        });
+        );
+
+        // 성공 처리
+        alert("회원가입이 성공적으로 완료되었습니다!");
+        navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
+      } catch (error) {
+        // 에러 처리
+        if (axios.isAxiosError(error) && error.response) {
+          console.error(
+            "서버가 오류를 반환했습니다:",
+            error.response.data.message
+          );
+          alert(`Error: ${error.response.data.message}`);
+        } else {
+          console.error(
+            "요청을 보내는 중 오류가 발생했습니다:",
+            (error as Error).message
+          );
+          alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+        }
+      }
     },
     [email, password, passwordConfirm, name, navigate]
   );
@@ -182,7 +189,7 @@ const Register = () => {
 
       // Step 2: 인증번호 요청
       await axiosInstance.post(
-        "/api/auth/sendVerifyEmail",
+        "/auth/sendVerifyEmail",
         {
           email,
           purpose: "verifyEmailCode", // 이메일 인증번호 요청
@@ -219,7 +226,7 @@ const Register = () => {
 
       // Step 2: 인증번호 확인 요청
       await axiosInstance.post(
-        "/api/auth/verifyEmailCode",
+        "/auth/verifyEmailCode",
         {
           email,
           code: confirmCode,

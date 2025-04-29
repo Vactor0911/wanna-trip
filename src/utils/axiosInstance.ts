@@ -14,7 +14,7 @@ const axiosInstance = axios.create({
  */
 export const getCsrfToken = async () => {
   try {
-    const response = await axiosInstance.get("/api/csrf/csrfToken");
+    const response = await axiosInstance.get("/csrf/csrfToken");
     return response.data.csrfToken;
   } catch (error) {
     console.error("CSRF 토큰을 가져오는 중 오류 발생:", error);
@@ -57,7 +57,7 @@ export const setupAxiosInterceptors = () => {
 
           // RefreshToken으로 AccessToken 재발급 요청
           const { data } = await axios.post(
-            `${SERVER_HOST}/api/auth/token/refresh`,
+            `${SERVER_HOST}/auth/token/refresh`,
             {},
             {
               withCredentials: true,

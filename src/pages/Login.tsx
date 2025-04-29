@@ -131,7 +131,7 @@ const Login = () => {
 
         // Step 2: 사용자 정보를 백엔드로 전달하여 로그인 처리
         const response = await axiosInstance.post(
-          "/api/auth/login/google",
+          "/auth/login/google",
           {
             googleEmail,
             googleName,
@@ -235,7 +235,7 @@ const Login = () => {
 
       // Step 3: 사용자 정보를 서버로 전달 (DB 저장/갱신 요청)
       const serverResponse = await axiosInstance.post(
-        "/api/auth/login/kakao",
+        "/auth/login/kakao",
         {
           KaKaoAccessToken: accessToken,
         },
@@ -336,7 +336,7 @@ const Login = () => {
 
       // Step 2: 서버에 로그인 요청
       const response = await axiosInstance.post(
-        "/api/auth/login",
+        "/auth/login",
         {
           email: email,
           password: password,
