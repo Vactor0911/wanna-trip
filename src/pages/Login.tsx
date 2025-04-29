@@ -349,8 +349,8 @@ const Login = () => {
       );
 
       // Step 3: 로그인 성공 처리
-      const { name, userUuid, permissions } = response.data;
-      setAccessToken(response.data.accessToken); // Access Token 저장
+      const { name, userUuid, permissions, accessToken } = response.data;
+      setAccessToken(accessToken); // Access Token 저장
 
       let enumPermission = Permission.USER;
       switch (permissions) {
