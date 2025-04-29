@@ -156,7 +156,7 @@ const Template = () => {
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, []);
+  }, [setKakaoLoginState]);
 
   // 모바일용 템플릿 메뉴 팝업
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트
@@ -232,6 +232,7 @@ const Template = () => {
     try {
       if (response.data.success) {
         // Jotai 상태
+        //TODO: 이거 리셋 함수 해줘요
         resetStates(setWannaTripLoginState); // 상태 초기화
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
@@ -266,9 +267,9 @@ const Template = () => {
       return;
     }
 
-    const userId = wannaTripLoginState.userId;
+    const userUuid = wannaTripLoginState.userUuid;
     axios
-      .post(`${SERVER_HOST}/api/template`, { userId: userId })
+      .post(`${SERVER_HOST}/api/template`, { userUuid: userUuid })
       .then((res) => {
         const template = res.data.template;
 
