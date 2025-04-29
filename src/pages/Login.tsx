@@ -143,7 +143,7 @@ const Login = () => {
           }
         );
 
-        const { accessToken, permissions, name, userId } = response.data;
+        const { accessToken, permissions, name, userUuid } = response.data;
         setAccessToken(accessToken); // Access Token 업데이트
 
         let enumPermission = Permission.USER;
@@ -159,7 +159,7 @@ const Login = () => {
         // Step 3: 로그인 상태 업데이트
         const newWannaTriploginState = {
           isLoggedIn: true, // 로그인 상태 boolean
-          userId: userId,
+          userUuid: userUuid, // 로그인된 사용자의 UUID
           email: email,
           name: name,
           loginType: "google", // 구글글 로그인
@@ -248,7 +248,7 @@ const Login = () => {
 
       const {
         accessToken: serverAccessToken,
-        userId,
+        userUuid,
         permissions,
         name,
       } = serverResponse.data;
@@ -267,7 +267,7 @@ const Login = () => {
       // Step 4: 로그인 상태 업데이트
       const newWannaTriploginState = {
         isLoggedIn: true, // 로그인 상태 boolean
-        userId: userId,
+        userUuid: userUuid, // 로그인된 사용자의 UUID
         email: email,
         name: name,
         loginType: "kakao", // 카카오 로그인
@@ -349,7 +349,7 @@ const Login = () => {
       );
 
       // Step 3: 로그인 성공 처리
-      const { name, userId, permissions } = response.data;
+      const { name, userUuid, permissions } = response.data;
       setAccessToken(response.data.accessToken); // Access Token 저장
 
       let enumPermission = Permission.USER;
@@ -365,7 +365,7 @@ const Login = () => {
       // 로그인 상태 업데이트
       const newWannaTriploginState = {
         isLoggedIn: true, // 로그인 상태 boolean
-        userId: userId,
+        userUuid: userUuid, // 로그인된 사용자의 UUID
         email: email,
         name: name,
         loginType: "normal", // 일반 로그인

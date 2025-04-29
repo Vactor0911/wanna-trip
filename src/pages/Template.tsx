@@ -267,9 +267,9 @@ const Template = () => {
       return;
     }
 
-    const userId = wannaTripLoginState.userId;
+    const userUuid = wannaTripLoginState.userUuid;
     axios
-      .post(`${SERVER_HOST}/api/template`, { userId: userId })
+      .post(`${SERVER_HOST}/api/template`, { userUuid: userUuid })
       .then((res) => {
         const template = res.data.template;
 

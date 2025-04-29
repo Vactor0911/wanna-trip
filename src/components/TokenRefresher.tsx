@@ -64,7 +64,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         if (response.data.success) {
           setAccessToken(response.data.accessToken);
 
-          const { userId, email, name, permission } = response.data;
+          const { email, name, permission, userUuid } = response.data;
           let enumPermission = Permission.USER;
           if (permission === "admin") {
             enumPermission = Permission.ADMIN;
@@ -74,11 +74,11 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
 
           const updatedLoginState = {
             isLoggedIn: true,
-            userId,
-            email,
-            userName: name,
+            userUuid,
             loginType: loginState.loginType || "normal", // 로그인 타입 ; ENUM(normal, kakao, google)
             permission: enumPermission,
+            email,
+            userName: name,
           };
 
           // 기존 상태와 다를 때만 업데이트
