@@ -1,7 +1,5 @@
 import axios from "axios";
-import { NavigateFunction } from "react-router-dom";
 import { getAccessToken, setAccessToken } from "./accessToken"; // Access Token 관리 함수 import
-import { useResetStates } from ".";
 
 export const SERVER_HOST = import.meta.env.VITE_SERVER_HOST;
 
@@ -27,7 +25,7 @@ export const getCsrfToken = async () => {
 let isInterceptorInitialized = false; // 인터셉터 초기화 상태를 저장
 
 // Axios Interceptor 설정
-export const setupAxiosInterceptors = (navigate: NavigateFunction) => {
+export const setupAxiosInterceptors = () => {
   if (isInterceptorInitialized) return; // 이미 초기화된 경우 실행하지 않음
   isInterceptorInitialized = true; // 인터셉터 초기화
 
@@ -52,7 +50,7 @@ export const setupAxiosInterceptors = (navigate: NavigateFunction) => {
       // AccessToken 만료 시 - Access Token 만료: 401 Unauthorized (권한 없음)
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true; // 중복 요청 방지 플래그
-
+        
         try {
           // CSRF 토큰 가져오기
           const csrfToken = await getCsrfToken();
@@ -76,15 +74,8 @@ export const setupAxiosInterceptors = (navigate: NavigateFunction) => {
           return axiosInstance(originalRequest); // 재시도
         } catch (refreshError) {
           // RefreshToken 만료 시 로그아웃 처리 Refresh Token 만료: 403 Forbidden (재로그인이 필요)
-          if (
-            axios.isAxiosError(refreshError) &&
-            refreshError.response?.status === 403
-          ) {
-            useResetStates(); // 상태 초기화
-
-            alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-            navigate("/login"); // 로그인 페이지로 이동
-          }
+          // 오류를 그대로 전달하여 호출자(TokenRefresher)에서 처리하도록 함
+          return Promise.reject(refreshError);
         }
       }
 
