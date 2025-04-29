@@ -23,6 +23,8 @@ import {
   wannaTripLoginStateAtom,
 } from "../state";
 import { useAtomValue, useSetAtom } from "jotai";
+import { isEmailValid } from "../utils";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
 const Register = () => {
   const [email, setEmail] = useState(""); // 사용자 이메일
@@ -50,6 +52,14 @@ const Register = () => {
   const handleEmailChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setEmail(e.target.value);
+    },
+    []
+  );
+
+  // 인증번호 입력
+  const handleConfirmCodeChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setConfirmCode(e.target.value.replace(" ", ""));
     },
     []
   );
@@ -88,32 +98,6 @@ const Register = () => {
     []
   );
 
-  // 이메일 중복 검사
-  const handleCheckEmail = useCallback(async () => {
-    if (!email) {
-      alert("이메일을 입력해주세요.");
-      return;
-    }
-
-    axios
-      .post(`${SERVER_HOST}/api/emailCheck`, {
-        email: email, // 사용자가 입력한 이메일
-      })
-      .then((response) => {
-        const { success, message } = response.data;
-
-        if (success) {
-          alert(message); // "사용 가능한 이메일입니다."
-        } else {
-          alert(message); // "이미 사용 중인 이메일입니다."
-        }
-      })
-      .catch((error) => {
-        console.error("이메일 중복 검사 오류:", error);
-        alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      });
-  }, [email]);
-
   // 회원가입 버튼 클릭
   const handleRegisterButtonClick = useCallback(
     async (e: React.FormEvent) => {
@@ -139,7 +123,7 @@ const Register = () => {
 
       // 서버로 회원가입 요청 전송
       axios
-        .post(`${SERVER_HOST}/api/register`, {
+        .post(`${SERVER_HOST}/api/auth/register`, {
           email: email,
           password: password,
           name: name,
@@ -170,6 +154,98 @@ const Register = () => {
     },
     [email, password, passwordConfirm, name, navigate]
   );
+
+  // 인증번호 요청 버튼 클릭
+  const [, setIsConfirmCodeSending] = useState(false);
+  const [isConfirmCodeChecked, setIsConfirmCodeChecked] = useState(false); // 인증번호 확인 여부
+  const [confirmCode, setConfirmCode] = useState(""); // 인증번호
+
+  const handleConfirmCodeSendButtonClick = useCallback(async () => {
+    // 이미 인증번호를 확인했다면 종료
+    if (isConfirmCodeChecked) {
+      alert("이미 인증번호를 확인했습니다.");
+      return;
+    }
+
+    // 이메일이 올바르지 않다면 종료
+    if (!isEmailValid(email)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
+
+    // 인증번호 요청 API 호출
+    try {
+      setIsConfirmCodeSending(true);
+
+      // Step 1: CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // Step 2: 인증번호 요청
+      await axiosInstance.post(
+        "/api/auth/sendVerifyEmail",
+        {
+          email,
+          purpose: "verifyEmailCode", // 이메일 인증번호 요청
+        },
+        {
+          headers: {
+            "X-CSRF-Token": csrfToken, // CSRF 토큰 추가
+          },
+        }
+      );
+
+      alert("인증번호가 이메일로 발송되었습니다.");
+    } catch (error) {
+      // 요청 실패 시 알림
+      if (axios.isAxiosError(error) && error.response) {
+        alert(
+          "이메일 전송 실패\n" +
+            (error.response.data?.message || "알 수 없는 오류")
+        );
+      } else {
+        console.error("요청 오류:", (error as Error).message);
+        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
+    } finally {
+      setIsConfirmCodeSending(false);
+    }
+  }, [email, isConfirmCodeChecked]);
+
+  // 인증번호 확인 버튼 클릭
+  const handleConfirmCodeCheckButtonClick = useCallback(async () => {
+    try {
+      // Step 1: CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // Step 2: 인증번호 확인 요청
+      await axiosInstance.post(
+        "/api/auth/verifyEmailCode",
+        {
+          email,
+          code: confirmCode,
+        },
+        {
+          headers: {
+            "X-CSRF-Token": csrfToken, // CSRF 토큰 추가
+          },
+        }
+      );
+
+      // 요청 성공 처리
+      alert("인증번호 확인이 완료되었습니다.");
+      setIsConfirmCodeChecked(true); // 인증 성공
+    } catch (error) {
+      // 요청 실패 처리
+      if (axios.isAxiosError(error) && error.response) {
+        alert(
+          "인증 실패\n" + (error.response.data?.message || "알 수 없는 오류")
+        );
+      } else {
+        console.error("요청 오류:", (error as Error).message);
+        alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
+      }
+    }
+  }, [confirmCode, email]);
 
   return (
     <Stack
@@ -245,13 +321,43 @@ const Register = () => {
             <InputAdornment position="end">
               <Button
                 variant="contained"
-                onClick={handleCheckEmail}
+                onClick={handleConfirmCodeSendButtonClick}
                 sx={{
                   px: 2,
                   borderRadius: "50px",
                 }}
               >
-                <Typography variant="subtitle1">중복 확인</Typography>
+                <Typography variant="subtitle1">인증 요청</Typography>
+              </Button>
+            </InputAdornment>
+          }
+          sx={{
+            borderRadius: "10px",
+            background: "white",
+          }}
+        />
+        <OutlinedInput
+          fullWidth
+          placeholder="인증코드"
+          value={confirmCode}
+          onChange={handleConfirmCodeChange}
+          required
+          startAdornment={
+            <InputAdornment position="start">
+              <EmailIcon />
+            </InputAdornment>
+          }
+          endAdornment={
+            <InputAdornment position="end">
+              <Button
+                variant="contained"
+                onClick={handleConfirmCodeCheckButtonClick}
+                sx={{
+                  px: 2,
+                  borderRadius: "50px",
+                }}
+              >
+                <Typography variant="subtitle1">인증 확인</Typography>
               </Button>
             </InputAdornment>
           }

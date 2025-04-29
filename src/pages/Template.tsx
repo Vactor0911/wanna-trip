@@ -31,6 +31,8 @@ import {
 } from "../components/Dialogs";
 import { useNavigate } from "react-router";
 import LoginButton from "../components/LoginButton";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { resetStates } from "../utils/index";
 
 const Style = styled.div`
   display: flex;
@@ -154,7 +156,7 @@ const Template = () => {
   const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
   useEffect(() => {
     setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, []);
+  }, [setKakaoLoginState]);
 
   // 모바일용 템플릿 메뉴 팝업
   const anchorTemplateMenu = useRef<HTMLButtonElement>(null); // 팝업 기준 엘리먼트
@@ -194,9 +196,9 @@ const Template = () => {
   );
 
   const navigate = useNavigate();
-  const { isLoggedIn, email, loginType, loginToken, refreshToken } =
-    useAtomValue(wannaTripLoginStateAtom); // 로그인 상태 읽기
+  const { isLoggedIn } = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태 읽기
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
+  
   useEffect(() => {
     const savedLoginState = localStorage.getItem("WannaTriploginState");
     if (savedLoginState) {
@@ -204,92 +206,47 @@ const Template = () => {
     }
   }, [setWannaTripLoginState]);
 
-  // Access Token 갱신 함수
-  const refreshAccessToken = () => {
-    return axios
-      .post(`${SERVER_HOST}/api/token/refresh`, {
-        email,
-        loginType,
-        refreshToken: refreshToken,
-      })
-      .then((response) => {
-        const newToken = response.data.token;
-
-        setWannaTripLoginState((prevState) => ({
-          ...prevState,
-          loginToken: newToken, // 갱신된 토큰 저장
-        }));
-
-        return newToken; // 갱신된 토큰 반환
-      })
-      .catch((error) => {
-        console.error("Access Token 갱신 실패:", error);
-        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-        setWannaTripLoginState({
-          isLoggedIn: false, // 로그인 상태 초기화
-          userId: null, // userId 초기화
-          email: "", // 이메일 초기화
-          loginType: "normal", // 로그인 타입 초기화
-          loginToken: "", // 토큰 초기화
-          refreshToken: "", // 리프레시 토큰 초기화
-        });
-
-        navigate("/login"); // 로그인 페이지로 이동
-      });
-  };
 
   // 로그아웃 기능 구현 시작
-  const handleLogoutClick = () => {
+  const handleLogoutClick = useCallback(async () => {
     if (!isLoggedIn) {
       alert("로그인이 필요합니다."); // 로그인 상태가 아닌 경우 알림
       return;
     }
 
-    let currentToken = loginToken;
+    // CSRF 토큰 가져오기
+    const csrfToken = await getCsrfToken();
 
-    // Access Token 갱신 (카카오 간편 로그인 사용자만 처리)
-    const refreshTokenPromise =
-      (loginType === "kakao" || loginType === "google") && !currentToken
-        ? refreshAccessToken().then((newToken) => {
-            currentToken = newToken; // 갱신된 토큰을 설정
-          })
-        : Promise.resolve(); // 일반 로그인 사용자는 바로 진행
+    const response = await axiosInstance.post(
+      "/api/auth/logout",
+      {
 
-    refreshTokenPromise
-      .then(() => {
-        // 로그아웃 요청 (일반 사용자는 AccessToken만 전달)
-        return axios.post(`${SERVER_HOST}/api/logout`, {
-          email,
-          token: currentToken, // 현재 AccessToken 전달
-        });
-      })
-      .then((response) => {
-        if (response.data.success) {
-          // LocalStorage에서 로그인 상태 제거
-          localStorage.removeItem("WannaTriploginState");
+      },
+      {
+        headers: {
+          "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
+        },
+      }
+    );
 
-          // Jotai 상태 초기화
-          setWannaTripLoginState({
-            isLoggedIn: false, // 로그인 상태 초기화
-            userId: null, // userId 초기화
-            email: "", // 이메일 초기화
-            loginType: "normal", // 로그인 타입 초기화
-            loginToken: "", // 토큰 초기화
-            refreshToken: "", // 리프레시 토큰 초기화
-          });
+    try {
+      if (response.data.success) {
+        // Jotai 상태
+        //TODO: 이거 리셋 함수 해줘요
+        resetStates(setWannaTripLoginState); // 상태 초기화
 
-          alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+        alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
 
-          navigate("/login"); // 로그인 페이지로 이동
-        } else {
-          alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
-        }
-      })
-      .catch((error) => {
-        console.error("로그아웃 중 오류 발생:", error);
-        alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
-      });
-  }; // 로그아웃 기능 구현 끝
+        navigate("/"); // 메인 페이지로 이동
+      } else {
+        alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
+      }
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);
+      alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
+    }
+  }, [isLoggedIn, navigate, setWannaTripLoginState]);
+  // 로그아웃 기능 구현 끝
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -310,9 +267,9 @@ const Template = () => {
       return;
     }
 
-    const userId = wannaTripLoginState.userId;
+    const userUuid = wannaTripLoginState.userUuid;
     axios
-      .post(`${SERVER_HOST}/api/template`, { userId: userId })
+      .post(`${SERVER_HOST}/api/template`, { userUuid: userUuid })
       .then((res) => {
         const template = res.data.template;
 
