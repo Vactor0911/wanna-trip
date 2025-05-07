@@ -11,12 +11,17 @@ dayjs.extend(minMax);
 export const theme = responsiveFontSizes(
   createTheme({
     palette: {
-      background: {
-        default: "#344056",
+      secondary: {
+        main: "#f6f6f6",
+      },
+      info: {
+        main: "#fff",
       },
     },
     typography: {
-      fontFamily: ["Noto Sans KR", "sans-serif"].join(","),
+      fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
+        ","
+      ),
       h1: {
         fontWeight: 700,
       },
