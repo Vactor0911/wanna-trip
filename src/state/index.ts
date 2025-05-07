@@ -20,9 +20,9 @@ export enum Permission {
 export interface LoginState {
   isLoggedIn: boolean;
   userUuid: string | null; // 로그인된 사용자의 UUID
-  email?: string | null; // 로그인된 사용자의 이메일
   loginType: string; // ENUM(normal, kakao, google)
   permission: Permission; // 사용자의 권한 (user, admin, superadmin)
+  email?: string | null; // 로그인된 사용자의 이메일
   userName?: string;
 }
 

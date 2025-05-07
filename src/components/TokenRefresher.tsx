@@ -1,9 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
-import {
-  wannaTripLoginStateAtom,
-  Permission,
-} from "../state";
+import { wannaTripLoginStateAtom, Permission } from "../state";
 import axiosInstance, {
   getCsrfToken,
   setupAxiosInterceptors,
@@ -21,7 +18,6 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
   const [isInitialized, setIsInitialized] = useState(false); // 로그인 정보 복구 완료 여부
   const navigate = useNavigate();
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
-
 
   useEffect(() => {
     // 1. sessionStorage or localStorage에서 로그인 정보 복구
@@ -52,7 +48,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         // CSRF 토큰 가져오기
         const csrfToken = await getCsrfToken();
         const response = await axiosInstance.post(
-          `/api/auth/token/refresh`,
+          `/auth/token/refresh`,
           {},
           {
             headers: {
@@ -105,7 +101,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         console.error("자동 로그인 유지 실패, 로그아웃 처리:", error);
 
         resetStates(setWannaTripLoginState); // 상태 초기화
-
+        alert("세션이 만료되었습니다. 다시 로그인해주세요.");
         navigate("/login"); // 로그인 페이지로 이동
       } finally {
         setIsInitialized(true); // 초기화 완료 상태로 변경
@@ -118,7 +114,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
     }
 
     // Axios Interceptor 설정 (자동 토큰 갱신)
-    setupAxiosInterceptors(navigate);
+    setupAxiosInterceptors();
   }, [setLoginState, navigate, loginState, setWannaTripLoginState]);
 
   //  로그인 정보가 복구될 때까지 UI 렌더링 방지
