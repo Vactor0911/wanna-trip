@@ -4,6 +4,7 @@ import { theme } from "./utils";
 import { CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import { Login, Main, Register, Template } from "./pages";
+import Header from "./components/Header";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
       <CssBaseline />
       <BrowserRouter basename="/wanna-trip">
         <TokenRefresher>
+          <Header />
           <Routes>
             <Route path="/" element={<Main />} />
             <Route path="/login" element={<Login />} />
