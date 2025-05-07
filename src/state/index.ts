@@ -1,8 +1,4 @@
 import { atom } from "jotai";
-import {
-  CardInterface,
-  TemplateInterface,
-} from "../utils";
 
 // 백엔드 서버 주소
 // export const SERVER_HOST = "https://wanna-trip.vactor0911.dev"; // AXIOS 통신 할 서버 주소
@@ -39,14 +35,6 @@ export const wannaTripLoginStateAtom = atom({
 } as LoginState);
 
 export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
-
-// 템플릿 정보
-export const templateDataAtom = atom<TemplateInterface>({
-  id: -1,
-  title: "새 여행 계획",
-});
-
-export const boardDataAtom = atom<Array<CardInterface[]>>([[]]);
 
 // 팝업 메뉴 상태
 export enum PopupMenuType {

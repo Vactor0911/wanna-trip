@@ -44,15 +44,6 @@ export const theme = responsiveFontSizes(
   })
 );
 
-// 색상 테마
-export const color = {
-  background: "#344056",
-  primary: "#47536b",
-  primaryLight: "#4d5d77",
-  primaryDark: "#2d405e",
-  link: "#3575f1",
-};
-
 /**
  * 시간 문자열을 dayjs 객체로 변환하는 함수
  * @param time 시간 문자열 (형식: "HH:mm")
