@@ -119,6 +119,7 @@ const Header = () => {
       {/* 헤더 */}
       <AppBar
         color="info"
+        position="relative"
         sx={{
           boxShadow: "none",
         }}
@@ -159,7 +160,7 @@ const Header = () => {
                 }}
               >
                 {Links.map((link, index) => (
-                  <StyledLink key={`link-${index}`} to={link.to}>
+                  <StyledLink key={`nav-link-${index}`} to={link.to}>
                     <Typography variant="h5" fontWeight={500}>
                       {link.text}
                     </Typography>
@@ -170,38 +171,52 @@ const Header = () => {
               {/* 아이콘 버튼 */}
               <Stack
                 direction="row"
-                gap={1}
+                gap={{
+                  xs: 0.5,
+                  sm: 1,
+                }}
                 color="black"
                 justifyContent="flex-end"
+                alignItems="center"
                 flexGrow={{
                   xs: 1,
                   sm: 0,
                 }}
+                sx={{
+                  "& > .MuiIconButton-root svg": {
+                    fontSize: {
+                      xs: "1.5rem",
+                      sm: "2rem",
+                    },
+                  },
+                }}
               >
                 {/* 라이트/다크 모드 버튼 */}
-                <IconButton color="inherit">
-                  <DarkModeOutlinedIcon fontSize="large" />
+                <IconButton color="inherit" size="small">
+                  <DarkModeOutlinedIcon />
                 </IconButton>
 
                 {/* 알림 버튼 */}
-                <IconButton color="inherit">
+                <IconButton color="inherit" size="small">
                   <Badge badgeContent={100} color="primary" overlap="circular">
-                    <NotificationsNoneOutlinedIcon fontSize="large" />
+                    <NotificationsNoneOutlinedIcon />
                   </Badge>
                 </IconButton>
 
                 {/* 프로필 버튼 */}
                 <IconButton
                   color="inherit"
+                  size="small"
                   ref={profileAnchorElement}
                   onClick={handleProfileButtonClick}
                 >
-                  <PermIdentityOutlinedIcon fontSize="large" />
+                  <PermIdentityOutlinedIcon />
                 </IconButton>
 
                 {/* 네비게이션 메뉴 버튼 */}
                 <IconButton
                   color="inherit"
+                  size="small"
                   onClick={handleNavMenuButtonClick}
                   ref={navMenuButtonAnchorElement}
                   sx={{
@@ -210,7 +225,7 @@ const Header = () => {
                     },
                   }}
                 >
-                  <MenuRoundedIcon fontSize="large" />
+                  <MenuRoundedIcon />
                 </IconButton>
               </Stack>
             </Toolbar>
@@ -223,19 +238,24 @@ const Header = () => {
             in={isNavMenuOpen}
             sx={{
               boxShadow: 3,
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              width: "100vw",
+              background: "white",
             }}
           >
-            <Stack p={2} paddingX={4} gap={2}>
+            <Stack p={1} paddingX={4} gap={0.5}>
               {Links.map((link, index) => (
                 <Button
-                  key={`link-${index}`}
+                  key={`mobile-nav-link-${index}`}
                   onClick={() => handleNavMenuLinkButtonClick(link.to)}
                   sx={{
                     justifyContent: "flex-start",
                   }}
                 >
                   <Typography
-                    variant="h5"
+                    variant="h6"
                     fontWeight={500}
                     color={location.pathname == link.to ? "primary" : "black"}
                   >
