@@ -283,7 +283,7 @@ const Header = () => {
         onClose={handleProfileMenuClose}
       >
         <Stack
-          width="300px"
+          width="250px"
           p={1}
           gap={1.5}
           sx={{
