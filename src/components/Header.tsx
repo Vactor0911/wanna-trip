@@ -182,8 +182,10 @@ const Header = () => {
               />
             </Avatar>
 
+            {/* 프로필 이름 */}
             <Typography variant="h5">홍길동님</Typography>
 
+            {/* 닫기 버튼 */}
             <Stack flex={1} alignItems="flex-end">
               <IconButton color="inherit" onClick={handleProfileMenuClose}>
                 <CloseRoundedIcon />
@@ -193,6 +195,7 @@ const Header = () => {
 
           <Divider />
 
+          {/* 링크 버튼 */}
           <Stack gap={0.5}>
             {MenuLinks.map((link, index) => (
               <Button
