@@ -17,6 +17,7 @@ export const theme = responsiveFontSizes(
       info: {
         main: "#fff",
       },
+      divider: "#9f9f9f",
     },
     typography: {
       fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
@@ -39,6 +40,16 @@ export const theme = responsiveFontSizes(
       },
       h6: {
         fontWeight: 700,
+      },
+    },
+    components: {
+      MuiDivider: {
+        styleOverrides: {
+          root: {
+            borderWidth: 1.2,
+            borderRadius: "50px",
+          },
+        },
       },
     },
   })
