@@ -122,6 +122,7 @@ const Header = () => {
         position="relative"
         sx={{
           boxShadow: "none",
+          zIndex: 10000,
         }}
       >
         <Box
