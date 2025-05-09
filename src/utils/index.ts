@@ -1,4 +1,4 @@
-import { createTheme } from "@mui/material";
+import { createTheme, responsiveFontSizes } from "@mui/material";
 import dayjs from "dayjs";
 import minMax from "dayjs/plugin/minMax";
 import { useSetAtom } from "jotai";
@@ -8,57 +8,58 @@ import { setAccessToken } from "./accessToken";
 dayjs.extend(minMax);
 
 // MUI 테마
-export const theme = createTheme({
-  palette: {
-    background: {
-      default: "#344056",
+export const theme = responsiveFontSizes(
+  createTheme({
+    palette: {
+      secondary: {
+        main: "#f6f6f6",
+      },
+      info: {
+        main: "#fff",
+      },
+      divider: "#9f9f9f",
     },
-  },
-  typography: {
-    fontFamily: ["Noto Sans KR", "sans-serif"].join(","),
-    h1: {
-      fontSize: "2em",
-      fontWeight: "bold",
+    typography: {
+      fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
+        ","
+      ),
+      h1: {
+        fontWeight: 700,
+      },
+      h2: {
+        fontWeight: 700,
+      },
+      h3: {
+        fontWeight: 700,
+      },
+      h4: {
+        fontWeight: 700,
+      },
+      h5: {
+        fontWeight: 700,
+      },
+      h6: {
+        fontWeight: 700,
+      },
     },
-    h2: {
-      fontSize: "1.5em",
-      fontWeight: "bold",
+    components: {
+      MuiDivider: {
+        styleOverrides: {
+          root: {
+            borderWidth: 1.2,
+            borderRadius: "50px",
+          },
+        },
+      },
     },
-    h3: {
-      fontSize: "1.17em",
-      fontWeight: "bold",
-    },
-    h4: {
-      fontSize: "1em",
-      fontWeight: "bold",
-    },
-    h5: {
-      fontSize: "0.83em",
-      fontWeight: "bold",
-    },
-    h6: {
-      fontSize: "0.67em",
-      fontWeight: "bold",
-    },
-    subtitle1: {
-      fontSize: "1em",
-    },
-    subtitle2: {
-      fontSize: "0.83em",
-    },
-  },
-});
+  })
+);
 
-// 색상 테마
-export const color = {
-  background: "#344056",
-  primary: "#47536b",
-  primaryLight: "#4d5d77",
-  primaryDark: "#2d405e",
-  link: "#3575f1",
-};
-
-// 시간 문자열을 dayjs 객체로 변환
+/**
+ * 시간 문자열을 dayjs 객체로 변환하는 함수
+ * @param time 시간 문자열 (형식: "HH:mm")
+ * @returns dayjs 객체
+ */
 export const timeStringToDayjs = (time: string): dayjs.Dayjs => {
   if (!time) {
     return dayjs().hour(0).minute(0);
@@ -68,27 +69,6 @@ export const timeStringToDayjs = (time: string): dayjs.Dayjs => {
     .minute(Number(time.split(":")[1]));
 };
 
-// 템플릿 속성
-export interface TemplateInterface {
-  id: number;
-  title: string;
-}
-
-// 카드 속성
-export enum CardType {
-  TEXT,
-  PLACE,
-}
-
-export interface CardInterface {
-  id: number;
-  type: CardType;
-  content: string;
-  startTime: string;
-  endTime: string;
-}
-
-// 비밀번호
 /**
  * 비밀번호의 길이가 8자 이상인지 확인하는 함수
  * @param password 비밀번호 문자열
