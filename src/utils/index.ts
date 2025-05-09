@@ -51,6 +51,23 @@ export const theme = responsiveFontSizes(
           },
         },
       },
+      MuiSvgIcon: {
+        styleOverrides: {
+          root: {
+            color: "black",
+          },
+        },
+      },
+      MuiTooltip: {
+        defaultProps: {
+          arrow: true,
+        },
+        styleOverrides: {
+          tooltip: {
+            fontSize: "0.9rem",
+          },
+        },
+      },
     },
   })
 );
