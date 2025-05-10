@@ -6,12 +6,12 @@ import {
   Typography,
 } from "@mui/material";
 import SortRoundedIcon from "@mui/icons-material/SortRounded";
-import { theme } from "../utils";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import Tooltip from "./Tooltip";
 import Card from "./Card";
+import { theme } from "../utils/theme";
 
 interface BoardProps {
   day: number;

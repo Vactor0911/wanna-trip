@@ -7,7 +7,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
 import { useCallback, useState } from "react";
 import Board from "../components/Board";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 
 const modes = [
   { name: "편집 모드", icon: <EditRoundedIcon /> },

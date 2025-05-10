@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
-import { theme } from "./utils";
+import { theme } from "./utils/theme";
 import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import { Login, Main, Register, Template } from "./pages";
