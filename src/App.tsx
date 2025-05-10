@@ -3,7 +3,7 @@ import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils";
 import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
-import { Login, Main, Register, Template } from "./pages";
+import { Login, Main, Register, Template, Intro } from "./pages";
 import Header from "./components/Header";
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
           <Header />
           <Container maxWidth="xl">
             <Routes>
-              <Route path="/" element={<Main />} />
+              <Route path="/" element={<Intro />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
             </Routes>
