@@ -1,11 +1,5 @@
 import { atom } from "jotai";
 
-// 백엔드 서버 주소
-// export const SERVER_HOST = "https://wanna-trip.vactor0911.dev"; // AXIOS 통신 할 서버 주소
-export const SERVER_HOST = "http://localhost:3000"; // AXIOS 통신 할 서버 주소
-// 이거 다 .env 파일로 옮겨야함 API 싹다 axiosInstance 로 수정하면 삭제 예정
-
-
 // 로그인 상태
 export enum Permission {
   USER = "user",
@@ -35,44 +29,3 @@ export const wannaTripLoginStateAtom = atom({
 } as LoginState);
 
 export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
-
-// 팝업 메뉴 상태
-export enum PopupMenuType {
-  NONE,
-  MOBILE,
-  BOARD,
-  CARD,
-}
-
-interface PopupMenuState {
-  isOpen: boolean;
-  type: PopupMenuType;
-  anchor: HTMLElement | null;
-  placement: string;
-  board: number | null;
-  card: number | null;
-}
-export const popupMenuStateAtom = atom<PopupMenuState>({
-  isOpen: false,
-  type: PopupMenuType.NONE,
-  anchor: null,
-  placement: "bottom-end",
-  board: null,
-  card: null,
-});
-
-// 대화상자 상태
-export enum DialogType {
-  NONE,
-  DELETE_BOARD,
-  DELETE_CARD,
-  SWAP_BOARD,
-  SWAP_CARD,
-}
-export const dialogStateAtom = atom({
-  type: DialogType.NONE,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  from: null as any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  to: null as any,
-});
