@@ -18,7 +18,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 import { useCallback, useRef, useState } from "react";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import { grey } from "@mui/material/colors";

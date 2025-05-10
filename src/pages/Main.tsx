@@ -1,4 +1,4 @@
-import { theme } from "../utils/index";
+import { theme } from "../utils/theme";
 import BackgroundImage from "../assets/images/background.png";
 import { Button, Stack, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
