@@ -4,6 +4,9 @@ import { createTheme, responsiveFontSizes } from "@mui/material";
 export const theme = responsiveFontSizes(
   createTheme({
     palette: {
+      primary: {
+        main: "#3288ff",
+      },
       secondary: {
         main: "#f6f6f6",
       },
@@ -58,6 +61,13 @@ export const theme = responsiveFontSizes(
         styleOverrides: {
           tooltip: {
             fontSize: "0.9rem",
+          },
+        },
+      },
+      MuiTypography: {
+        styleOverrides: {
+          root: {
+            wordBreak: "keep-all",
           },
         },
       },
