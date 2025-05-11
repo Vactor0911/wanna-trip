@@ -114,6 +114,11 @@ const Header = () => {
     [navigate]
   );
 
+  // 로그인, 회원가입 페이지에서는 헤더 숨김
+  if (location.pathname === "/login" || location.pathname === "/register") {
+    return null;
+  }
+
   return (
     <>
       {/* 헤더 */}
