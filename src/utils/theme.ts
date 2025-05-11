@@ -1,5 +1,14 @@
 import { createTheme, responsiveFontSizes } from "@mui/material";
 
+declare module "@mui/material/styles" {
+  interface Palette {
+    black: Palette["primary"];
+  }
+  interface PaletteOptions {
+    black?: PaletteOptions["primary"];
+  }
+}
+
 // MUI 테마
 export const theme = responsiveFontSizes(
   createTheme({
@@ -13,7 +22,10 @@ export const theme = responsiveFontSizes(
       info: {
         main: "#fff",
       },
-      divider: "#9f9f9f",
+      black: {
+        main: "#404040",
+      },
+      divider: "#797979",
     },
     typography: {
       fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
@@ -44,13 +56,6 @@ export const theme = responsiveFontSizes(
           root: {
             borderWidth: 1.2,
             borderRadius: "50px",
-          },
-        },
-      },
-      MuiSvgIcon: {
-        styleOverrides: {
-          root: {
-            color: "black",
           },
         },
       },
