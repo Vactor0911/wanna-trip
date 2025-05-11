@@ -20,8 +20,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import axios from "axios";
-import { useAtomValue, useSetAtom } from "jotai";
-import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import Tooltip from "../components/Tooltip";
 
@@ -84,19 +84,13 @@ const Register: React.FC = () => {
 
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
-  // 카카오 로그인 상태 초기화
-  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
-  useEffect(() => {
-    setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, [setKakaoLoginState]);
-
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
   if (wannaTripLoginState.isLoggedIn) {
     navigate("/template");
   }
 
-  // 이메일 입력
+  // 아이디(이메일) 입력
   const handleEmailChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setEmail(e.target.value);
@@ -168,7 +162,7 @@ const Register: React.FC = () => {
     setIsPasswordCheckVisible(!isPasswordConfirmVisible);
   }, [isPasswordConfirmVisible]);
 
-  // 별명 입력
+  // 닉네임(별명) 입력
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setName(e.target.value);
@@ -219,6 +213,12 @@ const Register: React.FC = () => {
       if (!email || !password || !passwordConfirm) {
         console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
         alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+        return;
+      }
+      
+      if (!isConfirmCodeChecked) {
+        console.error("인증번호를 확인해주세요.");
+        alert("인증번호를 확인해주세요.");
         return;
       }
 
@@ -272,7 +272,7 @@ const Register: React.FC = () => {
         }
       }
     },
-    [email, password, passwordConfirm, name, navigate]
+    [email, password, passwordConfirm, isConfirmCodeChecked, name, navigate]
   );
 
   const handleConfirmCodeSendButtonClick = useCallback(async () => {
@@ -291,7 +291,6 @@ const Register: React.FC = () => {
     // 인증번호 요청 API 호출
     try {
       setIsConfirmCodeSending(true);
-      return;
 
       // Step 1: CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -311,6 +310,7 @@ const Register: React.FC = () => {
       );
 
       alert("인증번호가 이메일로 발송되었습니다.");
+      setIsConfirmCodeSent(true); // 인증번호 전송 여부를 true로 설정
     } catch (error) {
       // 요청 실패 시 알림
       if (axios.isAxiosError(error) && error.response) {
@@ -323,10 +323,7 @@ const Register: React.FC = () => {
         alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
       }
     } finally {
-      //TODO: API 연동 후 setTimeout 제거
-      setTimeout(() => {
-        setIsConfirmCodeSending(false);
-      }, 3000);
+      setIsConfirmCodeSending(false);
     }
   }, [email, isConfirmCodeChecked]);
 
@@ -388,12 +385,16 @@ const Register: React.FC = () => {
             {/* 헤더 */}
             <SectionHeader title="아이디/비밀번호" />
 
-            {/* 아이디 */}
+            {/* 아이디(이메일) */}
             <Stack gap={1}>
-              {/* 아이디 입력란 */}
+              {/* 아이디(이메일) 입력란 */}
               <Stack direction="row" gap={1} mt={1}>
                 <Box flex={1}>
-                  <OutlinedTextField label="아이디(이메일)" />
+                  <OutlinedTextField 
+                  label="아이디(이메일)" 
+                  value={email}
+                  onChange={handleEmailChange}
+                  />
                 </Box>
 
                 {/* 인증 요청 버튼 */}
@@ -416,7 +417,11 @@ const Register: React.FC = () => {
                 display={isConfirmCodeSent ? "flex" : "none"}
               >
                 <Box flex={2}>
-                  <OutlinedTextField label="인증번호" />
+                  <OutlinedTextField 
+                  label="인증번호"
+                  value={confirmCode}
+                  onChange={handleConfirmCodeChange}
+                   />
                 </Box>
 
                 {/* 남은 인증 시간 */}
@@ -449,6 +454,8 @@ const Register: React.FC = () => {
             {/* 비밀번호 입력란 */}
             <OutlinedTextField
               label="비밀번호"
+              value={password}
+              onChange={handlePasswordChange}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -469,6 +476,8 @@ const Register: React.FC = () => {
             {/* 비밀번호 재확인 입력란 */}
             <OutlinedTextField
               label="비밀번호 재확인"
+              value={passwordConfirm}
+              onChange={handlePasswordConfirmChange}
               type={isPasswordConfirmVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -487,7 +496,11 @@ const Register: React.FC = () => {
             />
 
             {/* 별명 입력란 */}
-            <OutlinedTextField label="닉네임(별명)" />
+            <OutlinedTextField 
+            label="닉네임(별명)"
+            value={name}
+            onChange={handleNameChange}
+            />
           </Stack>
 
           {/* 이용약관 컨테이너 */}
@@ -610,7 +623,7 @@ const Register: React.FC = () => {
 
           <Stack gap={0.5}>
             {/* 회원가입 버튼 */}
-            <Button variant="contained">
+            <Button variant="contained" onClick={handleRegisterButtonClick}>
               <Typography variant="h5">회원가입</Typography>
             </Button>
 
