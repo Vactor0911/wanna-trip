@@ -1,19 +1,17 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
-  Avatar,
   Box,
   Button,
   Checkbox,
+  Container,
+  Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
-  OutlinedInput,
   Stack,
   Typography,
 } from "@mui/material";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import GoogleIcon from "../assets/images/google.png";
@@ -32,6 +30,10 @@ import { jwtDecode } from "jwt-decode";
 
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { setAccessToken } from "../utils/accessToken";
+import { theme } from "../utils";
+import OutlinedTextField from "../components/OutlinedTextField";
+import PlainLink from "../components/PlainLinkProps";
+import SectionHeader from "../components/SectionHeader";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -156,7 +158,7 @@ const Login = () => {
       callback: googleLoginCallback,
     });
     google.accounts.id.prompt();
-  }, [googleLoginCallback]);
+  }, [google.accounts.id, googleLoginCallback]);
 
   // 카카오 간편 로그인
   const kakaoLoginState = useAtomValue(kakaoLoginStateAtom);
@@ -327,280 +329,142 @@ const Login = () => {
   }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
 
   return (
-    <Stack
-      minHeight="100vh"
-      justifyContent="center"
-      alignItems="center"
-      sx={{
-        backgroundColor: "#fff",
-        padding: 2,
-      }}
-    >
-      {/* 로고 섹션 */}
-      <Typography variant="h3" color="#3288FF" fontWeight="bold" sx={{ mb: 4 }}>
-        Wanna Trip
-      </Typography>
-
-      {/* 로그인 폼 섹션 */}
-      <Stack
-        gap={2}
-        sx={{
-          width: { xs: "90%", sm: "60%", md: "400px" },
-        }}
-      >
-        <Stack display="flex" justifyContent="space-between">
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            width="20%"
-          >
-            <Typography
-              color="text.primary"
-              fontWeight="bold"
-              fontSize={"15px"}
-            >
-              로그인
+    <Container maxWidth="xs">
+      <Stack minHeight="100vh" justifyContent="center">
+        <Stack gap={8}>
+          {/* 로고 링크 버튼 */}
+          <PlainLink to="/">
+            <Typography variant="h3" color="primary" textAlign="center">
+              Wanna Trip
             </Typography>
-          </Box>
-          <Box width="80%" />
+          </PlainLink>
 
-          <Box
-            sx={{
-              width: "100%",
-              height: "2px",
-              mt: 1,
-              background: "linear-gradient(to right, #3288FF 20%, #ccc 20%)",
-            }}
-          />
-        </Stack>
+          <Stack gap={1}>
+            {/* 로그인 헤더 */}
+            <SectionHeader title="로그인" />
 
-        {/* 로그인 입력 섹션 */}
-        <Stack gap={1}>
-          {/* 이메일 입력 필드 */}
-          <OutlinedInput
-            fullWidth
-            type="email"
-            placeholder="이메일(아이디)"
-            value={email}
-            onChange={handleEmailChange}
-            startAdornment={
-              <InputAdornment position="start">
-                <EmailIcon sx={{ color: "#666" }} />
-              </InputAdornment>
-            }
-            sx={{
-              borderRadius: "7px",
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              "&:hover": {
-                borderColor: "#3288FF",
-              },
-              "&.Mui-focused": {
-                borderColor: "#3288FF",
-              },
-              "& .MuiInputBase-input": {
-                padding: "12px 14px",
-              },
-            }}
-          />
+            {/* 아이디 입력란 */}
+            <OutlinedTextField label="아이디(이메일)" />
 
-          {/* 비밀번호 입력 필드 */}
+            {/* 비밀번호 입력란 */}
+            <Box mt={1}>
+              <OutlinedTextField
+                label="비밀번호"
+                type={isPasswordVisible ? "text" : "password"}
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handlePasswordVisibilityChange}
+                      edge="end"
+                    >
+                      {isPasswordVisible ? (
+                        <VisibilityOffIcon />
+                      ) : (
+                        <VisibilityIcon />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </Box>
 
-          <OutlinedInput
-            fullWidth
-            type={isPasswordVisible ? "text" : "password"}
-            placeholder="비밀번호"
-            value={password}
-            onChange={handlePasswordChange}
-            startAdornment={
-              <InputAdornment position="start">
-                <LockIcon sx={{ color: "#666" }} />
-              </InputAdornment>
-            }
-            endAdornment={
-              <InputAdornment position="end">
-                <IconButton onClick={handlePasswordVisibilityChange}>
-                  {" "}
-                  {/* handleTogglePassword 대신 handlePasswordVisibilityChange 사용 */}
-                  {isPasswordVisible ? (
-                    <VisibilityIcon sx={{ color: "#666" }} />
-                  ) : (
-                    <VisibilityOffIcon sx={{ color: "#666" }} />
-                  )}
-                </IconButton>
-              </InputAdornment>
-            }
-            sx={{
-              borderRadius: "7px",
-              backgroundColor: "#fff",
-              border: "1px solid #ccc",
-              "&:hover": {
-                borderColor: "#3288FF",
-              },
-              "&.Mui-focused": {
-                borderColor: "#3288FF",
-              },
-              "& .MuiInputBase-input": {
-                padding: "12px 14px",
-              },
-            }}
-          />
+            {/* 로그인 상태 유지 체크박스 */}
+            <Box>
+              <FormControlLabel
+                control={<Checkbox name="로그인 상태 유지" />}
+                label="로그인 상태 유지"
+              />
+            </Box>
 
-          {/* 체크박스 섹션 */}
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            ml={1}
-          >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isLoginStateSave}
-                  onChange={handleLoginStateSaveChange}
-                  color="primary"
-                  sx={{ padding: "4px" }}
+            {/* 로그인 버튼 */}
+            <Button variant="contained">
+              <Typography variant="h5">로그인</Typography>
+            </Button>
+
+            <Stack direction="row">
+              <Stack direction="row" gap={1} alignItems="center">
+                {/* 아이디 찾기 링크 */}
+                <PlainLink to="/">
+                  <Typography color="divider">아이디 찾기</Typography>
+                </PlainLink>
+
+                <Box
+                  width="1px"
+                  height="60%"
+                  borderRadius="50px"
+                  sx={{
+                    background: theme.palette.divider,
+                  }}
                 />
-              }
-              label="로그인 상태 유지"
-              sx={{
-                color: "text.secondary",
-                "& .MuiTypography-root": { fontSize: "14px" },
-              }}
-            />
+
+                {/* 비밀번호 찾기 링크 */}
+                <PlainLink to="/">
+                  <Typography color="divider">비밀번호 찾기</Typography>
+                </PlainLink>
+              </Stack>
+
+              {/* 회원가입 링크 */}
+              <Box flex={1} display="flex" justifyContent="flex-end">
+                <PlainLink to="/register">
+                  <Typography color="divider">회원가입</Typography>
+                </PlainLink>
+              </Box>
+            </Stack>
+          </Stack>
+
+          <Stack gap={4}>
+            {/* 간편 로그인 구분선 */}
+            <Stack direction="row" gap={2} alignItems="center">
+              <Box
+                flex={1}
+                height="1px"
+                borderRadius="50px"
+                sx={{
+                  background: theme.palette.divider,
+                }}
+              />
+              <Typography>간편 로그인</Typography>
+              <Box
+                flex={1}
+                height="1px"
+                borderRadius="50px"
+                sx={{
+                  background: theme.palette.divider,
+                }}
+              />
+            </Stack>
+
+            {/* 간편 로그인 버튼 */}
+            <Stack direction="row" justifyContent="center" gap={8}>
+              {[
+                {
+                  src: KakaoIcon,
+                  alt: "카카오 로그인",
+                  onClick: handleKakaoLogin,
+                },
+                {
+                  src: GoogleIcon,
+                  alt: "구글 로그인",
+                  onClick: handleGoogleLogin,
+                },
+              ].map(({ src, alt, onClick }, index) => (
+                <Box key={`social-login-${index}`}>
+                  <IconButton
+                    disableRipple
+                    onClick={onClick}
+                    sx={{
+                      padding: 0,
+                    }}
+                  >
+                    <Box component="img" width="60px" src={src} alt={alt} />
+                  </IconButton>
+                </Box>
+              ))}
+            </Stack>
           </Stack>
         </Stack>
-
-        {/* 로그인 버튼 */}
-        <Button
-          variant="contained"
-          onClick={handleLoginButtonClick}
-          disabled={isLoading}
-          sx={{
-            borderRadius: "10px",
-            padding: "12px 0",
-            backgroundColor: "#3288FF",
-            "&:hover": {
-              backgroundColor: "#2a77e0",
-            },
-          }}
-        >
-          <Typography
-            variant="h6"
-            color="white"
-            fontWeight="bold"
-            sx={{ fontSize: "18px" }}
-          >
-            로그인
-          </Typography>
-        </Button>
-
-        {/* 링크 섹션 (아이디 찾기, 비밀번호 찾기, 회원가입) */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          sx={{ mt: 2 }}
-        >
-          <Stack direction="row" spacing={1}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
-                fontSize: "14px",
-              }}
-            >
-              아이디 찾기
-            </Typography>
-            <Typography variant="body2" color="text.secondary" fontSize="14px">
-              |
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: "#666",
-                cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
-                fontSize: "14px",
-              }}
-            >
-              비밀번호 찾기
-            </Typography>
-          </Stack>
-          <Link to="/register" style={{ textDecoration: "none" }}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{
-                cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
-                fontSize: "14px",
-              }}
-            >
-              회원가입
-            </Typography>
-          </Link>
-        </Stack>
       </Stack>
-
-      {/* 구분선 - "간편 로그인" */}
-      <Box
-        sx={{ display: "flex", alignItems: "center", width: "400px", my: 3 }}
-      >
-        <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc" }} />
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          fontSize="14px"
-          sx={{ mx: 1 }}
-        >
-          간편 로그인
-        </Typography>
-        <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc" }} />
-      </Box>
-
-      {/* 간편 로그인 버튼 */}
-      <Stack direction="row" justifyContent="center" gap={2}>
-        {/* 카카오 로그인 버튼 */}
-        <IconButton onClick={handleKakaoLogin}>
-          <Avatar
-            src={KakaoIcon}
-            alt="Kakao"
-            sx={{
-              width: {
-                xs: "50px",
-                sm: "60px",
-              },
-              height: {
-                xs: "50px",
-                sm: "60px",
-              },
-            }}
-          />
-        </IconButton>
-
-        {/* 구글 로그인 버튼 */}
-        <IconButton onClick={handleGoogleLogin}>
-          <Avatar
-            src={GoogleIcon}
-            alt="Google"
-            sx={{
-              width: {
-                xs: "50px",
-                sm: "60px",
-              },
-              height: {
-                xs: "50px",
-                sm: "60px",
-              },
-            }}
-          />
-        </IconButton>
-      </Stack>
-    </Stack>
+    </Container>
   );
 };
 
