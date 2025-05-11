@@ -1,269 +1,185 @@
-import styled from "@emotion/styled";
-import { Button, IconButton } from "@mui/material";
-
+import { Button, IconButton, Paper, Stack, Typography } from "@mui/material";
+import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import { useCallback, useRef } from "react";
-import {
-  boardDataAtom,
-  dialogStateAtom,
-  DialogType,
-  popupMenuStateAtom,
-  PopupMenuType,
-  SERVER_HOST,
-  templateDataAtom,
-} from "../state";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import Tooltip from "./Tooltip";
 import Card from "./Card";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { CardType, timeStringToDayjs } from "../utils";
-import axios from "axios";
-
+import { theme } from "../utils/theme";
+import { useAtom } from "jotai";
+import { templateAtom } from "../state";
+import { useCallback } from "react";
+import { insertNewBoard, insertNewCard, MAX_BOARDS } from "../utils/template";
 import dayjs from "dayjs";
-
-const Style = styled.div`
-  .board {
-    display: flex;
-    flex-direction: column;
-    min-width: 280px;
-    width: 20vw;
-    max-height: 100%;
-    padding: 10px 15px;
-    gap: 15px;
-    background-color: #d9d9d9;
-    border-radius: 5px;
-  }
-
-  .board > header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  header > .btn-container {
-    display: flex;
-  }
-
-  .board-scrollbar,
-  .card-container {
-    display: flex;
-  }
-
-  .card-container {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  @media (max-width: 480px) {
-    .board {
-      width: 90vw;
-    }
-  }
-`;
 
 interface BoardProps {
   day: number;
 }
 
-const Board = ({ day }: BoardProps) => {
-  const [boardData, setBoardData] = useAtom(boardDataAtom);
-  const templateData = useAtomValue(templateDataAtom);
+const Board = (props: BoardProps) => {
+  const { day } = props;
 
-  // 카드 추가
-  const appendCard = useCallback(() => {
-    if (!templateData) {
+  const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
+
+  // 보드 추가 버튼 클릭
+  const handleAddBoardButtonClick = useCallback(() => {
+    // 보드 개수가 최대 개수보다 많으면 중단
+    if (template.boards.length >= MAX_BOARDS) {
       return;
     }
 
-    let startTime = dayjs().hour(0).minute(0);
-    if (boardData[day]) {
-      const cards = boardData[day];
+    // 새 보드 객체
+    const newBoard = { cards: [] };
 
-      if (cards.length > 0) {
-        startTime = timeStringToDayjs(cards[cards.length - 1].endTime);
-      }
+    // 새 템플릿 객체
+    const newTemplate = insertNewBoard(template, newBoard, day);
 
-      // 23:59 이후로는 계획 추가 불가
-      if (startTime.isAfter(dayjs().hour(23).minute(59))) {
-        return;
-      }
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
+
+  // 보드 복제 버튼 클릭
+  const handleCopyBoardButtonClick = useCallback(() => {
+    // 보드 개수가 최대 개수보다 많으면 중단
+    if (template.boards.length >= MAX_BOARDS) {
+      return;
     }
-    const endTime = dayjs.min(
-      startTime.add(10, "minutes"),
-      dayjs().hour(23).minute(59)
-    );
 
-    axios
-      .post(`${SERVER_HOST}/api/card?type=append`, {
-        templateId: templateData.id,
-        startTime: startTime.format("HH:mm"),
-        endTime: endTime.format("HH:mm"),
-        board: day,
-      })
-      .then((res) => {
-        const newCardId = res.data.cardId;
-        const newCard = {
-          id: newCardId,
-          type: CardType.TEXT,
-          content: "새 계획",
-          startTime: startTime.format("HH:mm"),
-          endTime: endTime.format("HH:mm"),
+    // 새 보드 객체
+    const newBoard = {
+      cards: template.boards[day - 1].cards,
+    };
+
+    // 새 템플릿 객체
+    const newTemplate = insertNewBoard(template, newBoard, day);
+
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
+
+  // 보드 삭제 버튼 클릭
+  const handleDeleteBoardButtonClick = useCallback(() => {
+    // 보드 개수가 최소 개수보다 적으면
+    if (template.boards.length <= 1) {
+      // 카드가 있다면 보드 초기화
+      if (template.boards[0].cards.length > 0) {
+        const newTemplate = {
+          ...template,
+          boards: [{ cards: [] }],
         };
 
-        // 보드에 카드가 없을 경우 새로 생성
-        if (!boardData[day]) {
-          setBoardData([...boardData, [newCard]]);
-          return;
-        }
+        setTemplate(newTemplate);
+      }
+      return; // 작업 중단
+    }
 
-        // 보드에 카드가 있을 경우 추가
-        const newBoardData = [...boardData];
-        newBoardData[day].push(newCard);
-        setBoardData(newBoardData);
-      });
-  }, [boardData, day, setBoardData, templateData]);
-
-  // 카드 팝업 메뉴
-  const [popupMenuState, setPopupMenuState] = useAtom(popupMenuStateAtom);
-  const anchorBoardMenu = useRef<HTMLButtonElement>(null);
-  const handleMenuClicked = () => {
-    const newPopupMenuState = {
-      isOpen: !popupMenuState.isOpen,
-      type: PopupMenuType.BOARD,
-      anchor: anchorBoardMenu.current,
-      placement: "right-start",
-      board: day,
-      card: null,
+    // 새 템플릿 객체
+    const newTemplate = {
+      ...template,
+      boards: [
+        ...template.boards.slice(0, day - 1),
+        ...template.boards.slice(day),
+      ],
     };
-    setPopupMenuState(newPopupMenuState);
-  };
 
-  // 새 보드 추가
-  const addBoard = (day: number) => {
-    // 15일 이상은 추가 불가
-    if (boardData.length >= 15) {
-      return;
-    }
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
 
-    axios
-      .post(`${SERVER_HOST}/api/board?type=insert`, {
-        templateId: templateData.id,
-        board: day,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          const newBoardData = [...boardData];
-          newBoardData.splice(day + 1, 0, []);
-          setBoardData(newBoardData);
-        }
-      });
-  };
+  // 계획 추가 버튼 클릭
+  const handleAddCardButtonClick = useCallback(() => {
+    // 새 카드 객체
+    const newCard = {
+      uuid: "1",
+      type: 0,
+      startTime: dayjs(),
+      endTime: dayjs(),
+      content: "새 카드",
+    };
 
-  // 보드 삭제
-  const setDialogState = useSetAtom(dialogStateAtom);
-  const handleDeleteBoardClick = (day: number) => {
-    if (day === null) {
-      return;
-    }
+    // 새 템플릿 객체
+    const newTemplate = insertNewCard(template, day, newCard);
 
-    setDialogState({
-      type: DialogType.DELETE_BOARD,
-      from: day + 1,
-      to: null,
-    });
-  };
-
-  // 보드 복사
-  const copyBoard = (day: number) => {
-    if (boardData.length >= 15) {
-      return;
-    }
-
-    axios
-      .post(`${SERVER_HOST}/api/board?type=copy`, {
-        templateId: templateData.id,
-        board: day,
-      })
-      .then((res) => {
-        if (res.data.success) {
-          const newBoardData = [...boardData];
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const newCardData = res.data.cards.map((card: any) => {
-            return {
-              id: card.card_id,
-              type: card.type,
-              content: card.content,
-              startTime: timeStringToDayjs(card.start_time).format("HH:mm"),
-              endTime: timeStringToDayjs(card.end_time).format("HH:mm"),
-            };
-          });
-          newBoardData.splice(day + 1, 0, newCardData);
-          setBoardData(newBoardData);
-        }
-      });
-  };
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
 
   return (
-    <Style>
-      <div className="board">
-        {/* 헤더 */}
-        <header>
-          {/* 제목 */}
-          <h2>DAY {day + 1}</h2>
+    <Stack height="100%">
+      <Paper
+        elevation={3}
+        sx={{
+          maxHeight: "100%",
+          background: theme.palette.secondary.main,
+        }}
+      >
+        <Stack padding={1} width="300px" maxHeight="inherit" gap={1}>
+          {/* 헤더 메뉴바 */}
+          <Stack direction="row" justifyContent="space-between">
+            {/* 좌측 컨테이너 */}
+            <Stack direction="row" alignItems="center" gap={1}>
+              {/* 보드 날짜 */}
+              <Typography variant="h6">Day {day}</Typography>
 
-          {/* 버튼 */}
-          <div className="btn-container">
-            <IconButton
-              onClick={() => addBoard(day)}
-              disabled={boardData.length >= 15}
-            >
-              <AddRoundedIcon sx={{ transform: "scale(1.3)" }} />
-            </IconButton>
-            <IconButton
-              disabled={boardData.length >= 15}
-              onClick={() => copyBoard(day)}
-            >
-              <ContentCopyRoundedIcon />
-            </IconButton>
-            <IconButton onClick={() => handleDeleteBoardClick(day)}>
-              <DeleteOutlineRoundedIcon sx={{ transform: "scale(1.15)" }} />
-            </IconButton>
-            <IconButton ref={anchorBoardMenu} onClick={handleMenuClicked}>
-              <MenuRoundedIcon sx={{ transform: "scale(1, 1.5)" }} />
-            </IconButton>
-          </div>
-        </header>
+              {/* 정렬하기 버튼 */}
+              <Tooltip title="정렬하기" placement="top">
+                <IconButton size="small">
+                  <SortRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
 
-        {/* 카드 표시 부분 */}
-        <OverlayScrollbarsComponent id="board-scrollbar">
-          <div className="card-container">
-            {boardData[day]
-              ?.sort(function (a, b) {
-                return a.endTime < b.endTime ? -1 : 1;
-              })
-              .map((_card, index) => {
-                return <Card key={index} day={day} position={index} />;
-              })}
-          </div>
-        </OverlayScrollbarsComponent>
+            {/* 우측 컨테이너 */}
+            <Stack direction="row" alignItems="center">
+              {/* 보드 추가하기 버튼 */}
+              <Tooltip title="보드 추가하기" placement="top">
+                <IconButton size="small" onClick={handleAddBoardButtonClick}>
+                  <AddRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
 
-        {/* 계획 추가 버튼 */}
-        <Button
-          startIcon={<AddRoundedIcon sx={{ color: "#4c4c4c" }} />}
-          sx={{
-            alignSelf: "flex-start",
-            color: "#4c4c4c",
-            fontWeight: "bold",
-            fontSize: "1.1em",
-          }}
-          onClick={appendCard}
-        >
-          계획 추가하기
-        </Button>
-      </div>
-    </Style>
+              {/* 보드 복제하기 버튼 */}
+              <Tooltip title="보드 복제하기" placement="top">
+                <IconButton size="small" onClick={handleCopyBoardButtonClick}>
+                  <ContentCopyRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
+              {/* 보드 삭제하기 버튼 */}
+              <Tooltip title="보드 삭제하기" placement="top">
+                <IconButton size="small" onClick={handleDeleteBoardButtonClick}>
+                  <DeleteOutlineRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
+
+          {/* 카드 컨테이너 */}
+          <Stack
+            flex={1}
+            gap={2}
+            paddingBottom={0.5}
+            sx={{
+              overflowY: "scroll",
+            }}
+          >
+            {template.boards[day - 1]?.cards?.map((_, index) => (
+              <Card key={`card-${day}-${index + 1}`} />
+            ))}
+          </Stack>
+
+          <Button
+            fullWidth
+            startIcon={
+              <AddRoundedIcon
+                sx={{
+                  color: "inherit",
+                }}
+              />
+            }
+            onClick={handleAddCardButtonClick}
+          >
+            <Typography variant="subtitle1">계획 추가하기</Typography>
+          </Button>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 };
 

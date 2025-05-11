@@ -1,24 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Main from "./pages/Main";
-import Login from "./pages/Login"; // Login 컴포넌트
-import Register from "./pages/Register"; // Register 컴포넌트
-import Template from "./pages/Template"; // Template 컴포넌트
 import { ThemeProvider } from "@emotion/react";
-import { theme } from "./utils";
-import { CssBaseline } from "@mui/material";
+import { theme } from "./utils/theme";
+import { Container, CssBaseline } from "@mui/material";
+import TokenRefresher from "./components/TokenRefresher";
+import { Login, Main, Register, Template } from "./pages";
+import Header from "./components/Header";
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter basename="/wanna-trip">
-        <Routes>
-          <Route path="/" element={<Main />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/template" element={<Template />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <TokenRefresher>
+          <Header />
+          <Container maxWidth="xl">
+            <Routes>
+              <Route path="/" element={<Main />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Routes>
+          </Container>
+          <Routes>
+            <Route path="/template" element={<Template />} />
+            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+          </Routes>
+        </TokenRefresher>
       </BrowserRouter>
     </ThemeProvider>
   );
