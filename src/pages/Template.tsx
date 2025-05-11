@@ -57,7 +57,14 @@ const Template = () => {
   }, [setTemplate, template]);
 
   return (
-    <Stack height="calc(100vh - 82px)">
+    <Stack
+      height="calc(100vh - 82px)"
+      sx={{
+        "& .MuiIconButton-root > svg": {
+          color: theme.palette.black.main,
+        },
+      }}
+    >
       {/* 상단 컨테이너 */}
       <Container
         maxWidth="xl"

@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   Checkbox,
+  Collapse,
   Container,
   FormControlLabel,
   IconButton,
@@ -21,6 +22,8 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import axios from "axios";
 import { useAtomValue, useSetAtom } from "jotai";
 import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import Tooltip from "../components/Tooltip";
 
 // 이용약관 데이터
 interface TermsOfService {
@@ -32,7 +35,7 @@ interface TermsOfService {
 const termsOfServices: TermsOfService[] = [
   {
     title: "개인정보 수집 및 이용",
-    isOptional: true,
+    isOptional: false,
     content: (
       <Typography variant="subtitle1">
         Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
@@ -44,13 +47,16 @@ const termsOfServices: TermsOfService[] = [
   },
   {
     title: "위치기반서비스 이용약관",
-    isOptional: false,
+    isOptional: true,
     content: (
       <Typography variant="subtitle1">
         Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
         corrupti recusandae voluptate adipisci aliquam fugiat deserunt omnis
         maxime earum neque debitis, quasi perferendis! Qui nihil distinctio
-        doloremque voluptatem corrupti est.
+        doloremque voluptatem corrupti est. Lorem ipsum dolor sit amet
+        consectetur adipisicing elit. Qui, porro cumque necessitatibus quisquam
+        sunt dolores nemo itaque et corporis totam deserunt veniam, tenetur
+        reiciendis perferendis quia consectetur vel mollitia magnam?
       </Typography>
     ),
   },
@@ -69,6 +75,12 @@ const Register: React.FC = () => {
   const [confirmCode, setConfirmCode] = useState(""); // 인증번호
   const [confirmTimeLeft, setConfirmTimeLeft] = useState(300); // 인증번호 입력 남은 시간
   const [isConfirmCodeChecked, setIsConfirmCodeChecked] = useState(false); // 인증번호 확인 여부
+  const [isTermAgreed, setIsTermAgreed] = useState(
+    Array.from({ length: termsOfServices.length }, () => false)
+  ); // 이용약관 동의 여부
+  const [isTermExpanded, setIsTermExpanded] = useState(
+    Array.from({ length: termsOfServices.length }, () => false)
+  ); // 이용약관 펼치기 여부
 
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
@@ -162,6 +174,40 @@ const Register: React.FC = () => {
       setName(e.target.value);
     },
     []
+  );
+
+  // 이용약관 전체 동의 버튼 클릭
+  const handleTermAgreeAllButtonClick = useCallback(() => {
+    const newCondition = isTermAgreed.some((agreed) => agreed) ? false : true;
+    setIsTermAgreed(
+      Array.from({ length: termsOfServices.length }, () => newCondition)
+    );
+  }, [isTermAgreed]);
+
+  // 이용약관 동의 버튼 클릭
+  const handleTermAgreeButtonClick = useCallback(
+    (index: number) => {
+      const newIsTermAgreed = [
+        ...isTermAgreed.slice(0, index),
+        !isTermAgreed[index],
+        ...isTermAgreed.slice(index + 1),
+      ];
+      setIsTermAgreed(newIsTermAgreed);
+    },
+    [isTermAgreed]
+  );
+
+  // 이용약관 펼치기 버튼 클릭
+  const handleExpandTermButtonClick = useCallback(
+    (index: number) => {
+      const newIsTermExpanded = [
+        ...isTermExpanded.slice(0, index),
+        !isTermExpanded[index],
+        ...isTermExpanded.slice(index + 1),
+      ];
+      setIsTermExpanded(newIsTermExpanded);
+    },
+    [isTermExpanded]
   );
 
   // 회원가입 버튼 클릭
@@ -430,7 +476,7 @@ const Register: React.FC = () => {
                     onClick={handlePasswordConfirmVisibilityChange}
                     edge="end"
                   >
-                    {isPasswordVisible ? (
+                    {isPasswordConfirmVisible ? (
                       <VisibilityOffIcon />
                     ) : (
                       <VisibilityIcon />
@@ -452,7 +498,17 @@ const Register: React.FC = () => {
             {/* 전체 동의하기 체크박스 */}
             <Box>
               <FormControlLabel
-                control={<Checkbox name="전체 동의하기" />}
+                control={
+                  <Checkbox
+                    name="전체 동의하기"
+                    checked={isTermAgreed.every((agreed) => agreed)}
+                    indeterminate={
+                      isTermAgreed.some((agreed) => agreed) &&
+                      !isTermAgreed.every((agreed) => agreed)
+                    }
+                    onChange={handleTermAgreeAllButtonClick}
+                  />
+                }
                 label={<Typography variant="h6">전체 동의하기</Typography>}
               />
             </Box>
@@ -460,12 +516,24 @@ const Register: React.FC = () => {
             {/* 약관 동의 항목 */}
             {termsOfServices.map((term, index) => (
               <Stack key={`term-${index}`}>
-                <Box>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  {/* 약관 동의 체크박스 */}
                   <FormControlLabel
-                    control={<Checkbox name={term.title} />}
+                    control={
+                      <Checkbox
+                        name={term.title}
+                        checked={isTermAgreed[index]}
+                        onChange={() => handleTermAgreeButtonClick(index)}
+                      />
+                    }
                     label={
                       <Stack
                         direction="row"
+                        width="100%"
                         gap={1}
                         fontWeight="bold"
                         alignItems="center"
@@ -473,7 +541,7 @@ const Register: React.FC = () => {
                         {/* 선택/필수 */}
                         <Typography
                           variant="subtitle1"
-                          color={term.isOptional ? "primary" : "divider"}
+                          color={term.isOptional ? "divider" : "primary"}
                           fontWeight="inherit"
                           whiteSpace="nowrap"
                         >
@@ -493,18 +561,48 @@ const Register: React.FC = () => {
                       </Stack>
                     }
                   />
-                </Box>
+
+                  {/* 약관 펼치기/접기 버튼 */}
+                  <Box flex={1} display="flex" justifyContent="flex-end">
+                    <Tooltip
+                      title={isTermExpanded[index] ? "접기" : "펼치기"}
+                      placement="top"
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => handleExpandTermButtonClick(index)}
+                      >
+                        <ExpandMoreRoundedIcon
+                          sx={{
+                            transform: isTermExpanded[index]
+                              ? "rotate(180deg)"
+                              : "none",
+                            transition: "transform 0.3s ease",
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Stack>
                 <Paper
                   variant="outlined"
                   sx={{
-                    maxHeight: "150px",
                     marginLeft: "32px",
-                    paddingX: 2,
+                    paddingLeft: 2,
+                    paddingRight: 1,
                     paddingY: 1,
-                    overflowY: "auto",
                   }}
                 >
-                  {term.content}
+                  <Collapse
+                    in={isTermExpanded[index]}
+                    collapsedSize={60}
+                    sx={{
+                      maxHeight: "150px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    {term.content}
+                  </Collapse>
                 </Paper>
               </Stack>
             ))}
@@ -512,12 +610,7 @@ const Register: React.FC = () => {
 
           <Stack gap={0.5}>
             {/* 회원가입 버튼 */}
-            <Button
-              variant="contained"
-              sx={{
-                mt: 3,
-              }}
-            >
+            <Button variant="contained">
               <Typography variant="h5">회원가입</Typography>
             </Button>
 

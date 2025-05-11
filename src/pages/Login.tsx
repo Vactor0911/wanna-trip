@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback, ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
   Checkbox,
   Container,
-  Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -30,7 +28,7 @@ import { jwtDecode } from "jwt-decode";
 
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { setAccessToken } from "../utils/accessToken";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 import OutlinedTextField from "../components/OutlinedTextField";
 import PlainLink from "../components/PlainLinkProps";
 import SectionHeader from "../components/SectionHeader";
@@ -344,29 +342,29 @@ const Login = () => {
             <SectionHeader title="로그인" />
 
             {/* 아이디 입력란 */}
-            <OutlinedTextField label="아이디(이메일)" />
+            <Box mt={1}>
+              <OutlinedTextField label="아이디(이메일)" />
+            </Box>
 
             {/* 비밀번호 입력란 */}
-            <Box mt={1}>
-              <OutlinedTextField
-                label="비밀번호"
-                type={isPasswordVisible ? "text" : "password"}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handlePasswordVisibilityChange}
-                      edge="end"
-                    >
-                      {isPasswordVisible ? (
-                        <VisibilityOffIcon />
-                      ) : (
-                        <VisibilityIcon />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </Box>
+            <OutlinedTextField
+              label="비밀번호"
+              type={isPasswordVisible ? "text" : "password"}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handlePasswordVisibilityChange}
+                    edge="end"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
 
             {/* 로그인 상태 유지 체크박스 */}
             <Box>

@@ -27,9 +27,9 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 
 const Links = [
   { text: "템플릿", to: "/template" },
-  { text: "게시판", to: "/" },
-  { text: "지도", to: "/" },
-  { text: "소식", to: "/" },
+  { text: "게시판", to: "/community" },
+  { text: "지도", to: "/map" },
+  { text: "소식", to: "/news" },
 ];
 
 const MenuLinks = [
@@ -55,7 +55,7 @@ const StyledLink = (props: StyledLinkProps) => {
       }
       css={{
         textDecoration: "none",
-        color: "inherit",
+        color: theme.palette.black.main,
         transition: "color 0.3s",
         "&.active": { color: theme.palette.primary.main },
       }}
@@ -181,7 +181,7 @@ const Header = () => {
                   xs: 0.5,
                   sm: 1,
                 }}
-                color="black"
+                color={theme.palette.black.main}
                 justifyContent="flex-end"
                 alignItems="center"
                 flexGrow={{
@@ -263,7 +263,11 @@ const Header = () => {
                   <Typography
                     variant="h6"
                     fontWeight={500}
-                    color={location.pathname == link.to ? "primary" : "black"}
+                    color={
+                      location.pathname == link.to
+                        ? "primary"
+                        : theme.palette.black.main
+                    }
                   >
                     {link.text}
                   </Typography>
@@ -296,7 +300,12 @@ const Header = () => {
             paddingX: 2,
           }}
         >
-          <Stack direction="row" alignItems="center" gap={1} color="black">
+          <Stack
+            direction="row"
+            alignItems="center"
+            gap={1}
+            color={theme.palette.black.main}
+          >
             {/* 프로필 이미지 */}
             <Avatar
               sx={{
@@ -347,7 +356,11 @@ const Header = () => {
                   },
                 }}
               >
-                <Typography variant="subtitle1" color="black" fontWeight={500}>
+                <Typography
+                  variant="subtitle1"
+                  color={theme.palette.black.main}
+                  fontWeight={500}
+                >
                   {link.text}
                 </Typography>
               </Button>
