@@ -22,7 +22,7 @@ function App() {
           </Container>
           <Routes>
             <Route path="/template" element={<Template />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
           </Routes>
         </TokenRefresher>
       </BrowserRouter>

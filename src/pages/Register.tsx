@@ -1,37 +1,74 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import BackgroundImage from "../assets/images/background.png";
-import LockIcon from "@mui/icons-material/Lock";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import EmailIcon from "@mui/icons-material/Email";
 import {
   Box,
   Button,
+  Checkbox,
+  Container,
+  FormControlLabel,
   IconButton,
   InputAdornment,
-  OutlinedInput,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom"; //네이게이트를 사용하기 위해 추가
-import axios from "axios";
-import {
-  kakaoLoginStateAtom,
-  wannaTripLoginStateAtom,
-} from "../state";
-import { useAtomValue, useSetAtom } from "jotai";
-import { isEmailValid } from "../utils";
+import { useNavigate } from "react-router-dom";
+import PlainLink from "../components/PlainLinkProps";
+import SectionHeader from "../components/SectionHeader";
+import OutlinedTextField from "../components/OutlinedTextField";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import axios from "axios";
+import { useAtomValue, useSetAtom } from "jotai";
+import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
 
-const Register = () => {
+// 이용약관 데이터
+interface TermsOfService {
+  title: string;
+  isOptional: boolean;
+  content: ReactNode;
+}
+
+const termsOfServices: TermsOfService[] = [
+  {
+    title: "개인정보 수집 및 이용",
+    isOptional: true,
+    content: (
+      <Typography variant="subtitle1">
+        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
+        corrupti recusandae voluptate adipisci aliquam fugiat deserunt omnis
+        maxime earum neque debitis, quasi perferendis! Qui nihil distinctio
+        doloremque voluptatem corrupti est.
+      </Typography>
+    ),
+  },
+  {
+    title: "위치기반서비스 이용약관",
+    isOptional: false,
+    content: (
+      <Typography variant="subtitle1">
+        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
+        corrupti recusandae voluptate adipisci aliquam fugiat deserunt omnis
+        maxime earum neque debitis, quasi perferendis! Qui nihil distinctio
+        doloremque voluptatem corrupti est.
+      </Typography>
+    ),
+  },
+];
+
+// 회원가입 컴포넌트 정의
+const Register: React.FC = () => {
   const [email, setEmail] = useState(""); // 사용자 이메일
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [passwordConfirm, setPasswordConfirm] = useState(""); // 사용자 비밀번호 재확인
   const [name, setName] = useState(""); // 사용자 별명
   const [isPasswordVisible, setIsPasswordVisible] = useState(false); // 비밀번호 보임/숨김
   const [isPasswordConfirmVisible, setIsPasswordCheckVisible] = useState(false); // 비밀번호 확인 보임/숨김
+  const [isConfirmCodeSending, setIsConfirmCodeSending] = useState(false); // 인증번호 전송 중 여부
+  const [isConfirmCodeSent, setIsConfirmCodeSent] = useState(false); // 인증번호 전송 여부
+  const [confirmCode, setConfirmCode] = useState(""); // 인증번호
+  const [confirmTimeLeft, setConfirmTimeLeft] = useState(300); // 인증번호 입력 남은 시간
+  const [isConfirmCodeChecked, setIsConfirmCodeChecked] = useState(false); // 인증번호 확인 여부
 
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
@@ -54,6 +91,36 @@ const Register = () => {
     },
     []
   );
+
+  // 인증번호 입력 타이머
+  useEffect(() => {
+    if (!isConfirmCodeSent || confirmTimeLeft <= 0 || isConfirmCodeChecked) {
+      return;
+    }
+
+    const confirmCodeTimer = setInterval(() => {
+      setConfirmTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(confirmCodeTimer); // 컴포넌트 언마운트 시 타이머 정리
+  }, [isConfirmCodeChecked, confirmTimeLeft, isConfirmCodeSent]);
+
+  // 타이머 시간 포맷팅
+  const getFormattedTime = useCallback(() => {
+    // 남은 시간이 0 이하일 경우
+    if (confirmTimeLeft <= 0) {
+      return "0:00";
+    }
+
+    // 이미 인증번호를 확인한 경우
+    if (isConfirmCodeChecked) {
+      return "인증완료";
+    }
+
+    const minutes = Math.floor(confirmTimeLeft / 60);
+    const seconds = confirmTimeLeft % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }, [confirmTimeLeft, isConfirmCodeChecked]);
 
   // 인증번호 입력
   const handleConfirmCodeChange = useCallback(
@@ -162,11 +229,6 @@ const Register = () => {
     [email, password, passwordConfirm, name, navigate]
   );
 
-  // 인증번호 요청 버튼 클릭
-  const [, setIsConfirmCodeSending] = useState(false);
-  const [isConfirmCodeChecked, setIsConfirmCodeChecked] = useState(false); // 인증번호 확인 여부
-  const [confirmCode, setConfirmCode] = useState(""); // 인증번호
-
   const handleConfirmCodeSendButtonClick = useCallback(async () => {
     // 이미 인증번호를 확인했다면 종료
     if (isConfirmCodeChecked) {
@@ -175,14 +237,15 @@ const Register = () => {
     }
 
     // 이메일이 올바르지 않다면 종료
-    if (!isEmailValid(email)) {
-      alert("유효한 이메일 주소를 입력해주세요.");
-      return;
-    }
+    // if (!isEmailValid(email)) {
+    //   alert("유효한 이메일 주소를 입력해주세요.");
+    //   return;
+    // }
 
     // 인증번호 요청 API 호출
     try {
       setIsConfirmCodeSending(true);
+      return;
 
       // Step 1: CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -214,7 +277,10 @@ const Register = () => {
         alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
       }
     } finally {
-      setIsConfirmCodeSending(false);
+      //TODO: API 연동 후 setTimeout 제거
+      setTimeout(() => {
+        setIsConfirmCodeSending(false);
+      }, 3000);
     }
   }, [email, isConfirmCodeChecked]);
 
@@ -255,253 +321,218 @@ const Register = () => {
   }, [confirmCode, email]);
 
   return (
-    <Stack
-      minHeight="100vh"
-      direction="row"
-      justifyContent="center"
-      alignItems="center"
-      position="relative"
-      padding={2}
-      gap={{
-        md: 10,
-        lg: 20,
-      }}
-    >
-      <Box
-        component="img"
-        src={BackgroundImage}
-        alt="logo"
-        width={{
-          xs: "75%",
-          sm: "60%",
-          md: "40%",
-        }}
-        maxWidth="600px"
-        position={{
-          xs: "absolute",
-          md: "relative",
-        }}
-        zIndex={-1}
-        sx={{
-          aspectRatio: "1/1",
-          opacity: {
-            xs: "0.25",
-            md: "1",
-          },
-        }}
-      />
-
+    <Container maxWidth="xs">
       <Stack
-        width={{
-          xs: "90%",
-          sm: "60%",
-          md: "50%",
-        }}
-        maxWidth="500px"
+        minHeight="100vh"
         justifyContent="center"
-        gap={2}
+        sx={{
+          paddingY: 10,
+        }}
       >
-        <Stack>
-          {/* 제목 */}
-          <Typography variant="h1" color="white">
-            여행갈래?
-          </Typography>
-          <Typography variant="h2" color="white" fontWeight={500}>
-            세상에서 가장 간단한 계획서
-          </Typography>
-        </Stack>
-
-        {/* 이메일 입력란 */}
-        <OutlinedInput
-          fullWidth
-          type="email"
-          placeholder="이메일"
-          value={email}
-          onChange={handleEmailChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <Button
-                variant="contained"
-                onClick={handleConfirmCodeSendButtonClick}
-                sx={{
-                  px: 2,
-                  borderRadius: "50px",
-                }}
-              >
-                <Typography variant="subtitle1">인증 요청</Typography>
-              </Button>
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            background: "white",
-          }}
-        />
-        <OutlinedInput
-          fullWidth
-          placeholder="인증코드"
-          value={confirmCode}
-          onChange={handleConfirmCodeChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <Button
-                variant="contained"
-                onClick={handleConfirmCodeCheckButtonClick}
-                sx={{
-                  px: 2,
-                  borderRadius: "50px",
-                }}
-              >
-                <Typography variant="subtitle1">인증 확인</Typography>
-              </Button>
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            background: "white",
-          }}
-        />
-
-        {/* 비밀번호 입력란 */}
-        <OutlinedInput
-          fullWidth
-          type={isPasswordVisible ? "text" : "password"}
-          placeholder="비밀번호"
-          value={password}
-          onChange={handlePasswordChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton onClick={handlePasswordVisibilityChange}>
-                {isPasswordVisible ? <VisibilityIcon /> : <VisibilityOffIcon />}
-              </IconButton>
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            background: "white",
-          }}
-        />
-
-        {/* 비밀번호 재입력 입력란 */}
-        <OutlinedInput
-          fullWidth
-          type={isPasswordConfirmVisible ? "text" : "password"}
-          placeholder="비밀번호 재입력"
-          value={passwordConfirm}
-          onChange={handlePasswordConfirmChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton onClick={handlePasswordConfirmVisibilityChange}>
-                {isPasswordConfirmVisible ? (
-                  <VisibilityIcon />
-                ) : (
-                  <VisibilityOffIcon />
-                )}
-              </IconButton>
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            background: "white",
-          }}
-        />
-
-        {/* 병명 입력란 */}
-        <OutlinedInput
-          fullWidth
-          type="text"
-          placeholder="별명"
-          value={name}
-          onChange={handleNameChange}
-          required
-          startAdornment={
-            <InputAdornment position="start">
-              <LocalOfferIcon />
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            background: "white",
-          }}
-        />
-
-        <Stack
-          direction={{
-            xs: "column",
-            md: "row",
-          }}
-          justifyContent="space-between"
-          alignItems="center"
-          gap={2}
-        >
-          {/* 로그인 페이지 링크 */}
-          <Stack direction="row" gap={2}>
-            <Typography variant="subtitle1" color="white">
-              계정이 이미 있으신가요?
+        <Stack gap={3}>
+          {/* 로고 링크 버튼 */}
+          <PlainLink to="/">
+            <Typography variant="h4" color="primary">
+              Wanna Trip
             </Typography>
-            <Link
-              to="/login"
-              style={{
-                textDecoration: "none",
-              }}
-            >
-              <Typography
-                variant="subtitle1"
-                color="primary"
-                fontWeight="bold"
-                sx={{
-                  "&:hover": {
-                    textDecoration: "underline",
-                  },
-                }}
+          </PlainLink>
+
+          {/* 사용자 정보 입력 폼 */}
+          <Stack gap={1}>
+            {/* 헤더 */}
+            <SectionHeader title="아이디/비밀번호" />
+
+            {/* 아이디 */}
+            <Stack gap={1}>
+              {/* 아이디 입력란 */}
+              <Stack direction="row" gap={1} mt={1}>
+                <Box flex={1}>
+                  <OutlinedTextField label="아이디(이메일)" />
+                </Box>
+
+                {/* 인증 요청 버튼 */}
+                <Button
+                  variant="outlined"
+                  loading={isConfirmCodeSending}
+                  onClick={handleConfirmCodeSendButtonClick}
+                  sx={{
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Typography>인증요청</Typography>
+                </Button>
+              </Stack>
+
+              {/* 인증번호 입력란 */}
+              <Stack
+                direction="row"
+                gap={1}
+                display={isConfirmCodeSent ? "flex" : "none"}
               >
-                로그인
-              </Typography>
-            </Link>
+                <Box flex={2}>
+                  <OutlinedTextField label="인증번호" />
+                </Box>
+
+                {/* 남은 인증 시간 */}
+                <Typography
+                  variant="subtitle1"
+                  color="primary"
+                  alignSelf="center"
+                  sx={{
+                    width: "35px",
+                    color: isConfirmCodeChecked ? "#19df79" : "none",
+                  }}
+                >
+                  {getFormattedTime()}
+                </Typography>
+
+                {/* 인증 확인 버튼 */}
+                <Button
+                  variant="outlined"
+                  onClick={handleConfirmCodeCheckButtonClick}
+                  sx={{
+                    ml: 2,
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Typography>인증확인</Typography>
+                </Button>
+              </Stack>
+            </Stack>
+
+            {/* 비밀번호 입력란 */}
+            <OutlinedTextField
+              label="비밀번호"
+              type={isPasswordVisible ? "text" : "password"}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handlePasswordVisibilityChange}
+                    edge="end"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+
+            {/* 비밀번호 재확인 입력란 */}
+            <OutlinedTextField
+              label="비밀번호 재확인"
+              type={isPasswordConfirmVisible ? "text" : "password"}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handlePasswordConfirmVisibilityChange}
+                    edge="end"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
+
+            {/* 별명 입력란 */}
+            <OutlinedTextField label="닉네임(별명)" />
           </Stack>
 
-          {/* 회원가입 버튼 */}
-          <Button
-            variant="contained"
-            onClick={handleRegisterButtonClick}
-            sx={{
-              padding: 2,
-              px: {
-                xs: 8,
-                md: 4,
-              },
-              borderRadius: "50px",
-            }}
-          >
-            <Typography variant="h2">회원가입</Typography>
-          </Button>
+          {/* 이용약관 컨테이너 */}
+          <Stack gap={1}>
+            {/* 헤더 */}
+            <SectionHeader title="이용약관" />
+
+            {/* 전체 동의하기 체크박스 */}
+            <Box>
+              <FormControlLabel
+                control={<Checkbox name="전체 동의하기" />}
+                label={<Typography variant="h6">전체 동의하기</Typography>}
+              />
+            </Box>
+
+            {/* 약관 동의 항목 */}
+            {termsOfServices.map((term, index) => (
+              <Stack key={`term-${index}`}>
+                <Box>
+                  <FormControlLabel
+                    control={<Checkbox name={term.title} />}
+                    label={
+                      <Stack
+                        direction="row"
+                        gap={1}
+                        fontWeight="bold"
+                        alignItems="center"
+                      >
+                        {/* 선택/필수 */}
+                        <Typography
+                          variant="subtitle1"
+                          color={term.isOptional ? "primary" : "divider"}
+                          fontWeight="inherit"
+                          whiteSpace="nowrap"
+                        >
+                          [{term.isOptional ? "선택" : "필수"}]
+                        </Typography>
+
+                        {/* 이용약관 제목 */}
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight="inherit"
+                          sx={{
+                            wordBreak: "keep-all",
+                          }}
+                        >
+                          {term.title}
+                        </Typography>
+                      </Stack>
+                    }
+                  />
+                </Box>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    maxHeight: "150px",
+                    marginLeft: "32px",
+                    paddingX: 2,
+                    paddingY: 1,
+                    overflowY: "auto",
+                  }}
+                >
+                  {term.content}
+                </Paper>
+              </Stack>
+            ))}
+          </Stack>
+
+          <Stack gap={0.5}>
+            {/* 회원가입 버튼 */}
+            <Button
+              variant="contained"
+              sx={{
+                mt: 3,
+              }}
+            >
+              <Typography variant="h5">회원가입</Typography>
+            </Button>
+
+            {/* 로그인 페이지 링크 */}
+            <Box alignSelf="flex-end">
+              <PlainLink to="/login">
+                <Typography variant="subtitle1" color="divider">
+                  이미 계정이 있으신가요?
+                </Typography>
+              </PlainLink>
+            </Box>
+          </Stack>
         </Stack>
       </Stack>
-    </Stack>
+    </Container>
   );
 };
 
