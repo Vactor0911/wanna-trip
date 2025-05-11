@@ -32,28 +32,8 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { setAccessToken } from "../utils/accessToken";
 import { theme } from "../utils";
 import OutlinedTextField from "../components/OutlinedTextField";
-
-// 링크 컴포넌트
-interface StyledLinkProps {
-  to: string;
-  children: ReactNode;
-}
-
-const StyledLink = (props: StyledLinkProps) => {
-  const { to, children, ...others } = props;
-
-  return (
-    <Link
-      to={to}
-      {...others}
-      css={{
-        textDecoration: "none",
-      }}
-    >
-      {children}
-    </Link>
-  );
-};
+import PlainLink from "../components/PlainLinkProps";
+import SectionHeader from "../components/SectionHeader";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -353,40 +333,15 @@ const Login = () => {
       <Stack minHeight="100vh" justifyContent="center">
         <Stack gap={8}>
           {/* 로고 링크 버튼 */}
-          <StyledLink to="/">
+          <PlainLink to="/">
             <Typography variant="h3" color="primary" textAlign="center">
               Wanna Trip
             </Typography>
-          </StyledLink>
+          </PlainLink>
 
           <Stack gap={1}>
             {/* 로그인 헤더 */}
-            <Stack>
-              <Typography
-                variant="h6"
-                display="inline"
-                alignSelf="flex-start"
-                padding="6px 32px"
-                position="relative"
-                sx={{
-                  "&:after": {
-                    content: '""',
-                    position: "absolute",
-                    left: "0",
-                    bottom: "-2.4px",
-                    width: "100%",
-                    height: "2.4px",
-                    background: theme.palette.primary.main,
-                    borderTopLeftRadius: "50px",
-                    borderBottomLeftRadius: "50px",
-                    zIndex: 2,
-                  },
-                }}
-              >
-                로그인
-              </Typography>
-              <Divider />
-            </Stack>
+            <SectionHeader title="로그인" />
 
             {/* 아이디 입력란 */}
             <OutlinedTextField label="아이디(이메일)" />
@@ -429,9 +384,9 @@ const Login = () => {
             <Stack direction="row">
               <Stack direction="row" gap={1} alignItems="center">
                 {/* 아이디 찾기 링크 */}
-                <StyledLink to="/">
+                <PlainLink to="/">
                   <Typography color="divider">아이디 찾기</Typography>
-                </StyledLink>
+                </PlainLink>
 
                 <Box
                   width="1px"
@@ -443,16 +398,16 @@ const Login = () => {
                 />
 
                 {/* 비밀번호 찾기 링크 */}
-                <StyledLink to="/">
+                <PlainLink to="/">
                   <Typography color="divider">비밀번호 찾기</Typography>
-                </StyledLink>
+                </PlainLink>
               </Stack>
 
               {/* 회원가입 링크 */}
               <Box flex={1} display="flex" justifyContent="flex-end">
-                <StyledLink to="/register">
+                <PlainLink to="/register">
                   <Typography color="divider">회원가입</Typography>
-                </StyledLink>
+                </PlainLink>
               </Box>
             </Stack>
           </Stack>
