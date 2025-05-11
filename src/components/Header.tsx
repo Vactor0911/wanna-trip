@@ -24,6 +24,12 @@ import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import { grey } from "@mui/material/colors";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import { getAccessToken } from "../utils/accessToken";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { resetStates } from "../utils";
+import { wannaTripLoginStateAtom } from "../state";
+import { useAtom } from "jotai";
+import { jwtDecode } from "jwt-decode";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -67,6 +73,11 @@ const StyledLink = (props: StyledLinkProps) => {
   );
 };
 
+interface JwtPayload {
+  name: string;
+  // 필요한 다른 필드가 있다면 추가
+}
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
@@ -75,6 +86,9 @@ const Header = () => {
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // 프로필 메뉴 열림 여부
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false); // 네비게이션 메뉴 열림 여부
+
+  const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom); // 로그인 상태
+  const { isLoggedIn } = loginState; // 로그인 상태에서 isLoggedIn 추출
 
   // 프로필 메뉴 닫기
   const handleProfileMenuClose = useCallback(() => {
@@ -113,6 +127,59 @@ const Header = () => {
     },
     [navigate]
   );
+
+  // 액세스 토큰 가져오기 및 디코드
+  const token = getAccessToken();
+  let userName = "홍길동님";
+  if (token) {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      userName = decoded.name;
+    } catch (error) {
+      console.error("토큰 디코드 오류:", error);
+    }
+  }
+
+  // 로그아웃 기능 구현 시작
+  const handleLogoutClick = useCallback(async () => {
+    if (!isLoggedIn) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    // CSRF 토큰 가져오기
+    const csrfToken = await getCsrfToken();
+
+    const response = await axiosInstance.post(
+      "/auth/logout",
+      {},
+      {
+        headers: {
+          "X-CSRF-Token": csrfToken, // CSRF 토큰 헤더 추가
+        },
+      }
+    );
+
+    try {
+      if (response.data.success) {
+        // Jotai 상태
+        //TODO: 이거 리셋 함수 해줘요
+        await resetStates(setWannaTripLoginState); // 상태 초기화
+        setIsProfileMenuOpen(false);
+        
+
+        alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+
+        navigate("/"); // 메인 페이지로 이동
+      } else {
+        alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
+      }
+    } catch (error) {
+      console.error("로그아웃 중 오류 발생:", error);
+      alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
+    }
+  }, [isLoggedIn, navigate, setWannaTripLoginState]);
+  // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
   if (location.pathname === "/login" || location.pathname === "/register") {
@@ -324,7 +391,7 @@ const Header = () => {
             </Avatar>
 
             {/* 프로필 이름 */}
-            <Typography variant="h6">홍길동님</Typography>
+            <Typography variant="h6">{userName}</Typography>
 
             {/* 닫기 버튼 */}
             <Stack flex={1} alignItems="flex-end">
@@ -355,6 +422,9 @@ const Header = () => {
                     color: "white",
                   },
                 }}
+                onClick={
+                  link.text === "로그아웃" ? handleLogoutClick : undefined
+                }
               >
                 <Typography
                   variant="subtitle1"
