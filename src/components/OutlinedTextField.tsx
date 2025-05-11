@@ -19,7 +19,7 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
       fullWidth
       sx={{
         "& label.MuiFormLabel-root": {
-          transform: "translate(14px, 18px)",
+          transform: "translate(14px, 16px)",
         },
         "& label.MuiFormLabel-root.MuiFormLabel-filled, & label.MuiFormLabel-root.Mui-focused":
           {
@@ -36,10 +36,16 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
         label={label}
         {...others}
         sx={{
-          transform: "translateY(5px)",
           fontWeight: 700,
           color: "#404040",
-          borderRadius: "8px"
+          borderRadius: "8px",
+          overflow: "hidden",
+          "& input": {
+            transform: "translateY(5px)",
+          },
+          "& fieldset": {
+            top: 0,
+          },
         }}
       />
     </FormControl>
