@@ -10,7 +10,8 @@ import {
 import MainImage1 from "../assets/images/main1.png";
 import MainImage2 from "../assets/images/main2.png";
 import { theme } from "../utils/theme";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
 
 interface ImagePaperProps {
   src: string;
@@ -46,6 +47,8 @@ const ImagePaper = ({ src }: ImagePaperProps) => {
 };
 
 const Main = () => {
+  const navigate = useNavigate();
+
   const isMobileScreen = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 화면 여부
   const isTabletScreen = useMediaQuery(theme.breakpoints.down("md")); // 태블릿 화면 여부
 
@@ -84,6 +87,11 @@ const Main = () => {
       );
     };
   }, [subtitleTypographyVariant, titleTypographyVariant]);
+
+  // 시작하기 버튼 클릭
+  const handleStartButtonClick = useCallback(() => {
+    navigate("/login");
+  }, [navigate]);
 
   return (
     <Stack
@@ -155,7 +163,7 @@ const Main = () => {
           <Typography
             variant={subtitleTypographyVariant}
             sx={{
-              color: "#404040",
+              color: theme.palette.black.main,
             }}
           >
             여행 계획을 더욱 빠르고 스마트하게 템플릿으로 만들어보세요!
@@ -168,13 +176,14 @@ const Main = () => {
         <Button
           variant="contained"
           size="large"
+          onClick={handleStartButtonClick}
           sx={{
             paddingX: 8,
             paddingY: 3,
             borderRadius: "20px",
           }}
         >
-          <Typography variant="h5" fontWeight="500">
+          <Typography variant="h5">
             바로 시작하기
           </Typography>
         </Button>
