@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Stack,
   Typography,
@@ -11,32 +11,32 @@ import {
   FormControlLabel,
   Box,
   Avatar,
-} from '@mui/material';
-import EmailIcon from '@mui/icons-material/Email';
-import LockIcon from '@mui/icons-material/Lock';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import GoogleIcon from '../assets/images/google.png';
-import KakaoIcon from '../assets/images/kakao.png';
+} from "@mui/material";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import GoogleIcon from "../assets/images/google.png";
+import KakaoIcon from "../assets/images/kakao.png";
 
-import axios from 'axios';
-import axiosInstance, { getCsrfToken } from '../utils/axiosInstance';
-import { setAccessToken } from '../utils/accessToken';
-import { useAtomValue, useSetAtom } from 'jotai';
+import axios from "axios";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { setAccessToken } from "../utils/accessToken";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   wannaTripLoginStateAtom,
   kakaoLoginStateAtom,
   Permission,
-} from '../state';
-import { jwtDecode } from 'jwt-decode';
+} from "../state";
+import { jwtDecode } from "jwt-decode";
 
 // Login 컴포넌트
 const Login: React.FC = () => {
   const navigate = useNavigate();
 
   // 상태 관리
-  const [email, setEmail] = useState<string>(''); // 이메일 입력값
-  const [password, setPassword] = useState<string>(''); // 비밀번호 입력값
+  const [email, setEmail] = useState<string>(""); // 이메일 입력값
+  const [password, setPassword] = useState<string>(""); // 비밀번호 입력값
   const [showPassword, setShowPassword] = useState<boolean>(false); // 비밀번호 보임/숨김 상태
   const [isEmailSaved, setIsEmailSaved] = useState<boolean>(false); // 이메일 저장 여부
   const [isLoginStateSave, setIsLoginStateSave] = useState<boolean>(false); // 로그인 상태 유지 여부
@@ -51,13 +51,13 @@ const Login: React.FC = () => {
   // 로그인 상태 확인 후 리다이렉트
   useEffect(() => {
     if (wannaTripLoginState.isLoggedIn) {
-      navigate('/template');
+      navigate("/template");
     }
   }, [wannaTripLoginState.isLoggedIn, navigate]);
 
   // 이메일 저장 상태 초기화
   useEffect(() => {
-    const savedEmail = localStorage.getItem('savedEmail');
+    const savedEmail = localStorage.getItem("savedEmail");
     if (savedEmail) {
       setEmail(savedEmail);
       setIsEmailSaved(true);
@@ -70,7 +70,7 @@ const Login: React.FC = () => {
       const newEmail = event.target.value;
       setEmail(newEmail);
       if (isEmailSaved) {
-        localStorage.setItem('savedEmail', newEmail);
+        localStorage.setItem("savedEmail", newEmail);
       }
     },
     [isEmailSaved]
@@ -95,9 +95,9 @@ const Login: React.FC = () => {
       const isChecked = event.target.checked;
       setIsEmailSaved(isChecked);
       if (isChecked) {
-        localStorage.setItem('savedEmail', email);
+        localStorage.setItem("savedEmail", email);
       } else {
-        localStorage.removeItem('savedEmail');
+        localStorage.removeItem("savedEmail");
       }
     },
     [email]
@@ -111,7 +111,7 @@ const Login: React.FC = () => {
   // 일반 로그인 처리
   const handleLoginButtonClick = useCallback(async () => {
     if (!email || !password) {
-      alert('이메일과 비밀번호를 입력해 주세요.');
+      alert("이메일과 비밀번호를 입력해 주세요.");
       return;
     }
 
@@ -120,9 +120,9 @@ const Login: React.FC = () => {
     try {
       const csrfToken = await getCsrfToken();
       const response = await axiosInstance.post(
-        '/api/auth/login',
+        "/api/auth/login",
         { email, password },
-        { headers: { 'X-CSRF-Token': csrfToken } }
+        { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       const { name, userUuid, permissions, accessToken } = response.data;
@@ -130,10 +130,10 @@ const Login: React.FC = () => {
 
       let enumPermission = Permission.USER;
       switch (permissions) {
-        case 'admin':
+        case "admin":
           enumPermission = Permission.ADMIN;
           break;
-        case 'superadmin':
+        case "superadmin":
           enumPermission = Permission.SUPER_ADMIN;
           break;
       }
@@ -143,7 +143,7 @@ const Login: React.FC = () => {
         userUuid,
         email,
         name,
-        loginType: 'normal',
+        loginType: "normal",
         permission: enumPermission,
       };
 
@@ -151,25 +151,25 @@ const Login: React.FC = () => {
 
       if (isLoginStateSave) {
         localStorage.setItem(
-          'WannaTripLoginState',
+          "WannaTripLoginState",
           JSON.stringify(newWannaTripLoginState)
         );
       } else {
         sessionStorage.setItem(
-          'WannaTripLoginState',
+          "WannaTripLoginState",
           JSON.stringify(newWannaTripLoginState)
         );
       }
 
       alert(`[ ${name} ]님 환영합니다!`);
-      navigate('/template');
+      navigate("/template");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        alert(error.response.data.message || '로그인 실패');
+        alert(error.response.data.message || "로그인 실패");
       } else {
-        alert('예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.');
+        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
       }
-      setPassword('');
+      setPassword("");
     } finally {
       setIsLoading(false);
     }
@@ -184,8 +184,8 @@ const Login: React.FC = () => {
       try {
         decoded = jwtDecode(credentialResponse.credential);
       } catch (error) {
-        console.error('구글 Credential 디코딩 실패:', error);
-        alert('구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        console.error("구글 Credential 디코딩 실패:", error);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
         return;
       }
 
@@ -195,9 +195,9 @@ const Login: React.FC = () => {
       try {
         const csrfToken = await getCsrfToken();
         const response = await axiosInstance.post(
-          '/api/auth/login/google',
+          "/api/auth/login/google",
           { googleEmail, googleName },
-          { headers: { 'X-CSRF-Token': csrfToken } }
+          { headers: { "X-CSRF-Token": csrfToken } }
         );
 
         const { accessToken, permissions, name, userUuid } = response.data;
@@ -205,10 +205,10 @@ const Login: React.FC = () => {
 
         let enumPermission = Permission.USER;
         switch (permissions) {
-          case 'admin':
+          case "admin":
             enumPermission = Permission.ADMIN;
             break;
-          case 'superadmin':
+          case "superadmin":
             enumPermission = Permission.SUPER_ADMIN;
             break;
         }
@@ -218,21 +218,21 @@ const Login: React.FC = () => {
           userUuid,
           email: googleEmail,
           name,
-          loginType: 'google',
+          loginType: "google",
           permission: enumPermission,
         };
 
         setWannaTripLoginState(newWannaTripLoginState);
         localStorage.setItem(
-          'WannaTripLoginState',
+          "WannaTripLoginState",
           JSON.stringify(newWannaTripLoginState)
         );
 
         alert(`${name}님 환영합니다!`);
-        navigate('/template');
+        navigate("/template");
       } catch (error) {
-        console.error('구글 로그인 처리 중 오류:', error);
-        alert('구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        console.error("구글 로그인 처리 중 오류:", error);
+        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     },
     [navigate, setWannaTripLoginState]
@@ -261,11 +261,11 @@ const Login: React.FC = () => {
 
     try {
       const tokenResponse = await axios.post(
-        'https://kauth.kakao.com/oauth/token',
+        "https://kauth.kakao.com/oauth/token",
         null,
         {
           params: {
-            grant_type: 'authorization_code',
+            grant_type: "authorization_code",
             client_id: KAKAO_CLIENT_ID,
             redirect_uri: KAKAO_REDIRECT_URI,
             code,
@@ -276,9 +276,9 @@ const Login: React.FC = () => {
       const accessToken = tokenResponse.data.access_token;
       const csrfToken = await getCsrfToken();
       const serverResponse = await axiosInstance.post(
-        '/api/auth/login/kakao',
+        "/api/auth/login/kakao",
         { KaKaoAccessToken: accessToken },
-        { headers: { 'X-CSRF-Token': csrfToken } }
+        { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       const {
@@ -291,10 +291,10 @@ const Login: React.FC = () => {
 
       let enumPermission = Permission.USER;
       switch (permissions) {
-        case 'admin':
+        case "admin":
           enumPermission = Permission.ADMIN;
           break;
-        case 'superadmin':
+        case "superadmin":
           enumPermission = Permission.SUPER_ADMIN;
           break;
       }
@@ -304,31 +304,31 @@ const Login: React.FC = () => {
         userUuid,
         email,
         name,
-        loginType: 'kakao',
+        loginType: "kakao",
         permission: enumPermission,
       };
 
       setWannaTripLoginState(newWannaTripLoginState);
       localStorage.setItem(
-        'WannaTripLoginState',
+        "WannaTripLoginState",
         JSON.stringify(newWannaTripLoginState)
       );
 
-      window.history.replaceState(null, '', '/login');
+      window.history.replaceState(null, "", "/login");
       alert(`[ ${name} ]님 환영합니다!`);
-      navigate('/template');
+      navigate("/template");
     } catch (error) {
-      console.error('카카오 로그인 실패:', error);
-      alert('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+      console.error("카카오 로그인 실패:", error);
+      alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
   }, [email, kakaoLoginState, navigate, setWannaTripLoginState]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
-    const code = url.searchParams.get('code');
+    const code = url.searchParams.get("code");
     if (code) {
       setKakaoLoginState(code);
-      window.history.replaceState(null, '', window.location.pathname);
+      window.history.replaceState(null, "", window.location.pathname);
     }
   }, [setKakaoLoginState]);
 
@@ -344,7 +344,7 @@ const Login: React.FC = () => {
       justifyContent="center"
       alignItems="center"
       sx={{
-        backgroundColor: '#fff',
+        backgroundColor: "#fff",
         padding: 2,
       }}
     >
@@ -357,11 +357,11 @@ const Login: React.FC = () => {
       <Stack
         spacing={2}
         sx={{
-          width: { xs: '90%', sm: '60%', md: '400px' },
+          width: { xs: "90%", sm: "60%", md: "400px" },
         }}
       >
         {/* 로그인 타이틀 */}
-        <Box sx={{ position: 'relative', mb: 2 }}>
+        <Box sx={{ position: "relative", mb: 2 }}>
           <Typography
             variant="h6"
             color="text.primary"
@@ -372,10 +372,10 @@ const Login: React.FC = () => {
           </Typography>
           <Box
             sx={{
-              width: '100%',
-              height: '2px',
-              background: 'linear-gradient(to right, #3288FF 20%, #ccc 20%)',
-              position: 'absolute',
+              width: "100%",
+              height: "2px",
+              background: "linear-gradient(to right, #3288FF 20%, #ccc 20%)",
+              position: "absolute",
               bottom: 0,
               left: 0,
             }}
@@ -391,21 +391,21 @@ const Login: React.FC = () => {
           onChange={handleEmailChange}
           startAdornment={
             <InputAdornment position="start">
-              <EmailIcon sx={{ color: '#666' }} />
+              <EmailIcon sx={{ color: "#666" }} />
             </InputAdornment>
           }
           sx={{
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            '&:hover': {
-              borderColor: '#3288FF',
+            borderRadius: "10px",
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+            "&:hover": {
+              borderColor: "#3288FF",
             },
-            '&.Mui-focused': {
-              borderColor: '#3288FF',
+            "&.Mui-focused": {
+              borderColor: "#3288FF",
             },
-            '& .MuiInputBase-input': {
-              padding: '12px 14px',
+            "& .MuiInputBase-input": {
+              padding: "12px 14px",
             },
           }}
         />
@@ -413,38 +413,38 @@ const Login: React.FC = () => {
         {/* 비밀번호 입력 필드 */}
         <OutlinedInput
           fullWidth
-          type={showPassword ? 'text' : 'password'}
+          type={showPassword ? "text" : "password"}
           placeholder="비밀번호"
           value={password}
           onChange={handlePasswordChange}
           startAdornment={
             <InputAdornment position="start">
-              <LockIcon sx={{ color: '#666' }} />
+              <LockIcon sx={{ color: "#666" }} />
             </InputAdornment>
           }
           endAdornment={
             <InputAdornment position="end">
               <IconButton onClick={handleTogglePassword}>
                 {showPassword ? (
-                  <VisibilityIcon sx={{ color: '#666' }} />
+                  <VisibilityIcon sx={{ color: "#666" }} />
                 ) : (
-                  <VisibilityOffIcon sx={{ color: '#666' }} />
+                  <VisibilityOffIcon sx={{ color: "#666" }} />
                 )}
               </IconButton>
             </InputAdornment>
           }
           sx={{
-            borderRadius: '10px',
-            backgroundColor: '#fff',
-            border: '1px solid #ccc',
-            '&:hover': {
-              borderColor: '#3288FF',
+            borderRadius: "10px",
+            backgroundColor: "#fff",
+            border: "1px solid #ccc",
+            "&:hover": {
+              borderColor: "#3288FF",
             },
-            '&.Mui-focused': {
-              borderColor: '#3288FF',
+            "&.Mui-focused": {
+              borderColor: "#3288FF",
             },
-            '& .MuiInputBase-input': {
-              padding: '12px 14px',
+            "& .MuiInputBase-input": {
+              padding: "12px 14px",
             },
           }}
         />
@@ -462,13 +462,13 @@ const Login: React.FC = () => {
                   checked={isEmailSaved}
                   onChange={handleEmailSaveChange}
                   color="primary"
-                  sx={{ padding: '4px' }}
+                  sx={{ padding: "4px" }}
                 />
               }
               label="이메일 저장"
               sx={{
-                color: 'text.secondary',
-                '& .MuiTypography-root': { fontSize: '14px' },
+                color: "text.secondary",
+                "& .MuiTypography-root": { fontSize: "14px" },
               }}
             />
             <FormControlLabel
@@ -477,13 +477,13 @@ const Login: React.FC = () => {
                   checked={isLoginStateSave}
                   onChange={handleLoginStateSaveChange}
                   color="primary"
-                  sx={{ padding: '4px' }}
+                  sx={{ padding: "4px" }}
                 />
               }
               label="로그인 상태 유지"
               sx={{
-                color: 'text.secondary',
-                '& .MuiTypography-root': { fontSize: '14px' },
+                color: "text.secondary",
+                "& .MuiTypography-root": { fontSize: "14px" },
               }}
             />
           </Stack>
@@ -495,11 +495,11 @@ const Login: React.FC = () => {
           onClick={handleLoginButtonClick}
           disabled={isLoading}
           sx={{
-            borderRadius: '10px',
-            padding: '12px 0',
-            backgroundColor: '#3288FF',
-            '&:hover': {
-              backgroundColor: '#2a77e0',
+            borderRadius: "10px",
+            padding: "12px 0",
+            backgroundColor: "#3288FF",
+            "&:hover": {
+              backgroundColor: "#2a77e0",
             },
           }}
         >
@@ -507,7 +507,7 @@ const Login: React.FC = () => {
             variant="h6"
             color="white"
             fontWeight="bold"
-            sx={{ fontSize: '18px' }}
+            sx={{ fontSize: "18px" }}
           >
             로그인
           </Typography>
@@ -525,9 +525,9 @@ const Login: React.FC = () => {
               variant="body2"
               color="text.secondary"
               sx={{
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' },
-                fontSize: '14px',
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline" },
+                fontSize: "14px",
               }}
             >
               아이디 찾기
@@ -538,23 +538,23 @@ const Login: React.FC = () => {
             <Typography
               variant="body2"
               sx={{
-                color: '#666',
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' },
-                fontSize: '14px',
+                color: "#666",
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline" },
+                fontSize: "14px",
               }}
             >
               비밀번호 찾기
             </Typography>
           </Stack>
-          <Link to="/register" style={{ textDecoration: 'none' }}>
+          <Link to="/register" style={{ textDecoration: "none" }}>
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{
-                cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline' },
-                fontSize: '14px',
+                cursor: "pointer",
+                "&:hover": { textDecoration: "underline" },
+                fontSize: "14px",
               }}
             >
               회원가입
@@ -565,9 +565,9 @@ const Login: React.FC = () => {
 
       {/* 구분선 - "간편 로그인" */}
       <Box
-        sx={{ display: 'flex', alignItems: 'center', width: '400px', my: 3 }}
+        sx={{ display: "flex", alignItems: "center", width: "400px", my: 3 }}
       >
-        <Box sx={{ flexGrow: 1, height: '1px', backgroundColor: '#ccc' }} />
+        <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc" }} />
         <Typography
           variant="body2"
           color="text.secondary"
@@ -576,7 +576,7 @@ const Login: React.FC = () => {
         >
           간편 로그인
         </Typography>
-        <Box sx={{ flexGrow: 1, height: '1px', backgroundColor: '#ccc' }} />
+        <Box sx={{ flexGrow: 1, height: "1px", backgroundColor: "#ccc" }} />
       </Box>
 
       {/* 간편 로그인 버튼 */}
@@ -588,12 +588,12 @@ const Login: React.FC = () => {
             alt="Kakao"
             sx={{
               width: {
-                xs: '50px',
-                sm: '60px',
+                xs: "50px",
+                sm: "60px",
               },
               height: {
-                xs: '50px',
-                sm: '60px',
+                xs: "50px",
+                sm: "60px",
               },
             }}
           />
@@ -606,12 +606,12 @@ const Login: React.FC = () => {
             alt="Google"
             sx={{
               width: {
-                xs: '50px',
-                sm: '60px',
+                xs: "50px",
+                sm: "60px",
               },
               height: {
-                xs: '50px',
-                sm: '60px',
+                xs: "50px",
+                sm: "60px",
               },
             }}
           />
