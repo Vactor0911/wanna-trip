@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Stack,
   Typography,
@@ -8,17 +8,17 @@ import {
   Box,
   Checkbox,
   FormControlLabel,
-} from '@mui/material';
+} from "@mui/material";
 
 // 회원가입 컴포넌트 정의
 const Register: React.FC = () => {
   const navigate = useNavigate();
 
   // 상태 관리
-  const [email, setEmail] = useState<string>(''); // 사용자 이메일 입력값
-  const [password, setPassword] = useState<string>(''); // 비밀번호 입력값
-  const [passwordConfirm, setPasswordConfirm] = useState<string>(''); // 비밀번호 재확인 입력값
-  const [name, setName] = useState<string>(''); // 닉네임 입력값
+  const [email, setEmail] = useState<string>(""); // 사용자 이메일 입력값
+  const [password, setPassword] = useState<string>(""); // 비밀번호 입력값
+  const [passwordConfirm, setPasswordConfirm] = useState<string>(""); // 비밀번호 재확인 입력값
+  const [name, setName] = useState<string>(""); // 닉네임 입력값
   const [isLoading, setIsLoading] = useState<boolean>(false); // 로딩 상태
   const [isEmailVerified, setIsEmailVerified] = useState<boolean>(false); // 이메일 인증 상태
   const [isTermsAgreed, setIsTermsAgreed] = useState<boolean>(false); // 전체 동의 상태
@@ -78,12 +78,12 @@ const Register: React.FC = () => {
   // 이메일 인증 요청 처리 함수
   const handleVerifyEmail = () => {
     if (!email) {
-      alert('이메일을 입력해주세요.');
+      alert("이메일을 입력해주세요.");
       setErrors((prev) => ({ ...prev, email: true }));
       return;
     }
     // 이메일 인증 요청 (모의 로직)
-    alert('인증 요청이 완료되었습니다. 이메일을 확인해 주세요.');
+    alert("인증 요청이 완료되었습니다. 이메일을 확인해 주세요.");
     setIsEmailVerified(true); // 인증 완료 상태로 설정
   };
 
@@ -121,11 +121,11 @@ const Register: React.FC = () => {
 
     // 오류 또는 약관 미동의 시 종료
     if (Object.values(newErrors).some((error) => error)) {
-      alert('모든 필드를 입력하고 이메일 인증 및 비밀번호를 일치시켜 주세요.');
+      alert("모든 필드를 입력하고 이메일 인증 및 비밀번호를 일치시켜 주세요.");
       return;
     }
     if (!isPrivacyAgreed) {
-      alert('개인정보 수집 및 이용에 동의해 주세요.');
+      alert("개인정보 수집 및 이용에 동의해 주세요.");
       return;
     }
 
@@ -133,10 +133,10 @@ const Register: React.FC = () => {
 
     try {
       // 서버에 회원가입 요청 (모의 API 호출)
-      alert('회원가입이 성공적으로 완료되었습니다!');
-      navigate('/login');
+      alert("회원가입이 성공적으로 완료되었습니다!");
+      navigate("/login");
     } catch (error) {
-      alert('회원가입 실패. 다시 시도해 주세요.');
+      alert("회원가입 실패. 다시 시도해 주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -152,20 +152,20 @@ const Register: React.FC = () => {
 
   // 공통 입력 필드 스타일 정의
   const inputFieldStyles = (error: boolean) => ({
-    borderRadius: '10px',
-    backgroundColor: '#fff',
-    '& .MuiOutlinedInput-notchedOutline': {
-      border: 'none',
+    borderRadius: "10px",
+    backgroundColor: "#fff",
+    "& .MuiOutlinedInput-notchedOutline": {
+      border: "none",
     },
-    border: error ? '2px solid red' : '1px solid #ccc',
-    '&:hover': {
-      border: error ? '2px solid red' : '1px solid #3288FF',
+    border: error ? "2px solid red" : "1px solid #ccc",
+    "&:hover": {
+      border: error ? "2px solid red" : "1px solid #3288FF",
     },
-    '&.Mui-focused': {
-      border: error ? '2px solid red' : '1px solid #3288FF',
+    "&.Mui-focused": {
+      border: error ? "2px solid red" : "1px solid #3288FF",
     },
-    '& .MuiInputBase-input': {
-      padding: '12px 14px',
+    "& .MuiInputBase-input": {
+      padding: "12px 14px",
     },
   });
 
@@ -174,14 +174,14 @@ const Register: React.FC = () => {
       minHeight="100vh"
       justifyContent="center"
       alignItems="center"
-      sx={{ backgroundColor: '#fff', padding: 2 }}
+      sx={{ backgroundColor: "#fff", padding: 2 }}
     >
       {/* 로고 섹션 */}
       <Typography
         variant="h5"
         color="#3288FF"
         fontWeight="bold"
-        sx={{ mb: 3, mr: 35, mt: 5, fontSize: '24px' }}
+        sx={{ mb: 3, mr: 35, mt: 5, fontSize: "24px" }}
       >
         Wanna Trip
       </Typography>
@@ -189,10 +189,10 @@ const Register: React.FC = () => {
       {/* 아이디/비밀번호 타이틀 섹션 */}
       <Box
         sx={{
-          position: 'relative',
+          position: "relative",
           mb: 2,
-          width: { xs: '90%', sm: '60%', md: '400px' },
-          textAlign: 'left',
+          width: { xs: "90%", sm: "60%", md: "400px" },
+          textAlign: "left",
           pl: 2, // 왼쪽 공백 추가
         }}
       >
@@ -200,16 +200,16 @@ const Register: React.FC = () => {
           variant="h6"
           color="text.primary"
           fontWeight="bold"
-          sx={{ mb: 1, fontSize: '20px' }}
+          sx={{ mb: 1, fontSize: "20px" }}
         >
           아이디/비밀번호
         </Typography>
         <Box
           sx={{
-            width: '100%',
-            height: '2px',
-            background: 'linear-gradient(to right, #3288FF 40%, #ccc 20%)',
-            position: 'absolute',
+            width: "100%",
+            height: "2px",
+            background: "linear-gradient(to right, #3288FF 40%, #ccc 20%)",
+            position: "absolute",
             bottom: 0,
             left: 0,
           }}
@@ -217,7 +217,7 @@ const Register: React.FC = () => {
       </Box>
 
       {/* 입력 필드 섹션 */}
-      <Stack spacing={2} sx={{ width: { xs: '90%', sm: '60%', md: '400px' } }}>
+      <Stack spacing={2} sx={{ width: { xs: "90%", sm: "60%", md: "400px" } }}>
         {/* 이메일 입력과 인증요청 버튼을 한 행에 나눠 배치 */}
         <Stack direction="row" spacing={1}>
           {/* 이메일 입력 필드 */}
@@ -236,19 +236,19 @@ const Register: React.FC = () => {
             onClick={handleVerifyEmail}
             disabled={isLoading || isEmailVerified}
             sx={{
-              width: '120px',
-              borderRadius: '10px',
-              backgroundColor: 'transparent',
-              color: isEmailVerified ? '#ccc' : 'primary.main',
-              borderWidth: '2px',
-              '&:hover': {
-                borderColor: isEmailVerified ? '#ccc' : 'primary.dark',
-                backgroundColor: 'transparent',
+              width: "120px",
+              borderRadius: "10px",
+              backgroundColor: "transparent",
+              color: isEmailVerified ? "#ccc" : "primary.main",
+              borderWidth: "2px",
+              "&:hover": {
+                borderColor: isEmailVerified ? "#ccc" : "primary.dark",
+                backgroundColor: "transparent",
               },
             }}
           >
-            <Typography variant="subtitle1" sx={{ fontSize: '14px' }}>
-              {isEmailVerified ? '인증완료' : '인증요청'}
+            <Typography variant="subtitle1" sx={{ fontSize: "14px" }}>
+              {isEmailVerified ? "인증완료" : "인증요청"}
             </Typography>
           </Button>
         </Stack>
@@ -286,11 +286,11 @@ const Register: React.FC = () => {
         {/* 이용약관 섹션 */}
         <Box
           sx={{
-            position: 'relative',
+            position: "relative",
             mt: 2,
             mb: 1,
-            width: { xs: '90%', sm: '60%', md: '400px' },
-            textAlign: 'left',
+            width: { xs: "90%", sm: "60%", md: "400px" },
+            textAlign: "left",
             pl: 2, // 왼쪽 공백 추가
           }}
         >
@@ -298,16 +298,16 @@ const Register: React.FC = () => {
             variant="h6"
             color="text.primary"
             fontWeight="bold"
-            sx={{ mb: 1, fontSize: '20px' }}
+            sx={{ mb: 1, fontSize: "20px" }}
           >
             이용약관
           </Typography>
           <Box
             sx={{
-              width: '100%',
-              height: '2px',
-              background: 'linear-gradient(to right, #3288FF 30%, #ccc 20%)',
-              position: 'absolute',
+              width: "100%",
+              height: "2px",
+              background: "linear-gradient(to right, #3288FF 30%, #ccc 20%)",
+              position: "absolute",
               bottom: 0,
               left: 0,
             }}
@@ -331,7 +331,7 @@ const Register: React.FC = () => {
         />
 
         {/* [필수] 개인정보 수집 및 이용 섹션 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, ml: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mt: 1, ml: 1 }}>
           <Checkbox
             checked={isPrivacyAgreed}
             onChange={handlePrivacyChange}
@@ -339,15 +339,15 @@ const Register: React.FC = () => {
             sx={{ mr: 1 }}
           />
           <Typography variant="body2">
-            <span style={{ color: '#3288FF' }}>[필수]</span> 개인정보 수집 및
+            <span style={{ color: "#3288FF" }}>[필수]</span> 개인정보 수집 및
             이용
           </Typography>
         </Box>
         {/* 개인정보 동의 내용 박스 */}
         <Box
           sx={{
-            border: '1px solid #ccc',
-            borderRadius: '4px',
+            border: "1px solid #ccc",
+            borderRadius: "4px",
             p: 1,
             ml: 1, // 체크박스와 정렬 맞춤
             mb: 2,
@@ -364,7 +364,7 @@ const Register: React.FC = () => {
         </Box>
 
         {/* [선택] 위치기반서비스 이용약관 섹션 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
           <Checkbox
             checked={isLocationAgreed}
             onChange={handleLocationChange}
@@ -372,15 +372,15 @@ const Register: React.FC = () => {
             sx={{ mr: 1 }}
           />
           <Typography variant="body2">
-            <span style={{ color: '#666' }}>[선택]</span> 위치기반서비스
+            <span style={{ color: "#666" }}>[선택]</span> 위치기반서비스
             이용약관
           </Typography>
         </Box>
         {/* 위치기반서비스 동의 내용 박스 */}
         <Box
           sx={{
-            border: '1px solid #ccc',
-            borderRadius: '4px',
+            border: "1px solid #ccc",
+            borderRadius: "4px",
             p: 1,
             ml: 1, // 체크박스와 정렬 맞춤
           }}
@@ -403,12 +403,12 @@ const Register: React.FC = () => {
             Object.values(errors).some((error) => error)
           }
           sx={{
-            borderRadius: '10px',
-            padding: '12px 0',
-            backgroundColor: '#3288FF',
-            '&:hover': { backgroundColor: '#2a77e0' },
-            width: '100%', // 버튼 길이 전체로 확장
-            alignSelf: 'flex-end',
+            borderRadius: "10px",
+            padding: "12px 0",
+            backgroundColor: "#3288FF",
+            "&:hover": { backgroundColor: "#2a77e0" },
+            width: "100%", // 버튼 길이 전체로 확장
+            alignSelf: "flex-end",
             mt: 2,
           }}
         >
@@ -416,7 +416,7 @@ const Register: React.FC = () => {
             variant="h6"
             color="white"
             fontWeight="bold"
-            sx={{ fontSize: '18px' }}
+            sx={{ fontSize: "18px" }}
           >
             회원가입
           </Typography>
