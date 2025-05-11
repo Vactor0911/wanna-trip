@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Stack,
@@ -7,7 +7,6 @@ import {
   Button,
   Box,
   Checkbox,
-  FormControlLabel,
 } from "@mui/material";
 
 // 회원가입 컴포넌트 정의
@@ -152,7 +151,7 @@ const Register: React.FC = () => {
 
   // 공통 입력 필드 스타일 정의
   const inputFieldStyles = (error: boolean) => ({
-    borderRadius: "10px",
+    borderRadius: "7px",
     backgroundColor: "#fff",
     "& .MuiOutlinedInput-notchedOutline": {
       border: "none",
@@ -174,224 +173,234 @@ const Register: React.FC = () => {
       minHeight="100vh"
       justifyContent="center"
       alignItems="center"
-      sx={{ backgroundColor: "#fff", padding: 2 }}
+      gap={2}
+      sx={{
+        backgroundColor: "#fff",
+        padding: 2,
+      }}
     >
-      {/* 로고 섹션 */}
-      <Typography
-        variant="h5"
-        color="#3288FF"
-        fontWeight="bold"
-        sx={{ mb: 3, mr: 35, mt: 5, fontSize: "24px" }}
-      >
-        Wanna Trip
-      </Typography>
-
-      {/* 아이디/비밀번호 타이틀 섹션 */}
-      <Box
+      <Stack
+        gap={3}
         sx={{
-          position: "relative",
-          mb: 2,
           width: { xs: "90%", sm: "60%", md: "400px" },
-          textAlign: "left",
-          pl: 2, // 왼쪽 공백 추가
         }}
       >
+        {/* 로고 섹션 */}
         <Typography
-          variant="h6"
-          color="text.primary"
+          variant="h5"
+          color="#3288FF"
           fontWeight="bold"
-          sx={{ mb: 1, fontSize: "20px" }}
+          sx={{ mb: 3, mr: 35, mt: 1, fontSize: "24px" }}
         >
-          아이디/비밀번호
+          Wanna Trip
         </Typography>
-        <Box
-          sx={{
-            width: "100%",
-            height: "2px",
-            background: "linear-gradient(to right, #3288FF 40%, #ccc 20%)",
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-          }}
-        />
-      </Box>
 
-      {/* 입력 필드 섹션 */}
-      <Stack spacing={2} sx={{ width: { xs: "90%", sm: "60%", md: "400px" } }}>
-        {/* 이메일 입력과 인증요청 버튼을 한 행에 나눠 배치 */}
-        <Stack direction="row" spacing={1}>
-          {/* 이메일 입력 필드 */}
-          <OutlinedInput
-            fullWidth
-            type="email"
-            placeholder="이메일(아이디)"
-            value={email}
-            onChange={handleEmailChange}
-            sx={inputFieldStyles(errors.email)}
-          />
-          {/* 인증요청 버튼 */}
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={handleVerifyEmail}
-            disabled={isLoading || isEmailVerified}
-            sx={{
-              width: "120px",
-              borderRadius: "10px",
-              backgroundColor: "transparent",
-              color: isEmailVerified ? "#ccc" : "primary.main",
-              borderWidth: "2px",
-              "&:hover": {
-                borderColor: isEmailVerified ? "#ccc" : "primary.dark",
-                backgroundColor: "transparent",
-              },
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontSize: "14px" }}>
-              {isEmailVerified ? "인증완료" : "인증요청"}
-            </Typography>
-          </Button>
+        {/* 아이디/비밀번호 타이틀 섹션 */}
+        <Stack gap={2}>
+          <Stack display="flex" justifyContent="space-between">
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              width="35%"
+            >
+              <Typography
+                color="text.primary"
+                fontWeight="bold"
+                fontSize={"15px"}
+              >
+                로그인/회원가입
+              </Typography>
+            </Box>
+            <Box width="80%" />
+
+            <Box
+              sx={{
+                width: "100%",
+                height: "2px",
+                mt: 1,
+                background: "linear-gradient(to right, #3288FF 35%, #ccc 20%)",
+              }}
+            />
+          </Stack>
+          {/* 입력 필드 섹션 */}
+          <Stack gap={1}>
+            {/* 이메일 입력과 인증요청 버튼을 한 행에 나눠 배치 */}
+            <Stack direction="row" spacing={1}>
+              {/* 이메일 입력 필드 */}
+              <OutlinedInput
+                fullWidth
+                type="email"
+                placeholder="이메일(아이디)"
+                value={email}
+                onChange={handleEmailChange}
+                sx={inputFieldStyles(errors.email)}
+              />
+              {/* 인증요청 버튼 */}
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleVerifyEmail}
+                disabled={isLoading || isEmailVerified}
+                sx={{
+                  width: "120px",
+                  borderRadius: "7px",
+                  backgroundColor: "transparent",
+                  color: isEmailVerified ? "#ccc" : "#3288FF",
+                  borderColor: "#3288FF",
+                  borderWidth: "1px",
+                  "&:hover": {
+                    borderColor: isEmailVerified ? "#ccc" : "#3288FF",
+                    backgroundColor: "transparent",
+                  },
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontSize: "14px" }}>
+                  {isEmailVerified ? "인증완료" : "인증요청"}
+                </Typography>
+              </Button>
+            </Stack>
+
+            {/* 비밀번호 입력 필드 */}
+            <OutlinedInput
+              fullWidth
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={handlePasswordChange}
+              sx={inputFieldStyles(errors.password)}
+            />
+
+            {/* 비밀번호 재확인 입력 필드 */}
+            <OutlinedInput
+              fullWidth
+              type="password"
+              placeholder="비밀번호 재확인"
+              value={passwordConfirm}
+              onChange={handlePasswordConfirmChange}
+              sx={inputFieldStyles(errors.passwordConfirm)}
+            />
+
+            {/* 닉네임 입력 필드 */}
+            <OutlinedInput
+              fullWidth
+              type="text"
+              placeholder="닉네임(별명)"
+              value={name}
+              onChange={handleNameChange}
+              sx={inputFieldStyles(errors.name)}
+            />
+          </Stack>
         </Stack>
 
-        {/* 비밀번호 입력 필드 */}
-        <OutlinedInput
-          fullWidth
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={handlePasswordChange}
-          sx={inputFieldStyles(errors.password)}
-        />
-
-        {/* 비밀번호 재확인 입력 필드 */}
-        <OutlinedInput
-          fullWidth
-          type="password"
-          placeholder="비밀번호 재확인"
-          value={passwordConfirm}
-          onChange={handlePasswordConfirmChange}
-          sx={inputFieldStyles(errors.passwordConfirm)}
-        />
-
-        {/* 닉네임 입력 필드 */}
-        <OutlinedInput
-          fullWidth
-          type="text"
-          placeholder="닉네임(별명)"
-          value={name}
-          onChange={handleNameChange}
-          sx={inputFieldStyles(errors.name)}
-        />
-
         {/* 이용약관 섹션 */}
-        <Box
-          sx={{
-            position: "relative",
-            mt: 2,
-            mb: 1,
-            width: { xs: "90%", sm: "60%", md: "400px" },
-            textAlign: "left",
-            pl: 2, // 왼쪽 공백 추가
-          }}
-        >
-          <Typography
-            variant="h6"
-            color="text.primary"
-            fontWeight="bold"
-            sx={{ mb: 1, fontSize: "20px" }}
-          >
-            이용약관
-          </Typography>
-          <Box
-            sx={{
-              width: "100%",
-              height: "2px",
-              background: "linear-gradient(to right, #3288FF 30%, #ccc 20%)",
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-            }}
-          />
-        </Box>
+        <Stack gap={1}>
+          <Stack display="flex" justifyContent="space-between">
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              width="35%"
+            >
+              <Typography
+                color="text.primary"
+                fontWeight="bold"
+                fontSize={"15px"}
+              >
+                이용약관
+              </Typography>
+            </Box>
+            <Box width="80%" />
 
-        {/* 전체 동의하기 체크박스 */}
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={isTermsAgreed}
-              onChange={handleAllTermsChange}
-              color="primary"
+            <Box
+              sx={{
+                width: "100%",
+                height: "2px",
+                mt: 1,
+                background: "linear-gradient(to right, #3288FF 35%, #ccc 20%)",
+              }}
             />
-          }
-          label={
-            <Typography variant="h6" fontWeight="bold">
-              전체 동의하기
-            </Typography>
-          }
-        />
+          </Stack>
+          {/* 이용약관 설명 */}
+          <Stack gap={1}>
+            {/* 전체 동의하기 체크박스 */}
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Checkbox
+                checked={isTermsAgreed}
+                onChange={handleAllTermsChange}
+                color="primary"
+              />
+              <Typography variant="h6" fontWeight="bold">
+                전체 동의하기
+              </Typography>
+            </Stack>
 
-        {/* [필수] 개인정보 수집 및 이용 섹션 */}
-        <Box sx={{ display: "flex", alignItems: "center", mt: 1, ml: 1 }}>
-          <Checkbox
-            checked={isPrivacyAgreed}
-            onChange={handlePrivacyChange}
-            color="primary"
-            sx={{ mr: 1 }}
-          />
-          <Typography variant="body2">
-            <span style={{ color: "#3288FF" }}>[필수]</span> 개인정보 수집 및
-            이용
-          </Typography>
-        </Box>
-        {/* 개인정보 동의 내용 박스 */}
-        <Box
-          sx={{
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            p: 1,
-            ml: 1, // 체크박스와 정렬 맞춤
-            mb: 2,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            개인정보 수집 및 이용에 대한 동의 (필수 항목)
-            <br />
-            개인정보보호법에 따라 네이버에 회원가입 신청하시는 분께 수집하는
-            개인정보의 항목, 개인정보의 수집 및 이용목적, 개인정보의 보유 및
-            이용기간, 동의 거부권 및 동의 거부 시 불이익에 관한 사항을 안내
-            드리오니 자세히 읽은 후 동의하여 주시기 바랍니다.
-          </Typography>
-        </Box>
+            {/* [필수] 개인정보 수집 및 이용 섹션 */}
+            <Stack>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Checkbox
+                  checked={isPrivacyAgreed}
+                  onChange={handlePrivacyChange}
+                  color="primary"
+                />
+                <Typography variant="body2">
+                  <span style={{ color: "#3288FF" }}>[필수]</span> 개인정보 수집
+                  및 이용
+                </Typography>
+              </Box>
+              {/* 개인정보 동의 내용 박스 */}
+              <Box
+                sx={{
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  p: 1,
+                  ml: "42px",
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  개인정보 수집 및 이용에 대한 동의 (필수 항목)
+                  <br />
+                  개인정보보호법에 따라 네이버에 회원가입 신청하시는 분께
+                  수집하는 개인정보의 항목, 개인정보의 수집 및 이용목적,
+                  개인정보의 보유 및 이용기간, 동의 거부권 및 동의 거부 시
+                  불이익에 관한 사항을 안내 드리오니 자세히 읽은 후 동의하여
+                  주시기 바랍니다.
+                </Typography>
+              </Box>
+            </Stack>
 
-        {/* [선택] 위치기반서비스 이용약관 섹션 */}
-        <Box sx={{ display: "flex", alignItems: "center", ml: 1 }}>
-          <Checkbox
-            checked={isLocationAgreed}
-            onChange={handleLocationChange}
-            color="primary"
-            sx={{ mr: 1 }}
-          />
-          <Typography variant="body2">
-            <span style={{ color: "#666" }}>[선택]</span> 위치기반서비스
-            이용약관
-          </Typography>
-        </Box>
-        {/* 위치기반서비스 동의 내용 박스 */}
-        <Box
-          sx={{
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            p: 1,
-            ml: 1, // 체크박스와 정렬 맞춤
-          }}
-        >
-          <Typography variant="caption" color="text.secondary">
-            위치기반서비스 이용약관에 동의하시면, 위치를 활용한 광고 정보 수신
-            등을 포함하는 네이버 위치기반 서비스를 이용할 수 있습니다.
-            <br />제 1 조 (목적)
-          </Typography>
-        </Box>
-
+            <Stack>
+              {/* [선택] 위치기반서비스 이용약관 섹션 */}
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Checkbox
+                  checked={isLocationAgreed}
+                  onChange={handleLocationChange}
+                  color="primary"
+                />
+                <Typography variant="body2">
+                  <span style={{ color: "#666" }}>[선택]</span> 위치기반서비스
+                  이용약관
+                </Typography>
+              </Box>
+              {/* 위치기반서비스 동의 내용 박스 */}
+              <Box
+                sx={{
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  p: 1,
+                  ml: "42px",
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  위치기반서비스 이용약관에 동의하시면, 위치를 활용한 광고 정보
+                  수신 등을 포함하는 네이버 위치기반 서비스를 이용할 수
+                  있습니다.
+                  <br />제 1 조 (목적)
+                </Typography>
+              </Box>
+            </Stack>
+          </Stack>
+        </Stack>
         {/* 회원가입 버튼 */}
         <Button
           variant="contained"
