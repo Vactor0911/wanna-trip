@@ -1,5 +1,5 @@
 import { Divider, Stack, Typography, TypographyProps } from "@mui/material";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 
 interface SectionHeaderProps {
   title: string;

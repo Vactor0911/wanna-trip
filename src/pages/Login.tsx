@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback, ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Button,
   Checkbox,
   Container,
-  Divider,
   FormControlLabel,
   IconButton,
   InputAdornment,
@@ -30,7 +28,7 @@ import { jwtDecode } from "jwt-decode";
 
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { setAccessToken } from "../utils/accessToken";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 import OutlinedTextField from "../components/OutlinedTextField";
 import PlainLink from "../components/PlainLinkProps";
 import SectionHeader from "../components/SectionHeader";
