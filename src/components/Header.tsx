@@ -18,7 +18,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
-import { theme } from "../utils";
+import { theme } from "../utils/theme";
 import { useCallback, useRef, useState } from "react";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import { grey } from "@mui/material/colors";
@@ -127,7 +127,7 @@ const Header = () => {
         position="relative"
         sx={{
           boxShadow: "none",
-          zIndex: 10000,
+          zIndex: 1000,
         }}
       >
         <Box
@@ -300,19 +300,22 @@ const Header = () => {
             {/* 프로필 이미지 */}
             <Avatar
               sx={{
+                width: "36px",
+                height: "36px",
                 bgcolor: theme.palette.primary.main,
               }}
             >
               <FaceRoundedIcon
-                fontSize="large"
                 sx={{
+                  width: "90%",
+                  height: "90%",
                   color: grey[100],
                 }}
               />
             </Avatar>
 
             {/* 프로필 이름 */}
-            <Typography variant="h5">홍길동님</Typography>
+            <Typography variant="h6">홍길동님</Typography>
 
             {/* 닫기 버튼 */}
             <Stack flex={1} alignItems="flex-end">
@@ -344,7 +347,7 @@ const Header = () => {
                   },
                 }}
               >
-                <Typography variant="h6" color="black" fontWeight={500}>
+                <Typography variant="subtitle1" color="black" fontWeight={500}>
                   {link.text}
                 </Typography>
               </Button>
