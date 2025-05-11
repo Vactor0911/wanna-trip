@@ -87,21 +87,6 @@ const Login = () => {
     setIsPasswordVisible(!isPasswordVisible);
   }, [isPasswordVisible]);
 
-  // 이메일 저장 체크박스 변경
-  const handleEmailSaveChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const isChecked = event.target.checked;
-      setIsEmailSaved(isChecked);
-
-      if (isChecked) {
-        localStorage.setItem("savedEmail", email); // 이메일 저장
-      } else {
-        localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
-      }
-    },
-    [email]
-  );
-
   // 구글 간편 로그인
   const google = (window as any).google; // 구글 간편 로그인 추가
 
@@ -358,125 +343,117 @@ const Login = () => {
 
       {/* 로그인 폼 섹션 */}
       <Stack
-        spacing={2}
+        gap={2}
         sx={{
           width: { xs: "90%", sm: "60%", md: "400px" },
         }}
       >
-        {/* 로그인 타이틀 */}
-        <Box sx={{ position: "relative", mb: 2 }}>
-          <Typography
-            variant="h6"
-            color="text.primary"
-            fontWeight="bold"
-            sx={{ mb: 1 }}
+        <Stack display="flex" justifyContent="space-between">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            width="20%"
           >
-            로그인
-          </Typography>
+            <Typography
+              color="text.primary"
+              fontWeight="bold"
+              fontSize={"15px"}
+            >
+              로그인
+            </Typography>
+          </Box>
+          <Box width="80%" />
+
           <Box
             sx={{
               width: "100%",
               height: "2px",
+              mt: 1,
               background: "linear-gradient(to right, #3288FF 20%, #ccc 20%)",
-              position: "absolute",
-              bottom: 0,
-              left: 0,
             }}
           />
-        </Box>
+        </Stack>
 
-        {/* 이메일 입력 필드 */}
-        <OutlinedInput
-          fullWidth
-          type="email"
-          placeholder="이메일(아이디)"
-          value={email}
-          onChange={handleEmailChange}
-          startAdornment={
-            <InputAdornment position="start">
-              <EmailIcon sx={{ color: "#666" }} />
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            "&:hover": {
-              borderColor: "#3288FF",
-            },
-            "&.Mui-focused": {
-              borderColor: "#3288FF",
-            },
-            "& .MuiInputBase-input": {
-              padding: "12px 14px",
-            },
-          }}
-        />
+        {/* 로그인 입력 섹션 */}
+        <Stack gap={1}>
+          {/* 이메일 입력 필드 */}
+          <OutlinedInput
+            fullWidth
+            type="email"
+            placeholder="이메일(아이디)"
+            value={email}
+            onChange={handleEmailChange}
+            startAdornment={
+              <InputAdornment position="start">
+                <EmailIcon sx={{ color: "#666" }} />
+              </InputAdornment>
+            }
+            sx={{
+              borderRadius: "7px",
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              "&:hover": {
+                borderColor: "#3288FF",
+              },
+              "&.Mui-focused": {
+                borderColor: "#3288FF",
+              },
+              "& .MuiInputBase-input": {
+                padding: "12px 14px",
+              },
+            }}
+          />
 
-        {/* 비밀번호 입력 필드 */}
-        {/* 수정: showPassword와 handleTogglePassword를 바로 위 코드에서 정의된 isPasswordVisible과 handlePasswordVisibilityChange로 대체 */}
-        <OutlinedInput
-          fullWidth
-          type={isPasswordVisible ? "text" : "password"} // showPassword 대신 isPasswordVisible 사용
-          placeholder="비밀번호"
-          value={password}
-          onChange={handlePasswordChange}
-          startAdornment={
-            <InputAdornment position="start">
-              <LockIcon sx={{ color: "#666" }} />
-            </InputAdornment>
-          }
-          endAdornment={
-            <InputAdornment position="end">
-              <IconButton onClick={handlePasswordVisibilityChange}>
-                {" "}
-                {/* handleTogglePassword 대신 handlePasswordVisibilityChange 사용 */}
-                {isPasswordVisible ? ( // showPassword 대신 isPasswordVisible 사용
-                  <VisibilityIcon sx={{ color: "#666" }} />
-                ) : (
-                  <VisibilityOffIcon sx={{ color: "#666" }} />
-                )}
-              </IconButton>
-            </InputAdornment>
-          }
-          sx={{
-            borderRadius: "10px",
-            backgroundColor: "#fff",
-            border: "1px solid #ccc",
-            "&:hover": {
-              borderColor: "#3288FF",
-            },
-            "&.Mui-focused": {
-              borderColor: "#3288FF",
-            },
-            "& .MuiInputBase-input": {
-              padding: "12px 14px",
-            },
-          }}
-        />
+          {/* 비밀번호 입력 필드 */}
 
-        {/* 체크박스 섹션 */}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Stack direction="row" spacing={1}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={isEmailSaved}
-                  onChange={handleEmailSaveChange}
-                  color="primary"
-                  sx={{ padding: "4px" }}
-                />
-              }
-              label="이메일 저장"
-              sx={{
-                color: "text.secondary",
-                "& .MuiTypography-root": { fontSize: "14px" },
-              }}
-            />
+          <OutlinedInput
+            fullWidth
+            type={isPasswordVisible ? "text" : "password"}
+            placeholder="비밀번호"
+            value={password}
+            onChange={handlePasswordChange}
+            startAdornment={
+              <InputAdornment position="start">
+                <LockIcon sx={{ color: "#666" }} />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton onClick={handlePasswordVisibilityChange}>
+                  {" "}
+                  {/* handleTogglePassword 대신 handlePasswordVisibilityChange 사용 */}
+                  {isPasswordVisible ? (
+                    <VisibilityIcon sx={{ color: "#666" }} />
+                  ) : (
+                    <VisibilityOffIcon sx={{ color: "#666" }} />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            }
+            sx={{
+              borderRadius: "7px",
+              backgroundColor: "#fff",
+              border: "1px solid #ccc",
+              "&:hover": {
+                borderColor: "#3288FF",
+              },
+              "&.Mui-focused": {
+                borderColor: "#3288FF",
+              },
+              "& .MuiInputBase-input": {
+                padding: "12px 14px",
+              },
+            }}
+          />
+
+          {/* 체크박스 섹션 */}
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            ml={1}
+          >
             <FormControlLabel
               control={
                 <Checkbox
