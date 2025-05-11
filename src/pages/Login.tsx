@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import {
-  Stack,
-  Typography,
-  OutlinedInput,
-  InputAdornment,
-  IconButton,
+  Avatar,
+  Box,
   Button,
   Checkbox,
   FormControlLabel,
-  Box,
-  Avatar,
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+  Stack,
+  Typography,
 } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
@@ -20,8 +20,8 @@ import GoogleIcon from "../assets/images/google.png";
 import KakaoIcon from "../assets/images/kakao.png";
 
 import axios from "axios";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
-import { setAccessToken } from "../utils/accessToken";
+import { useNavigate } from "react-router-dom";
+
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   wannaTripLoginStateAtom,
@@ -30,32 +30,42 @@ import {
 } from "../state";
 import { jwtDecode } from "jwt-decode";
 
-// Login 컴포넌트
-const Login: React.FC = () => {
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { setAccessToken } from "../utils/accessToken";
+
+const Login = () => {
   const navigate = useNavigate();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  // 상태 관리
-  const [email, setEmail] = useState<string>(""); // 이메일 입력값
-  const [password, setPassword] = useState<string>(""); // 비밀번호 입력값
-  const [showPassword, setShowPassword] = useState<boolean>(false); // 비밀번호 보임/숨김 상태
-  const [isEmailSaved, setIsEmailSaved] = useState<boolean>(false); // 이메일 저장 여부
-  const [isLoginStateSave, setIsLoginStateSave] = useState<boolean>(false); // 로그인 상태 유지 여부
-  const [isLoading, setIsLoading] = useState<boolean>(false); // 로딩 상태
-
-  // Jotai 상태 관리
+  // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
-  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom);
-  const kakaoLoginState = useAtomValue(kakaoLoginStateAtom);
-  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
+  if (wannaTripLoginState.isLoggedIn) {
+    navigate("/template");
+  }
 
-  // 로그인 상태 확인 후 리다이렉트
-  useEffect(() => {
-    if (wannaTripLoginState.isLoggedIn) {
-      navigate("/template");
-    }
-  }, [wannaTripLoginState.isLoggedIn, navigate]);
+  // 로그인 기능 추가
+  const [email, setEmail] = useState(""); // 이메일 값
+  const [password, setPassword] = useState(""); // 사용자 비밀번호
+  const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
+  const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
 
-  // 이메일 저장 상태 초기화
+  const [isLoginStateSave, setIsLoginStateSave] = useState(false); // 로그인 상태 유지 여부
+  const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태
+
+  // 이메일 입력값 변경
+  const handleEmailChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const newEmail = event.target.value;
+      setEmail(newEmail);
+
+      if (isEmailSaved) {
+        localStorage.setItem("savedEmail", newEmail); // 저장된 이메일 업데이트
+      }
+    },
+    [isEmailSaved]
+  );
+
+  // 초기화: 이메일 저장 상태 불러오기
   useEffect(() => {
     const savedEmail = localStorage.getItem("savedEmail");
     if (savedEmail) {
@@ -64,19 +74,7 @@ const Login: React.FC = () => {
     }
   }, []);
 
-  // 이메일 입력 처리
-  const handleEmailChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const newEmail = event.target.value;
-      setEmail(newEmail);
-      if (isEmailSaved) {
-        localStorage.setItem("savedEmail", newEmail);
-      }
-    },
-    [isEmailSaved]
-  );
-
-  // 비밀번호 입력 처리
+  // 비밀번호 입력값 변경
   const handlePasswordChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setPassword(event.target.value);
@@ -84,99 +82,28 @@ const Login: React.FC = () => {
     []
   );
 
-  // 비밀번호 보임/숨김 토글 처리
-  const handleTogglePassword = () => {
-    setShowPassword(!showPassword);
-  };
+  // 비밀번호 표시/숨김 변경
+  const handlePasswordVisibilityChange = useCallback(() => {
+    setIsPasswordVisible(!isPasswordVisible);
+  }, [isPasswordVisible]);
 
-  // 이메일 저장 체크박스 처리
+  // 이메일 저장 체크박스 변경
   const handleEmailSaveChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const isChecked = event.target.checked;
       setIsEmailSaved(isChecked);
+
       if (isChecked) {
-        localStorage.setItem("savedEmail", email);
+        localStorage.setItem("savedEmail", email); // 이메일 저장
       } else {
-        localStorage.removeItem("savedEmail");
+        localStorage.removeItem("savedEmail"); // 저장된 이메일 삭제
       }
     },
     [email]
   );
 
-  // 로그인 상태 유지 체크 처리
-  const handleLoginStateSaveChange = useCallback(() => {
-    setIsLoginStateSave((prev) => !prev);
-  }, []);
-
-  // 일반 로그인 처리
-  const handleLoginButtonClick = useCallback(async () => {
-    if (!email || !password) {
-      alert("이메일과 비밀번호를 입력해 주세요.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      const csrfToken = await getCsrfToken();
-      const response = await axiosInstance.post(
-        "/api/auth/login",
-        { email, password },
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
-
-      const { name, userUuid, permissions, accessToken } = response.data;
-      setAccessToken(accessToken);
-
-      let enumPermission = Permission.USER;
-      switch (permissions) {
-        case "admin":
-          enumPermission = Permission.ADMIN;
-          break;
-        case "superadmin":
-          enumPermission = Permission.SUPER_ADMIN;
-          break;
-      }
-
-      const newWannaTripLoginState = {
-        isLoggedIn: true,
-        userUuid,
-        email,
-        name,
-        loginType: "normal",
-        permission: enumPermission,
-      };
-
-      setWannaTripLoginState(newWannaTripLoginState);
-
-      if (isLoginStateSave) {
-        localStorage.setItem(
-          "WannaTripLoginState",
-          JSON.stringify(newWannaTripLoginState)
-        );
-      } else {
-        sessionStorage.setItem(
-          "WannaTripLoginState",
-          JSON.stringify(newWannaTripLoginState)
-        );
-      }
-
-      alert(`[ ${name} ]님 환영합니다!`);
-      navigate("/template");
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        alert(error.response.data.message || "로그인 실패");
-      } else {
-        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
-      }
-      setPassword("");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [email, password, isLoginStateSave, navigate, setWannaTripLoginState]);
-
-  // 구글 로그인 처리
-  const google = (window as any).google;
+  // 구글 간편 로그인
+  const google = (window as any).google; // 구글 간편 로그인 추가
 
   const googleLoginCallback = useCallback(
     async (credentialResponse: any) => {
@@ -213,19 +140,19 @@ const Login: React.FC = () => {
             break;
         }
 
-        const newWannaTripLoginState = {
+        const newWannaTriploginState = {
           isLoggedIn: true,
-          userUuid,
-          email: googleEmail,
-          name,
+          userUuid: userUuid,
+          email: email,
+          name: name,
           loginType: "google",
           permission: enumPermission,
         };
 
-        setWannaTripLoginState(newWannaTripLoginState);
+        setWannaTripLoginState(newWannaTriploginState);
         localStorage.setItem(
-          "WannaTripLoginState",
-          JSON.stringify(newWannaTripLoginState)
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
         );
 
         alert(`${name}님 환영합니다!`);
@@ -235,7 +162,7 @@ const Login: React.FC = () => {
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     },
-    [navigate, setWannaTripLoginState]
+    [email, navigate, setWannaTripLoginState]
   );
 
   const handleGoogleLogin = useCallback(() => {
@@ -246,7 +173,10 @@ const Login: React.FC = () => {
     google.accounts.id.prompt();
   }, [googleLoginCallback]);
 
-  // 카카오 로그인 처리
+  // 카카오 간편 로그인
+  const kakaoLoginState = useAtomValue(kakaoLoginStateAtom);
+  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
+
   const handleKakaoLogin = useCallback(async () => {
     const KAKAO_CLIENT_ID = import.meta.env.VITE_KAKAO_CLIENT_ID;
     const KAKAO_REDIRECT_URI = import.meta.env.VITE_KAKAO_REDIRECT_URI;
@@ -299,19 +229,19 @@ const Login: React.FC = () => {
           break;
       }
 
-      const newWannaTripLoginState = {
+      const newWannaTriploginState = {
         isLoggedIn: true,
-        userUuid,
-        email,
-        name,
+        userUuid: userUuid,
+        email: email,
+        name: name,
         loginType: "kakao",
         permission: enumPermission,
       };
 
-      setWannaTripLoginState(newWannaTripLoginState);
+      setWannaTripLoginState(newWannaTriploginState);
       localStorage.setItem(
-        "WannaTripLoginState",
-        JSON.stringify(newWannaTripLoginState)
+        "WannaTriploginState",
+        JSON.stringify(newWannaTriploginState)
       );
 
       window.history.replaceState(null, "", "/login");
@@ -337,6 +267,79 @@ const Login: React.FC = () => {
       handleKakaoLogin();
     }
   }, [handleKakaoLogin, kakaoLoginState]);
+
+  // 로그인 상태 유지/해제
+  const handleLoginStateSaveChange = useCallback(() => {
+    setIsLoginStateSave((prev) => !prev);
+  }, []);
+
+  // 일반 로그인 기능 시작
+  const handleLoginButtonClick = useCallback(async () => {
+    if (!email || !password) {
+      alert("이메일과 비밀번호를 입력해 주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const csrfToken = await getCsrfToken();
+      const response = await axiosInstance.post(
+        "/api/auth/login",
+        { email: email, password: password },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      const { name, userUuid, permissions } = response.data;
+      setAccessToken(response.data.accessToken);
+
+      let enumPermission = Permission.USER;
+      switch (permissions) {
+        case "admin":
+          enumPermission = Permission.ADMIN;
+          break;
+        case "superadmin":
+          enumPermission = Permission.SUPER_ADMIN;
+          break;
+      }
+
+      const newWannaTriploginState = {
+        isLoggedIn: true,
+        userUuid: userUuid,
+        email: email,
+        name: name,
+        loginType: "normal",
+        permission: enumPermission,
+      };
+
+      setWannaTripLoginState(newWannaTriploginState);
+
+      if (isLoginStateSave) {
+        localStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
+        );
+      } else {
+        sessionStorage.setItem(
+          "WannaTriploginState",
+          JSON.stringify(newWannaTriploginState)
+        );
+      }
+
+      alert(`[ ${name} ]님 환영합니다!`);
+      navigate("/template");
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        console.error("서버 오류:", error.response.data.message);
+        alert(error.response.data.message || "로그인 실패");
+      } else {
+        console.error("요청 오류:", (error as Error).message);
+        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
+      }
+
+      setPassword("");
+    }
+  }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
 
   return (
     <Stack
@@ -411,9 +414,10 @@ const Login: React.FC = () => {
         />
 
         {/* 비밀번호 입력 필드 */}
+        {/* 수정: showPassword와 handleTogglePassword를 바로 위 코드에서 정의된 isPasswordVisible과 handlePasswordVisibilityChange로 대체 */}
         <OutlinedInput
           fullWidth
-          type={showPassword ? "text" : "password"}
+          type={isPasswordVisible ? "text" : "password"} // showPassword 대신 isPasswordVisible 사용
           placeholder="비밀번호"
           value={password}
           onChange={handlePasswordChange}
@@ -424,8 +428,10 @@ const Login: React.FC = () => {
           }
           endAdornment={
             <InputAdornment position="end">
-              <IconButton onClick={handleTogglePassword}>
-                {showPassword ? (
+              <IconButton onClick={handlePasswordVisibilityChange}>
+                {" "}
+                {/* handleTogglePassword 대신 handlePasswordVisibilityChange 사용 */}
+                {isPasswordVisible ? ( // showPassword 대신 isPasswordVisible 사용
                   <VisibilityIcon sx={{ color: "#666" }} />
                 ) : (
                   <VisibilityOffIcon sx={{ color: "#666" }} />
