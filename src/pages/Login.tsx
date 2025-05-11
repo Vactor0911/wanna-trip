@@ -342,29 +342,29 @@ const Login = () => {
             <SectionHeader title="로그인" />
 
             {/* 아이디 입력란 */}
-            <OutlinedTextField label="아이디(이메일)" />
+            <Box mt={1}>
+              <OutlinedTextField label="아이디(이메일)" />
+            </Box>
 
             {/* 비밀번호 입력란 */}
-            <Box mt={1}>
-              <OutlinedTextField
-                label="비밀번호"
-                type={isPasswordVisible ? "text" : "password"}
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton
-                      onClick={handlePasswordVisibilityChange}
-                      edge="end"
-                    >
-                      {isPasswordVisible ? (
-                        <VisibilityOffIcon />
-                      ) : (
-                        <VisibilityIcon />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                }
-              />
-            </Box>
+            <OutlinedTextField
+              label="비밀번호"
+              type={isPasswordVisible ? "text" : "password"}
+              endAdornment={
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={handlePasswordVisibilityChange}
+                    edge="end"
+                  >
+                    {isPasswordVisible ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              }
+            />
 
             {/* 로그인 상태 유지 체크박스 */}
             <Box>

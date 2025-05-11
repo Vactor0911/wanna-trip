@@ -4,6 +4,7 @@ import {
   OutlinedInput,
   OutlinedInputProps,
 } from "@mui/material";
+import { theme } from "../utils/theme";
 
 interface OutlinedTextFieldProps extends OutlinedInputProps {
   label: string;
@@ -37,7 +38,7 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
         {...others}
         sx={{
           fontWeight: 700,
-          color: "#404040",
+          color: theme.palette.black.main,
           borderRadius: "8px",
           overflow: "hidden",
           "& input": {

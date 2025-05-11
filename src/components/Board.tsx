@@ -115,7 +115,7 @@ const Board = (props: BoardProps) => {
             {/* 좌측 컨테이너 */}
             <Stack direction="row" alignItems="center" gap={1}>
               {/* 보드 날짜 */}
-              <Typography variant="h6">Day{day}</Typography>
+              <Typography variant="h6">Day {day}</Typography>
 
               {/* 정렬하기 버튼 */}
               <Tooltip title="정렬하기" placement="top">
