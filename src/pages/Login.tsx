@@ -47,8 +47,6 @@ const Login = () => {
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
-  const [isLoading, setIsLoading] = useState(false); // 로그인 로딩 상태 추가
-
   const [isLoginStateSave, setIsLoginStateSave] = useState(false); // 로그인 상태 유지 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태
 
@@ -88,10 +86,13 @@ const Login = () => {
   }, [isPasswordVisible]);
 
   // 구글 간편 로그인
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google; // 구글 간편 로그인 추가
 
   const googleLoginCallback = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (credentialResponse: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let decoded: any;
       try {
         decoded = jwtDecode(credentialResponse.credential);
@@ -107,7 +108,7 @@ const Login = () => {
       try {
         const csrfToken = await getCsrfToken();
         const response = await axiosInstance.post(
-          "/api/auth/login/google",
+          "/auth/login/google",
           { googleEmail, googleName },
           { headers: { "X-CSRF-Token": csrfToken } }
         );
@@ -191,7 +192,7 @@ const Login = () => {
       const accessToken = tokenResponse.data.access_token;
       const csrfToken = await getCsrfToken();
       const serverResponse = await axiosInstance.post(
-        "/api/auth/login/kakao",
+        "/auth/login/kakao",
         { KaKaoAccessToken: accessToken },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
@@ -253,6 +254,7 @@ const Login = () => {
     }
   }, [handleKakaoLogin, kakaoLoginState]);
 
+
   // 로그인 상태 유지/해제
   const handleLoginStateSaveChange = useCallback(() => {
     setIsLoginStateSave((prev) => !prev);
@@ -265,12 +267,10 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       const csrfToken = await getCsrfToken();
       const response = await axiosInstance.post(
-        "/api/auth/login",
+        "/auth/login",
         { email: email, password: password },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
@@ -343,12 +343,18 @@ const Login = () => {
 
             {/* 아이디 입력란 */}
             <Box mt={1}>
-              <OutlinedTextField label="아이디(이메일)" />
+              <OutlinedTextField
+                label="아이디(이메일)"
+                value={email}
+                onChange={handleEmailChange}
+              />
             </Box>
 
             {/* 비밀번호 입력란 */}
             <OutlinedTextField
               label="비밀번호"
+              value={password}
+              onChange={handlePasswordChange}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -369,13 +375,19 @@ const Login = () => {
             {/* 로그인 상태 유지 체크박스 */}
             <Box>
               <FormControlLabel
-                control={<Checkbox name="로그인 상태 유지" />}
+                control={
+                  <Checkbox
+                    name="로그인 상태 유지"
+                    checked={isLoginStateSave}
+                    onChange={handleLoginStateSaveChange}
+                  />
+                }
                 label="로그인 상태 유지"
               />
             </Box>
 
             {/* 로그인 버튼 */}
-            <Button variant="contained">
+            <Button variant="contained" onClick={handleLoginButtonClick}>
               <Typography variant="h5">로그인</Typography>
             </Button>
 
