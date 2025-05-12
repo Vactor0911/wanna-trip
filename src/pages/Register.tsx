@@ -34,7 +34,7 @@ interface TermsOfService {
 
 const termsOfServices: TermsOfService[] = [
   {
-    title: "개인정보 수집 및 이용",
+    title: "개인정보 수집 및 이용약관 동의",
     isOptional: false,
     content: (
       <Typography variant="subtitle1">
@@ -46,7 +46,7 @@ const termsOfServices: TermsOfService[] = [
     ),
   },
   {
-    title: "위치기반서비스 이용약관",
+    title: "위치 정보 이용약관 동의",
     isOptional: true,
     content: (
       <Typography variant="subtitle1">
@@ -204,6 +204,10 @@ const Register: React.FC = () => {
     [isTermExpanded]
   );
 
+  const allRequiredAgreed = termsOfServices.every(
+    (term, index) => term.isOptional || isTermAgreed[index]
+  );
+
   // 회원가입 버튼 클릭
   const handleRegisterButtonClick = useCallback(
     async (e: React.FormEvent) => {
@@ -217,8 +221,8 @@ const Register: React.FC = () => {
       }
 
       if (!isConfirmCodeChecked) {
-        console.error("인증번호를 확인해주세요.");
-        alert("인증번호를 확인해주세요.");
+        console.error("이메일 인증을 완료해주세요.");
+        alert("이메일 인증을 완료해주세요.");
         return;
       }
 
@@ -233,9 +237,20 @@ const Register: React.FC = () => {
         return;
       }
 
+      if (!allRequiredAgreed) {
+        alert("필수 약관에 모두 동의해 주세요.");
+        return;
+      }
+
       try {
         // CSRF 토큰 가져오기
         const csrfToken = await getCsrfToken();
+
+        // 이용약관 동의 여부 확인
+        const termsData = {
+          privacy: isTermAgreed[0], // 첫 번째 항목: 개인정보 수집 및 이용약관 (필수)
+          location: isTermAgreed[1], // 두 번째 항목: 위치 정보 이용약관 (선택)
+        };
 
         // 서버로 회원가입 요청 전송
         await axiosInstance.post(
@@ -244,6 +259,7 @@ const Register: React.FC = () => {
             email: email,
             password: password,
             name: name,
+            terms: termsData,
           },
           {
             headers: {
@@ -290,9 +306,10 @@ const Register: React.FC = () => {
         }
       }
     },
-    [email, password, passwordConfirm, isConfirmCodeChecked, name, navigate]
+    [email, password, passwordConfirm, isConfirmCodeChecked, name, allRequiredAgreed, isTermAgreed, navigate]
   );
 
+  // 인증번호 전송 버튼 클릭
   const handleConfirmCodeSendButtonClick = useCallback(async () => {
     // 이미 인증번호를 확인했다면 종료
     if (isConfirmCodeChecked) {
@@ -326,9 +343,9 @@ const Register: React.FC = () => {
           },
         }
       );
-
-      alert("인증번호가 이메일로 발송되었습니다.");
+    
       setIsConfirmCodeSent(true); // 인증번호 전송 여부를 true로 설정
+      alert("인증번호가 이메일로 발송되었습니다.");
     } catch (error) {
       // 요청 실패 시 알림
       if (axios.isAxiosError(error) && error.response) {
@@ -347,6 +364,12 @@ const Register: React.FC = () => {
 
   // 인증번호 확인 버튼 클릭
   const handleConfirmCodeCheckButtonClick = useCallback(async () => {
+    // 이미 확인된 인증번호라면 종료
+    if (isConfirmCodeChecked) {
+      alert("이미 인증번호를 확인했습니다.");
+      return;
+    }
+
     try {
       // Step 1: CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -379,7 +402,7 @@ const Register: React.FC = () => {
         alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
       }
     }
-  }, [confirmCode, email]);
+  }, [confirmCode, email, isConfirmCodeChecked]);
 
   return (
     <Container maxWidth="xs">
@@ -641,7 +664,11 @@ const Register: React.FC = () => {
 
           <Stack gap={0.5}>
             {/* 회원가입 버튼 */}
-            <Button variant="contained" onClick={handleRegisterButtonClick}>
+            <Button
+              variant="contained"
+              onClick={handleRegisterButtonClick}
+              disabled={!allRequiredAgreed} // 필수 약관에 동의하지 않으면 비활성화
+            >
               <Typography variant="h5">회원가입</Typography>
             </Button>
 
