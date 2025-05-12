@@ -113,6 +113,89 @@ const Login = () => {
           { headers: { "X-CSRF-Token": csrfToken } }
         );
 
+        // 연동 대상 계정인 경우 처리 (카카오와 같은 방식)
+        if (response.data.accountExists) {
+          const existingType =
+            response.data.existingLoginType === "normal"
+              ? "일반"
+              : response.data.existingLoginType === "kakao"
+              ? "카카오"
+              : "구글";
+          const confirmMsg = `이미 ${existingType} 계정으로 가입된 이메일입니다.\n계정을 연동하시겠습니까?`;
+
+          if (confirm(confirmMsg)) {
+            if (existingType === "일반") {
+              // 일반 계정이면 비밀번호 입력 후 연동
+              const password = prompt("기존 계정 비밀번호를 입력하세요:");
+              if (password) {
+                try {
+                  const linkResponse = await axiosInstance.post(
+                    "/auth/link/account",
+                    {
+                      password,
+                      email: response.data.email,
+                      socialInfo: response.data.socialInfo,
+                    },
+                    { headers: { "X-CSRF-Token": csrfToken } }
+                  );
+                  if (linkResponse.data.success) {
+                    setAccessToken(linkResponse.data.accessToken);
+
+                    let enumPermission = Permission.USER;
+                    switch (linkResponse.data.permissions) {
+                      case "admin":
+                        enumPermission = Permission.ADMIN;
+                        break;
+                      case "superadmin":
+                        enumPermission = Permission.SUPER_ADMIN;
+                        break;
+                    }
+
+                    const newWannaTriploginState = {
+                      isLoggedIn: true,
+                      userUuid: linkResponse.data.userUuid,
+                      email: response.data.email,
+                      name: linkResponse.data.name,
+                      loginType: linkResponse.data.loginType,
+                      permission: enumPermission,
+                    };
+
+                    setWannaTripLoginState(newWannaTriploginState);
+                    localStorage.setItem(
+                      "WannaTriploginState",
+                      JSON.stringify(newWannaTriploginState)
+                    );
+
+                    alert(
+                      `계정 연동 성공! ${linkResponse.data.name}님 환영합니다!`
+                    );
+                    navigate("/template");
+                    return;
+                  }
+                } catch (error) {
+                  console.error("계정 연동 실패:", error);
+                  alert("계정 연동에 실패했습니다. 다시 시도해주세요.");
+                  return;
+                }
+              }
+            } else {
+              // 다른 소셜 계정인 경우 바로 연동
+              await axiosInstance.post(
+                "/auth/link/account",
+                {
+                  email: response.data.email,
+                  socialInfo: response.data.socialInfo,
+                },
+                { headers: { "X-CSRF-Token": csrfToken } }
+              );
+            }
+          } else {
+            alert(`${existingType} 계정으로 로그인해주세요.`);
+            return;
+          }
+        }
+
+        // 연동이 필요하지 않은 정상 로그인 처리
         const { accessToken, permissions, name, userUuid } = response.data;
         setAccessToken(accessToken);
 
@@ -203,6 +286,97 @@ const Login = () => {
         permissions,
         name,
       } = serverResponse.data;
+
+      // 계정 연동 처리
+      if (serverResponse.data.accountExists) {
+        const existingType =
+          serverResponse.data.existingLoginType === "normal"
+            ? "일반"
+            : serverResponse.data.existingLoginType === "google"
+            ? "구글"
+            : "카카오";
+
+        const confirmMsg = `이미 ${existingType} 계정으로 가입된 이메일입니다.\n계정을 연동하시겠습니까?`;
+
+        if (confirm(confirmMsg)) {
+          // 연동을 원하는 경우 - 비밀번호 입력 또는 즉시 연동
+          if (existingType === "일반") {
+            // 일반 계정인 경우 비밀번호 확인 후 연동
+            const password = prompt("기존 계정 비밀번호를 입력하세요:");
+            if (password) {
+              try {
+                // 계정 연동 API 호출
+                const linkResponse = await axiosInstance.post(
+                  "/auth/link/account",
+                  {
+                    password,
+                    email: serverResponse.data.email,
+                    socialInfo: serverResponse.data.socialInfo,
+                  },
+                  { headers: { "X-CSRF-Token": csrfToken } }
+                );
+
+                // 연동 성공 시 새로 받은 토큰으로 로그인 상태 갱신
+                if (linkResponse.data.success) {
+                  setAccessToken(linkResponse.data.accessToken);
+
+                  let enumPermission = Permission.USER;
+                  switch (linkResponse.data.permissions) {
+                    case "admin":
+                      enumPermission = Permission.ADMIN;
+                      break;
+                    case "superadmin":
+                      enumPermission = Permission.SUPER_ADMIN;
+                      break;
+                  }
+
+                  const newWannaTriploginState = {
+                    isLoggedIn: true,
+                    userUuid: linkResponse.data.userUuid,
+                    email: serverResponse.data.email,
+                    name: linkResponse.data.name,
+                    loginType: linkResponse.data.loginType,
+                    permission: enumPermission,
+                  };
+
+                  setWannaTripLoginState(newWannaTriploginState);
+                  localStorage.setItem(
+                    "WannaTriploginState",
+                    JSON.stringify(newWannaTriploginState)
+                  );
+
+                  alert(
+                    `계정 연동 성공! ${linkResponse.data.name}님 환영합니다!`
+                  );
+                  navigate("/template");
+                  return; // 추가 로직 실행 방지
+                }
+              } catch (error) {
+                console.error("계정 연동 실패:", error);
+                // 연동 실패 시 카카오 url 초기화
+                setKakaoLoginState("");
+                alert("계정 연동에 실패했습니다. 다시 시도해주세요.");
+                return;
+              }
+            }
+          } else {
+            // 다른 소셜 계정인 경우 바로 연동
+            await axiosInstance.post(
+              "/auth/link/account",
+              {
+                email: serverResponse.data.email,
+                socialInfo: serverResponse.data.socialInfo,
+              },
+              { headers: { "X-CSRF-Token": csrfToken } }
+            );
+          }
+        } else {
+          // 연동을 원하지 않는 경우 - 기존 계정으로 로그인하도록 안내
+          alert(`${existingType} 계정으로 로그인해주세요.`);
+          return;
+        }
+      }
+
       setAccessToken(serverAccessToken);
 
       let enumPermission = Permission.USER;
@@ -237,7 +411,13 @@ const Login = () => {
       console.error("카카오 로그인 실패:", error);
       alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
-  }, [email, kakaoLoginState, navigate, setWannaTripLoginState]);
+  }, [
+    email,
+    kakaoLoginState,
+    navigate,
+    setKakaoLoginState,
+    setWannaTripLoginState,
+  ]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -253,7 +433,6 @@ const Login = () => {
       handleKakaoLogin();
     }
   }, [handleKakaoLogin, kakaoLoginState]);
-
 
   // 로그인 상태 유지/해제
   const handleLoginStateSaveChange = useCallback(() => {
