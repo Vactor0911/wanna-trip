@@ -115,7 +115,7 @@ const Register: React.FC = () => {
   const getFormattedTime = useCallback(() => {
     // 남은 시간이 0 이하일 경우
     if (confirmTimeLeft <= 0) {
-      return "0:00";
+      return "시간초과";
     }
 
     // 이미 인증번호를 확인한 경우
@@ -306,7 +306,16 @@ const Register: React.FC = () => {
         }
       }
     },
-    [email, password, passwordConfirm, isConfirmCodeChecked, name, allRequiredAgreed, isTermAgreed, navigate]
+    [
+      email,
+      password,
+      passwordConfirm,
+      isConfirmCodeChecked,
+      name,
+      allRequiredAgreed,
+      isTermAgreed,
+      navigate,
+    ]
   );
 
   // 인증번호 전송 버튼 클릭
@@ -343,8 +352,9 @@ const Register: React.FC = () => {
           },
         }
       );
-    
+
       setIsConfirmCodeSent(true); // 인증번호 전송 여부를 true로 설정
+      setConfirmTimeLeft(300); // 타이머를 5분(300초)으로 초기화
       alert("인증번호가 이메일로 발송되었습니다.");
     } catch (error) {
       // 요청 실패 시 알림
@@ -468,11 +478,14 @@ const Register: React.FC = () => {
                 {/* 남은 인증 시간 */}
                 <Typography
                   variant="subtitle1"
-                  color="primary"
                   alignSelf="center"
                   sx={{
-                    width: "35px",
-                    color: isConfirmCodeChecked ? "#19df79" : "none",
+                    width: "65px",
+                    color: isConfirmCodeChecked
+                      ? "#19df79" // 인증 완료 시 초록색
+                      : confirmTimeLeft <= 0
+                      ? "error.main" // 시간 초과 시 빨간색
+                      : "primary.main", // 평상시 파란색
                   }}
                 >
                   {getFormattedTime()}
