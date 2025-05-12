@@ -215,7 +215,7 @@ const Register: React.FC = () => {
         alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
         return;
       }
-      
+
       if (!isConfirmCodeChecked) {
         console.error("인증번호를 확인해주세요.");
         alert("인증번호를 확인해주세요.");
@@ -258,11 +258,29 @@ const Register: React.FC = () => {
       } catch (error) {
         // 에러 처리
         if (axios.isAxiosError(error) && error.response) {
-          console.error(
-            "서버가 오류를 반환했습니다:",
-            error.response.data.message
-          );
-          alert(`Error: ${error.response.data.message}`);
+          const errorData = error.response.data;
+          console.error("서버가 오류를 반환했습니다:", errorData.message);
+
+          if (errorData.loginType) {
+            // 특정 로그인 타입이 제공된 경우
+            const loginTypeName =
+              errorData.loginType === "kakao"
+                ? "카카오"
+                : errorData.loginType === "google"
+                ? "구글"
+                : "일반";
+
+            const goToLogin = confirm(
+              `이미 ${loginTypeName} 계정으로 가입된 이메일입니다.\n로그인 페이지로 이동하시겠습니까?`
+            );
+
+            if (goToLogin) {
+              navigate("/login");
+            }
+          } else {
+            // 기존 메시지 표시
+            alert(`Error: ${errorData.message}`);
+          }
         } else {
           console.error(
             "요청을 보내는 중 오류가 발생했습니다:",
@@ -390,10 +408,10 @@ const Register: React.FC = () => {
               {/* 아이디(이메일) 입력란 */}
               <Stack direction="row" gap={1} mt={1}>
                 <Box flex={1}>
-                  <OutlinedTextField 
-                  label="아이디(이메일)" 
-                  value={email}
-                  onChange={handleEmailChange}
+                  <OutlinedTextField
+                    label="아이디(이메일)"
+                    value={email}
+                    onChange={handleEmailChange}
                   />
                 </Box>
 
@@ -417,11 +435,11 @@ const Register: React.FC = () => {
                 display={isConfirmCodeSent ? "flex" : "none"}
               >
                 <Box flex={2}>
-                  <OutlinedTextField 
-                  label="인증번호"
-                  value={confirmCode}
-                  onChange={handleConfirmCodeChange}
-                   />
+                  <OutlinedTextField
+                    label="인증번호"
+                    value={confirmCode}
+                    onChange={handleConfirmCodeChange}
+                  />
                 </Box>
 
                 {/* 남은 인증 시간 */}
@@ -496,10 +514,10 @@ const Register: React.FC = () => {
             />
 
             {/* 별명 입력란 */}
-            <OutlinedTextField 
-            label="닉네임(별명)"
-            value={name}
-            onChange={handleNameChange}
+            <OutlinedTextField
+              label="닉네임(별명)"
+              value={name}
+              onChange={handleNameChange}
             />
           </Stack>
 
