@@ -66,6 +66,18 @@ export const resetStates = async (setLoginState: (state: LoginState) => void) =>
   }
 };
 
+// 카카오 정보만 초기화하는 함수
+export const resetKakaoLoginState = async () => {
+  try {
+    // kakaoLoginState 초기화 (getDefaultStore 사용)
+    const kakaoLoginStateAtom = await getKakaoLoginStateAtom();
+    const store = getDefaultStore();
+    store.set(kakaoLoginStateAtom, "");
+  } catch (err) {
+    console.error("카카오 로그인 상태 초기화 실패", err);
+  }
+};
+
 /**
  * 이메일 형식이 올바른지 확인하는 함수
  * @param email 이메일 주소

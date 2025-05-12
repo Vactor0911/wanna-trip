@@ -2,6 +2,7 @@ import axios from "axios";
 import axiosInstance, { getCsrfToken } from "./axiosInstance";
 import { setAccessToken } from "./accessToken";
 import { LoginState, Permission } from "../state";
+import { resetKakaoLoginState } from ".";
 
 // 계정 타입을 한글로 변환하는 함수
 export const getLoginTypeInKorean = (loginType: string): string => {
@@ -21,6 +22,7 @@ export interface SocialInfo {
   name: string;
 }
 
+
 // 연동 계정 처리 함수
 export const handleAccountLinking = async (params: {
   existingType: string;
@@ -36,6 +38,7 @@ export const handleAccountLinking = async (params: {
   
   if (!confirm(confirmMsg)) {
     alert(`${koreanType} 계정으로 로그인해주세요.`);
+    await resetKakaoLoginState(); // 카카오 로그인 상태 초기화
     return { success: false };
   }
   
@@ -60,10 +63,12 @@ export const handleAccountLinking = async (params: {
         };
       } else {
         alert("계정 연동에 실패했습니다.");
+        await resetKakaoLoginState(); // 카카오 로그인 상태 초기화
         return { success: false };
       }
     } catch (error) {
       console.error("계정 연동 실패:", error);
+      await resetKakaoLoginState(); // 카카오 로그인 상태 초기화
       alert("계정 연동에 실패했습니다. 다시 시도해주세요.");
       return { success: false };
     }
@@ -84,10 +89,12 @@ export const handleAccountLinking = async (params: {
         };
       } else {
         alert("계정 연동에 실패했습니다.");
+        await resetKakaoLoginState(); // 카카오 로그인 상태 초기화
         return { success: false };
       }
     } catch (error) {
       console.error("계정 연동 실패:", error);
+      await resetKakaoLoginState(); // 카카오 로그인 상태 초기화
       alert("계정 연동에 실패했습니다. 다시 시도해주세요.");
       return { success: false };
     }
