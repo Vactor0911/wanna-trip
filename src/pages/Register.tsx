@@ -20,8 +20,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import axios from "axios";
-import { useAtomValue, useSetAtom } from "jotai";
-import { kakaoLoginStateAtom, wannaTripLoginStateAtom } from "../state";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import Tooltip from "../components/Tooltip";
 
@@ -34,7 +34,7 @@ interface TermsOfService {
 
 const termsOfServices: TermsOfService[] = [
   {
-    title: "개인정보 수집 및 이용",
+    title: "개인정보 수집 및 이용약관 동의",
     isOptional: false,
     content: (
       <Typography variant="subtitle1">
@@ -46,7 +46,7 @@ const termsOfServices: TermsOfService[] = [
     ),
   },
   {
-    title: "위치기반서비스 이용약관",
+    title: "위치 정보 이용약관 동의",
     isOptional: true,
     content: (
       <Typography variant="subtitle1">
@@ -84,19 +84,13 @@ const Register: React.FC = () => {
 
   const navigate = useNavigate(); //네이게이트를 사용하기 위해 추가
 
-  // 카카오 로그인 상태 초기화
-  const setKakaoLoginState = useSetAtom(kakaoLoginStateAtom);
-  useEffect(() => {
-    setKakaoLoginState(""); // 카카오 로그인 상태 초기화
-  }, [setKakaoLoginState]);
-
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
   if (wannaTripLoginState.isLoggedIn) {
     navigate("/template");
   }
 
-  // 이메일 입력
+  // 아이디(이메일) 입력
   const handleEmailChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setEmail(e.target.value);
@@ -121,7 +115,7 @@ const Register: React.FC = () => {
   const getFormattedTime = useCallback(() => {
     // 남은 시간이 0 이하일 경우
     if (confirmTimeLeft <= 0) {
-      return "0:00";
+      return "시간초과";
     }
 
     // 이미 인증번호를 확인한 경우
@@ -168,7 +162,7 @@ const Register: React.FC = () => {
     setIsPasswordCheckVisible(!isPasswordConfirmVisible);
   }, [isPasswordConfirmVisible]);
 
-  // 별명 입력
+  // 닉네임(별명) 입력
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setName(e.target.value);
@@ -210,6 +204,10 @@ const Register: React.FC = () => {
     [isTermExpanded]
   );
 
+  const allRequiredAgreed = termsOfServices.every(
+    (term, index) => term.isOptional || isTermAgreed[index]
+  );
+
   // 회원가입 버튼 클릭
   const handleRegisterButtonClick = useCallback(
     async (e: React.FormEvent) => {
@@ -219,6 +217,12 @@ const Register: React.FC = () => {
       if (!email || !password || !passwordConfirm) {
         console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
         alert("이메일 또는 비밀번호가 비어있으면 안됩니다.");
+        return;
+      }
+
+      if (!isConfirmCodeChecked) {
+        console.error("이메일 인증을 완료해주세요.");
+        alert("이메일 인증을 완료해주세요.");
         return;
       }
 
@@ -233,9 +237,20 @@ const Register: React.FC = () => {
         return;
       }
 
+      if (!allRequiredAgreed) {
+        alert("필수 약관에 모두 동의해 주세요.");
+        return;
+      }
+
       try {
         // CSRF 토큰 가져오기
         const csrfToken = await getCsrfToken();
+
+        // 이용약관 동의 여부 확인
+        const termsData = {
+          privacy: isTermAgreed[0], // 첫 번째 항목: 개인정보 수집 및 이용약관 (필수)
+          location: isTermAgreed[1], // 두 번째 항목: 위치 정보 이용약관 (선택)
+        };
 
         // 서버로 회원가입 요청 전송
         await axiosInstance.post(
@@ -244,6 +259,7 @@ const Register: React.FC = () => {
             email: email,
             password: password,
             name: name,
+            terms: termsData,
           },
           {
             headers: {
@@ -258,11 +274,29 @@ const Register: React.FC = () => {
       } catch (error) {
         // 에러 처리
         if (axios.isAxiosError(error) && error.response) {
-          console.error(
-            "서버가 오류를 반환했습니다:",
-            error.response.data.message
-          );
-          alert(`Error: ${error.response.data.message}`);
+          const errorData = error.response.data;
+          console.error("서버가 오류를 반환했습니다:", errorData.message);
+
+          if (errorData.loginType) {
+            // 특정 로그인 타입이 제공된 경우
+            const loginTypeName =
+              errorData.loginType === "kakao"
+                ? "카카오"
+                : errorData.loginType === "google"
+                ? "구글"
+                : "일반";
+
+            const goToLogin = confirm(
+              `이미 ${loginTypeName} 계정으로 가입된 이메일입니다.\n로그인 페이지로 이동하시겠습니까?`
+            );
+
+            if (goToLogin) {
+              navigate("/login");
+            }
+          } else {
+            // 기존 메시지 표시
+            alert(`Error: ${errorData.message}`);
+          }
         } else {
           console.error(
             "요청을 보내는 중 오류가 발생했습니다:",
@@ -272,9 +306,19 @@ const Register: React.FC = () => {
         }
       }
     },
-    [email, password, passwordConfirm, name, navigate]
+    [
+      email,
+      password,
+      passwordConfirm,
+      isConfirmCodeChecked,
+      name,
+      allRequiredAgreed,
+      isTermAgreed,
+      navigate,
+    ]
   );
 
+  // 인증번호 전송 버튼 클릭
   const handleConfirmCodeSendButtonClick = useCallback(async () => {
     // 이미 인증번호를 확인했다면 종료
     if (isConfirmCodeChecked) {
@@ -291,7 +335,6 @@ const Register: React.FC = () => {
     // 인증번호 요청 API 호출
     try {
       setIsConfirmCodeSending(true);
-      return;
 
       // Step 1: CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -310,6 +353,8 @@ const Register: React.FC = () => {
         }
       );
 
+      setIsConfirmCodeSent(true); // 인증번호 전송 여부를 true로 설정
+      setConfirmTimeLeft(300); // 타이머를 5분(300초)으로 초기화
       alert("인증번호가 이메일로 발송되었습니다.");
     } catch (error) {
       // 요청 실패 시 알림
@@ -323,15 +368,18 @@ const Register: React.FC = () => {
         alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
       }
     } finally {
-      //TODO: API 연동 후 setTimeout 제거
-      setTimeout(() => {
-        setIsConfirmCodeSending(false);
-      }, 3000);
+      setIsConfirmCodeSending(false);
     }
   }, [email, isConfirmCodeChecked]);
 
   // 인증번호 확인 버튼 클릭
   const handleConfirmCodeCheckButtonClick = useCallback(async () => {
+    // 이미 확인된 인증번호라면 종료
+    if (isConfirmCodeChecked) {
+      alert("이미 인증번호를 확인했습니다.");
+      return;
+    }
+
     try {
       // Step 1: CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -364,7 +412,7 @@ const Register: React.FC = () => {
         alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
       }
     }
-  }, [confirmCode, email]);
+  }, [confirmCode, email, isConfirmCodeChecked]);
 
   return (
     <Container maxWidth="xs">
@@ -388,12 +436,16 @@ const Register: React.FC = () => {
             {/* 헤더 */}
             <SectionHeader title="아이디/비밀번호" />
 
-            {/* 아이디 */}
+            {/* 아이디(이메일) */}
             <Stack gap={1}>
-              {/* 아이디 입력란 */}
+              {/* 아이디(이메일) 입력란 */}
               <Stack direction="row" gap={1} mt={1}>
                 <Box flex={1}>
-                  <OutlinedTextField label="아이디(이메일)" />
+                  <OutlinedTextField
+                    label="아이디(이메일)"
+                    value={email}
+                    onChange={handleEmailChange}
+                  />
                 </Box>
 
                 {/* 인증 요청 버튼 */}
@@ -416,17 +468,24 @@ const Register: React.FC = () => {
                 display={isConfirmCodeSent ? "flex" : "none"}
               >
                 <Box flex={2}>
-                  <OutlinedTextField label="인증번호" />
+                  <OutlinedTextField
+                    label="인증번호"
+                    value={confirmCode}
+                    onChange={handleConfirmCodeChange}
+                  />
                 </Box>
 
                 {/* 남은 인증 시간 */}
                 <Typography
                   variant="subtitle1"
-                  color="primary"
                   alignSelf="center"
                   sx={{
-                    width: "35px",
-                    color: isConfirmCodeChecked ? "#19df79" : "none",
+                    width: "65px",
+                    color: isConfirmCodeChecked
+                      ? "#19df79" // 인증 완료 시 초록색
+                      : confirmTimeLeft <= 0
+                      ? "error.main" // 시간 초과 시 빨간색
+                      : "primary.main", // 평상시 파란색
                   }}
                 >
                   {getFormattedTime()}
@@ -449,6 +508,8 @@ const Register: React.FC = () => {
             {/* 비밀번호 입력란 */}
             <OutlinedTextField
               label="비밀번호"
+              value={password}
+              onChange={handlePasswordChange}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -469,6 +530,8 @@ const Register: React.FC = () => {
             {/* 비밀번호 재확인 입력란 */}
             <OutlinedTextField
               label="비밀번호 재확인"
+              value={passwordConfirm}
+              onChange={handlePasswordConfirmChange}
               type={isPasswordConfirmVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -487,7 +550,11 @@ const Register: React.FC = () => {
             />
 
             {/* 별명 입력란 */}
-            <OutlinedTextField label="닉네임(별명)" />
+            <OutlinedTextField
+              label="닉네임(별명)"
+              value={name}
+              onChange={handleNameChange}
+            />
           </Stack>
 
           {/* 이용약관 컨테이너 */}
@@ -610,7 +677,11 @@ const Register: React.FC = () => {
 
           <Stack gap={0.5}>
             {/* 회원가입 버튼 */}
-            <Button variant="contained">
+            <Button
+              variant="contained"
+              onClick={handleRegisterButtonClick}
+              disabled={!allRequiredAgreed} // 필수 약관에 동의하지 않으면 비활성화
+            >
               <Typography variant="h5">회원가입</Typography>
             </Button>
 

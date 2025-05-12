@@ -100,7 +100,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
       } catch (error) {
         console.error("자동 로그인 유지 실패, 로그아웃 처리:", error);
 
-        resetStates(setWannaTripLoginState); // 상태 초기화
+        await resetStates(setWannaTripLoginState); // 상태 초기화
         alert("세션이 만료되었습니다. 다시 로그인해주세요.");
         navigate("/login"); // 로그인 페이지로 이동
       } finally {

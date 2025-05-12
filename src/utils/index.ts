@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import minMax from "dayjs/plugin/minMax";
-import { useSetAtom } from "jotai";
-import { LoginState, wannaTripLoginStateAtom } from "../state";
+import { LoginState } from "../state";
 import { setAccessToken } from "./accessToken";
+import { getDefaultStore } from 'jotai/vanilla'; // vanilla 버전은 React에 의존하지 않음
 
 dayjs.extend(minMax);
 
@@ -37,29 +37,45 @@ export const isPasswordCombinationValid = (password: string) =>
   /[0-9]/.test(password) &&
   /[!@#$%^&*?]/.test(password);
 
-/**
- * 모든 상태를 초기화하는 함수
- * @returns
- */
-export const useResetStates = () => {
-  const setLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태 설정
 
-  setLoginState({} as LoginState); // 로그인 상태 초기화
-  setAccessToken(""); // 토큰 초기화
-  sessionStorage.removeItem("WannaTriploginState"); // 세션 스토리지 제거
-  localStorage.removeItem("WannaTriploginState"); // 로컬 스토리지 제거
-
-  return {
-    setLoginState,
-  };
+// 로컬 import를 위한 함수
+const getKakaoLoginStateAtom = async () => {
+  const { kakaoLoginStateAtom } = await import("../state");
+  return kakaoLoginStateAtom;
 };
 
-// 일반 함수 버전의 resetStates 추가 (useCallback 내에서 사용 가능)
-export const resetStates = (setLoginState: (state: LoginState) => void) => {
+/**
+ * 로그인 상태를 설정하는 비동기 함수 
+ * 컴포넌트 외부에서도 아톰 상태 변경 가능
+ * @param setLoginState 
+ * @returns 로그인 상태 초기화
+ */
+export const resetStates = async (setLoginState: (state: LoginState) => void) => {
   setLoginState({} as LoginState); // 로그인 상태 초기화
   setAccessToken(""); // 토큰 초기화
   sessionStorage.removeItem("WannaTriploginState"); // 세션 스토리지 제거
   localStorage.removeItem("WannaTriploginState"); // 로컬 스토리지 제거
+
+  try {
+    // kakaoLoginState 초기화 (getDefaultStore 사용)
+    const kakaoLoginStateAtom = await getKakaoLoginStateAtom();
+    const store = getDefaultStore();
+    store.set(kakaoLoginStateAtom, "");
+  } catch (err) {
+    console.error("카카오 로그인 상태 초기화 실패", err);
+  }
+};
+
+// 카카오 정보만 초기화하는 함수
+export const resetKakaoLoginState = async () => {
+  try {
+    // kakaoLoginState 초기화 (getDefaultStore 사용)
+    const kakaoLoginStateAtom = await getKakaoLoginStateAtom();
+    const store = getDefaultStore();
+    store.set(kakaoLoginStateAtom, "");
+  } catch (err) {
+    console.error("카카오 로그인 상태 초기화 실패", err);
+  }
 };
 
 /**
