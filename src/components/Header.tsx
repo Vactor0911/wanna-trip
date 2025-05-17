@@ -40,8 +40,8 @@ const Links = [
 
 const MenuLinks = [
   { text: "내 정보", to: "/" },
+  { text: "내 템플릿", to: "/userTemplates" },
   { text: "좋아요 한 게시글", to: "/" },
-  { text: "내가 쓴 댓글", to: "/" },
   { text: "로그아웃", to: "/" },
 ];
 
@@ -124,6 +124,7 @@ const Header = () => {
     (to: string) => {
       navigate(to);
       setIsNavMenuOpen(false);
+      setIsProfileMenuOpen(false);
     },
     [navigate]
   );
@@ -166,7 +167,6 @@ const Header = () => {
         //TODO: 이거 리셋 함수 해줘요
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
-        
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
 
@@ -422,8 +422,10 @@ const Header = () => {
                     color: "white",
                   },
                 }}
-                onClick={
-                  link.text === "로그아웃" ? handleLogoutClick : undefined
+                onClick={() =>
+                  link.text === "로그아웃"
+                    ? handleLogoutClick()
+                    : handleNavMenuLinkButtonClick(link.to)
                 }
               >
                 <Typography
