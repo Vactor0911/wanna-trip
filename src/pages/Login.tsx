@@ -43,7 +43,8 @@ const Login = () => {
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
   if (wannaTripLoginState.isLoggedIn) {
-    navigate("/template");
+    // navigate("/template");
+    navigate("/community");
   }
 
   // 로그인 기능 추가
@@ -138,7 +139,8 @@ const Login = () => {
             );
 
             alert(`계정 연동 성공! ${linkingResult.data.name}님 환영합니다!`);
-            navigate("/template");
+            // navigate("/template");
+            navigate("/community");
           }
           return;
         }
@@ -152,7 +154,8 @@ const Login = () => {
         );
 
         alert(`${loginState.userName}님 환영합니다!`);
-        navigate("/template");
+        // navigate("/template");
+        navigate("/community");
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -211,7 +214,8 @@ const Login = () => {
           );
 
           alert(`계정 연동 성공! ${linkingResult.data.name}님 환영합니다!`);
-          navigate("/template");
+          // navigate("/template");
+          navigate("/community");
         }
         return;
       }
@@ -226,7 +230,8 @@ const Login = () => {
 
       window.history.replaceState(null, "", "/login");
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      // navigate("/template");
+      navigate("/community");
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       setKakaoLoginState(""); // 오류 시 상태 초기화
@@ -276,7 +281,8 @@ const Login = () => {
       );
 
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      // navigate("/template");
+      navigate("/community");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("서버 오류:", error.response.data.message);
