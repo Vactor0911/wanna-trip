@@ -3,7 +3,7 @@ import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
 import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
-import { Login, Main, Register, Template } from "./pages";
+import { Community, Login, Main, Register, Template } from "./pages";
 import Header from "./components/Header";
 
 function App() {
@@ -18,6 +18,7 @@ function App() {
               <Route path="/" element={<Main />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/community" element={<Community/>} />
             </Routes>
           </Container>
           <Routes>
