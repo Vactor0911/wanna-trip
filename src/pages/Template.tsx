@@ -22,7 +22,7 @@ import { templateAtom, templateModeAtom } from "../state";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
 import { useNavigate, useParams } from "react-router";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -66,42 +66,49 @@ const Template = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchTemplateData = useCallback(async () => {
+    if (!uuid) return; // uuid가 없으면 종료
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+      console.log("CSRF 토큰:", csrfToken);
+
+      // 템플릿 데이터 가져오기
+      const response = await axiosInstance.get(`/template/uuid/${uuid}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      console.log("템플릿 데이터:", response.data);
+
+      if (response.data.success) {
+        const backendTemplate = response.data.template as BackendTemplate;
+
+        // 보드만 있는 간단한 형태로 변환
+        setTemplate({
+          uuid: backendTemplate.template_uuid,
+          name: backendTemplate.name,
+          boards: backendTemplate.boards.map(() => ({
+            cards: [], // 현재는 카드 없이 빈 보드로 설정
+          })),
+        });
+      } else {
+        setError("템플릿 데이터를 불러올 수 없습니다.");
+      }
+    } catch (err) {
+      console.error("템플릿 데이터 로딩 오류:", err);
+      setError("템플릿을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setTemplate, uuid]);
+
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
-    if (!uuid) return; // uuid가 없으면 기본 템플릿 사용
-
-    const fetchTemplateData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const response = await axiosInstance.get(`/template/uuid/${uuid}`);
-        console.log("템플릿 데이터:", response.data);
-
-        if (response.data.success) {
-          const backendTemplate = response.data.template as BackendTemplate;
-
-          // 보드만 있는 간단한 형태로 변환
-          setTemplate({
-            uuid: backendTemplate.template_uuid,
-            name: backendTemplate.name,
-            boards: backendTemplate.boards.map(() => ({
-              cards: [], // 현재는 카드 없이 빈 보드로 설정
-            })),
-          });
-        } else {
-          setError("템플릿 데이터를 불러올 수 없습니다.");
-        }
-      } catch (err) {
-        console.error("템플릿 데이터 로딩 오류:", err);
-        setError("템플릿을 불러오는 중 오류가 발생했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTemplateData();
-  }, [uuid, setTemplate]);
+  }, [fetchTemplateData]);
 
   // 모드 변경
   const handleModeChange = useCallback(() => {

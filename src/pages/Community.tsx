@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
-import axiosInstance from "../utils/axiosInstance";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
 const popularTemplates = [
   {
@@ -79,28 +79,35 @@ const Community = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchTemplates = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 템플릿 목록 가져오기
+      const response = await axiosInstance.get("/template", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        setMyTemplates(response.data.templates);
+      } else {
+        setError("템플릿 목록을 불러오는 데 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("템플릿 목록 불러오기 오류:", err);
+      setError("템플릿 목록을 불러오는 데 문제가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // 컴포넌트 마운트 시 사용자의 템플릿 목록 가져오기
   useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axiosInstance.get("/template");
-
-        if (response.data.success) {
-          setMyTemplates(response.data.templates);
-        } else {
-          setError("템플릿 목록을 불러오는 데 실패했습니다.");
-        }
-      } catch (err) {
-        console.error("템플릿 목록 불러오기 오류:", err);
-        setError("템플릿 목록을 불러오는 데 문제가 발생했습니다.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchTemplates();
-  }, []);
+  }, [fetchTemplates]);
 
   // 템플릿 클릭 시 해당 UUID로 이동
   const handleTemplateClick = useCallback(
