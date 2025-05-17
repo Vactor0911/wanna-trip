@@ -5,62 +5,6 @@ import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
-const popularTemplates = [
-  {
-    id: 1,
-    image:
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80",
-    label: "국내여행 혜택",
-    title: "최대 19만원 혜택 받고 봄 여행 떠날 준비 완료",
-    subtitle: "호텔&펜션 최대 81% 특가까지",
-    bgColor: "#FFB6C1",
-  },
-  {
-    id: 2,
-    image:
-      "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80",
-    label: "해외여행 혜택",
-    title: "황금연휴 해외여행 최대 30만원 할인 받기",
-    subtitle: "매일 받는 항공 & 숙소 더블 혜택",
-    bgColor: "#B3C6FF",
-  },
-  {
-    id: 3,
-    image:
-      "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=600&q=80",
-    label: "국내여행 혜택",
-    title: "최대 19만원 혜택 받고 봄 여행 떠날 준비 완료",
-    subtitle: "호텔&펜션 최대 81% 특가까지",
-    bgColor: "#FFB6C1",
-  },
-  {
-    id: 4,
-    image:
-      "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=600&q=80",
-    label: "해외여행 혜택",
-    title: "황금연휴 해외여행 최대 30만원 할인 받기",
-    subtitle: "매일 받는 항공 & 숙소 더블 혜택",
-    bgColor: "#B3C6FF",
-  },
-  {
-    id: 5,
-    image:
-      "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=600&q=80",
-    label: "국내여행 혜택",
-    title: "최대 19만원 혜택 받고 봄 여행 떠날 준비 완료",
-    subtitle: "호텔&펜션 최대 81% 특가까지",
-    bgColor: "#FFB6C1",
-  },
-  {
-    id: 6,
-    image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80",
-    label: "해외여행 혜택",
-    title: "황금연휴 해외여행 최대 30만원 할인 받기",
-    subtitle: "매일 받는 항공 & 숙소 더블 혜택",
-    bgColor: "#B3C6FF",
-  },
-];
 
 // 템플릿 타입 정의
 interface Template {
@@ -73,7 +17,7 @@ interface Template {
 
 const CARD_GAP = 24; // 카드 간격(px)
 
-const Community = () => {
+const UserTemplates = () => {
   const navigate = useNavigate();
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -185,4 +129,4 @@ const Community = () => {
   );
 };
 
-export default Community;
+export default UserTemplates;
