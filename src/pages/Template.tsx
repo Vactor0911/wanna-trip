@@ -74,7 +74,6 @@ const Template = () => {
       setError(null);
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
-      console.log("CSRF 토큰:", csrfToken);
 
       // 템플릿 데이터 가져오기
       const response = await axiosInstance.get(`/template/uuid/${uuid}`, {
