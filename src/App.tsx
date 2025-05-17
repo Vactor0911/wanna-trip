@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
 import { Container, CssBaseline } from "@mui/material";
@@ -23,6 +23,7 @@ function App() {
           </Container>
           <Routes>
             <Route path="/template" element={<Template />} />
+            <Route path="/template/:uuid" element={<Template />} />
             {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
           </Routes>
         </TokenRefresher>
