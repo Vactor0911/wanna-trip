@@ -78,6 +78,14 @@ interface JwtPayload {
   // 필요한 다른 필드가 있다면 추가
 }
 
+// 헤더 숨기는 페이지 목록
+const hiddenPages = [
+  "/login",
+  "/register",
+  "/find-password",
+  "/change-password",
+];
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
@@ -181,12 +189,7 @@ const Header = () => {
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
-  if (
-    location.pathname === "/login" ||
-    location.pathname === "/register" ||
-    location.pathname === "/passwordsearch" ||
-    location.pathname === "/passwordchange"
-  ) {
+  if (hiddenPages.includes(location.pathname)) {
     return null;
   }
 
