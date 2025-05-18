@@ -167,7 +167,6 @@ const Header = () => {
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
 
-
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
 
         navigate("/"); // 메인 페이지로 이동
@@ -182,7 +181,12 @@ const Header = () => {
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
-  if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/passwordsearch" || location.pathname === "/passwordchange") {
+  if (
+    location.pathname === "/login" ||
+    location.pathname === "/register" ||
+    location.pathname === "/passwordsearch" ||
+    location.pathname === "/passwordchange"
+  ) {
     return null;
   }
 
@@ -360,6 +364,7 @@ const Header = () => {
         onClose={handleProfileMenuClose}
       >
         {isLoggedIn ? (
+          // 로그인 상태일 때
           <Stack
             width="250px"
             p={1}
@@ -439,16 +444,19 @@ const Header = () => {
             </Stack>
           </Stack>
         ) : (
-          <Stack
-            width="250px"
-            px={2}
-            py={0.5}
-            pb={1}
-            gap={1}
-          >
-            <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ fontWeight: 600, fontSize: 11.5 }}>
-              계획을 여행갈래로 더 쉽고 편리하게 이용하세요
+          // 로그인 상태가 아닐 때
+          <Stack p="8px 16px" gap={1}>
+            {/* 문구 */}
+            <Typography
+              variant="body2"
+              textAlign="center"
+              color="text.secondary"
+              sx={{ fontWeight: 700, fontSize: "12px" }}
+            >
+              여행갈래로 계획을 더 쉽고 편리하게
             </Typography>
+
+            {/* 로그인 버튼 */}
             <Button
               variant="contained"
               color="primary"
@@ -462,9 +470,7 @@ const Header = () => {
                 textTransform: "none",
               }}
             >
-              <Typography variant="h6">
-                Wanna Trip 로그인
-              </Typography>
+              <Typography variant="h6">Wanna Trip 로그인</Typography>
             </Button>
           </Stack>
         )}
