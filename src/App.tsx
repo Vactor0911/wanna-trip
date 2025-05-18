@@ -3,7 +3,7 @@ import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
 import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
-import { Community, Login, Main, Register, PasswordSearch, Template } from "./pages";
+import { Community, Login, Main, Register, PasswordSearch, PasswordChange, Template } from "./pages";
 import Header from "./components/Header";
 
 function App() {
@@ -19,6 +19,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/passwordsearch" element={<PasswordSearch />} />
+              <Route path="/passwordchange" element={<PasswordChange />} />
               <Route path="/community" element={<Community />} />
             </Routes>
           </Container>
