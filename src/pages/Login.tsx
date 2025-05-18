@@ -80,7 +80,7 @@ const Login = () => {
   }, []);
 
   // 비밀번호 입력값 변경
-  const handlePasswordChange = useCallback(
+  const handleChangePassword = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setPassword(event.target.value);
     },
@@ -318,7 +318,7 @@ const Login = () => {
             <OutlinedTextField
               label="비밀번호"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={handleChangePassword}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -371,7 +371,7 @@ const Login = () => {
                 /> 
                 */}
 
-                <PlainLink to="/passwordsearch">
+                <PlainLink to="/find-password">
                   <Typography color="divider">비밀번호 찾기</Typography>
                 </PlainLink>
               </Stack>

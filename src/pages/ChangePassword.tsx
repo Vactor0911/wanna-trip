@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import {
     Box,
-    Button,
     Container,
     IconButton,
     InputAdornment,
@@ -20,7 +19,7 @@ import axios from "axios";
 
 
 
-const PasswordChange = () => {
+const ChangePassword = () => {
     const [email, setEmail] = useState(""); // 사용자 이메일
     const [password, setPassword] = useState(""); // 사용자 비밀번호
     const [passwordConfirm, setPasswordConfirm] = useState(""); // 사용자 비밀번호 재확인
@@ -28,7 +27,7 @@ const PasswordChange = () => {
     const [isPasswordConfirmVisible, setIsPasswordCheckVisible] = useState(false); // 비밀번호 확인 보임/숨김
 
     // 비밀번호 입력
-    const handlePasswordChange = useCallback(
+    const handleChangePassword = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             setPassword(e.target.value);
         },
@@ -89,7 +88,7 @@ const PasswordChange = () => {
                         <OutlinedTextField
                             label="비밀번호"
                             value={password}
-                            onChange={handlePasswordChange}
+                            onChange={handleChangePassword}
                             type={isPasswordVisible ? "text" : "password"}
                             endAdornment={
                                 <InputAdornment position="end">
@@ -135,4 +134,4 @@ const PasswordChange = () => {
     );
 };
 
-export default PasswordChange;
+export default ChangePassword;
