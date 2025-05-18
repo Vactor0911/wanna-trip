@@ -182,7 +182,7 @@ const Header = () => {
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/passwordsearch") {
     return null;
   }
 
