@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
-import { Container, CssBaseline } from "@mui/material";
+import { CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
   Community,
@@ -31,10 +31,6 @@ function App() {
               <Route path="/community" element={<Community />} />
             </Routes>
           </Container>
-          <Routes>
-            <Route path="/template" element={<Template />} />
-            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
-          </Routes>
         </TokenRefresher>
       </BrowserRouter>
     </ThemeProvider>
