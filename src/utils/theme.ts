@@ -26,6 +26,9 @@ export const theme = responsiveFontSizes(
         main: "#404040",
       },
       divider: "#797979",
+      success: {
+        main: "#19df79",
+      },
     },
     typography: {
       fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
