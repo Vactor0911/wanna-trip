@@ -423,9 +423,14 @@ const Header = () => {
                       color: "white",
                     },
                   }}
-                  onClick={
-                    link.text === "로그아웃" ? handleLogoutClick : undefined
-                  }
+                  onClick={() => {
+                    if (link.text === "로그아웃") {
+                      handleLogoutClick();
+                    } else {
+                      navigate(link.to); // 해당 경로로 이동
+                      setIsProfileMenuOpen(false); // 메뉴 닫기
+                    }
+                  }}
                 >
                   <Typography
                     variant="subtitle1"
