@@ -78,6 +78,14 @@ interface JwtPayload {
   // 필요한 다른 필드가 있다면 추가
 }
 
+// 헤더 숨기는 페이지 목록
+const hiddenPages = [
+  "/login",
+  "/register",
+  "/find-password",
+  "/change-password",
+];
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
@@ -182,7 +190,7 @@ const Header = () => {
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (hiddenPages.includes(location.pathname)) {
     return null;
   }
 
@@ -360,6 +368,8 @@ const Header = () => {
         onClose={handleProfileMenuClose}
       >
         {isLoggedIn ? (
+
+          // 로그인 상태일 때
           <Stack
             width="250px"
             p={1}
@@ -423,6 +433,7 @@ const Header = () => {
                       color: "white",
                     },
                   }}
+                  
                   onClick={() => {
                     if (link.text === "로그아웃") {
                       handleLogoutClick();
@@ -444,15 +455,20 @@ const Header = () => {
             </Stack>
           </Stack>
         ) : (
-          <Stack width="250px" px={2} py={0.5} pb={1} gap={1}>
+
+          // 로그인 상태가 아닐 때
+          <Stack p="8px 16px" gap={1}>
+            {/* 문구 */}
             <Typography
               variant="body2"
               textAlign="center"
               color="text.secondary"
-              sx={{ fontWeight: 600, fontSize: 11.5 }}
+              sx={{ fontWeight: 700, fontSize: "12px" }}
             >
-              계획을 여행갈래로 더 쉽고 편리하게 이용하세요
+              여행갈래로 계획을 더 쉽고 편리하게
             </Typography>
+
+            {/* 로그인 버튼 */}
             <Button
               variant="contained"
               color="primary"

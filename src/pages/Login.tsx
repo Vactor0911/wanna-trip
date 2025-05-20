@@ -81,7 +81,7 @@ const Login = () => {
   }, []);
 
   // 비밀번호 입력값 변경
-  const handlePasswordChange = useCallback(
+  const handleChangePassword = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setPassword(event.target.value);
     },
@@ -299,7 +299,7 @@ const Login = () => {
   return (
     <Container maxWidth="xs">
       <Stack minHeight="100vh" justifyContent="center">
-        <Stack gap={8}>
+        <Stack gap={6}>
           {/* 로고 링크 버튼 */}
           <PlainLink to="/">
             <Typography variant="h3" color="primary" textAlign="center">
@@ -324,7 +324,7 @@ const Login = () => {
             <OutlinedTextField
               label="비밀번호"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={handleChangePassword}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -360,10 +360,9 @@ const Login = () => {
             <Button variant="contained" onClick={handleLoginButtonClick}>
               <Typography variant="h5">로그인</Typography>
             </Button>
-
             <Stack direction="row">
               <Stack direction="row" gap={1} alignItems="center">
-                {/* 아이디 찾기 링크 */}
+                {/*
                 <PlainLink to="/">
                   <Typography color="divider">아이디 찾기</Typography>
                 </PlainLink>
@@ -375,15 +374,14 @@ const Login = () => {
                   sx={{
                     background: theme.palette.divider,
                   }}
-                />
+                /> 
+                */}
 
-                {/* 비밀번호 찾기 링크 */}
-                <PlainLink to="/">
+                <PlainLink to="/find-password">
                   <Typography color="divider">비밀번호 찾기</Typography>
                 </PlainLink>
               </Stack>
 
-              {/* 회원가입 링크 */}
               <Box flex={1} display="flex" justifyContent="flex-end">
                 <PlainLink to="/register">
                   <Typography color="divider">회원가입</Typography>
@@ -443,8 +441,8 @@ const Login = () => {
             </Stack>
           </Stack>
         </Stack>
-      </Stack>
-    </Container>
+      </Stack >
+    </Container >
   );
 };
 
