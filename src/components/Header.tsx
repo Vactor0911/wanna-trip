@@ -78,6 +78,14 @@ interface JwtPayload {
   // 필요한 다른 필드가 있다면 추가
 }
 
+// 헤더 숨기는 페이지 목록
+const hiddenPages = [
+  "/login",
+  "/register",
+  "/find-password",
+  "/change-password",
+];
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
@@ -166,7 +174,6 @@ const Header = () => {
         //TODO: 이거 리셋 함수 해줘요
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
-        
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
 
@@ -182,7 +189,7 @@ const Header = () => {
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
-  if (location.pathname === "/login" || location.pathname === "/register") {
+  if (hiddenPages.includes(location.pathname)) {
     return null;
   }
 
@@ -359,84 +366,117 @@ const Header = () => {
         open={isProfileMenuOpen}
         onClose={handleProfileMenuClose}
       >
-        <Stack
-          width="250px"
-          p={1}
-          gap={1.5}
-          sx={{
-            paddingX: 2,
-          }}
-        >
+        {isLoggedIn ? (
+          // 로그인 상태일 때
           <Stack
-            direction="row"
-            alignItems="center"
-            gap={1}
-            color={theme.palette.black.main}
+            width="250px"
+            p={1}
+            gap={1.5}
+            sx={{
+              paddingX: 2,
+            }}
           >
-            {/* 프로필 이미지 */}
-            <Avatar
-              sx={{
-                width: "36px",
-                height: "36px",
-                bgcolor: theme.palette.primary.main,
-              }}
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap={1}
+              color={theme.palette.black.main}
             >
-              <FaceRoundedIcon
+              {/* 프로필 이미지 */}
+              <Avatar
                 sx={{
-                  width: "90%",
-                  height: "90%",
-                  color: grey[100],
+                  width: "36px",
+                  height: "36px",
+                  bgcolor: theme.palette.primary.main,
                 }}
-              />
-            </Avatar>
+              >
+                <FaceRoundedIcon
+                  sx={{
+                    width: "90%",
+                    height: "90%",
+                    color: grey[100],
+                  }}
+                />
+              </Avatar>
 
-            {/* 프로필 이름 */}
-            <Typography variant="h6">{userName}</Typography>
+              {/* 프로필 이름 */}
+              <Typography variant="h6">{userName}</Typography>
 
-            {/* 닫기 버튼 */}
-            <Stack flex={1} alignItems="flex-end">
-              <IconButton color="inherit" onClick={handleProfileMenuClose}>
-                <CloseRoundedIcon />
-              </IconButton>
+              {/* 닫기 버튼 */}
+              <Stack flex={1} alignItems="flex-end">
+                <IconButton color="inherit" onClick={handleProfileMenuClose}>
+                  <CloseRoundedIcon />
+                </IconButton>
+              </Stack>
+            </Stack>
+
+            <Divider />
+
+            {/* 링크 버튼 */}
+            <Stack gap={0.5}>
+              {MenuLinks.map((link, index) => (
+                <Button
+                  key={`menu-link-${index}`}
+                  color="info"
+                  sx={{
+                    justifyContent: "flex-start",
+                    borderRadius: "50px",
+                    pl: 2,
+                    "&:hover": {
+                      "--variant-containedBg": "white",
+                      "--variant-textBg": theme.palette.primary.main,
+                      "--variant-outlinedBg": theme.palette.primary.main,
+                    },
+                    "&:hover > .MuiTypography-root": {
+                      color: "white",
+                    },
+                  }}
+                  onClick={
+                    link.text === "로그아웃" ? handleLogoutClick : undefined
+                  }
+                >
+                  <Typography
+                    variant="subtitle1"
+                    color={theme.palette.black.main}
+                    fontWeight={500}
+                  >
+                    {link.text}
+                  </Typography>
+                </Button>
+              ))}
             </Stack>
           </Stack>
+        ) : (
+          // 로그인 상태가 아닐 때
+          <Stack p="8px 16px" gap={1}>
+            {/* 문구 */}
+            <Typography
+              variant="body2"
+              textAlign="center"
+              color="text.secondary"
+              sx={{ fontWeight: 700, fontSize: "12px" }}
+            >
+              여행갈래로 계획을 더 쉽고 편리하게
+            </Typography>
 
-          <Divider />
-
-          {/* 링크 버튼 */}
-          <Stack gap={0.5}>
-            {MenuLinks.map((link, index) => (
-              <Button
-                key={`menu-link-${index}`}
-                color="info"
-                sx={{
-                  justifyContent: "flex-start",
-                  borderRadius: "50px",
-                  pl: 2,
-                  "&:hover": {
-                    "--variant-containedBg": "white",
-                    "--variant-textBg": theme.palette.primary.main,
-                    "--variant-outlinedBg": theme.palette.primary.main,
-                  },
-                  "&:hover > .MuiTypography-root": {
-                    color: "white",
-                  },
-                }}
-                onClick={
-                  link.text === "로그아웃" ? handleLogoutClick : undefined
-                }
-              >
-                <Typography
-                  variant="subtitle1"
-                  color={theme.palette.black.main}
-                  fontWeight={500}
-                >
-                  {link.text}
-                </Typography>
-              </Button>
-            ))}
+            {/* 로그인 버튼 */}
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                handleProfileMenuClose();
+                navigate("/login");
+              }}
+              sx={{
+                height: "60px",
+                borderRadius: "6px",
+                textTransform: "none",
+              }}
+            >
+              <Typography variant="h6">Wanna Trip 로그인</Typography>
+            </Button>
           </Stack>
-        </Stack>
+        )}
       </Menu>
     </>
   );

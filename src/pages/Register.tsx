@@ -137,7 +137,7 @@ const Register: React.FC = () => {
   );
 
   // 비밀번호 입력
-  const handlePasswordChange = useCallback(
+  const handleChangePassword = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setPassword(e.target.value);
     },
@@ -509,7 +509,7 @@ const Register: React.FC = () => {
             <OutlinedTextField
               label="비밀번호"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={handleChangePassword}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
