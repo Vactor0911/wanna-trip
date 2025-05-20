@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   IconButton,
   Paper,
@@ -13,13 +14,15 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
 import { templateAtom, templateModeAtom } from "../state";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
+import { useNavigate, useParams } from "react-router";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -27,9 +30,84 @@ const modes = [
   { name: "열람 모드", icon: <ImportContactsRoundedIcon /> },
 ];
 
+// 백엔드 템플릿 인터페이스
+interface BackendTemplate {
+  template_id: number;
+  template_uuid: string;
+  name: string;
+  boards: BackendBoard[];
+}
+
+// 백엔드 보드 인터페이스
+interface BackendBoard {
+  board_id: number;
+  board_uuid: string;
+  day_number: number;
+  title: string;
+  cards: BackendCard[];
+}
+
+// 백엔드 카드 인터페이스
+interface BackendCard {
+  card_id: number;
+  card_uuid: string;
+  title: string;
+  content: string;
+  start_time: string;
+  end_time: string;
+  order_index: number;
+}
+
 const Template = () => {
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
+  const navigate = useNavigate();
+  const { uuid } = useParams(); // URL에서 uuid 파라미터 가져오기
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchTemplateData = useCallback(async () => {
+    if (!uuid) return; // uuid가 없으면 종료
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 템플릿 데이터 가져오기
+      const response = await axiosInstance.get(`/template/uuid/${uuid}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      console.log("템플릿 데이터:", response.data);
+
+      if (response.data.success) {
+        const backendTemplate = response.data.template as BackendTemplate;
+
+        // 보드만 있는 간단한 형태로 변환
+        setTemplate({
+          uuid: backendTemplate.template_uuid,
+          name: backendTemplate.name,
+          boards: backendTemplate.boards.map(() => ({
+            cards: [], // 현재는 카드 없이 빈 보드로 설정
+          })),
+        });
+      } else {
+        setError("템플릿 데이터를 불러올 수 없습니다.");
+      }
+    } catch (err) {
+      console.error("템플릿 데이터 로딩 오류:", err);
+      setError("템플릿을 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setTemplate, uuid]);
+
+  // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
+  useEffect(() => {
+    fetchTemplateData();
+  }, [fetchTemplateData]);
 
   // 모드 변경
   const handleModeChange = useCallback(() => {
@@ -56,6 +134,39 @@ const Template = () => {
     setTemplate(newTemplate);
   }, [setTemplate, template]);
 
+  // 로딩 상태 표시
+  if (isLoading) {
+    return (
+      <Stack
+        height="calc(100vh - 82px)"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <CircularProgress />
+      </Stack>
+    );
+  }
+
+  // 에러 상태 표시
+  if (error) {
+    return (
+      <Stack
+        height="calc(100vh - 82px)"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography color="error">{error}</Typography>
+        <Button
+          variant="contained"
+          onClick={() => navigate("/community")}
+          sx={{ mt: 2 }}
+        >
+          뒤로 가기
+        </Button>
+      </Stack>
+    );
+  }
+
   return (
     <Stack
       height="calc(100vh - 82px)"
@@ -81,7 +192,7 @@ const Template = () => {
           {/* 좌측 컨테이너 */}
           <Stack direction="row" alignItems="inherit" gap={1}>
             {/* 템플릿 제목 */}
-            <Typography variant="h4">MyBoard</Typography>
+            <Typography variant="h4">{template.name}</Typography>
 
             {/* 정렬하기 버튼 */}
             <Tooltip title="정렬하기">
