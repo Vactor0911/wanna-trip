@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
-import { CssBaseline } from "@mui/material";
+import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
   UserTemplates,
@@ -29,7 +29,6 @@ function App() {
               <Route path="/userTemplates" element={<UserTemplates/>} />
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
-              <Route path="/community" element={<Community />} />
             </Routes>
           </Container>
           <Routes>
