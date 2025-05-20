@@ -1,9 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
 import { Container, CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
-import { Login, Main, Register, Template } from "./pages";
+import {
+  Community,
+  Login,
+  Main,
+  Register,
+  FindPassword,
+  ChangePassword,
+  Template,
+} from "./pages";
 import Header from "./components/Header";
 
 function App() {
@@ -18,6 +26,9 @@ function App() {
               <Route path="/" element={<Main />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/find-password" element={<FindPassword />} />
+              <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/community" element={<Community />} />
             </Routes>
           </Container>
           <Routes>
