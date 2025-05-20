@@ -40,8 +40,8 @@ const Links = [
 
 const MenuLinks = [
   { text: "내 정보", to: "/" },
+  { text: "내 템플릿", to: "/userTemplates" },
   { text: "좋아요 한 게시글", to: "/" },
-  { text: "내가 쓴 댓글", to: "/" },
   { text: "로그아웃", to: "/" },
 ];
 
@@ -132,6 +132,7 @@ const Header = () => {
     (to: string) => {
       navigate(to);
       setIsNavMenuOpen(false);
+      setIsProfileMenuOpen(false);
     },
     [navigate]
   );
@@ -367,6 +368,7 @@ const Header = () => {
         onClose={handleProfileMenuClose}
       >
         {isLoggedIn ? (
+
           // 로그인 상태일 때
           <Stack
             width="250px"
@@ -431,9 +433,15 @@ const Header = () => {
                       color: "white",
                     },
                   }}
-                  onClick={
-                    link.text === "로그아웃" ? handleLogoutClick : undefined
-                  }
+                  
+                  onClick={() => {
+                    if (link.text === "로그아웃") {
+                      handleLogoutClick();
+                    } else {
+                      navigate(link.to); // 해당 경로로 이동
+                      setIsProfileMenuOpen(false); // 메뉴 닫기
+                    }
+                  }}
                 >
                   <Typography
                     variant="subtitle1"
@@ -447,6 +455,7 @@ const Header = () => {
             </Stack>
           </Stack>
         ) : (
+
           // 로그인 상태가 아닐 때
           <Stack p="8px 16px" gap={1}>
             {/* 문구 */}

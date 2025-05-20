@@ -4,7 +4,7 @@ import { theme } from "./utils/theme";
 import { CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
-  Community,
+  UserTemplates,
   Login,
   Main,
   Register,
@@ -26,11 +26,17 @@ function App() {
               <Route path="/" element={<Main />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/userTemplates" element={<UserTemplates/>} />
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
             </Routes>
           </Container>
+          <Routes>
+            <Route path="/template" element={<Template />} />
+            <Route path="/template/:uuid" element={<Template />} />
+          </Routes>
+
         </TokenRefresher>
       </BrowserRouter>
     </ThemeProvider>
