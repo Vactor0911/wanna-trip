@@ -1,5 +1,5 @@
 import Slider from "react-slick";
-import { Stack, Typography, Card, CardContent } from "@mui/material";
+import { Stack, Typography, Card, CardContent, Box } from "@mui/material";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
@@ -21,9 +21,7 @@ const Community = () => {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h4" color="primary">
-        실시간 인기글
-      </Typography>
+      <Typography variant="h4">실시간 인기글</Typography>
       <Slider {...sliderSettings}>
         {popularPosts.map((post) => (
           <Card key={post.id} sx={{ mx: 1 }}>
@@ -34,8 +32,18 @@ const Community = () => {
           </Card>
         ))}
       </Slider>
+      <Stack>
+        <Typography variant="h4">여행 카테고리</Typography>
+        <Stack>
+          <Stack sx={{ bgcolor: "#eee" }}>
+            <Box>box</Box>
+          </Stack>
+        </Stack>
+      </Stack>
+      <Stack>
+        <Typography variant="h4">일반 게시판</Typography>
+      </Stack>
     </Stack>
   );
 };
-
 export default Community;
