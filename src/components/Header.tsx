@@ -32,7 +32,7 @@ import { useAtom } from "jotai";
 import { jwtDecode } from "jwt-decode";
 
 const Links = [
-  { text: "템플릿", to: "/template" },
+  { text: "템플릿", to: "/usertemplates" },
   { text: "게시판", to: "/community" },
   { text: "지도", to: "/map" },
   { text: "소식", to: "/news" },
