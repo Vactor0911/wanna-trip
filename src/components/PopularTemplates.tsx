@@ -1,7 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Box, IconButton, Typography, Paper, Avatar } from "@mui/material";
+import { useState, useRef, useEffect } from "react";
+import { Box, IconButton, Typography, Paper, Avatar, BoxProps } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
+import ShareIcon from "@mui/icons-material/Share";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import { useNavigate } from "react-router-dom";
 
 // 인기 템플릿 데이터 타입 정의
@@ -14,22 +18,30 @@ export interface PopularTemplateData {
   likes: number; // 좋아요 수
   shares: number; // 공유 수
   comments: number; // 댓글 수
+  description?: string; // 설명
 }
 
-interface PopularTemplatesProps {
-  type: "template" | "community";
+interface PopularTemplatesProps extends BoxProps {
+  maxCards?: number; // 최대 카드 개수
   data: PopularTemplateData[];
+  onCardClick?: (templateId: string) => void; // 카드 클릭 핸들러
 }
 
 // 가로:세로 비율 (11:6)
-const CARD_ASPECT_RATIO = 11/6;
+const CARD_ASPECT_RATIO = 11 / 6;
 
 /**
  * 인기 템플릿/커뮤니티 배너 컴포넌트
- * @param type - template | community
+ * @param maxCards - 최대 카드 개수 (기본값: 3)
  * @param data - 배너 데이터 배열
+ * @param onCardClick - 카드 클릭 시 실행할 콜백 함수
  */
-const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
+const PopularTemplates = ({
+  maxCards = 3,
+  data,
+  onCardClick,
+  ...boxProps
+}: PopularTemplatesProps) => {
   // 슬라이드 인덱스 관리
   const [index, setIndex] = useState(0);
   // 부모 영역의 width 측정
@@ -37,22 +49,22 @@ const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
   const [containerWidth, setContainerWidth] = useState(0);
   // 페이지 이동을 위한 navigate
   const navigate = useNavigate();
+  const [likedTemplates, setLikedTemplates] = useState<Set<string>>(new Set());
 
-  // 보여줄 카드 개수 계산
-  let visibleCount = 1;
-  if (type === "template") {
-    if (data.length === 2) visibleCount = 2;
-    else if (data.length >= 3) visibleCount = 2;
-  } else if (type === "community") {
-    if (data.length === 2) visibleCount = 2;
-    else if (data.length === 3) visibleCount = 3;
-    else if (data.length >= 4) visibleCount = 3;
-  }
+  // 화면 너비에 따른 보여줄 카드 개수 계산
+  const getVisibleCount = () => {
+    if (!containerWidth) return 1;
+
+    // 화면 너비에 따른 카드 개수 결정
+    if (containerWidth >= 1200) return Math.min(maxCards, data.length);
+    if (containerWidth >= 768) return Math.min(2, data.length);
+    return 1;
+  };
+
+  const visibleCount = getVisibleCount();
 
   // 버튼 노출 조건
-  const showArrows =
-    (type === "template" && data.length >= 3) ||
-    (type === "community" && data.length >= 4);
+  const showArrows = data.length > visibleCount;
 
   // 슬라이드 데이터 계산 (순환)
   const getVisibleData = () => {
@@ -95,11 +107,35 @@ const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
       : 320;
   const cardHeight = cardWidth / CARD_ASPECT_RATIO;
 
+  // 카드 클릭 핸들러
+  const handleCardClick = (templateId: string) => {
+    if (onCardClick) {
+      onCardClick(templateId);
+    } else {
+      navigate(`/template/${templateId}`);
+    }
+  };
+
+  // 좋아요 토글 핸들러
+  const handleLikeClick = (e: React.MouseEvent, templateId: string) => {
+    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
+    setLikedTemplates(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(templateId)) {
+        newSet.delete(templateId);
+      } else {
+        newSet.add(templateId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <Box
       ref={containerRef}
       width="100%"
       sx={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}
+      {...boxProps}
     >
       {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
       {showArrows && (
@@ -125,7 +161,7 @@ const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
         {getVisibleData().map((tpl) => (
           <Paper
             key={tpl.id}
-            onClick={() => navigate(`/template/${tpl.id}`)} // 카드 클릭 시 이동
+            onClick={() => handleCardClick(tpl.id)}
             sx={{
               width: cardWidth,
               height: cardHeight,
@@ -139,10 +175,11 @@ const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
                 : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
+              minHeight: "250px", // 최소 높이 설정
               position: "relative",
               boxShadow: 2,
               transition: "width 0.2s, height 0.2s",
-              cursor: "pointer", // 커서 포인터
+              cursor: "pointer",
             }}
           >
             {/* 카드 하단 정보 */}
@@ -152,27 +189,65 @@ const PopularTemplates = ({ type, data }: PopularTemplatesProps) => {
                 bottom: 0,
                 width: "100%",
                 bgcolor: "rgba(255,255,255)",
-                p: 1,
+                p: 2,
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.5,
               }}
             >
-              <Box display="flex" alignItems="center" gap={1}>
-                <Avatar sx={{ width: 24, height: 24, fontSize: 14 }}>
+              {/* 상단: 아바타, 제목/작성자 */}
+              <Box display="flex" alignItems="center" gap={1.5}>
+              <Avatar sx={{ width: 32, height: 32, fontSize: 18 }}>
                   {tpl.author[0]}
                 </Avatar>
-                <Typography variant="body2" fontWeight={500}>
-                  {tpl.label}
-                </Typography>
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    sx={{
+                      color: "#222",
+                      lineHeight: 1.2,
+                      maxWidth: 220,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {tpl.label}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: 13, fontWeight: 400 }}
+                  >
+                    {tpl.author}
+                  </Typography>
+                </Box>
               </Box>
-              <Typography variant="caption" color="text.secondary">
-                {tpl.author}
-              </Typography>
-              <Box display="flex" gap={2} mt={0.5}>
-                <Typography variant="caption">❤️ {tpl.likes}</Typography>
-                <Typography variant="caption">🔄 {tpl.shares}</Typography>
-                <Typography variant="caption">💬 {tpl.comments}</Typography>
+
+              <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 0.5,
+                    cursor: 'pointer'
+                  }}
+                  onClick={(e) => handleLikeClick(e, tpl.id)}
+                >
+                  {likedTemplates.has(tpl.id) ? (
+                    <FavoriteIcon sx={{ fontSize: 16, color: 'error.main' }} />
+                  ) : (
+                    <FavoriteBorderOutlinedIcon sx={{ fontSize: 16, color: 'text.primary' }} />
+                  )} {tpl.likes}
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
+                </Typography>
+                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} /> {tpl.comments}
+                </Typography>
               </Box>
             </Box>
           </Paper>
