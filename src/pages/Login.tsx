@@ -323,9 +323,9 @@ const Login = () => {
                     edge="end"
                   >
                     {isPasswordVisible ? (
-                      <VisibilityOffIcon />
-                    ) : (
                       <VisibilityIcon />
+                    ) : (
+                      <VisibilityOffIcon />
                     )}
                   </IconButton>
                 </InputAdornment>
