@@ -22,7 +22,7 @@ import PopularTemplates, { PopularTemplateData } from "../components/PopularTemp
 const dummyPopularTemplates: PopularTemplateData[] = [
   {
     id: "1",
-    image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
+    bgColor: "#76B6FF",
     label: "파워J를 위한 일본 여행 완벽 플래너",
     author: "고유로",
     likes: 12,
@@ -31,7 +31,7 @@ const dummyPopularTemplates: PopularTemplateData[] = [
   },
   {
     id: "2",
-    bgColor: "#A7C7FF",
+    bgColor: "#FFF0A7",
     label: "감성 가득 오사카 2박 3일",
     author: "여행러버",
     likes: 8,
@@ -40,7 +40,7 @@ const dummyPopularTemplates: PopularTemplateData[] = [
   },
   {
     id: "3",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+    bgColor: "#FFB7E4",
     label: "도쿄 핵심 맛집 투어",
     author: "맛집헌터",
     likes: 20,
@@ -49,7 +49,7 @@ const dummyPopularTemplates: PopularTemplateData[] = [
   },
   {
     id: "4",
-    bgColor: "#FFD59E",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
     label: "벚꽃 시즌 교토 산책",
     author: "벚꽃소녀",
     likes: 15,
@@ -236,7 +236,7 @@ const UserTemplates = () => {
       <Stack gap={4}>
         <Typography variant="h5">인기 템플릿</Typography>
         {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
-        <PopularTemplates type="community" data={dummyPopularTemplates} />
+        <PopularTemplates maxCards={3} data={dummyPopularTemplates} />
       </Stack>
 
       {/* 내 템플릿 */}
