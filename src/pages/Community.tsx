@@ -5,7 +5,7 @@ import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useRef } from "react";
 import { categories } from "../utils/categories";
 
-const Community = () => {
+const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleScrollLeft = () => {
@@ -22,17 +22,24 @@ const Community = () => {
     }
   };
 
+  return { scrollRef, handleScrollLeft, handleScrollRight };
+};
+
+const Community = () => {
+  const { scrollRef, handleScrollLeft, handleScrollRight } =
+    useHorizontalScroll();
+
   return (
     <Box sx={{ width: "100%", minHeight: "100vh", p: 3 }}>
+      {/* 실시간 인기 게시글 섹션 */}
       <Box sx={{ mb: 5 }}>
         <Typography variant="h5" fontWeight={700} mb={2}>
           실시간 인기 게시글
         </Typography>
-
         <Box sx={{ height: 220, bgcolor: "#e0e0e0", borderRadius: 2 }}></Box>
       </Box>
 
-      {/* 여행 카테고리 영역 */}
+      {/* 여행 카테고리 섹션 */}
       <Box sx={{ mb: 5 }}>
         <Typography variant="h5" fontWeight={700} mb={2}>
           여행 카테고리
@@ -46,7 +53,7 @@ const Community = () => {
             position: "relative",
           }}
         >
-          {/* 이전 버튼   */}
+          {/* 왼쪽  버튼 */}
           <IconButton
             onClick={handleScrollLeft}
             sx={{
@@ -63,7 +70,6 @@ const Community = () => {
             <ArrowBackIosNewRoundedIcon />
           </IconButton>
 
-          {/* 카테고리  Stack 컨테이너  */}
           <Stack
             direction="row"
             spacing={3}
@@ -75,7 +81,7 @@ const Community = () => {
               scrollbarWidth: "none",
             }}
           >
-            {/* SquareTemplateCard 컴포넌트로 렌더링 */}
+            {/* 카테고리 박스 렌더링 */}
             {categories.map((category, index) => (
               <Box key={index} sx={{ flexShrink: 0 }}>
                 <SquareTemplateCard title={category.name}>
@@ -95,7 +101,7 @@ const Community = () => {
             ))}
           </Stack>
 
-          {/* 다음 버튼  */}
+          {/* 오른쪽  버튼 */}
           <IconButton
             onClick={handleScrollRight}
             sx={{
@@ -114,9 +120,8 @@ const Community = () => {
         </Box>
       </Box>
 
-      {/* 일반 게시판 영역 */}
+      {/* 일반 게시판 섹션 */}
       <Box>
-        {/* 섹션 제목 */}
         <Typography variant="h5" fontWeight={700} mb={2}>
           일반 게시판
         </Typography>
