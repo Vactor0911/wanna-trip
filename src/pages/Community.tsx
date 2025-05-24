@@ -3,7 +3,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useRef } from "react";
-import { categories } from "../utils/categories";
+import { travelRegions } from "../data/travelRegions";
 
 const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -81,14 +81,14 @@ const Community = () => {
               scrollbarWidth: "none",
             }}
           >
-            {/* 카테고리 박스 렌더링 */}
-            {categories.map((category, index) => (
+            {/* 사진 박스 렌더링 */}
+            {travelRegions.map((region, index) => (
               <Box key={index} sx={{ flexShrink: 0 }}>
-                <SquareTemplateCard title={category.name}>
+                <SquareTemplateCard title={region.name}>
                   <Box
                     component="img"
-                    src={category.image}
-                    alt={category.name}
+                    src={region.image}
+                    alt={region.name}
                     sx={{
                       width: "100%",
                       height: "100%",
