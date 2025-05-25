@@ -1,7 +1,8 @@
-import { Paper, Stack, Typography } from "@mui/material";
+import { Button, Paper, Stack, Typography } from "@mui/material";
 import { cardEditDialogOpenAtom } from "../state";
 import { useCallback } from "react";
 import { useSetAtom } from "jotai";
+import { theme } from "../utils/theme";
 
 const Card = () => {
   const setCardEditDialogOpen = useSetAtom(cardEditDialogOpenAtom);
@@ -14,10 +15,15 @@ const Card = () => {
   return (
     <Paper
       onClick={handleCardEditDialogOpen}
+      elevation={2}
       sx={{
         width: "100%",
         px: 1,
         cursor: "pointer",
+        border: `2px solid transparent`,
+        "&:hover": {
+          border: `2px solid ${theme.palette.primary.main}`,
+        },
       }}
     >
       <Stack gap={1}>
