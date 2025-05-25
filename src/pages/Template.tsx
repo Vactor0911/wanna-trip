@@ -227,7 +227,7 @@ const Template = () => {
               direction="row"
               alignItems="center"
               gap={1}
-              sx={{ minWidth: 0, flex: 1, overflow: "hidden" }}
+              sx={{ minWidth: 0, overflow: "hidden" }}
             >
               {isTemplateTitleEditing ? (
                 <ClickAwayListener onClickAway={handleTemplateTitleClickAway}>
@@ -237,7 +237,6 @@ const Template = () => {
                     autoFocus
                     sx={{
                       minWidth: 0,
-                      flex: 1,
                       "& input": {
                         padding: 1,
                         fontWeight: "bold",
