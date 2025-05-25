@@ -39,3 +39,5 @@ export const templateAtom = atom<TemplateInterface>({
 }); // 보드 상태
 
 export const templateModeAtom = atom(TemplateModes.EDIT); // 템플릿 모드 상태
+
+export const cardEditDialogOpenAtom = atom(false); // 카드 편집 다이얼로그 열림 상태

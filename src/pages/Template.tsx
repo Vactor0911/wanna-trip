@@ -23,6 +23,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import CardEditDialog from "../components/CardEditDialog";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -168,136 +169,144 @@ const Template = () => {
   }
 
   return (
-    <Stack
-      height="calc(100vh - 82px)"
-      sx={{
-        "& .MuiIconButton-root > svg": {
-          color: theme.palette.black.main,
-        },
-      }}
-    >
-      {/* 상단 컨테이너 */}
-      <Container
-        maxWidth="xl"
+    <>
+      {/* 템플릿 페이지 */}
+      <Stack
+        height="calc(100vh - 82px)"
         sx={{
-          marginTop: 5,
+          "& .MuiIconButton-root > svg": {
+            color: theme.palette.black.main,
+          },
         }}
       >
+        {/* 상단 컨테이너 */}
+        <Container
+          maxWidth="xl"
+          sx={{
+            marginTop: 5,
+          }}
+        >
+          <Stack
+            direction="row"
+            height="40px"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            {/* 좌측 컨테이너 */}
+            <Stack direction="row" alignItems="inherit" gap={1}>
+              {/* 템플릿 제목 */}
+              <Typography variant="h4">{template.name}</Typography>
+
+              {/* 정렬하기 버튼 */}
+              <Tooltip title="정렬하기">
+                <IconButton size="small">
+                  <FilterListRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+
+            {/* 우측 컨테이너 */}
+            <Stack direction="row" alignContent="inherit" gap={1}>
+              {/* 모드 선택 버튼 */}
+              <Tooltip
+                title={mode === modes[0].name ? "열람 모드" : "편집 모드"}
+              >
+                <IconButton size="small" onClick={handleModeChange}>
+                  {mode === modes[0].name ? (
+                    <ImportContactsRoundedIcon />
+                  ) : (
+                    <EditRoundedIcon />
+                  )}
+                </IconButton>
+              </Tooltip>
+
+              {/* 공유하기 버튼 */}
+              <Tooltip title="공유하기">
+                <IconButton size="small">
+                  <ShareRoundedIcon />
+                </IconButton>
+              </Tooltip>
+
+              {/* 더보기 버튼 */}
+              <Tooltip title="더보기">
+                <IconButton size="small">
+                  <MoreVertRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
+        </Container>
+
+        {/* 보드 컨테이너 */}
         <Stack
           direction="row"
-          height="40px"
-          justifyContent="space-between"
-          alignItems="center"
+          height="100%"
+          gap={5}
+          paddingX={{
+            xs: "16px",
+            sm: "24px",
+            xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
+          }}
+          paddingY={5}
+          sx={{
+            overflowX: "auto",
+          }}
         >
-          {/* 좌측 컨테이너 */}
-          <Stack direction="row" alignItems="inherit" gap={1}>
-            {/* 템플릿 제목 */}
-            <Typography variant="h4">{template.name}</Typography>
+          {template.boards.map((_, index) => (
+            <Board key={`board-${index + 1}`} day={index + 1} />
+          ))}
 
-            {/* 정렬하기 버튼 */}
-            <Tooltip title="정렬하기">
-              <IconButton size="small">
-                <FilterListRoundedIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-
-          {/* 우측 컨테이너 */}
-          <Stack direction="row" alignContent="inherit" gap={1}>
-            {/* 모드 선택 버튼 */}
-            <Tooltip title={mode === modes[0].name ? "열람 모드" : "편집 모드"}>
-              <IconButton size="small" onClick={handleModeChange}>
-                {mode === modes[0].name ? (
-                  <ImportContactsRoundedIcon />
-                ) : (
-                  <EditRoundedIcon />
-                )}
-              </IconButton>
-            </Tooltip>
-
-            {/* 공유하기 버튼 */}
-            <Tooltip title="공유하기">
-              <IconButton size="small">
-                <ShareRoundedIcon />
-              </IconButton>
-            </Tooltip>
-
-            {/* 더보기 버튼 */}
-            <Tooltip title="더보기">
-              <IconButton size="small">
-                <MoreVertRoundedIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        </Stack>
-      </Container>
-
-      {/* 보드 컨테이너 */}
-      <Stack
-        direction="row"
-        height="100%"
-        gap={5}
-        paddingX={{
-          xs: "16px",
-          sm: "24px",
-          xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
-        }}
-        paddingY={5}
-        sx={{
-          overflowX: "auto",
-        }}
-      >
-        {template.boards.map((_, index) => (
-          <Board key={`board-${index + 1}`} day={index + 1} />
-        ))}
-
-        {/* 보드 추가 버튼 */}
-        {template.boards.length < MAX_BOARDS && (
-          <Box>
-            <Tooltip title="보드 추가하기" placement="top">
-              <Button
-                onClick={handleAddBoardButtonClick}
-                sx={{
-                  padding: 0,
-                }}
-              >
-                <Paper
-                  elevation={3}
+          {/* 보드 추가 버튼 */}
+          {template.boards.length < MAX_BOARDS && (
+            <Box>
+              <Tooltip title="보드 추가하기" placement="top">
+                <Button
+                  onClick={handleAddBoardButtonClick}
                   sx={{
-                    width: "300px",
-                    height: "80px",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    background: theme.palette.secondary.main,
-                    borderRadius: "inherit",
-                    overflow: "hidden",
+                    padding: 0,
                   }}
                 >
                   <Paper
                     elevation={3}
                     sx={{
+                      width: "300px",
+                      height: "80px",
                       display: "flex",
-                      padding: 0.5,
                       justifyContent: "center",
                       alignItems: "center",
-                      borderRadius: "50%",
+                      background: theme.palette.secondary.main,
+                      borderRadius: "inherit",
+                      overflow: "hidden",
                     }}
                   >
-                    <AddRoundedIcon
+                    <Paper
+                      elevation={3}
                       sx={{
-                        color: theme.palette.primary.main,
-                        fontSize: "2.5rem",
+                        display: "flex",
+                        padding: 0.5,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: "50%",
                       }}
-                    />
+                    >
+                      <AddRoundedIcon
+                        sx={{
+                          color: theme.palette.primary.main,
+                          fontSize: "2.5rem",
+                        }}
+                      />
+                    </Paper>
                   </Paper>
-                </Paper>
-              </Button>
-            </Tooltip>
-          </Box>
-        )}
+                </Button>
+              </Tooltip>
+            </Box>
+          )}
+        </Stack>
       </Stack>
-    </Stack>
+
+      {/* 카드 편집 대화상자 */}
+      <CardEditDialog />
+    </>
   );
 };
 
