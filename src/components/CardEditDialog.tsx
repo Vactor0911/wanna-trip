@@ -36,6 +36,7 @@ const CardEditDialog = () => {
 
   return (
     <Dialog
+      fullWidth
       open={cardEditDialogOpen}
       onClose={handleCardEditDialogClose}
       maxWidth="md"
@@ -43,7 +44,10 @@ const CardEditDialog = () => {
       {/* 제목 */}
       <DialogTitle
         sx={{
-          paddingX: 5,
+          paddingX: {
+            xs: 2,
+            sm: 5,
+          },
         }}
       >
         <Stack gap={1}>
@@ -76,56 +80,84 @@ const CardEditDialog = () => {
       </DialogTitle>
 
       {/* 내용 */}
-      <Stack px={5} pb={3} gap={3}>
-        <Stack direction="row" justifyContent="space-between" gap={5}>
+      <Stack
+        px={{
+          xs: 2,
+          sm: 5,
+        }}
+        pb={3}
+        gap={3}
+      >
+        <Stack
+          direction={{
+            sm: "column",
+            md: "row",
+          }}
+          justifyContent="space-between"
+          gap={5}
+        >
           {/* 텍스트 편집기 */}
           <Skeleton
             variant="rectangular"
-            width="500px"
+            width="100%"
             height="400px"
             sx={{
               borderRadius: 2,
             }}
           />
 
-          <Stack>
+          <Stack
+            direction={{
+              xs: "column",
+              sm: "row",
+              md: "column",
+            }}
+            gap={1}
+          >
             {/* 지도 뷰어 */}
             <Skeleton
               variant="rectangular"
-              width="250px"
-              height="250px"
               sx={{
-                mb: 1,
                 borderRadius: 2,
+                width: {
+                  xs: "200px",
+                  md: "250px",
+                },
+                height: {
+                  xs: "200px",
+                  md: "250px",
+                },
               }}
             />
 
-            {/* 선택된 장소 설명 */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap={0.5}
-              sx={{
-                color: theme.palette.black.main,
-              }}
-            >
-              <PlaceRoundedIcon />
-              <Typography variant="h6">장소</Typography>
-            </Stack>
+            <Stack>
+              {/* 선택된 장소 설명 */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                gap={0.5}
+                sx={{
+                  color: theme.palette.black.main,
+                }}
+              >
+                <PlaceRoundedIcon />
+                <Typography variant="h6">장소</Typography>
+              </Stack>
 
-            {/* 시간 선택기 */}
-            <Stack
-              direction="row"
-              alignItems="center"
-              gap={0.5}
-              sx={{
-                color: theme.palette.black.main,
-              }}
-            >
-              <AccessTimeRoundedIcon />
-              <Typography variant="h6" flex={1}>
-                시간
-              </Typography>
+              {/* 시간 선택기 */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                gap={0.5}
+                sx={{
+                  color: theme.palette.black.main,
+                }}
+              >
+                <AccessTimeRoundedIcon />
+                <Typography variant="h6" flex={1}>
+                  시간
+                </Typography>
+              </Stack>
             </Stack>
           </Stack>
         </Stack>
