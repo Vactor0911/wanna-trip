@@ -1,19 +1,9 @@
-import {
-  Box,
-  Stack,
-  Typography,
-  IconButton,
-  TextField,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
+import { Box, Stack, Typography, IconButton, TextField } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { useRef } from "react";
-import { travelRegions } from "../data/travelRegions";
 import SearchIcon from "@mui/icons-material/Search";
-import PostItem from "../components/PostItem";
-import TravelRegionCard from "../components/TravelRegionCard";
+import CommunityPostItem from "../components/CommunityPostItem";
 
 const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,8 +26,7 @@ const useHorizontalScroll = () => {
 };
 
 const Community = () => {
-  const { scrollRef, handleScrollLeft, handleScrollRight } =
-    useHorizontalScroll();
+  const { handleScrollLeft, handleScrollRight } = useHorizontalScroll();
 
   const scrollButtonStyles = {
     position: "absolute",
@@ -85,30 +74,6 @@ const Community = () => {
           >
             <ArrowBackIosNewRoundedIcon />
           </IconButton>
-
-          <Stack
-            direction="row"
-            spacing={{ xs: 2, sm: 3, md: 5 }}
-            ref={scrollRef}
-            sx={{
-              overflowX: "auto",
-              "&::-webkit-scrollbar": { display: "none" },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-              px: { xs: 2, sm: 3, md: 4 },
-              width: "100%",
-            }}
-          >
-            {travelRegions.map((region, index) => (
-              <TravelRegionCard
-                key={index}
-                region={region}
-                width={{ xs: 200, sm: 280, md: 300 }}
-                height={{ xs: 220, sm: 300, md: 320 }}
-                mr={{ xs: 2, sm: 3, md: 4 }}
-              />
-            ))}
-          </Stack>
 
           <IconButton
             onClick={handleScrollRight}
@@ -162,7 +127,7 @@ const Community = () => {
       </Box>
 
       <Stack spacing={2}>
-        <PostItem
+        <CommunityPostItem
           imgbg="#f3e5f5"
           title="일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!"
           hashtags={["일본", "단기여행", "행복", "유튜버"]}
@@ -170,7 +135,7 @@ const Community = () => {
           shares={23}
           comments={3}
         />
-        <PostItem
+        <CommunityPostItem
           imgbg="#f0f4c3"
           title="일본으로 2박 여행 가볼래?"
           hashtags={["일본", "해외여행", "강추"]}
@@ -178,7 +143,7 @@ const Community = () => {
           shares={3}
           comments={5}
         />
-        <PostItem
+        <CommunityPostItem
           imgbg="#bbdefb"
           title="연인끼리 추억 쌓기 (당일치기)"
           hashtags={["연인", "단기여행", "힐링", "즐거운", "시원한"]}
@@ -186,7 +151,7 @@ const Community = () => {
           shares={23}
           comments={3}
         />
-        <PostItem
+        <CommunityPostItem
           imgbg="#eeeeee"
           title="국내 맛집 여행"
           hashtags={["국내여행", "맛집", "전국", "힐링"]}
