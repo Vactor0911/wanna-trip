@@ -31,7 +31,7 @@ export interface BoardInterface {
 // 템플릿 객체 인터페이스
 export interface TemplateInterface {
   uuid: string | null; // 템플릿 UUID
-  name: string; // 템플릿 이름
+  title: string; // 템플릿 이름
   boards: BoardInterface[]; // 보드 목록
 }
 
