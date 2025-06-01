@@ -130,18 +130,23 @@ const Community = () => {
     setSelectedTags((chips) => chips.filter((tag) => tag !== tagToDelete));
   };
 
+  // 검색창 입력 필드에 포커스가 왔을 때 호출되는 핸들러
   const handleInputFocus = () => {
-    // 현재 입력 값이 #으로 시작하는 단어를 포함하고 있다면 추천 목록 표시
+    // 현재 입력 값이 #으로 시작하는 단어를 포함하고 있다면 추천 목록 표시 (useEffect에서 필터링 로직 처리)
     const words = inputValue.split(/\s+/);
     const lastWord = words[words.length - 1];
     if (lastWord.startsWith("#")) {
       // useEffect에서 이미 필터링 및 설정 로직을 처리하므로 여기서는 단순히 표시 상태만 제어
       setShowSuggestions(true);
     } else if (inputValue.trim() === "") {
-      // 입력 값이 비어있으면 전체 추천 목록 표시
-      setSuggestedTags(regionTags);
-      setShowSuggestions(true);
+      // 입력 값이 비어있으면 전체 지역 태그 중 선택되지 않은 태그만 추천 목록으로 표시
+      const filteredTagsForEmptyInput = regionTags.filter(
+        (tag) => !selectedTags.includes(tag) // 이미 선택된 태그는 추천 목록에서 제외
+      );
+      setSuggestedTags(filteredTagsForEmptyInput);
+      setShowSuggestions(true); // 추천 목록 표시
     }
+    // 태그 추천은 # 입력 시에만 동작하도록 useEffect 로직으로 제어
   };
 
   const handleInputBlur = () => {
@@ -155,13 +160,10 @@ const Community = () => {
 
   const scrollButtonStyles = {
     position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
     zIndex: 2,
-    background: "rgba(255,255,255, 0.8)",
+    background: "rgba(255,255,255)",
     boxShadow: 1,
-    "&:hover": { background: "rgba(255,255,255, 1)" },
-    display: { xs: "none", sm: "flex" },
+    "&:hover": { background: "rgba(255,255,255)" },
   };
 
   return (
@@ -197,7 +199,7 @@ const Community = () => {
             sx={{
               ...scrollButtonStyles,
               left: 0,
-              transform: "translateX(-50%) translateY(-50%)",
+              transform: "translateX(-50%) translateY(-40%)",
             }}
           >
             <ArrowBackIosNewRoundedIcon />
@@ -206,7 +208,7 @@ const Community = () => {
           <Stack
             ref={scrollRef}
             direction="row"
-            gap={2}
+            gap={3}
             sx={{
               overflowX: "auto",
               py: 1,
@@ -251,37 +253,42 @@ const Community = () => {
                 imgSrc: yeosuImg,
               },
             ].map((category, index) => (
-              <Stack
-                key={index}
-                direction="column"
-                spacing={1}
-                sx={{
-                  flexShrink: 0,
-                  width: 280,
-                  height: 280,
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <Box
+              <Stack key={index} gap={1.1}>
+                <Stack
+                  direction="column"
+                  spacing={1}
                   sx={{
-                    width: "100%",
-                    height: 200,
-                    borderRadius: 4,
-                    overflow: "hidden",
+                    flexShrink: 0,
+                    width: 280,
+                    height: 280,
+                    borderRadius: 8,
                     boxShadow: 5,
-                    backgroundImage: `url(${category.imgSrc})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
+                    overflow: "hidden",
                   }}
-                ></Box>
+                >
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 280,
+                      borderRadius: 8,
+                      border: "1px solid #B7B7B7",
+                      overflow: "hidden",
+                      cursor: "pointer",
+                      backgroundImage: `url(${category.imgSrc})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  ></Box>
+                </Stack>
 
                 {/* 지역 이름  */}
                 <Typography
                   variant="body1"
-                  fontWeight={600}
+                  fontWeight={400}
+                  fontSize={"1.2em"}
                   color="text.primary"
                   textAlign="left"
+                  ml={2.5}
                 >
                   {category.name}
                 </Typography>
@@ -295,7 +302,7 @@ const Community = () => {
             sx={{
               ...scrollButtonStyles,
               right: 0,
-              transform: "translateX(50%) translateY(-50%)",
+              transform: "translateX(50%) translateY(-40%)",
             }}
           >
             <ArrowForwardIosRoundedIcon />
@@ -304,47 +311,51 @@ const Community = () => {
       </Stack>
 
       {/* 일반 게시판 */}
-      <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2 }}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={{ xs: 2, sm: 4 }}
+      <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2, position: "relative" }}>
+        {/* 섹션 제목 */}
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          height="3em"
           sx={{
-            alignItems: { xs: "stretch", sm: "center" },
-            justifyContent: "space-between",
+            mb: 2,
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          <Typography variant="h5" fontWeight={700}>
-            일반 게시판
-          </Typography>
+          일반 게시판
+        </Typography>
 
-          {/* 검색창과 태그 추천 목록 컨테이너 */}
-          <Box
-            sx={{
-              width: { xs: "100%", sm: 400 },
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-              minHeight: 50,
-              border: "1px solid #000",
-              borderRadius: "8px",
-              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-              p: 1,
-            }}
-          >
-            {/* 검색 & 태그 박스 */}
-
+        {/* 검색창과 태그 추천 목록 컨테이너 */}
+        <Stack
+          sx={{
+            width: { xs: "100%", sm: "23em" },
+            position: { xs: "static", sm: "absolute" },
+            top: 0,
+            right: 0,
+            zIndex: 2,
+            display: "flex",
+            minHeight: 30,
+            border: "1px solid #6F6F6F",
+            borderRadius: "8px",
+            boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+            p: 1,
+            bgcolor: "white",
+            mt: { xs: 2, sm: 0 },
+          }}
+        >
+          {/* 검색 & 태그 박스 */}
+          <Box>
             <Box
-              className="search-input-box"
               sx={{
                 display: "flex",
-                alignItems: "center",
                 flexWrap: "wrap",
                 gap: "4px",
-                flexGrow: 1,
+                mb: 1,
+                alignItems: "center",
               }}
             >
               {/* 선택된 태그들을 Mui Chip 형태로 표시 */}
-
               {selectedTags.map((tag) => (
                 <Chip
                   key={tag}
@@ -357,16 +368,22 @@ const Community = () => {
                   sx={{ justifyContent: "flex-start" }}
                 />
               ))}
+            </Box>
+            {/* 검색어 입력 및 버튼 영역 */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
               {/* 검색어 입력 필드 (TextField) */}
-              <Box sx={{ flexGrow: 1, minWidth: 100 }}>
+              <Box sx={{ flexGrow: 1 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  placeholder={
-                    selectedTags.length > 0
-                      ? ""
-                      : "게시글,글쓴이,카테고리,태그 검색"
-                  }
+                  placeholder={"게시글,글쓴이,카테고리,태그 검색"}
+                  /* TODO: 아래줄 바꾸는 법 및 쓸때마다 아래줄 생기는거 바꿔야함*/
                   variant="standard"
                   InputProps={{
                     disableUnderline: true,
@@ -378,41 +395,22 @@ const Community = () => {
                   onBlur={handleInputBlur}
                 />
               </Box>
+              {/* 검색 버튼 */}
+              <IconButton onClick={handleSearch}>
+                <SearchIcon sx={{ fontSize: 35, color: "#000" }} />
+              </IconButton>
             </Box>
-
-            {/* 검색 버튼 */}
-
-            <IconButton
-              onClick={handleSearch}
-              sx={{
-                p: "10px",
-              }}
-            >
-              <SearchIcon sx={{ fontSize: 35, color: "#000" }} />
-            </IconButton>
 
             {/* 지역 태그 추천 목록 */}
             {showSuggestions && suggestedTags.length > 0 && (
               <Box
                 className="region-suggestions-box"
                 sx={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  bgcolor: "white",
-                  border: "1px solid #000",
-                  borderRadius: "0 0 8px 8px",
-                  borderTop: "none",
-                  p: 1,
-                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                  zIndex: 2,
                   display: "flex",
                   flexDirection: "column",
-                  gap: "4px",
-                  maxHeight: 200,
-                  overflowY: "auto",
-                  mt: 1,
+                  gap: 1,
+                  mt: 1.5,
+                  pb: 1.3,
                 }}
               >
                 {/* 추천 태그  */}
@@ -426,7 +424,7 @@ const Community = () => {
                     clickable
                     sx={{
                       justifyContent: "flex-start",
-                      fontSize: "1rem",
+                      fontSize: "1.1rem",
                     }}
                   />
                 ))}
