@@ -77,7 +77,7 @@ const Community = () => {
       // 지역 태그 목록에서 일치하는 태그 필터링 (#으로 시작하는 단어로 필터링)
       const filteredTags = regionTags.filter(
         (tag) =>
-          tag.toLowerCase().startsWith(tagPrefix) && !selectedTags.includes(tag) // 이미 선택된 태그는 추천 목록에서 제외
+          tag.toLowerCase().startsWith(tagPrefix) && !selectedTags.includes(tag)
       );
       setSuggestedTags(filteredTags);
       // 일치하는 태그가 있고 검색창에 포커스가 있다면 추천 목록 표시
@@ -90,11 +90,10 @@ const Community = () => {
         setShowSuggestions(false);
       }
     } else {
-      // '#'으로 시작하는 단어가 아니거나 비어있다면 추천 목록 숨김
       setSuggestedTags([]);
       setShowSuggestions(false);
     }
-  }, [inputValue, selectedTags]); // inputValue 또는 selectedTags 변경 시 useEffect 다시 실행
+  }, [inputValue, selectedTags]);
 
   // 검색 실행 핸들러
   const handleSearch = () => {
@@ -114,41 +113,35 @@ const Community = () => {
 
   // 추천 태그 클릭 핸들러
   const handleSuggestionTagClick = (tag: string) => {
-    // 클릭한 태그를 selectedTags 배열에 추가 (이미 선택된 태그가 아닌 경우에만)
     if (!selectedTags.includes(tag)) {
       setSelectedTags([...selectedTags, tag]);
     }
-    // 입력 필드에서 '#'으로 시작하는 현재 단어를 제거하고 나머지 입력 값 유지
-    const words = inputValue.split(/\s+/);
-    words.pop(); // 마지막 '#' 단어 제거
-    setInputValue(words.join(" ") + " "); // 단어들 다시 합치고 공백 추가
 
-    setSuggestedTags([]); // 추천 목록 비움
-    setShowSuggestions(false); // 추천 목록 숨김
+    const words = inputValue.split(/\s+/);
+    words.pop();
+    setInputValue(words.join(" ") + " ");
+
+    setSuggestedTags([]);
+    setShowSuggestions(false);
   };
 
   // 검색창 내부에서 태그 삭제 핸들러
   const handleDeleteTag = (tagToDelete: string) => () => {
     setSelectedTags((chips) => chips.filter((tag) => tag !== tagToDelete));
-    // 태그 삭제 후 입력 값 상태는 유지
   };
 
-  // 검색창 포커스 시 추천 목록 표시
   const handleInputFocus = () => {
     // 현재 입력 값이 #으로 시작하는 단어를 포함하고 있다면 추천 목록 표시
     const words = inputValue.split(/\s+/);
     const lastWord = words[words.length - 1];
     if (lastWord.startsWith("#")) {
-      // #으로 시작하는 경우에만 추천 목록 표시
-      // 추천 목록 내용을 현재 입력 값 기반으로 업데이트하기 위해 useEffect에 의존
       // useEffect에서 이미 필터링 및 설정 로직을 처리하므로 여기서는 단순히 표시 상태만 제어
       setShowSuggestions(true);
     } else if (inputValue.trim() === "") {
       // 입력 값이 비어있으면 전체 추천 목록 표시
-      setSuggestedTags(regionTags); // 입력값이 없으면 전체 태그 표시
+      setSuggestedTags(regionTags);
       setShowSuggestions(true);
     }
-    // 태그 추천은 # 입력 시에만 동작하도록 useEffect 로직으로 제어
   };
 
   const handleInputBlur = () => {
@@ -173,7 +166,7 @@ const Community = () => {
 
   return (
     <Box sx={{ width: "100%", minHeight: "100vh", p: { xs: 2, sm: 3, md: 4 } }}>
-      {/* 인기 게시글 섹션 ) */}
+      {/* 인기 게시글  */}
       <Box sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
         <Typography variant="h5" fontWeight={700} mb={2}>
           실시간 인기 게시글
@@ -282,7 +275,8 @@ const Community = () => {
                     backgroundPosition: "center",
                   }}
                 ></Box>
-                {/* 지역 이름 Typography */}
+
+                {/* 지역 이름  */}
                 <Typography
                   variant="body1"
                   fontWeight={600}
@@ -324,14 +318,21 @@ const Community = () => {
           </Typography>
 
           {/* 검색창과 태그 추천 목록 컨테이너 */}
-          {/* 검색창 클릭/포커스 시 태그 추천 목록 표시 */}
           <Box
             sx={{
               width: { xs: "100%", sm: 400 },
-
               position: "relative",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 50,
+              border: "1px solid #000",
+              borderRadius: "8px",
+              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+              p: 1,
             }}
           >
+            {/* 검색 & 태그 박스 */}
+
             <Box
               className="search-input-box"
               sx={{
@@ -339,14 +340,11 @@ const Community = () => {
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: "4px",
-                width: "100%",
-                minHeight: 50,
-                border: "1px solid #000",
-                borderRadius: "8px",
-                boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-                p: 1,
+                flexGrow: 1,
               }}
             >
+              {/* 선택된 태그들을 Mui Chip 형태로 표시 */}
+
               {selectedTags.map((tag) => (
                 <Chip
                   key={tag}
@@ -359,39 +357,41 @@ const Community = () => {
                   sx={{ justifyContent: "flex-start" }}
                 />
               ))}
-              {/* 검색어 입력 필드 */}
-
+              {/* 검색어 입력 필드 (TextField) */}
               <Box sx={{ flexGrow: 1, minWidth: 100 }}>
                 <TextField
                   fullWidth
                   size="small"
-                  // 선택된 태그가 있을 경우 플레이스홀더 숨김
                   placeholder={
                     selectedTags.length > 0
                       ? ""
                       : "게시글,글쓴이,카테고리,태그 검색"
                   }
                   variant="standard"
-                  InputProps={{ disableUnderline: true }}
+                  InputProps={{
+                    disableUnderline: true,
+                    style: { fontSize: "1rem" },
+                  }}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onFocus={handleInputFocus}
                   onBlur={handleInputBlur}
                 />
               </Box>
-
-              <IconButton
-                onClick={handleSearch}
-                sx={{
-                  p: "10px",
-                }}
-              >
-                <SearchIcon sx={{ fontSize: 35, color: "#000" }} />
-              </IconButton>
             </Box>
 
-            {/* 지역 태그 추천 목록 */}
+            {/* 검색 버튼 */}
 
+            <IconButton
+              onClick={handleSearch}
+              sx={{
+                p: "10px",
+              }}
+            >
+              <SearchIcon sx={{ fontSize: 35, color: "#000" }} />
+            </IconButton>
+
+            {/* 지역 태그 추천 목록 */}
             {showSuggestions && suggestedTags.length > 0 && (
               <Box
                 className="region-suggestions-box"
@@ -401,9 +401,8 @@ const Community = () => {
                   left: 0,
                   right: 0,
                   bgcolor: "white",
-                  border: "1px solid #ccc",
+                  border: "1px solid #000",
                   borderRadius: "0 0 8px 8px",
-                  borderColor: "#000",
                   borderTop: "none",
                   p: 1,
                   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
@@ -413,8 +412,10 @@ const Community = () => {
                   gap: "4px",
                   maxHeight: 200,
                   overflowY: "auto",
+                  mt: 1,
                 }}
               >
+                {/* 추천 태그  */}
                 {suggestedTags.map((tag) => (
                   <Chip
                     key={tag}
@@ -423,7 +424,10 @@ const Community = () => {
                     size="small"
                     variant="outlined"
                     clickable
-                    sx={{ justifyContent: "flex-start" }}
+                    sx={{
+                      justifyContent: "flex-start",
+                      fontSize: "1rem",
+                    }}
                   />
                 ))}
               </Box>
@@ -432,7 +436,7 @@ const Community = () => {
         </Stack>
       </Box>
 
-      {/* 일반 게시판 목록 (기존 코드 유지) */}
+      {/* 일반 게시판 목록  */}
       <Stack spacing={2}>
         <CommunityPostItem
           imgbg="#f3e5f5"
