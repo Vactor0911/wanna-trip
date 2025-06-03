@@ -3,6 +3,7 @@ import {
   Button,
   Container,
   Paper,
+  PaperProps,
   Stack,
   Typography,
   TypographyProps,
@@ -14,21 +15,18 @@ import { theme } from "../utils/theme";
 import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
 
-interface ImagePaperProps {
+interface ImagePaperProps extends PaperProps {
   src: string;
 }
 
-const ImagePaper = ({ src }: ImagePaperProps) => {
+const ImagePaper = (props: ImagePaperProps) => {
+  const { src, ...others } = props;
+
   return (
     <Paper
       elevation={3}
       sx={{
-        width: {
-          xs: "250px",
-          sm: "300px",
-          lg: "350px",
-          xl: "400px",
-        },
+        width: "90%",
         aspectRatio: "1/1",
         borderRadius: "30px",
         backgroundImage: `url(${src})`,
@@ -36,13 +34,8 @@ const ImagePaper = ({ src }: ImagePaperProps) => {
         backgroundPosition: "center top",
         backgroundRepeat: "no-repeat",
         position: "absolute",
-        top: "0",
-        right: "0",
-        transform: {
-          xs: "none",
-          md: "translateY(-100%)",
-        },
       }}
+      {...others}
     />
   );
 };
@@ -110,36 +103,23 @@ const Main = () => {
         position="relative"
       >
         {/* 사진 */}
-        {isMobileScreen || isTabletScreen ? (
-          <Stack
-            height={{
-              xs: "250px",
-              sm: "300px",
-            }}
-            alignItems="center"
-            position="relative"
-          >
-            <Box
-              width={{
-                xs: "250px",
-                sm: "300px",
-              }}
-              position="relative"
-            >
-              <ImagePaper src={MainImage1} />
-              <Box position="absolute" bottom="40px" right="-40px" zIndex={-1}>
-                <ImagePaper src={MainImage2} />
-              </Box>
-            </Box>
-          </Stack>
-        ) : (
-          <Box position="absolute" bottom="100px" right="40px" zIndex={-1}>
-            <ImagePaper src={MainImage1} />
-            <Box position="absolute" bottom="40px" right="-40px" zIndex={-1}>
-              <ImagePaper src={MainImage2} />
-            </Box>
-          </Box>
-        )}
+        <Box
+          width={{
+            xs: "250px",
+            sm: "300px",
+          }}
+          height={{
+            xs: "250px",
+            sm: "300px",
+          }}
+          position="relative"
+        >
+          <ImagePaper src={MainImage1} sx={{
+            bottom: 0,
+            left: 0,
+          }} />
+          <ImagePaper src={MainImage2} />
+        </Box>
 
         {/* 슬로건 */}
         <Stack gap={1}>
