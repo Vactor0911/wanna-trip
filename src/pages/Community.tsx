@@ -4,6 +4,7 @@ import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRound
 import { useRef } from "react";
 import CommunityPostItem from "../components/CommunityPostItem";
 import SearchBox from "../components/SearchBox";
+import ScrollToTopButton from "../components/ScrollToTopButton";
 
 // 이미지 파일
 import seoulImg from "../images/서울.jpg";
@@ -265,6 +266,9 @@ const Community = () => {
           comments={2}
         />
       </Stack>
+
+      {/* 스크롤 맨 위로 이동 버튼 */}
+      <ScrollToTopButton />
     </Box>
   );
 };
