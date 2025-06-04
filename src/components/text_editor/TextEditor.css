@@ -10,17 +10,20 @@
 .editor-container,
 .editor-container__editor,
 .editor-container__editor > div,
-.ck-editor {
+.ck-editor,
+.ck-editor__editable {
   width: 100% !important;
   height: 100% !important;
 }
 
 .ck-editor {
+  width: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .ck-editor__main {
+  width: 100%;
   flex: 1;
   display: flex;
   overflow: hidden;
