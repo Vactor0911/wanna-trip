@@ -57,7 +57,7 @@ import "ckeditor5/ckeditor5.css";
 
 import "./TextEditor.css";
 
-const LICENSE_KEY = import.meta.env.CKEDITOR_LICENSE_KEY;
+const LICENSE_KEY = import.meta.env.VITE_CKEDITOR_LICENSE_KEY;
 
 export default function TextEditor() {
   const editorContainerRef = useRef(null);
