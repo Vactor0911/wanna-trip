@@ -518,9 +518,9 @@ const Register: React.FC = () => {
                     edge="end"
                   >
                     {isPasswordVisible ? (
-                      <VisibilityOffIcon />
-                    ) : (
                       <VisibilityIcon />
+                    ) : (
+                      <VisibilityOffIcon />
                     )}
                   </IconButton>
                 </InputAdornment>
@@ -540,9 +540,9 @@ const Register: React.FC = () => {
                     edge="end"
                   >
                     {isPasswordConfirmVisible ? (
-                      <VisibilityOffIcon />
-                    ) : (
                       <VisibilityIcon />
+                    ) : (
+                      <VisibilityOffIcon />
                     )}
                   </IconButton>
                 </InputAdornment>

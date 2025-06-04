@@ -156,7 +156,7 @@ const Board = (props: BoardProps) => {
             gap={2}
             paddingBottom={0.5}
             sx={{
-              overflowY: "scroll",
+              overflowY: "auto",
             }}
           >
             {template.boards[day - 1]?.cards?.map((_, index) => (

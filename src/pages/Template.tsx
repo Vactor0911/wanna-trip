@@ -2,10 +2,12 @@ import {
   Box,
   Button,
   CircularProgress,
+  ClickAwayListener,
   Container,
   IconButton,
   Paper,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import Tooltip from "../components/Tooltip";
@@ -23,6 +25,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import CardEditDialog from "../components/CardEditDialog";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -34,7 +37,7 @@ const modes = [
 interface BackendTemplate {
   template_id: number;
   template_uuid: string;
-  name: string;
+  title: string;
   boards: BackendBoard[];
 }
 
@@ -59,13 +62,17 @@ interface BackendCard {
 }
 
 const Template = () => {
+  const navigate = useNavigate();
+
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
-  const navigate = useNavigate();
+  const [templateTitle, setTemplateTitle] = useState(template.title); // 템플릿 이름 상태
   const { uuid } = useParams(); // URL에서 uuid 파라미터 가져오기
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태
+  const [error, setError] = useState<string | null>(null); // 에러 상태
+  const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
 
+  // 템플릿 데이터 가져오기
   const fetchTemplateData = useCallback(async () => {
     if (!uuid) return; // uuid가 없으면 종료
 
@@ -88,11 +95,12 @@ const Template = () => {
         // 보드만 있는 간단한 형태로 변환
         setTemplate({
           uuid: backendTemplate.template_uuid,
-          name: backendTemplate.name,
+          title: backendTemplate.title,
           boards: backendTemplate.boards.map(() => ({
             cards: [], // 현재는 카드 없이 빈 보드로 설정
           })),
         });
+        setTemplateTitle(backendTemplate.title);
       } else {
         setError("템플릿 데이터를 불러올 수 없습니다.");
       }
@@ -134,6 +142,28 @@ const Template = () => {
     setTemplate(newTemplate);
   }, [setTemplate, template]);
 
+  // 템플릿 제목 클릭
+  const handleTemplateTitleClick = useCallback(() => {
+    setIsTemplateTitleEditing((prev) => !prev);
+  }, []);
+
+  // 템플릿 제목 변경
+  const handleTemplateTitleChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setTemplateTitle(event.target.value);
+    },
+    []
+  );
+
+  // 템플릿 제목 편집 완료
+  const handleTemplateTitleClickAway = useCallback(() => {
+    const newTemplate = { ...template };
+    newTemplate.title = templateTitle;
+
+    setTemplate(newTemplate);
+    setIsTemplateTitleEditing(false);
+  }, [setTemplate, template, templateTitle]);
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
@@ -168,136 +198,191 @@ const Template = () => {
   }
 
   return (
-    <Stack
-      height="calc(100vh - 82px)"
-      sx={{
-        "& .MuiIconButton-root > svg": {
-          color: theme.palette.black.main,
-        },
-      }}
-    >
-      {/* 상단 컨테이너 */}
-      <Container
-        maxWidth="xl"
+    <>
+      {/* 템플릿 페이지 */}
+      <Stack
+        height="calc(100vh - 82px)"
         sx={{
-          marginTop: 5,
+          "& .MuiIconButton-root > svg": {
+            color: theme.palette.black.main,
+          },
         }}
       >
+        {/* 상단 컨테이너 */}
+        <Container
+          maxWidth="xl"
+          sx={{
+            marginTop: 5,
+          }}
+        >
+          <Stack
+            direction="row"
+            width="100%"
+            height="40px"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            {/* 좌측 컨테이너 */}
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap={1}
+              sx={{ minWidth: 0, overflow: "hidden" }}
+            >
+              {isTemplateTitleEditing ? (
+                <ClickAwayListener onClickAway={handleTemplateTitleClickAway}>
+                  <TextField
+                    value={templateTitle}
+                    onChange={handleTemplateTitleChange}
+                    autoFocus
+                    sx={{
+                      minWidth: 0,
+                      "& input": {
+                        padding: 1,
+                        fontWeight: "bold",
+                        fontSize: theme.typography.h4.fontSize,
+                      },
+                    }}
+                  />
+                </ClickAwayListener>
+              ) : (
+                <Button
+                  onClick={handleTemplateTitleClick}
+                  sx={{
+                    minWidth: 0,
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    padding: 0,
+                    textTransform: "none",
+                    flexShrink: 1,
+                    flexGrow: 1,
+                    justifyContent: "flex-start",
+                  }}
+                >
+                  <Typography
+                    variant="h4"
+                    color="black"
+                    sx={{
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {template.title}
+                  </Typography>
+                </Button>
+              )}
+
+              <Tooltip title="정렬하기">
+                <IconButton size="small">
+                  <FilterListRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+
+            {/* 우측 컨테이너 */}
+            <Stack direction="row" alignContent="inherit" gap={1}>
+              {/* 모드 선택 버튼 */}
+              <Tooltip
+                title={mode === modes[0].name ? "열람 모드" : "편집 모드"}
+              >
+                <IconButton size="small" onClick={handleModeChange}>
+                  {mode === modes[0].name ? (
+                    <ImportContactsRoundedIcon />
+                  ) : (
+                    <EditRoundedIcon />
+                  )}
+                </IconButton>
+              </Tooltip>
+
+              {/* 공유하기 버튼 */}
+              <Tooltip title="공유하기">
+                <IconButton size="small">
+                  <ShareRoundedIcon />
+                </IconButton>
+              </Tooltip>
+
+              {/* 더보기 버튼 */}
+              <Tooltip title="더보기">
+                <IconButton size="small">
+                  <MoreVertRoundedIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Stack>
+        </Container>
+
+        {/* 보드 컨테이너 */}
         <Stack
           direction="row"
-          height="40px"
-          justifyContent="space-between"
-          alignItems="center"
+          height="100%"
+          gap={5}
+          paddingX={{
+            xs: "16px",
+            sm: "24px",
+            xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
+          }}
+          paddingY={5}
+          sx={{
+            overflowX: "auto",
+          }}
         >
-          {/* 좌측 컨테이너 */}
-          <Stack direction="row" alignItems="inherit" gap={1}>
-            {/* 템플릿 제목 */}
-            <Typography variant="h4">{template.name}</Typography>
+          {template.boards.map((_, index) => (
+            <Board key={`board-${index + 1}`} day={index + 1} />
+          ))}
 
-            {/* 정렬하기 버튼 */}
-            <Tooltip title="정렬하기">
-              <IconButton size="small">
-                <FilterListRoundedIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-
-          {/* 우측 컨테이너 */}
-          <Stack direction="row" alignContent="inherit" gap={1}>
-            {/* 모드 선택 버튼 */}
-            <Tooltip title={mode === modes[0].name ? "열람 모드" : "편집 모드"}>
-              <IconButton size="small" onClick={handleModeChange}>
-                {mode === modes[0].name ? (
-                  <ImportContactsRoundedIcon />
-                ) : (
-                  <EditRoundedIcon />
-                )}
-              </IconButton>
-            </Tooltip>
-
-            {/* 공유하기 버튼 */}
-            <Tooltip title="공유하기">
-              <IconButton size="small">
-                <ShareRoundedIcon />
-              </IconButton>
-            </Tooltip>
-
-            {/* 더보기 버튼 */}
-            <Tooltip title="더보기">
-              <IconButton size="small">
-                <MoreVertRoundedIcon />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        </Stack>
-      </Container>
-
-      {/* 보드 컨테이너 */}
-      <Stack
-        direction="row"
-        height="100%"
-        gap={5}
-        paddingX={{
-          xs: "16px",
-          sm: "24px",
-          xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
-        }}
-        paddingY={5}
-        sx={{
-          overflowX: "auto",
-        }}
-      >
-        {template.boards.map((_, index) => (
-          <Board key={`board-${index + 1}`} day={index + 1} />
-        ))}
-
-        {/* 보드 추가 버튼 */}
-        {template.boards.length < MAX_BOARDS && (
-          <Box>
-            <Tooltip title="보드 추가하기" placement="top">
-              <Button
-                onClick={handleAddBoardButtonClick}
-                sx={{
-                  padding: 0,
-                }}
-              >
-                <Paper
-                  elevation={3}
+          {/* 보드 추가 버튼 */}
+          {template.boards.length < MAX_BOARDS && (
+            <Box>
+              <Tooltip title="보드 추가하기" placement="top">
+                <Button
+                  onClick={handleAddBoardButtonClick}
                   sx={{
-                    width: "300px",
-                    height: "80px",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    background: theme.palette.secondary.main,
-                    borderRadius: "inherit",
-                    overflow: "hidden",
+                    padding: 0,
                   }}
                 >
                   <Paper
                     elevation={3}
                     sx={{
+                      width: "300px",
+                      height: "80px",
                       display: "flex",
-                      padding: 0.5,
                       justifyContent: "center",
                       alignItems: "center",
-                      borderRadius: "50%",
+                      background: theme.palette.secondary.main,
+                      borderRadius: "inherit",
+                      overflow: "hidden",
                     }}
                   >
-                    <AddRoundedIcon
+                    <Paper
+                      elevation={3}
                       sx={{
-                        color: theme.palette.primary.main,
-                        fontSize: "2.5rem",
+                        display: "flex",
+                        padding: 0.5,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        borderRadius: "50%",
                       }}
-                    />
+                    >
+                      <AddRoundedIcon
+                        sx={{
+                          color: theme.palette.primary.main,
+                          fontSize: "2.5rem",
+                        }}
+                      />
+                    </Paper>
                   </Paper>
-                </Paper>
-              </Button>
-            </Tooltip>
-          </Box>
-        )}
+                </Button>
+              </Tooltip>
+            </Box>
+          )}
+        </Stack>
       </Stack>
-    </Stack>
+
+      {/* 카드 편집 대화상자 */}
+      <CardEditDialog />
+    </>
   );
 };
 
