@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogTitle,
@@ -17,6 +18,7 @@ import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import Tooltip from "./Tooltip";
+import CardTextEditor from "./text_editor/CardTextEditor";
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
@@ -94,17 +96,21 @@ const CardEditDialog = () => {
             md: "row",
           }}
           justifyContent="space-between"
-          gap={5}
+          gap={{
+            xs: 5,
+            md: 0,
+          }}
         >
           {/* 텍스트 편집기 */}
-          <Skeleton
-            variant="rectangular"
-            width="100%"
-            height="400px"
-            sx={{
-              borderRadius: 2,
+          <Box
+            width={{
+              xs: "100%",
+              md: "70%",
             }}
-          />
+            height="400px"
+          >
+            <CardTextEditor />
+          </Box>
 
           <Stack
             direction={{
@@ -121,11 +127,9 @@ const CardEditDialog = () => {
                 borderRadius: 2,
                 width: {
                   xs: "200px",
-                  md: "250px",
                 },
                 height: {
                   xs: "200px",
-                  md: "250px",
                 },
               }}
             />
