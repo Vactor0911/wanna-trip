@@ -157,7 +157,7 @@ const Template = () => {
 
   // 템플릿 제목 편집 완료
   const handleTemplateTitleClickAway = useCallback(() => {
-    const newTemplate = template;
+    const newTemplate = { ...template };
     newTemplate.title = templateTitle;
 
     setTemplate(newTemplate);
