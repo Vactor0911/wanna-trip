@@ -78,7 +78,7 @@ const Main = () => {
           </Box>
 
           {/* 슬로건 */}
-          <Stack gap={1}>
+          <Stack gap={1} alignItems="flex-start">
             {/* 첫번째 줄 */}
             <Typography
               variant="h2"
@@ -116,19 +116,34 @@ const Main = () => {
               로 시작!
             </Typography>
 
-            <Typography
-              variant="h5"
-              color="black"
-              sx={{
-                fontSize: {
-                  xs: theme.typography.subtitle1.fontSize,
-                  md: theme.typography.h6.fontSize,
-                  lg: theme.typography.h5.fontSize,
-                },
+            {/* 세번쨰 줄 */}
+            <Stack
+              direction={{
+                xs: "column",
+                sm: "row",
               }}
             >
-              여행 계획을 더욱 빠르고 스마트하게 만들어보세요!
-            </Typography>
+              {["여행 계획을 더욱 빠르고 스마트하게", "만들어보세요 !"].map(
+                (text, index) => (
+                  <Typography
+                    variant="h5"
+                    color="black"
+                    display="inline-block"
+                    whiteSpace="nowrap"
+                    key={`main-slogan-${index}`}
+                    sx={{
+                      fontSize: {
+                        xs: theme.typography.subtitle1.fontSize,
+                        md: theme.typography.h6.fontSize,
+                        lg: theme.typography.h5.fontSize,
+                      },
+                    }}
+                  >
+                    {text}
+                  </Typography>
+                )
+              )}
+            </Stack>
           </Stack>
 
           {/* 시작하기 버튼 */}
