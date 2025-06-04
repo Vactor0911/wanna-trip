@@ -116,7 +116,7 @@ const Main = () => {
               로 시작!
             </Typography>
 
-            {/* 세번쨰 줄 */}
+            {/* 세번째 줄 */}
             <Stack
               direction={{
                 xs: "column",

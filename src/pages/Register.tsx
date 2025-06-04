@@ -539,7 +539,7 @@ const Register: React.FC = () => {
                     onClick={handlePasswordConfirmVisibilityChange}
                     edge="end"
                   >
-                    {isPasswordVisible ? (
+                    {isPasswordConfirmVisible ? (
                       <VisibilityIcon />
                     ) : (
                       <VisibilityOffIcon />
