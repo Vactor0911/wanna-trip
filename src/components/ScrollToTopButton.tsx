@@ -57,7 +57,7 @@ const ScrollToTopButton = () => {
           onClick={scrollToTop}
         >
           {/* 위쪽 화살표 아이콘 */}
-          <ArrowUpwardIcon sx={{ color: "#1976d2", fontSize: "35px" }} />
+          <ArrowUpwardIcon sx={{ color: "#3288FF", fontSize: "35px" }} />
         </Box>
       )}
     </>
