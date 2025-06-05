@@ -5,8 +5,9 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import IosShareIcon from "@mui/icons-material/IosShare";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 
-// 게시글  prop 타입
-interface PostItemProps {
+// 게시글 데이터 타입 정의
+export interface PostData {
+  id: string;
   imgbg: string; // 왼쪽 박스 배경색 또는 이미지 URL
   title: string; // 게시글 제목
   hashtags: string[]; // 해시태그 목록
@@ -15,19 +16,23 @@ interface PostItemProps {
   shares: number; // 공유 수
 }
 
+// 게시글 prop 타입
+interface PostItemProps {
+  post: PostData; // 게시글 데이터 객체
+  onClick?: () => void; // 클릭 이벤트 핸들러
+}
+
 const PostItem: React.FC<PostItemProps> = ({
-  imgbg,
-  title,
-  hashtags,
-  likes,
-  comments,
-  shares,
+  post, // post prop 받음
+  onClick,
 }) => {
+  const { imgbg, title, hashtags, likes, comments, shares } = post;
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
 
   // 좋아요 버튼 클릭 핸들러
-  const handleLikeClick = () => {
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsLiked(!isLiked);
     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
   };
@@ -35,6 +40,7 @@ const PostItem: React.FC<PostItemProps> = ({
   return (
     // 게시글 항목 전체를 감싸는 박스
     <Box
+      onClick={onClick}
       sx={{
         display: "flex",
         alignItems: "flex-start",
@@ -65,7 +71,6 @@ const PostItem: React.FC<PostItemProps> = ({
         }}
       />
 
-      {/* stack 레이아웃  */}
       <Stack sx={{ flexGrow: 1 }}>
         {/* 제목  */}
         <Stack>
