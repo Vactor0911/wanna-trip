@@ -5,6 +5,7 @@ import { useRef } from "react";
 import CommunityPostItem from "../components/CommunityPostItem";
 import SearchBox from "../components/SearchBox";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+import { useNavigate } from "react-router-dom";
 
 // 이미지 파일
 import seoulImg from "../images/서울.jpg";
@@ -15,6 +16,47 @@ import gyeongjuImg from "../images/경주.jpg";
 import jejuImg from "../images/제주.jpg";
 import sokchoImg from "../images/속초.jpg";
 import yeosuImg from "../images/여수.jpg";
+
+// 게시글 데이터
+export const temporaryPosts = [
+  {
+    id: "1",
+    imgbg: "#f3e5f5",
+    title:
+      "일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!",
+    hashtags: ["일본", "단기여행", "행복", "유튜버"],
+    likes: 132,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "2",
+    imgbg: "#f0f4c3",
+    title: "일본으로 2박 여행 가볼래?",
+    hashtags: ["일본", "해외여행", "강추"],
+    likes: 312,
+    comments: 5,
+    shares: 3,
+  },
+  {
+    id: "3",
+    imgbg: "#bbdefb",
+    title: "연인끼리 추억 쌓기 (당일치기)",
+    hashtags: ["연인", "단기여행", "힐링", "즐거운", "시원한"],
+    likes: 1322,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "4",
+    imgbg: "#eeeeee",
+    title: "국내 맛집 여행",
+    hashtags: ["국내여행", "맛집", "전국", "힐링"],
+    likes: 411,
+    comments: 2,
+    shares: 11,
+  },
+];
 
 const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -39,6 +81,7 @@ const useHorizontalScroll = () => {
 const Community = () => {
   const { scrollRef, handleScrollLeft, handleScrollRight } =
     useHorizontalScroll();
+  const navigate = useNavigate();
 
   const regionTags = [
     "서울",
@@ -59,6 +102,11 @@ const Community = () => {
       (inputValue.trim() ? ` ${inputValue.trim()}` : "");
     console.log("검색 실행 (전체 검색어):", fullSearchTerm.trim());
     // 여기에 실제 검색 로직 구현 (예: API 호출, 데이터 필터링 등)
+  };
+
+  // 게시글 클릭 핸들러
+  const handlePostClick = (postId: string) => {
+    navigate(`/community/post/${postId}`);
   };
 
   const scrollButtonStyles = {
@@ -233,38 +281,13 @@ const Community = () => {
 
       {/* 일반 게시판 목록  */}
       <Stack spacing={2}>
-        <CommunityPostItem
-          imgbg="#f3e5f5"
-          title="일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!"
-          hashtags={["일본", "단기여행", "행복", "유튜버"]}
-          likes={132}
-          shares={23}
-          comments={3}
-        />
-        <CommunityPostItem
-          imgbg="#f0f4c3"
-          title="일본으로 2박 여행 가볼래?"
-          hashtags={["일본", "해외여행", "강추"]}
-          likes={312}
-          shares={3}
-          comments={5}
-        />
-        <CommunityPostItem
-          imgbg="#bbdefb"
-          title="연인끼리 추억 쌓기 (당일치기)"
-          hashtags={["연인", "단기여행", "힐링", "즐거운", "시원한"]}
-          likes={1322}
-          shares={23}
-          comments={3}
-        />
-        <CommunityPostItem
-          imgbg="#eeeeee"
-          title="국내 맛집 여행"
-          hashtags={["국내여행", "맛집", "전국", "힐링"]}
-          likes={411}
-          shares={11}
-          comments={2}
-        />
+        {temporaryPosts.map((post) => (
+          <CommunityPostItem
+            key={post.id}
+            post={post}
+            onClick={() => handlePostClick(post.id)}
+          />
+        ))}
       </Stack>
 
       {/* 스크롤 맨 위로 이동 버튼 */}
