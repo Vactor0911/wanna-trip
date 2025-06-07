@@ -3,7 +3,7 @@
  * https://ckeditor.com/ckeditor-5/builder/?redirect=portal#installation/NoNgNARATAdCMAYKQOwFYoEYCcbsu0wQSgQBYoQBmMs7ADhHuxBDLQRSioSqmQgBrAPbIEYYJjDip4mQF1UAMyJoUAYwjygA
  */
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   ClassicEditor,
@@ -20,6 +20,7 @@ import {
   ListProperties,
   Paragraph,
   TodoList,
+  EventInfo,
 } from "ckeditor5";
 
 import translations from "ckeditor5/translations/ko.js";
@@ -30,10 +31,29 @@ import "./TextEditor.css";
 
 const LICENSE_KEY = import.meta.env.VITE_CKEDITOR_LICENSE_KEY;
 
-export default function CardTextEditor() {
+interface CardTextEditorProps {
+  setContent?: (content: string) => void;
+}
+
+export default function CardTextEditor(props: CardTextEditorProps) {
+  const { setContent } = props;
+
   const editorContainerRef = useRef(null);
   const editorRef = useRef(null);
   const [isLayoutReady, setIsLayoutReady] = useState(false);
+
+  // 내용 변경
+  const handleContentChange = useCallback(
+    (_: EventInfo, editor: ClassicEditor) => {
+      if (!setContent) {
+        return;
+      }
+
+      const newContent = editor.getData();
+      setContent(newContent);
+    },
+    [setContent]
+  );
 
   useEffect(() => {
     setIsLayoutReady(true);
@@ -134,7 +154,11 @@ export default function CardTextEditor() {
         <div className="editor-container__editor">
           <div ref={editorRef}>
             {editorConfig && (
-              <CKEditor editor={ClassicEditor} config={editorConfig} />
+              <CKEditor
+                editor={ClassicEditor}
+                config={editorConfig}
+                onBlur={handleContentChange}
+              />
             )}
           </div>
         </div>

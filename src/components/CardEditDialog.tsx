@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  ClickAwayListener,
   Dialog,
   DialogTitle,
   Divider,
@@ -11,7 +12,7 @@ import {
 } from "@mui/material";
 import { useAtom } from "jotai";
 import { cardEditDialogOpenAtom } from "../state";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { theme } from "../utils/theme";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
@@ -19,12 +20,29 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import Tooltip from "./Tooltip";
 import CardTextEditor from "./text_editor/CardTextEditor";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { TimeField } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
   const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
+  const [content, setContent] = useState(""); // 카드 내용
+  const [startTime, setStartTime] = useState(dayjs("2001-01-01T01:00")); // 시작 시간
+  const [endTime, setEndTime] = useState(dayjs("2001-01-01T02:00")); // 종료 시간
+  const [isStartTimeEditing, setIsStartTimeEditing] = useState(false); // 시작 시간 편집 상태
+  const [isEndTimeEditing, setIsEndTimeEditing] = useState(false); // 종료 시간 편집 상태
+
+  // 대화상자 열 때 시간 초기화
+  useEffect(() => {
+    if (cardEditDialogOpen) {
+      setStartTime(dayjs("2001-01-01T01:00"));
+      setEndTime(dayjs("2001-01-01T02:00"));
+    }
+  }, [cardEditDialogOpen]);
 
   // 카드 편집 대화상자 닫기
   const handleCardEditDialogClose = useCallback(() => {
@@ -35,6 +53,52 @@ const CardEditDialog = () => {
   const handleCardLockToggle = useCallback(() => {
     setIsCardLocked((prev) => !prev);
   }, [setIsCardLocked]);
+
+  // 시작 시간 클릭
+  const handleStartTimeClick = useCallback(() => {
+    setIsStartTimeEditing((prev) => !prev);
+  }, []);
+
+  // 시작 시간 변경
+  const handleStartTimeChange = useCallback(
+    (newTime: dayjs.Dayjs | null) => {
+      if (newTime && newTime.isBefore(endTime)) {
+        setStartTime(newTime);
+      }
+    },
+    [endTime]
+  );
+
+  // 시작 시간 변경 완료
+  const handleStartTimeClickAway = useCallback(() => {
+    setIsStartTimeEditing(false);
+  }, []);
+
+  // 종료 시간 클릭
+  const handleEndTimeClick = useCallback(() => {
+    setIsEndTimeEditing((prev) => !prev);
+  }, []);
+
+  // 종료 시간 변경
+  const handleEndTimeChange = useCallback(
+    (newTime: dayjs.Dayjs | null) => {
+      if (newTime && newTime.isAfter(startTime)) {
+        setEndTime(newTime);
+      }
+    },
+    [startTime]
+  );
+
+  // 종료 시간 변경 완료
+  const handleEndTimeClickAway = useCallback(() => {
+    setIsEndTimeEditing(false);
+  }, []);
+
+  // 저장 버튼 클릭
+  const handleSaveButtonClick = useCallback(() => {
+    console.log("저장 버튼 클릭", content, startTime, endTime);
+    setCardEditDialogOpen(false);
+  }, [content, endTime, setCardEditDialogOpen, startTime]);
 
   return (
     <Dialog
@@ -109,7 +173,7 @@ const CardEditDialog = () => {
             }}
             height="400px"
           >
-            <CardTextEditor />
+            <CardTextEditor setContent={setContent} />
           </Box>
 
           <Stack
@@ -145,7 +209,14 @@ const CardEditDialog = () => {
                 }}
               >
                 <PlaceRoundedIcon />
-                <Typography variant="h6">장소</Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    padding: "6px 8px",
+                  }}
+                >
+                  장소
+                </Typography>
               </Stack>
 
               {/* 시간 선택기 */}
@@ -158,9 +229,58 @@ const CardEditDialog = () => {
                 }}
               >
                 <AccessTimeRoundedIcon />
-                <Typography variant="h6" flex={1}>
-                  시간
-                </Typography>
+
+                {/* 시간 선택 */}
+                <Stack direction="row" alignItems="center">
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    {/* 시작 시간 */}
+                    {isStartTimeEditing ? (
+                      <ClickAwayListener onClickAway={handleStartTimeClickAway}>
+                        <Box width="80px">
+                          <TimeField
+                            label="시작 시간"
+                            ampm={false}
+                            value={startTime}
+                            maxTime={endTime}
+                            onChange={handleStartTimeChange}
+                          />
+                        </Box>
+                      </ClickAwayListener>
+                    ) : (
+                      <Button onClick={handleStartTimeClick}>
+                        <Typography variant="h6" color="black">
+                          {startTime.format("HH:mm")}
+                        </Typography>
+                      </Button>
+                    )}
+
+                    {/* 구분자 */}
+                    <Typography variant="h6" color="black">
+                      ~
+                    </Typography>
+
+                    {/* 종료 시간 */}
+                    {isEndTimeEditing ? (
+                      <ClickAwayListener onClickAway={handleEndTimeClickAway}>
+                        <Box width="80px">
+                          <TimeField
+                            label="종료 시간"
+                            ampm={false}
+                            value={endTime}
+                            minTime={startTime}
+                            onChange={handleEndTimeChange}
+                          />
+                        </Box>
+                      </ClickAwayListener>
+                    ) : (
+                      <Button onClick={handleEndTimeClick}>
+                        <Typography variant="h6" color="black">
+                          {endTime.format("HH:mm")}
+                        </Typography>
+                      </Button>
+                    )}
+                  </LocalizationProvider>
+                </Stack>
               </Stack>
             </Stack>
           </Stack>
@@ -191,6 +311,7 @@ const CardEditDialog = () => {
             sx={{
               px: 3,
             }}
+            onClick={handleSaveButtonClick}
           >
             <Typography>저장</Typography>
           </Button>
