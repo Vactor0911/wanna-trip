@@ -1,8 +1,8 @@
 import { Paper, Stack, Typography } from "@mui/material";
-import { cardEditDialogOpenAtom } from "../state";
 import { useCallback } from "react";
 import { useSetAtom } from "jotai";
 import { theme } from "../utils/theme";
+import { cardEditDialogOpenAtom } from "../state/template";
 
 const Card = () => {
   const setCardEditDialogOpen = useSetAtom(cardEditDialogOpenAtom);

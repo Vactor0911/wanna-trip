@@ -11,7 +11,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useAtom } from "jotai";
-import { cardEditDialogOpenAtom } from "../state";
 import { useCallback, useEffect, useState } from "react";
 import { theme } from "../utils/theme";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
@@ -24,6 +23,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimeField } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import { cardEditDialogOpenAtom } from "../state/template";
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
