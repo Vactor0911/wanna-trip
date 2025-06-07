@@ -5,7 +5,6 @@ import {
   DialogTitle,
   Divider,
   IconButton,
-  Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
@@ -19,6 +18,8 @@ import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import Tooltip from "./Tooltip";
 import CardTextEditor from "./text_editor/CardTextEditor";
+import NaverMap from "./NaverMap";
+
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
@@ -121,18 +122,7 @@ const CardEditDialog = () => {
             gap={1}
           >
             {/* 지도 뷰어 */}
-            <Skeleton
-              variant="rectangular"
-              sx={{
-                borderRadius: 2,
-                width: {
-                  xs: "200px",
-                },
-                height: {
-                  xs: "200px",
-                },
-              }}
-            />
+            <NaverMap width={200} height={200} />
 
             <Stack>
               {/* 선택된 장소 설명 */}
