@@ -25,16 +25,16 @@ import { TimeField } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import DOMPurify from "dompurify";
 import {
-  cardDataAtom,
   cardEditDialogOpenAtom,
   selectedCardAtom,
+  templateAtom,
 } from "../state/template";
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
-  const [cardData, setCardData] = useAtom(cardDataAtom);
+  const [template, setTemplate] = useAtom(templateAtom);
   const selectedCard = useAtomValue(selectedCardAtom);
 
   const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
@@ -46,11 +46,17 @@ const CardEditDialog = () => {
 
   // 대화상자 열 때 시간 초기화
   useEffect(() => {
-    if (cardEditDialogOpen) {
-      setStartTime(dayjs("2001-01-01T01:00"));
-      setEndTime(dayjs("2001-01-01T02:00"));
+    if (cardEditDialogOpen && selectedCard) {
+      const boardIndex = selectedCard.board;
+      const cardIndex = selectedCard.card;
+      const card = template.boards[boardIndex]?.cards[cardIndex];
+
+      setStartTime(card.startTime || dayjs("2001-01-01T01:00"));
+      setEndTime(card.endTime || dayjs("2001-01-01T02:00"));
+      setContent(card.content || "");
+      setIsCardLocked(card.isLocked || false);
     }
-  }, [cardEditDialogOpen]);
+  }, [cardEditDialogOpen, selectedCard, template.boards]);
 
   // 카드 편집 대화상자 닫기
   const handleCardEditDialogClose = useCallback(() => {
@@ -104,38 +110,53 @@ const CardEditDialog = () => {
 
   // 저장 버튼 클릭
   const handleSaveButtonClick = useCallback(() => {
-    
+    if (!selectedCard) {
+      return;
+    }
+
+    const boardIndex = selectedCard.board;
+    const cardIndex = selectedCard.card;
+    const card = template.boards[boardIndex]?.cards[cardIndex];
+
     // HTML 내용 정제
     const cleanHtml = DOMPurify.sanitize(content);
 
     // 카드 데이터 업데이트
-    const updatedCardData = cardData?.map((card) => {
-      if (card.uuid === selectedCard?.uuid) {
-        return {
-          ...card,
-          content: cleanHtml,
-          startTime: startTime,
-          endTime: endTime,
-          isLocked: isCardLocked,
-        };
-      }
-      return card;
-    });
-    setCardData(updatedCardData || []);
-    
+    const newCard = {
+      ...card,
+      startTime: startTime,
+      endTime: endTime,
+      content: cleanHtml,
+      isLocked: isCardLocked,
+    };
+
+    const newTemplate = {
+      ...template,
+      boards: template.boards.map((board, index) => {
+        if (index === boardIndex) {
+          return {
+            ...board,
+            cards: board.cards.map((c, i) => (i === cardIndex ? newCard : c)),
+          };
+        }
+        return board;
+      }),
+    };
+    setTemplate(newTemplate);
+
     console.log("저장 버튼 클릭", cleanHtml, startTime, endTime);
 
     // 대화상자 닫기
     setCardEditDialogOpen(false);
   }, [
-    cardData,
     content,
     endTime,
     isCardLocked,
-    selectedCard?.uuid,
-    setCardData,
+    selectedCard,
     setCardEditDialogOpen,
+    setTemplate,
     startTime,
+    template,
   ]);
 
   return (

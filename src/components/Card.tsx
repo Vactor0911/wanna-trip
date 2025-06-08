@@ -2,7 +2,7 @@ import { Paper, Stack, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useSetAtom } from "jotai";
 import { theme } from "../utils/theme";
-import { cardEditDialogOpenAtom, CardInterface } from "../state/template";
+import { cardEditDialogOpenAtom, CardInterface, selectedCardAtom } from "../state/template";
 
 interface CardProps {
   card: CardInterface;
@@ -12,6 +12,7 @@ const Card = (props: CardProps) => {
   const { card } = props;
 
   const setCardEditDialogOpen = useSetAtom(cardEditDialogOpenAtom);
+  const setSelectedCard = useSetAtom(selectedCardAtom);
 
   // 카드 편집 다이얼로그 열기
   const handleCardEditDialogOpen = useCallback(() => {

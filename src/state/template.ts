@@ -45,6 +45,4 @@ export const templateModeAtom = atom(TemplateModes.EDIT); // 템플릿 모드 �
 
 export const cardEditDialogOpenAtom = atom(false); // 카드 편집 다이얼로그 열림 상태
 
-export const selectedCardAtom = atom<CardInterface | null>(null); // 선택된 카드 상태
-
-export const cardDataAtom = atom<CardInterface[] | null>(null); // 카드 데이터 상태
+export const selectedCardAtom = atom<{ board:number, card:number } | null>(null); // 선택된 카드 상태
