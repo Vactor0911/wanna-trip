@@ -98,7 +98,7 @@ const UserTemplates = () => {
       // 사용자가 입력한 이름으로 템플릿 생성
       const response = await axiosInstance.post(
         "/template",
-        { name: newTemplateName.trim() },
+        { title: newTemplateName.trim() },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
