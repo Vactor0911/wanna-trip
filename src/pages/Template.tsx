@@ -20,12 +20,17 @@ import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
-import { templateAtom, templateModeAtom } from "../state";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
+import { MAX_BOARDS } from "../utils/template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import CardEditDialog from "../components/CardEditDialog";
+import dayjs from "dayjs";
+import {
+  templateAtom,
+  templateModeAtom,
+  TemplateModes,
+} from "../state/template";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -52,13 +57,12 @@ interface BackendBoard {
 
 // 백엔드 카드 인터페이스
 interface BackendCard {
-  card_id: number;
-  card_uuid: string;
-  title: string;
-  content: string;
-  start_time: string;
-  end_time: string;
-  order_index: number;
+  card_id: number; // 카드 ID
+  content: string; // 카드 내용
+  start_time: string; // 카드 시작 시간
+  end_time: string; // 카드 종료 시간
+  order_index: number; // 카드 순서 인덱스
+  locked: boolean; // 카드 잠금 상태 (0, 1으로 표현 됨)
 }
 
 const Template = () => {
@@ -91,15 +95,35 @@ const Template = () => {
 
       if (response.data.success) {
         const backendTemplate = response.data.template as BackendTemplate;
+        console.log("백엔드 템플릿:", backendTemplate);
+        console.log("보드 개수:", backendTemplate.boards?.length || 0);
 
-        // 보드만 있는 간단한 형태로 변환
-        setTemplate({
+        // 보드와 카드 정보를 포함한 템플릿 데이터로 변환
+        const transformedTemplate = {
           uuid: backendTemplate.template_uuid,
           title: backendTemplate.title,
-          boards: backendTemplate.boards.map(() => ({
-            cards: [], // 현재는 카드 없이 빈 보드로 설정
+          boards: (backendTemplate.boards || []).map((board) => ({
+            id: board.board_id,
+            dayNumber: board.day_number,
+            title: board.title || `Day ${board.day_number}`,
+            cards: (board.cards || []).map((card) => ({
+              id: card.card_id,
+              content: card.content || "",
+              // 시간만 있는 경우 임시 기본 날짜를 추가하여 파싱
+              startTime: card.start_time
+                ? dayjs(`2001-01-01T${card.start_time}`)
+                : dayjs(),
+              endTime: card.end_time
+                ? dayjs(`2001-01-01T${card.end_time}`)
+                : dayjs(),
+              orderIndex: card.order_index,
+              isLocked: card.locked, // 기본값 - 잠금 해제 상태
+            })),
           })),
-        });
+        };
+
+        console.log("변환된 템플릿:", transformedTemplate);
+        setTemplate(transformedTemplate);
         setTemplateTitle(backendTemplate.title);
       } else {
         setError("템플릿 데이터를 불러올 수 없습니다.");
@@ -124,23 +148,34 @@ const Template = () => {
     );
   }, [setMode]);
 
-  // 보드 추가 버튼 클릭
-  const handleAddBoardButtonClick = useCallback(() => {
+  // 맨 뒤에 보드 추가 함수
+  const handleAddBoardToEnd = useCallback(async () => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
       return;
     }
 
-    // 새 보드 객체
-    const newBoard = {
-      cards: [],
-    };
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
 
-    // 새 템플릿 객체
-    const newTemplate = insertNewBoard(template, newBoard);
+      // 백엔드 API 호출하여 맨 뒤에 새 보드 생성
+      const response = await axiosInstance.post(
+        `/board/${template.uuid}`,
+        {},
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
 
-    setTemplate(newTemplate);
-  }, [setTemplate, template]);
+      if (response.data.success) {
+        console.log("보드 추가 성공:", response.data);
+
+        // 템플릿 데이터 새로 불러오기
+        await fetchTemplateData();
+      }
+    } catch (error) {
+      console.error("보드 추가 오류:", error);
+    }
+  }, [template, fetchTemplateData]);
 
   // 템플릿 제목 클릭
   const handleTemplateTitleClick = useCallback(() => {
@@ -156,12 +191,31 @@ const Template = () => {
   );
 
   // 템플릿 제목 편집 완료
-  const handleTemplateTitleClickAway = useCallback(() => {
-    const newTemplate = { ...template };
-    newTemplate.title = templateTitle;
+  const handleTemplateTitleClickAway = useCallback(async () => {
+    try {
+      const newTemplate = { ...template };
+      newTemplate.title = templateTitle;
+      setTemplate(newTemplate);
 
-    setTemplate(newTemplate);
-    setIsTemplateTitleEditing(false);
+      // uuid로 템플릿 데이터를 가져왔으므로, 해당 uuid를 사용하여 API 요청
+      if (template.uuid) {
+        const csrfToken = await getCsrfToken();
+
+        await axiosInstance.put(
+          `/template/uuid/${template.uuid}`,
+          { title: newTemplate.title },
+          { headers: { "X-CSRF-Token": csrfToken } }
+        );
+
+        console.log("템플릿 제목이 성공적으로 변경되었습니다.");
+      } else {
+        console.error("템플릿 UUID가 유효하지 않습니다.");
+      }
+    } catch (error) {
+      console.error("템플릿 제목 변경 중 오류 발생:", error);
+    } finally {
+      setIsTemplateTitleEditing(false);
+    }
   }, [setTemplate, template, templateTitle]);
 
   // 로딩 상태 표시
@@ -328,8 +382,14 @@ const Template = () => {
             overflowX: "auto",
           }}
         >
-          {template.boards.map((_, index) => (
-            <Board key={`board-${index + 1}`} day={index + 1} />
+          {template.boards.map((board, index) => (
+            <Board
+              key={`board-${board.id || index}`}
+              boardId={board.id!}
+              day={board.dayNumber || index + 1}
+              boardData={board} // 보드 데이터 직접 전달
+              fetchTemplateData={fetchTemplateData} // 함수 전달
+            />
           ))}
 
           {/* 보드 추가 버튼 */}
@@ -337,7 +397,7 @@ const Template = () => {
             <Box>
               <Tooltip title="보드 추가하기" placement="top">
                 <Button
-                  onClick={handleAddBoardButtonClick}
+                  onClick={handleAddBoardToEnd}
                   sx={{
                     padding: 0,
                   }}

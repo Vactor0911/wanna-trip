@@ -20,7 +20,7 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 interface Template {
   template_id: number;
   template_uuid: string;
-  name: string;
+  title: string;
   created_at: string;
   updated_at: string;
 }
@@ -98,7 +98,7 @@ const UserTemplates = () => {
       // 사용자가 입력한 이름으로 템플릿 생성
       const response = await axiosInstance.post(
         "/template",
-        { name: newTemplateName.trim() },
+        { title: newTemplateName.trim() },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -224,7 +224,7 @@ const UserTemplates = () => {
               <SquareTemplateCard
                 key={`template-${template.template_id}`}
                 id={template.template_id}
-                title={template.name}
+                title={template.title}
                 color={getRandomColor(template.template_id)} // 색상은 ID 기반으로 랜덤 생성, 임시
                 onClick={() => handleTemplateClick(template.template_uuid)}
                 onDelete={() => handleDeleteButtonClick(template.template_id)}
