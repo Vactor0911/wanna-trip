@@ -7,10 +7,10 @@ import Tooltip from "./Tooltip";
 import Card from "./Card";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
-import { templateAtom } from "../state";
 import { useCallback } from "react";
 import { insertNewBoard, insertNewCard, MAX_BOARDS } from "../utils/template";
 import dayjs from "dayjs";
+import { templateAtom } from "../state/template";
 
 interface BoardProps {
   day: number;
@@ -88,10 +88,10 @@ const Board = (props: BoardProps) => {
     // 새 카드 객체
     const newCard = {
       uuid: "1",
-      type: 0,
-      startTime: dayjs(),
-      endTime: dayjs(),
-      content: "새 카드",
+      startTime: dayjs("2001-01-01T01:00"),
+      endTime: dayjs("2001-01-01T02:00"),
+      content: "",
+      isLocked: false,
     };
 
     // 새 템플릿 객체
@@ -159,8 +159,8 @@ const Board = (props: BoardProps) => {
               overflowY: "auto",
             }}
           >
-            {template.boards[day - 1]?.cards?.map((_, index) => (
-              <Card key={`card-${day}-${index + 1}`} />
+            {template.boards[day - 1]?.cards?.map((card, index) => (
+              <Card key={`card-${day}-${index + 1}`} card={card} />
             ))}
           </Stack>
 

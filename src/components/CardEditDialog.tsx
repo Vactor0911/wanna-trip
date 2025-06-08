@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { theme } from "../utils/theme";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
@@ -23,12 +23,20 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimeField } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { cardEditDialogOpenAtom } from "../state/template";
+import DOMPurify from "dompurify";
+import {
+  cardDataAtom,
+  cardEditDialogOpenAtom,
+  selectedCardAtom,
+} from "../state/template";
 
 const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
+  const [cardData, setCardData] = useAtom(cardDataAtom);
+  const selectedCard = useAtomValue(selectedCardAtom);
+
   const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
   const [content, setContent] = useState(""); // 카드 내용
   const [startTime, setStartTime] = useState(dayjs("2001-01-01T01:00")); // 시작 시간
@@ -96,9 +104,39 @@ const CardEditDialog = () => {
 
   // 저장 버튼 클릭
   const handleSaveButtonClick = useCallback(() => {
-    console.log("저장 버튼 클릭", content, startTime, endTime);
+    
+    // HTML 내용 정제
+    const cleanHtml = DOMPurify.sanitize(content);
+
+    // 카드 데이터 업데이트
+    const updatedCardData = cardData?.map((card) => {
+      if (card.uuid === selectedCard?.uuid) {
+        return {
+          ...card,
+          content: cleanHtml,
+          startTime: startTime,
+          endTime: endTime,
+          isLocked: isCardLocked,
+        };
+      }
+      return card;
+    });
+    setCardData(updatedCardData || []);
+    
+    console.log("저장 버튼 클릭", cleanHtml, startTime, endTime);
+
+    // 대화상자 닫기
     setCardEditDialogOpen(false);
-  }, [content, endTime, setCardEditDialogOpen, startTime]);
+  }, [
+    cardData,
+    content,
+    endTime,
+    isCardLocked,
+    selectedCard?.uuid,
+    setCardData,
+    setCardEditDialogOpen,
+    startTime,
+  ]);
 
   return (
     <Dialog

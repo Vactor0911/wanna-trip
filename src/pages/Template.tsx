@@ -20,12 +20,12 @@ import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
-import { templateAtom, templateModeAtom } from "../state";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { insertNewBoard, MAX_BOARDS, TemplateModes } from "../utils/template";
+import { insertNewBoard, MAX_BOARDS } from "../utils/template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import CardEditDialog from "../components/CardEditDialog";
+import { templateAtom, templateModeAtom, TemplateModes } from "../state/template";
 
 // 템플릿 모드별 아이콘
 const modes = [

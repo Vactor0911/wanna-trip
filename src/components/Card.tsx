@@ -2,9 +2,15 @@ import { Paper, Stack, Typography } from "@mui/material";
 import { useCallback } from "react";
 import { useSetAtom } from "jotai";
 import { theme } from "../utils/theme";
-import { cardEditDialogOpenAtom } from "../state/template";
+import { cardEditDialogOpenAtom, CardInterface } from "../state/template";
 
-const Card = () => {
+interface CardProps {
+  card: CardInterface;
+}
+
+const Card = (props: CardProps) => {
+  const { card } = props;
+
   const setCardEditDialogOpen = useSetAtom(cardEditDialogOpenAtom);
 
   // 카드 편집 다이얼로그 열기
@@ -29,14 +35,11 @@ const Card = () => {
       <Stack gap={1}>
         {/* 시간 */}
         <Typography variant="subtitle1" fontWeight="bold">
-          01:00 ~ 03:00
+          {`${card.startTime.format("HH:mm")} ~ ${card.endTime.format("HH:mm")}`}
         </Typography>
 
         {/* 내용 */}
-        <Typography>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Harum id
-          molestias molestiae, aperiam iste soluta nostrum magnam blanditiis...
-        </Typography>
+        {card.content}
       </Stack>
     </Paper>
   );
