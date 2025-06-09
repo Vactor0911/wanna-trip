@@ -15,12 +15,53 @@ import { useNavigate } from "react-router-dom";
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import PopularTemplates from "../components/PopularTemplates";
+
+// 임시 인기 템플릿 데이터
+const dummyPopularTemplates: PopularTemplateData[] = [
+  {
+    id: "1",
+    bgColor: "#76B6FF",
+    label: "파워J를 위한 일본 여행 완벽 플래너",
+    author: "고유로",
+    likes: 12,
+    shares: 3,
+    comments: 5,
+  },
+  {
+    id: "2",
+    bgColor: "#FFF0A7",
+    label: "감성 가득 오사카 2박 3일",
+    author: "여행러버",
+    likes: 8,
+    shares: 2,
+    comments: 1,
+  },
+  {
+    id: "3",
+    bgColor: "#FFB7E4",
+    label: "도쿄 핵심 맛집 투어",
+    author: "맛집헌터",
+    likes: 20,
+    shares: 7,
+    comments: 10,
+  },
+  {
+    id: "4",
+    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+    label: "벚꽃 시즌 교토 산책",
+    author: "벚꽃소녀",
+    likes: 15,
+    shares: 4,
+    comments: 2,
+  },
+];
 
 // 템플릿 타입 정의
 interface Template {
   template_id: number;
   template_uuid: string;
-  name: string;
+  title: string;
   created_at: string;
   updated_at: string;
 }
@@ -98,7 +139,7 @@ const UserTemplates = () => {
       // 사용자가 입력한 이름으로 템플릿 생성
       const response = await axiosInstance.post(
         "/template",
-        { name: newTemplateName.trim() },
+        { title: newTemplateName.trim() },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -193,6 +234,8 @@ const UserTemplates = () => {
       {/* 인기 템플릿 */}
       <Stack gap={4}>
         <Typography variant="h5">인기 템플릿</Typography>
+        {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
+        <PopularTemplates maxCards={3} type="template" data={dummyPopularTemplates} />
       </Stack>
 
       {/* 내 템플릿 */}
@@ -224,7 +267,7 @@ const UserTemplates = () => {
               <SquareTemplateCard
                 key={`template-${template.template_id}`}
                 id={template.template_id}
-                title={template.name}
+                title={template.title}
                 color={getRandomColor(template.template_id)} // 색상은 ID 기반으로 랜덤 생성, 임시
                 onClick={() => handleTemplateClick(template.template_uuid)}
                 onDelete={() => handleDeleteButtonClick(template.template_id)}
