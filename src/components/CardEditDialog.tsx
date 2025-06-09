@@ -8,10 +8,11 @@ import {
   IconButton,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { theme } from "../utils/theme";
 import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
 import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
@@ -30,8 +31,12 @@ import {
   updateBoardCardAtom,
 } from "../state/template";
 import dayjs from "dayjs";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 const CardEditDialog = () => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
@@ -44,7 +49,7 @@ const CardEditDialog = () => {
 
   // 동적 제목 생성
   const dialogTitle = currentBoard
-    ? `${template.title} - Day ${currentBoard.dayNumber || ""}`
+    ? `${currentBoard.dayNumber || "N"}일차`
     : "새 카드 작성";
 
   const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
@@ -233,6 +238,12 @@ const CardEditDialog = () => {
   return (
     <Dialog
       fullWidth
+      fullScreen={fullScreen}
+      slotProps={{
+        paper: {
+          sx: { margin: 1 },
+        },
+      }}
       open={cardEditDialogOpen}
       onClose={handleCardEditDialogClose}
       maxWidth="md"
@@ -268,6 +279,18 @@ const CardEditDialog = () => {
 
             {/* 카드 제목 */}
             <Typography variant="h4">{dialogTitle}</Typography>
+
+            {/* 닫기 버튼 */}
+            <Stack flex={1} alignItems="flex-end">
+              <Tooltip title="닫기" placement="top">
+                <IconButton onClick={handleCardEditDialogClose} size="small">
+                  <CloseRoundedIcon
+                    fontSize="large"
+                    sx={{ color: theme.palette.black.main }}
+                  />
+                </IconButton>
+              </Tooltip>
+            </Stack>
           </Stack>
 
           {/* 구분선 */}
