@@ -60,8 +60,12 @@ export const temporaryPosts = [
 
 const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollAmount = 3 * (200 + 16);
 
+  // Constants for item width and margin
+  const ITEM_WIDTH = 200; // Width of each item in pixels
+  const ITEM_MARGIN = 16; // Margin between items in pixels
+
+  const scrollAmount = 3 * (ITEM_WIDTH + ITEM_MARGIN); // Total scroll amount for 3 items
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({
