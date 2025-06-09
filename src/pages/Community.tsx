@@ -205,8 +205,8 @@ const Community = () => {
                 name: "여수",
                 imgSrc: yeosuImg,
               },
-            ].map((category, index) => (
-              <Stack key={index} gap={1.1}>
+            ].map((category) => (
+              <Stack key={category.name} gap={1.1}>
                 <Stack
                   direction="column"
                   spacing={1}
