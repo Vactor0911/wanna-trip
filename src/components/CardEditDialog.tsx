@@ -295,20 +295,6 @@ const CardEditDialog = () => {
             md: 0,
           }}
         >
-          {/* 텍스트 편집기 */}
-          <Box
-            width={{
-              xs: "100%",
-              md: "70%",
-            }}
-            height="400px"
-          >
-            <CardTextEditor
-              setContent={setContent}
-              initialContent={content} // 현재 카드 내용을 초기값으로 전달
-            />
-          </Box>
-
           <Stack
             direction={{
               xs: "column",
@@ -405,6 +391,20 @@ const CardEditDialog = () => {
               </Stack>
             </Stack>
           </Stack>
+
+          {/* 텍스트 편집기 */}
+          <Box
+            width={{
+              xs: "100%",
+              md: "70%",
+            }}
+            height="400px"
+          >
+            <CardTextEditor
+              setContent={setContent}
+              initialContent={content} // 현재 카드 내용을 초기값으로 전달
+            />
+          </Box>
         </Stack>
 
         {/* 오류 메시지 표시 부분 - 지워도 됨 */}
