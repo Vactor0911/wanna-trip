@@ -11,6 +11,7 @@ import MainImage2 from "../assets/images/main2.png";
 import { theme } from "../utils/theme";
 import { useCallback } from "react";
 import { useNavigate } from "react-router";
+import Informations from "../components/Informations";
 
 const Main = () => {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ const Main = () => {
 
   return (
     <Container maxWidth="xl">
-      <Stack height="calc(100vh - 82px)">
+      <Stack height="calc(100vh - 82px)" overflow="auto">
         {/* 첫번째 장 */}
         <Stack
           height="100%"
@@ -168,6 +169,36 @@ const Main = () => {
               </Typography>
             </Button>
           </Box>
+        </Stack>
+
+        {/* 구분선 */}
+        <Box my={4} height="100%" border="1px solid #D9D9D9"/>
+
+        
+        {/* Informations 컴포넌트 예시 2개 */}
+        <Stack gap={4} height="100%">
+          {/* 두번째 장 */}
+          <Informations
+            subtitle="계획"
+            title={`내 계획 관리,\n일정부터 준비물까지\n완벽하게`}
+            rightContent={
+                <Stack>
+                  <Typography>필요한 준비물 자동 정리</Typography>
+                  <Typography>친구와 계획 공유</Typography> 
+                </Stack>
+            }
+          />
+          {/* 세번째 장 */}
+          <Informations
+            subtitle="추천"
+            title={`여행지 추천,\n맞춤 일정 제안`}
+            rightContent={
+              <Stack>
+              <Typography>취향 기반 여행지 추천</Typography>
+              <Typography>AI가 짜주는 일정</Typography> 
+            </Stack>
+            }
+          />
         </Stack>
       </Stack>
     </Container>
