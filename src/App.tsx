@@ -33,7 +33,7 @@ function App() {
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/myinformation/:uuid" element={<Myinformation />} />
+              <Route path="/myinformation" element={<Myinformation />} />
               <Route
                 path="/community/post/:id"
                 element={<CommunityPostDetail />}
