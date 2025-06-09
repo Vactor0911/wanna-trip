@@ -23,6 +23,7 @@ export interface PopularTemplateData {
 
 interface PopularTemplatesProps extends BoxProps {
   maxCards?: number; // 최대 카드 개수
+  type: 'template' | 'post'; // 컴포넌트 타입
   data: PopularTemplateData[];
   onCardClick?: (templateId: string) => void; // 카드 클릭 핸들러
 }
@@ -33,11 +34,13 @@ const CARD_ASPECT_RATIO = 11 / 6;
 /**
  * 인기 템플릿/커뮤니티 배너 컴포넌트
  * @param maxCards - 최대 카드 개수 (기본값: 3)
+ * @param type - 컴포넌트 타입
  * @param data - 배너 데이터 배열
  * @param onCardClick - 카드 클릭 시 실행할 콜백 함수
  */
 const PopularTemplates = ({
   maxCards = 3,
+  type,
   data,
   onCardClick,
   ...boxProps
@@ -226,28 +229,33 @@ const PopularTemplates = ({
               </Box>
 
               <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 0.5,
-                    cursor: 'pointer'
-                  }}
-                  onClick={(e) => handleLikeClick(e, tpl.id)}
-                >
-                  {likedTemplates.has(tpl.id) ? (
-                    <FavoriteIcon sx={{ fontSize: 16, color: 'error.main' }} />
-                  ) : (
-                    <FavoriteBorderOutlinedIcon sx={{ fontSize: 16, color: 'text.primary' }} />
-                  )} {tpl.likes}
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
-                </Typography>
-                <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} /> {tpl.comments}
-                </Typography>
+                {type === 'template' ? (
+                  <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
+                  </Typography>
+                ) : (
+                  <>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 0.5,
+                        cursor: 'pointer'
+                      }}
+                      onClick={(e) => handleLikeClick(e, tpl.id)}
+                    >
+                      {likedTemplates.has(tpl.id) ? (
+                        <FavoriteIcon sx={{ fontSize: 16, color: 'error.main' }} />
+                      ) : (
+                        <FavoriteBorderOutlinedIcon sx={{ fontSize: 16, color: 'text.primary' }} />
+                      )} {tpl.likes}
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} /> {tpl.comments}
+                    </Typography>
+                  </>
+                )}
               </Box>
             </Box>
           </Paper>
