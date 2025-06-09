@@ -12,6 +12,7 @@ import {
   ChangePassword,
   Template,
   Community,
+  Myinformation,
 } from "./pages";
 import CommunityPostDetail from "./pages/CommunityPostDetail";
 import Header from "./components/Header";
@@ -32,6 +33,7 @@ function App() {
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/myinformation/:uuid" element={<Myinformation />} />
               <Route
                 path="/community/post/:id"
                 element={<CommunityPostDetail />}
