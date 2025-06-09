@@ -38,12 +38,16 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
         {...others}
         sx={{
           fontWeight: 700,
-          color: others.readOnly ? "rgba(0, 0, 0, 0.38)" : theme.palette.black.main,
+          color: others.readOnly
+            ? "rgba(0, 0, 0, 0.38)"
+            : theme.palette.black.main,
           borderRadius: "8px",
           overflow: "hidden",
-          backgroundColor: others.readOnly ? theme.palette.secondary.main : "white",
+          backgroundColor: others.readOnly
+            ? theme.palette.secondary.main
+            : "white",
           "& input": {
-            transform: "translateY(5px)",
+            padding: "21.5px 14px 11.5px 14px",
           },
           "& fieldset": {
             top: 0,
