@@ -47,10 +47,20 @@ export const setupAxiosInterceptors = () => {
     async (error) => {
       const originalRequest = error.config;
 
+      // Rate Limit 오류 처리 (429 상태 코드)
+      if (error.response?.status === 429) {
+        // 서버에서 전달한 오류 메시지 표시
+        const errorMessage =
+          error.response.data.message ||
+          "너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.";
+        alert(errorMessage);
+        return Promise.reject(error);
+      }
+
       // AccessToken 만료 시 - Access Token 만료: 401 Unauthorized (권한 없음)
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true; // 중복 요청 방지 플래그
-        
+
         try {
           // CSRF 토큰 가져오기
           const csrfToken = await getCsrfToken();
