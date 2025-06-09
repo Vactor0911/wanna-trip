@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
-import PopularTemplates, { PopularTemplateData } from "../components/PopularTemplates";
+import PopularTemplates from "../components/PopularTemplates";
 
 // 임시 인기 템플릿 데이터
 const dummyPopularTemplates: PopularTemplateData[] = [
@@ -235,7 +235,7 @@ const UserTemplates = () => {
       <Stack gap={4}>
         <Typography variant="h5">인기 템플릿</Typography>
         {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
-        <PopularTemplates maxCards={3} data={dummyPopularTemplates} />
+        <PopularTemplates maxCards={3} type="template" data={dummyPopularTemplates} />
       </Stack>
 
       {/* 내 템플릿 */}
