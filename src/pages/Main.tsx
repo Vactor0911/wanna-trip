@@ -5,15 +5,89 @@ import {
   Paper,
   Stack,
   Typography,
+  TypographyProps,
+  useMediaQuery,
 } from "@mui/material";
 import MainImage1 from "../assets/images/main1.png";
 import MainImage2 from "../assets/images/main2.png";
 import { theme } from "../utils/theme";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router";
+
+interface ImagePaperProps {
+  src: string;
+}
+
+const ImagePaper = ({ src }: ImagePaperProps) => {
+  return (
+    <Paper
+      elevation={3}
+      sx={{
+        width: {
+          xs: "250px",
+          sm: "300px",
+          lg: "350px",
+          xl: "400px",
+        },
+        aspectRatio: "1/1",
+        borderRadius: "30px",
+        backgroundImage: `url(${src})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+        position: "absolute",
+        top: "0",
+        right: "0",
+        transform: {
+          xs: "none",
+          md: "translateY(-100%)",
+        },
+      }}
+    />
+  );
+};
 
 const Main = () => {
   const navigate = useNavigate();
+
+  const isMobileScreen = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 화면 여부
+  const isTabletScreen = useMediaQuery(theme.breakpoints.down("md")); // 태블릿 화면 여부
+
+  // 슬로건 타이포그래피 variant 속성값
+  const titleTypographyVariant = isMobileScreen // 제목 타이포그래피
+    ? "h5"
+    : isTabletScreen
+    ? "h3"
+    : "h2";
+  const subtitleTypographyVariant = isMobileScreen // 부제목 타이포그래피
+    ? "subtitle2"
+    : isTabletScreen
+    ? "h6"
+    : "h5";
+
+  // 슬로건 타이포그래피
+  const SloganTypography = useMemo(() => {
+    return (props: TypographyProps, isSubtitle = false) => {
+      const { children, ...others } = props;
+
+      const variant = isSubtitle
+        ? subtitleTypographyVariant
+        : titleTypographyVariant;
+
+      return (
+        <Typography
+          variant={variant}
+          {...others}
+          sx={{
+            wordBreak: "keep-all",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {children}
+        </Typography>
+      );
+    };
+  }, [subtitleTypographyVariant, titleTypographyVariant]);
 
   // 시작하기 버튼 클릭
   const handleStartButtonClick = useCallback(() => {
@@ -22,153 +96,98 @@ const Main = () => {
 
   return (
     <Container maxWidth="xl">
-      <Stack height="calc(100vh - 82px)">
-        {/* 첫번째 장 */}
-        <Stack
-          height="100%"
-          py={5}
-          gap={3}
-          justifyContent="space-evenly"
-          alignItems={{
-            xs: "center",
-            md: "flex-start",
-          }}
-          position="relative"
-        >
-          {/* 사진 */}
-          <Box
-            width={{
-              xs: "200px",
-              sm: "250px",
-              md: "300px",
-              lg: "400px",
+      <Stack
+        height="calc(100vh - 82px)"
+        paddingTop={{
+          xs: "40px",
+          md: "0",
+        }}
+        justifyContent="space-evenly"
+        alignItems={{
+          xs: "center",
+          md: "flex-start",
+        }}
+        position="relative"
+      >
+        {/* 사진 */}
+        {isMobileScreen || isTabletScreen ? (
+          <Stack
+            height={{
+              xs: "250px",
+              sm: "300px",
             }}
-            position={{
-              xs: "relative",
-              md: "absolute",
-            }}
-            bottom={{
-              xs: 0,
-              md: "10%",
-            }}
-            right={0}
-            sx={{
-              aspectRatio: "1/1",
-            }}
+            alignItems="center"
+            position="relative"
           >
-            {[MainImage1, MainImage2].map((image, index) => (
-              <Paper
-                elevation={3}
-                key={`main-image-${index}`}
-                sx={{
-                  width: "90%",
-                  aspectRatio: "1/1",
-                  backgroundImage: `url(${image})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                  borderRadius: 5,
-                  position: "absolute",
-                  bottom: index === 0 ? 0 : "10%",
-                  left: index === 0 ? 0 : "10%",
-                  zIndex: index === 0 ? 1 : 0,
-                }}
-              />
-            ))}
+            <Box
+              width={{
+                xs: "250px",
+                sm: "300px",
+              }}
+              position="relative"
+            >
+              <ImagePaper src={MainImage1} />
+              <Box position="absolute" bottom="40px" right="-40px" zIndex={-1}>
+                <ImagePaper src={MainImage2} />
+              </Box>
+            </Box>
+          </Stack>
+        ) : (
+          <Box position="absolute" bottom="100px" right="40px" zIndex={-1}>
+            <ImagePaper src={MainImage1} />
+            <Box position="absolute" bottom="40px" right="-40px" zIndex={-1}>
+              <ImagePaper src={MainImage2} />
+            </Box>
           </Box>
+        )}
 
-          {/* 슬로건 */}
-          <Stack gap={1} alignItems="flex-start">
-            {/* 첫번째 줄 */}
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: {
-                  xs: theme.typography.h6.fontSize,
-                  sm: theme.typography.h3.fontSize,
-                  md: theme.typography.h2.fontSize,
-                  lg: theme.typography.h1.fontSize,
-                },
-              }}
-            >
-              세상에서 제일{" "}
-              <Box component="span" sx={{ color: theme.palette.primary.main }}>
+        {/* 슬로건 */}
+        <Stack gap={1}>
+          {/* 첫번째 줄 */}
+          <Stack direction="row" flexWrap="wrap">
+            <SloganTypography>세상에서 제일</SloganTypography>
+            <Stack direction="row">
+              <SloganTypography color="primary" ml="0.25em">
                 간단한 계획서
-              </Box>
-              는
-            </Typography>
-
-            {/* 두번째 줄 */}
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: {
-                  xs: theme.typography.h6.fontSize,
-                  sm: theme.typography.h3.fontSize,
-                  md: theme.typography.h2.fontSize,
-                  lg: theme.typography.h1.fontSize,
-                },
-              }}
-            >
-              <Box component="span" sx={{ color: theme.palette.primary.main }}>
-                여행갈래
-              </Box>
-              로 시작!
-            </Typography>
-
-            {/* 세번째 줄 */}
-            <Stack
-              direction={{
-                xs: "column",
-                sm: "row",
-              }}
-            >
-              {["여행 계획을 더욱 빠르고 스마트하게", "만들어보세요 !"].map(
-                (text, index) => (
-                  <Typography
-                    variant="h5"
-                    color="black"
-                    display="inline-block"
-                    whiteSpace="nowrap"
-                    key={`main-slogan-${index}`}
-                    sx={{
-                      fontSize: {
-                        xs: theme.typography.subtitle1.fontSize,
-                        md: theme.typography.h6.fontSize,
-                        lg: theme.typography.h5.fontSize,
-                      },
-                    }}
-                  >
-                    {text}
-                  </Typography>
-                )
-              )}
+              </SloganTypography>
+              <SloganTypography>는</SloganTypography>
             </Stack>
           </Stack>
 
-          {/* 시작하기 버튼 */}
-          <Box>
-            <Button
-              variant="contained"
-              onClick={handleStartButtonClick}
+          {/* 두번째 줄 */}
+          <Stack direction="row" flexWrap="wrap">
+            <SloganTypography color="primary">여행갈래</SloganTypography>
+            <SloganTypography>로 시작!</SloganTypography>
+          </Stack>
+
+          {/* 세번째 줄 */}
+          <Stack direction="row">
+            <Typography
+              variant={subtitleTypographyVariant}
               sx={{
-                py: {
-                  xs: 2,
-                  md: 3,
-                },
-                px: {
-                  xs: 5,
-                  md: 9,
-                },
-                borderRadius: 3,
+                color: theme.palette.black.main,
               }}
             >
-              <Typography variant="h5" color="white">
-                바로 시작하기
-              </Typography>
-            </Button>
-          </Box>
+              여행 계획을 더욱 빠르고 스마트하게 템플릿으로 만들어보세요!
+            </Typography>
+          </Stack>
         </Stack>
+
+        {/* 시작하기 버튼 */}
+        <Box>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={handleStartButtonClick}
+            sx={{
+              paddingX: 8,
+              paddingY: 3,
+              borderRadius: "20px",
+            }}
+          >
+            <Typography variant="h5">바로 시작하기</Typography>
+          </Button>
+        </Box>
       </Stack>
     </Container>
   );

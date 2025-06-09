@@ -7,156 +7,98 @@ import Tooltip from "./Tooltip";
 import Card from "./Card";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
+import { templateAtom } from "../state";
 import { useCallback } from "react";
-import { MAX_BOARDS } from "../utils/template";
-import {
-  BoardInterface,
-  cardEditDialogOpenAtom,
-  currentEditCardAtom,
-  templateAtom,
-} from "../state/template";
-import React from "react";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { insertNewBoard, insertNewCard, MAX_BOARDS } from "../utils/template";
+import dayjs from "dayjs";
 
 interface BoardProps {
-  boardId: number;
   day: number;
-  boardData: BoardInterface; // 보드 데이터 직접 전달
-  fetchTemplateData: () => Promise<void>; // 함수 타입 추가
 }
 
-const Board = React.memo((props: BoardProps) => {
-  const { day, boardData, fetchTemplateData } = props;
-  const [template, ] = useAtom(templateAtom); // 템플릿 상태
+const Board = (props: BoardProps) => {
+  const { day } = props;
 
-  const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
-  const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
+  const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
 
-  // 카드 클릭 핸들러
-  const handleCardClick = useCallback(
-    (cardIndex: number) => {
-      const card = boardData.cards[cardIndex];
-      setCurrentEditCard({
-        cardId: card.id,
-        boardId: boardData.id,
-        orderIndex: card.orderIndex || cardIndex,
-      });
-      setCardEditDialogOpen(true);
-    },
-    [boardData, setCurrentEditCard, setCardEditDialogOpen]
-  );
-
-  // 카드 생성 버튼 클릭 핸들러
-  const handleAddCardButtonClick = useCallback(() => {
-    // 새 카드 생성을 위한 상태 설정
-    setCurrentEditCard({
-      cardId: null,
-      boardId: boardData.id,
-      orderIndex: boardData.cards.length,
-    });
-    setCardEditDialogOpen(true);
-  }, [boardData, setCurrentEditCard, setCardEditDialogOpen]);
-
-  // 보드 추가 버튼 클릭 - 현재 보드 바로 뒤에 새 보드 추가
-  const handleAddBoardButtonClick = useCallback(async () => {
+  // 보드 추가 버튼 클릭
+  const handleAddBoardButtonClick = useCallback(() => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
       return;
     }
 
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
+    // 새 보드 객체
+    const newBoard = { cards: [] };
 
-      // 백엔드 API 호출하여 현재 보드 뒤에 새 보드 생성
-      const response = await axiosInstance.post(
-        `/board/after/${boardData.id}`,
-        {}, // 빈 객체 전송
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
+    // 새 템플릿 객체
+    const newTemplate = insertNewBoard(template, newBoard, day);
 
-      if (response.data.success) {
-        console.log("보드 추가 성공:", response.data);
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
 
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
-      }
-    } catch (error) {
-      console.error("보드 추가 오류:", error);
-    }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
-
-  // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
-  const handleCopyBoardButtonClick = useCallback(async () => {
+  // 보드 복제 버튼 클릭
+  const handleCopyBoardButtonClick = useCallback(() => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
       return;
     }
 
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
+    // 새 보드 객체
+    const newBoard = {
+      cards: template.boards[day - 1].cards,
+    };
 
-      // 백엔드 API 호출하여 현재 보드 복제 (newTitle 필드 제거)
-      const response = await axiosInstance.post(
-        `/board/duplicate/${boardData.id}`,
-        {}, // 빈 객체 전송 (title 필드 제거)
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
+    // 새 템플릿 객체
+    const newTemplate = insertNewBoard(template, newBoard, day);
 
-      if (response.data.success) {
-        console.log("보드 복제 성공:", response.data);
-
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
-      }
-    } catch (error) {
-      console.error("보드 복제 오류:", error);
-    }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
 
   // 보드 삭제 버튼 클릭
-  const handleDeleteBoardButtonClick = useCallback(async () => {
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
+  const handleDeleteBoardButtonClick = useCallback(() => {
+    // 보드 개수가 최소 개수보다 적으면
+    if (template.boards.length <= 1) {
+      // 카드가 있다면 보드 초기화
+      if (template.boards[0].cards.length > 0) {
+        const newTemplate = {
+          ...template,
+          boards: [{ cards: [] }],
+        };
 
-      // 보드 개수가 최소 개수보다 적으면
-      if (template.boards.length <= 1) {
-        // 카드가 있다면 보드 카드 모두 삭제 API 호출
-        if (template.boards[0].cards.length > 0) {
-          const response = await axiosInstance.delete(
-            `/board/${boardData.id}/cards`,
-            {
-              headers: { "X-CSRF-Token": csrfToken },
-            }
-          );
-
-          if (response.data.success) {
-            console.log("보드 카드 삭제 성공:", response.data);
-
-            // 템플릿 데이터 새로 불러오기
-            await fetchTemplateData();
-          }
-        }
-        return;
+        setTemplate(newTemplate);
       }
-
-      // 보드 개수가 2개 이상일 경우 보드 자체를 삭제
-      const response = await axiosInstance.delete(`/board/${boardData.id}`, {
-        headers: { "X-CSRF-Token": csrfToken },
-      });
-
-      if (response.data.success) {
-        console.log("보드 삭제 성공:", response.data);
-
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
-      }
-    } catch (error) {
-      console.error("보드 삭제 오류:", error);
+      return; // 작업 중단
     }
-  }, [template, boardData, fetchTemplateData]);
+
+    // 새 템플릿 객체
+    const newTemplate = {
+      ...template,
+      boards: [
+        ...template.boards.slice(0, day - 1),
+        ...template.boards.slice(day),
+      ],
+    };
+
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
+
+  // 계획 추가 버튼 클릭
+  const handleAddCardButtonClick = useCallback(() => {
+    // 새 카드 객체
+    const newCard = {
+      uuid: "1",
+      type: 0,
+      startTime: dayjs(),
+      endTime: dayjs(),
+      content: "새 카드",
+    };
+
+    // 새 템플릿 객체
+    const newTemplate = insertNewCard(template, day, newCard);
+
+    setTemplate(newTemplate);
+  }, [day, setTemplate, template]);
 
   return (
     <Stack height="100%">
@@ -214,25 +156,23 @@ const Board = React.memo((props: BoardProps) => {
             gap={2}
             paddingBottom={0.5}
             sx={{
-              overflowY: "auto",
+              overflowY: "scroll",
             }}
           >
-            {/* 카드 목록 렌더링 */}
-            {(boardData?.cards || []).map((card, index) => (
-              <Card
-                key={`card-${card.id || `new-${index}`}`}
-                content={card.content || ""}
-                startTime={card.startTime}
-                endTime={card.endTime}
-                isLocked={card.isLocked}
-                onClick={() => handleCardClick(index)}
-              />
+            {template.boards[day - 1]?.cards?.map((_, index) => (
+              <Card key={`card-${day}-${index + 1}`} />
             ))}
           </Stack>
 
           <Button
             fullWidth
-            startIcon={<AddRoundedIcon sx={{ color: "inherit" }} />}
+            startIcon={
+              <AddRoundedIcon
+                sx={{
+                  color: "inherit",
+                }}
+              />
+            }
             onClick={handleAddCardButtonClick}
           >
             <Typography variant="subtitle1">계획 추가하기</Typography>
@@ -241,6 +181,6 @@ const Board = React.memo((props: BoardProps) => {
       </Paper>
     </Stack>
   );
-});
+};
 
 export default Board;

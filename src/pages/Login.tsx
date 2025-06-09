@@ -43,6 +43,7 @@ const Login = () => {
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
   if (wannaTripLoginState.isLoggedIn) {
+    // navigate("/template");
     navigate("/userTemplates");
   }
 
@@ -136,6 +137,9 @@ const Login = () => {
               true,
               { email: response.data.email }
             );
+
+            alert(`계정 연동 성공! ${linkingResult.data.name}님 환영합니다!`);
+            // navigate("/template");
             navigate("/userTemplates");
           }
           return;
@@ -150,6 +154,7 @@ const Login = () => {
         );
 
         alert(`${loginState.userName}님 환영합니다!`);
+        // navigate("/template");
         navigate("/userTemplates");
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
@@ -207,6 +212,9 @@ const Login = () => {
             true,
             { email: serverResponse.data.email }
           );
+
+          alert(`계정 연동 성공! ${linkingResult.data.name}님 환영합니다!`);
+          // navigate("/template");
           navigate("/userTemplates");
         }
         return;
@@ -222,6 +230,7 @@ const Login = () => {
 
       window.history.replaceState(null, "", "/login");
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
+      // navigate("/template");
       navigate("/userTemplates");
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
@@ -272,6 +281,7 @@ const Login = () => {
       );
 
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
+      // navigate("/template");
       navigate("/userTemplates");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -323,9 +333,9 @@ const Login = () => {
                     edge="end"
                   >
                     {isPasswordVisible ? (
-                      <VisibilityIcon />
-                    ) : (
                       <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
                     )}
                   </IconButton>
                 </InputAdornment>
