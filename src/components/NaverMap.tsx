@@ -1,3 +1,4 @@
+import { Skeleton } from "@mui/material";
 import { useEffect, useRef } from "react";
 
 // Add type declaration for naver on window object
@@ -16,8 +17,7 @@ interface MapProps {
 }
 
 const DEFAULT_LAT = 37.5665; // 서울 시청 위도
-const DEFAULT_LNG = 126.9780; // 서울 시청 경도
-
+const DEFAULT_LNG = 126.978; // 서울 시청 경도
 
 const NaverMap = ({
   width = 200,
@@ -26,9 +26,15 @@ const NaverMap = ({
   lng = DEFAULT_LNG,
   zoom = 13,
 }: MapProps) => {
-  const mapRef = useRef<HTMLDivElement | null>(null);   // 지도 컨테이너를 참조하기 위한 ref
+  const mapRef = useRef<HTMLDivElement | null>(null); // 지도 컨테이너를 참조하기 위한 ref
   const NAVER_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
+
   useEffect(() => {
+    // 네이버 클라이언트 ID가 설정되지 않은 경우 초기화 중단
+    if (!NAVER_CLIENT_ID) {
+      return;
+    }
+
     // 네이버 지도 스크립트가 로드되지 않았을 경우 동적으로 추가
     if (!window.naver) {
       const script = document.createElement("script");
@@ -58,13 +64,18 @@ const NaverMap = ({
     }
   }, [NAVER_CLIENT_ID, lat, lng, zoom]);
 
+  // 클라이언트 ID가 설정되지 않은 경우 로딩 스켈레톤 표시
+  if (!NAVER_CLIENT_ID) {
+    return <Skeleton variant="rounded" width={width} height={height} />;
+  }
+
   return (
     <div
-      ref={mapRef}  // 지도 컨테이너를 참조하기 위한 ref
+      ref={mapRef} // 지도 컨테이너를 참조하기 위한 ref
       style={{
-        width: typeof width === "number" ? `${width}px` : width,  // 너비 설정
+        width: typeof width === "number" ? `${width}px` : width, // 너비 설정
         height: typeof height === "number" ? `${height}px` : height, // 높이 설정
-        borderRadius: 8,  // 모서리 둥글게
+        borderRadius: 8, // 모서리 둥글게
         overflow: "hidden", // 자식 요소가 경계 밖으로 나가지 않도록 설정
       }}
     />
