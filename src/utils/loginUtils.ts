@@ -32,8 +32,9 @@ export const handleAccountLinking = async (params: {
   email: string;
   socialInfo: SocialInfo;
   csrfToken: string;
+  setWannaTripLoginState?: (state: LoginState) => void;
 }) => {
-  const { email, socialInfo, csrfToken } = params;
+  const { email, socialInfo, csrfToken, setWannaTripLoginState } = params;
 
   try {
     // 계정 연동 API 호출
@@ -50,6 +51,44 @@ export const handleAccountLinking = async (params: {
       alert(
         `${socialInfo.name}님 ${socialTypeName} 계정 연동 완료!\n이제 ${socialTypeName}로 간편하게 로그인할 수 있습니다.`
       );
+
+      // 서버 응답에서 로그인 타입 가져오기
+      // 서버에서 받은 loginType을 우선적으로 사용, 없으면 소셜 정보에서 가져옴
+      const serverLoginType =
+        linkResponse.data.loginType || socialInfo.socialType;
+
+      // 로그인 상태 업데이트
+      const savedLoginState = JSON.parse(
+        localStorage.getItem("WannaTriploginState") ||
+          sessionStorage.getItem("WannaTriploginState") ||
+          "{}"
+      );
+
+      if (savedLoginState.isLoggedIn) {
+        const updatedLoginState = {
+          ...savedLoginState,
+          loginType: serverLoginType, // 서버에서 받은 로그인 타입 사용
+          userName: socialInfo.name,
+        };
+
+        // 스토리지 업데이트
+        if (localStorage.getItem("WannaTriploginState")) {
+          localStorage.setItem(
+            "WannaTriploginState",
+            JSON.stringify(updatedLoginState)
+          );
+        } else if (sessionStorage.getItem("WannaTriploginState")) {
+          sessionStorage.setItem(
+            "WannaTriploginState",
+            JSON.stringify(updatedLoginState)
+          );
+        }
+
+        // Jotai 상태 업데이트
+        if (setWannaTripLoginState) {
+          setWannaTripLoginState(updatedLoginState);
+        }
+      }
 
       return {
         success: true,
@@ -75,6 +114,7 @@ export interface LoginResponseData {
   name: string;
   userUuid: string;
   email?: string;
+  loginType: string; // 로그인 타입 (normal, kakao, google 등)
 }
 
 // 로그인 상태 처리 함수
@@ -97,6 +137,8 @@ export const processLoginSuccess = (
       enumPermission = Permission.SUPER_ADMIN;
       break;
   }
+  // 로그인 타입 우선순위: 1. 서버 응답, 2. options, 3. 기본값
+  const loginType = responseData.loginType || options?.loginType || "normal";
 
   // 로그인 상태 생성
   const newWannaTriploginState: LoginState = {
@@ -104,7 +146,7 @@ export const processLoginSuccess = (
     userUuid: userUuid,
     email: options?.email || responseData.email || "",
     userName: name,
-    loginType: options?.loginType || "normal",
+    loginType: loginType,
     permission: enumPermission,
   };
 
