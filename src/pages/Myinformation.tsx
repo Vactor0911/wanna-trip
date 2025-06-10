@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -24,11 +24,15 @@ import { grey } from "@mui/material/colors";
 import OutlinedTextField from "../components/OutlinedTextField";
 import { useNavigate } from "react-router-dom";
 import SectionHeader from "../components/SectionHeader";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import axiosInstance, {
+  getCsrfToken,
+  SERVER_HOST,
+} from "../utils/axiosInstance";
 import { useAtom } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import { resetStates } from "../utils";
 import { theme } from "../utils/theme";
+import imageCompression from "browser-image-compression";
 
 // 내 정보 인터페이스
 interface UserInfo {
@@ -36,6 +40,13 @@ interface UserInfo {
   email: string;
   nickname: string;
   profileImage: string | null;
+}
+
+// 스낵바 상태 인터페이스
+interface SnackbarState {
+  open: boolean;
+  message: string;
+  severity: "success" | "error" | "warning" | "info";
 }
 
 const Myinformation = () => {
@@ -58,17 +69,20 @@ const Myinformation = () => {
     useState(false);
 
   // 이미지 상태
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageVersion, setImageVersion] = useState(0);
 
   // 작업 상태
   const [isNicknameUpdating, setIsNicknameUpdating] = useState(false);
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
 
   // 알림 상태
-  const [snackbar, setSnackbar] = useState({
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: "",
-    severity: "success" as "success" | "error" | "info" | "warning",
+    severity: "info",
   });
 
   // 계정 탈퇴 관련 상태
@@ -96,7 +110,7 @@ const Myinformation = () => {
         const userData = response.data.data;
         setUserInfo(userData);
         setNickname(userData.nickname);
-        setProfileImage(userData.profileImage);
+        setProfileImage(`${SERVER_HOST}${userData.profileImage}`);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -113,6 +127,123 @@ const Myinformation = () => {
   useEffect(() => {
     fetchUserInfo();
   }, [fetchUserInfo]);
+
+  // 프로필 이미지 클릭 처리
+  const handleProfileClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  // 이미지 압축 함수
+  const compressImage = async (file: File): Promise<File> => {
+    // 1MB 이하면 압축하지 않음
+    if (file.size <= 1024 * 1024) return file;
+
+    const options = {
+      maxSizeMB: 1, // 최대 1MB
+      maxWidthOrHeight: 1024, // 최대 해상도 1024px
+      useWebWorker: true,
+    };
+
+    try {
+      return await imageCompression(file, options);
+    } catch (error) {
+      console.error("이미지 압축 실패:", error);
+      return file; // 압축 실패 시 원본 반환
+    }
+  };
+
+  // 파일 변경 핸들러
+  const handleFileChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // 파일 타입 검증
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setSnackbar({
+          open: true,
+          message:
+            "지원되지 않는 파일 형식입니다. JPG, PNG, GIF, WEBP 형식만 업로드할 수 있습니다.",
+          severity: "error",
+        });
+        return;
+      }
+
+      // 파일 크기 검증 (4MB)
+      if (file.size > 4 * 1024 * 1024) {
+        setSnackbar({
+          open: true,
+          message: "파일 크기는 4MB를 초과할 수 없습니다.",
+          severity: "error",
+        });
+        return;
+      }
+
+      try {
+        setIsUploading(true);
+
+        // 이미지 압축
+        const compressedFile = await compressImage(file);
+
+        // FormData 생성
+        const formData = new FormData();
+        formData.append("profileImage", compressedFile);
+
+        // CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
+
+        // 업로드 API 호출
+        const response = await axiosInstance.post(
+          "/auth/me/profile-image",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              "X-CSRF-Token": csrfToken,
+            },
+          }
+        );
+
+        if (response.data.success) {
+          // 캐시 방지를 위한 타임스탬프 추가
+          const imageUrl = `${SERVER_HOST}${
+            response.data.data.profileImage
+          }?t=${new Date().getTime()}`;
+          setProfileImage(imageUrl);
+
+          // 이미지 버전 증가 (강제 리렌더링 유도)
+          setImageVersion((prev) => prev + 1);
+
+          // 성공 메시지 표시
+          setSnackbar({
+            open: true,
+            message: "프로필 이미지가 성공적으로 업로드되었습니다.",
+            severity: "success",
+          });
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        console.error("프로필 이미지 업로드 실패:", err);
+        setSnackbar({
+          open: true,
+          message:
+            err.response?.data?.message || "이미지 업로드에 실패했습니다.",
+          severity: "error",
+        });
+      } finally {
+        setIsUploading(false);
+        // 파일 입력 초기화
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    []
+  );
 
   // 닉네임 변경 입력
   const handleNicknameChange = useCallback(
@@ -359,15 +490,9 @@ const Myinformation = () => {
     navigate,
   ]);
 
-  // 프로필 이미지 클릭 핸들러 (추후 구현)
-  const handleProfileClick = useCallback(() => {
-    // 프로필 이미지 업로드 기능은 추후 구현 예정
-    console.log("Profile image clicked - to be implemented");
-  }, []);
-
-  // 알림 닫기 핸들러
+  // 스낵바 닫기 핸들러
   const handleCloseSnackbar = () => {
-    setSnackbar({ ...snackbar, open: false });
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   // 로딩 중 표시
@@ -402,13 +527,15 @@ const Myinformation = () => {
         {/* 내정보 */}
         <Stack gap={3}>
           <SectionHeader title="내정보" />
-          {/* Profile Picture Section */}
+          {/* 프로필 사진 섹션 */}
           <Stack direction="row" alignItems="center" gap={2}>
             <IconButton
               onClick={handleProfileClick}
               sx={{ p: 0, "&:hover": { backgroundColor: "transparent" } }}
+              disabled={isUploading}
             >
               <Avatar
+                key={`profile-image-${imageVersion}`} // 버전이 바뀔 때마다 Avatar를 강제로 리렌더링
                 // 프로필 이미지가 없을 경우 기본 아이콘 표시
                 src={profileImage || undefined}
                 sx={{
@@ -428,7 +555,19 @@ const Myinformation = () => {
                     }}
                   />
                 )}
+                {/* 업로드 중 로딩 표시 */}
+                {isUploading && (
+                  <CircularProgress
+                    size={40}
+                    sx={{
+                      position: "absolute",
+                      color: "white",
+                    }}
+                  />
+                )}
               </Avatar>
+
+              {/* 편집 아이콘 */}
               <Box
                 sx={{
                   position: "absolute",
@@ -447,12 +586,25 @@ const Myinformation = () => {
               </Box>
             </IconButton>
 
-            {/* 최소 규격 & 업로드 */}
+            {/* 숨겨진 파일 입력 */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              style={{ display: "none" }}
+            />
+
+            {/* 이미지 업로드 안내 */}
             <Stack gap={1}>
               <Typography variant="body2" color="textSecondary">
-                98x98픽셀 이상, 4MB 이하에 사진이 권장합니다.
+                98x98픽셀 이상, 4MB 이하의 사진을 권장합니다.
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                지원 형식: JPG, PNG, GIF, WEBP
               </Typography>
               <Button
+                onClick={handleProfileClick}
                 variant="outlined"
                 sx={{
                   borderRadius: "8px",
@@ -503,7 +655,7 @@ const Myinformation = () => {
           </Stack>
         </Stack>
 
-        {/* Change Password Section */}
+        {/* 비밀번호 변경 섹션 */}
         <Stack gap={1}>
           <SectionHeader title="비밀번호 변경" />
           <OutlinedTextField
@@ -658,7 +810,7 @@ const Myinformation = () => {
         </Dialog>
       </Stack>
 
-      {/* 알림 메시지 */}
+      {/* 알림 스낵바 */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
