@@ -346,7 +346,16 @@ const CardEditDialog = () => {
                 </Stack>
 
                 {/* 지도 뷰어 */}
-                <NaverMap width={200} height={200} />
+                <NaverMap
+                  width="100%"
+                  height={{
+                    xs: "200px",
+                    md: "auto",
+                  }}
+                  sx={{
+                    aspectRatio: "1/1",
+                  }}
+                />
               </Stack>
 
               {/* 시간 */}
