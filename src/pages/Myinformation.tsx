@@ -19,7 +19,8 @@ import {
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CreateIcon from "@mui/icons-material/Create";
-import PersonIcon from "@mui/icons-material/Person";
+import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
+import { grey } from "@mui/material/colors";
 import OutlinedTextField from "../components/OutlinedTextField";
 import { useNavigate } from "react-router-dom";
 import SectionHeader from "../components/SectionHeader";
@@ -27,6 +28,7 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useAtom } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import { resetStates } from "../utils";
+import { theme } from "../utils/theme";
 
 // 내 정보 인터페이스
 interface UserInfo {
@@ -350,7 +352,12 @@ const Myinformation = () => {
     } finally {
       setIsDeleting(false);
     }
-  }, [loginState.loginType, deleteConfirmPassword, setWannaTripLoginState, navigate]);
+  }, [
+    loginState.loginType,
+    deleteConfirmPassword,
+    setWannaTripLoginState,
+    navigate,
+  ]);
 
   // 프로필 이미지 클릭 핸들러 (추후 구현)
   const handleProfileClick = useCallback(() => {
@@ -407,13 +414,19 @@ const Myinformation = () => {
                 sx={{
                   width: 98,
                   height: 98,
-                  backgroundColor: "#e0e0e0",
+                  backgroundColor: theme.palette.primary.main, // 헤더와 동일한 배경색
                   position: "relative",
                 }}
               >
                 {/* 프로필 이미지가 없을 경우 기본 아이콘 표시 */}
                 {!profileImage && (
-                  <PersonIcon sx={{ fontSize: "75px", color: "gray" }} />
+                  <FaceRoundedIcon
+                    sx={{
+                      width: "90%",
+                      height: "90%",
+                      color: grey[100], // 헤더와 동일한 아이콘 색상
+                    }}
+                  />
                 )}
               </Avatar>
               <Box
@@ -421,7 +434,7 @@ const Myinformation = () => {
                   position: "absolute",
                   bottom: 0,
                   right: 0,
-                  backgroundColor: "#d9d9d9",
+                  backgroundColor: theme.palette.primary.main,
                   borderRadius: "50%",
                   p: 1,
                   display: "flex",
