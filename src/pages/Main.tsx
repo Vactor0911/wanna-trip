@@ -5,13 +5,13 @@ import {
   Paper,
   Stack,
   Typography,
+  Divider,
 } from "@mui/material";
 import MainImage1 from "../assets/images/main1.png";
 import MainImage2 from "../assets/images/main2.png";
 import { theme } from "../utils/theme";
 import { useCallback } from "react";
 import { useNavigate } from "react-router";
-import Informations from "../components/Informations";
 
 const PAGE_HEIGHT = "calc(100vh - 82px)";
 
@@ -181,32 +181,42 @@ const Main = () => {
           </Stack>
 
           {/* 구분선 */}
-          <Box my={4} height="100%" border="1px solid #D9D9D9" />
+          <Divider sx={{ my: 4, borderColor: theme.palette.divider }} />
 
-          {/* Informations 컴포넌트 예시 2개 */}
+          {/* 두번째와 세번째 섹션 */}
           <Stack gap={4} height={PAGE_HEIGHT}>
             {/* 두번째 장 */}
-            <Informations
-              subtitle="계획"
-              title={`내 계획 관리,\n일정부터 준비물까지\n완벽하게`}
-              rightContent={
-                <Stack>
-                  <Typography>필요한 준비물 자동 정리</Typography>
-                  <Typography>친구와 계획 공유</Typography>
-                </Stack>
-              }
-            />
-            {/* 세번째 장 */}
-            <Informations
-              subtitle="추천"
-              title={`여행지 추천,\n맞춤 일정 제안`}
-              rightContent={
-                <Stack>
-                  <Typography>취향 기반 여행지 추천</Typography>
-                  <Typography>AI가 짜주는 일정</Typography>
-                </Stack>
-              }
-            />
+            <Stack direction={{ xs: "column", md: "row" }} gap="5" sx={{ position: 'relative', minHeight: "100vh" }}>
+              {/* 왼쪽: 소제목, 제목 */}
+              <Box flex={1.2} display="flex" flexDirection="column" justifyContent="flex-start" minWidth={200}>
+                <Typography variant="subtitle2" sx={{ color: "primary.main", fontWeight: 600, mb: 1 }}>
+                  계획
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800, whiteSpace: "pre-line" }}>
+                  {`내 계획 관리,\n일정부터 준비물까지\n완벽하게`}
+                </Typography>
+              </Box>
+              {/* 가운데: 이미지 한 장 (Stack 기준 수직 중앙) */}
+              <Box flex={2} display="flex" alignItems="center" justifyContent="center" position="relative" alignSelf="center">
+                <Box
+                  component="img"
+                  src={MainImage1}
+                  alt="계획 카드 예시"
+                  sx={{
+                    width: { xs: '90%', md: '90%' },
+                  }}
+                />
+              </Box>
+              {/* 오른쪽: 설명 리스트 */}
+              <Box flex={1} display="flex" alignItems="flex-end" minWidth={260} height="100%">
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>1. 이번 주 일정 한눈에</Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>여행, 약속, 해야 할 일까지 하루하루의 계획을 깔끔하게 정리해보세요.</Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>2. 다가오는 일정 미리 알림</Typography>
+                  <Typography variant="body2" sx={{ mb: 2 }}>중요한 계획을 깜빡하지 않게! 날짜가 가까워질수록 알림으로 챙겨드려요.</Typography>
+                </Box>
+              </Box>
+            </Stack>
           </Stack>
         </Stack>
       </Container>
