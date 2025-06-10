@@ -19,17 +19,18 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
 import { theme } from "../utils/theme";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import { grey } from "@mui/material/colors";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
-import { getAccessToken } from "../utils/accessToken";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import axiosInstance, {
+  getCsrfToken,
+  SERVER_HOST,
+} from "../utils/axiosInstance";
 import { resetStates } from "../utils";
 import { wannaTripLoginStateAtom } from "../state";
 import { useAtom } from "jotai";
-import { jwtDecode } from "jwt-decode";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -73,11 +74,6 @@ const StyledLink = (props: StyledLinkProps) => {
   );
 };
 
-interface JwtPayload {
-  name: string;
-  // 필요한 다른 필드가 있다면 추가
-}
-
 // 헤더 숨기는 페이지 목록
 const hiddenPages = [
   "/login",
@@ -98,6 +94,53 @@ const Header = () => {
   const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom); // 로그인 상태
   const { isLoggedIn } = loginState; // 로그인 상태에서 isLoggedIn 추출
 
+  // 프로필 이미지 관련련
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [imageVersion, setImageVersion] = useState(0); // (캐시 방지용)
+
+  const [userName, setUserName] = useState<string>("사용자"); // 사용자 이름 초기값
+
+  // 프로필 이미지 URL을 가져오는 함수
+  const fetchUserProfile = useCallback(async () => {
+    if (!isLoggedIn) return;
+
+    try {
+      const csrfToken = await getCsrfToken();
+      const response = await axiosInstance.get("/auth/me", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        // 사용자 데이터
+        const userData = response.data.data;
+
+        // nickname 정보 저장 (백엔드에서 받아온 nickname 사용)
+        if (userData.nickname) {
+          setUserName(userData.nickname);
+        }
+
+        if (userData.profileImage) {
+          // 프로필 이미지 URL 구성 (캐시 방지용 타임스탬프 추가)
+          const imageUrl = `${SERVER_HOST}${
+            userData.profileImage
+          }?t=${new Date().getTime()}`;
+          setProfileImage(imageUrl);
+          // 이미지 버전 증가 ( 캐시 방지용 )
+          setImageVersion((prev) => prev + 1);
+        }
+      }
+    } catch (err) {
+      console.error("사용자 프로필 정보 로드 실패:", err);
+    }
+  }, [isLoggedIn]);
+
+  // useEffect 추가
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchUserProfile();
+    }
+  }, [isLoggedIn, fetchUserProfile]);
+
   // 프로필 메뉴 닫기
   const handleProfileMenuClose = useCallback(() => {
     setIsProfileMenuOpen(false);
@@ -105,8 +148,12 @@ const Header = () => {
 
   // 프로필 메뉴 버튼 클릭
   const handleProfileButtonClick = useCallback(() => {
+    // 메뉴를 열 때 최신 프로필 이미지 가져오기
+    if (!isProfileMenuOpen) {
+      fetchUserProfile(); // 메뉴가 열릴 때만 프로필 다시 가져오기
+    }
     setIsProfileMenuOpen((prev) => !prev);
-  }, []);
+  }, [isProfileMenuOpen, fetchUserProfile]);
 
   // 네비게이션 메뉴 닫기
   const handleNavMenuClose = useCallback(
@@ -136,18 +183,6 @@ const Header = () => {
     },
     [navigate]
   );
-
-  // 액세스 토큰 가져오기 및 디코드
-  const token = getAccessToken();
-  let userName = "홍길동님";
-  if (token) {
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      userName = decoded.name;
-    } catch (error) {
-      console.error("토큰 디코드 오류:", error);
-    }
-  }
 
   // 로그아웃 기능 구현 시작
   const handleLogoutClick = useCallback(async () => {
@@ -385,19 +420,23 @@ const Header = () => {
             >
               {/* 프로필 이미지 */}
               <Avatar
+                key={`profile-image-${imageVersion}`}
+                src={profileImage || undefined}
                 sx={{
                   width: "36px",
                   height: "36px",
                   bgcolor: theme.palette.primary.main,
                 }}
               >
-                <FaceRoundedIcon
-                  sx={{
-                    width: "90%",
-                    height: "90%",
-                    color: grey[100],
-                  }}
-                />
+                {!profileImage && (
+                  <FaceRoundedIcon
+                    sx={{
+                      width: "90%",
+                      height: "90%",
+                      color: grey[100],
+                    }}
+                  />
+                )}
               </Avatar>
 
               {/* 프로필 이름 */}
