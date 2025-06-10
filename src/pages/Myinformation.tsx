@@ -11,15 +11,22 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CreateIcon from "@mui/icons-material/Create";
 import PersonIcon from "@mui/icons-material/Person";
 import OutlinedTextField from "../components/OutlinedTextField";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import SectionHeader from "../components/SectionHeader";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { useAtom } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
+import { resetStates } from "../utils";
 
 // 내 정보 인터페이스
 interface UserInfo {
@@ -61,6 +68,13 @@ const Myinformation = () => {
     message: "",
     severity: "success" as "success" | "error" | "info" | "warning",
   });
+
+  // 계정 탈퇴 관련 상태
+  const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom);
+  const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmPassword, setDeleteConfirmPassword] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // 사용자 정보 로딩
   const fetchUserInfo = useCallback(async () => {
@@ -276,6 +290,67 @@ const Myinformation = () => {
       setIsPasswordUpdating(false);
     }
   }, [currentPassword, newPassword, confirmNewPassword]);
+
+  // 계정 탈퇴 다이얼로그 열기
+  const handleOpenDeleteDialog = () => {
+    setIsDeleteDialogOpen(true);
+    setDeleteConfirmPassword("");
+  };
+
+  // 계정 탈퇴 다이얼로그 닫기
+  const handleCloseDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setDeleteConfirmPassword("");
+  };
+
+  // 계정 탈퇴 처리
+  const handleDeleteAccount = useCallback(async () => {
+    // 일반 계정이고 비밀번호가 비어있으면 검증
+    if (loginState.loginType === "normal" && !deleteConfirmPassword.trim()) {
+      setSnackbar({
+        open: true,
+        message: "계정 탈퇴를 위해 비밀번호를 입력해주세요.",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 계정 탈퇴 API 호출
+      const response = await axiosInstance.post(
+        "/auth/me/delete",
+        { password: deleteConfirmPassword },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 로그인 상태 초기화
+        resetStates(setWannaTripLoginState);
+
+        // 다이얼로그 닫기
+        handleCloseDeleteDialog();
+
+        // 성공 알림 후 로그인 페이지로 이동
+        alert("계정이 성공적으로 탈퇴되었습니다.");
+        navigate("/");
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("계정 탈퇴 실패:", err);
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || "계정 탈퇴에 실패했습니다.",
+        severity: "error",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [loginState.loginType, deleteConfirmPassword, setWannaTripLoginState, navigate]);
 
   // 프로필 이미지 클릭 핸들러 (추후 구현)
   const handleProfileClick = useCallback(() => {
@@ -507,14 +582,67 @@ const Myinformation = () => {
           </Box>
         </Stack>
 
-        {/* Account Deletion Section */}
+        {/* 계정 탈퇴 섹션 */}
         <Stack mt={4}>
-          <Link to="#" style={{ textDecoration: "none" }}>
-            <Typography variant="body2" sx={{ color: "red" }}>
-              계정 탈퇴
-            </Typography>
-          </Link>
+          <Button
+            variant="text"
+            onClick={handleOpenDeleteDialog}
+            sx={{
+              color: "red",
+              p: 0,
+              minWidth: "auto",
+              justifyContent: "flex-start",
+              "&:hover": {
+                backgroundColor: "transparent",
+                textDecoration: "underline",
+              },
+            }}
+          >
+            <Typography variant="body2">계정 탈퇴</Typography>
+          </Button>
         </Stack>
+        {/* 계정 탈퇴 확인 다이얼로그 */}
+        <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+          <DialogTitle>계정 탈퇴 확인</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 1 }}>
+              계정을 탈퇴하시면 모든 데이터가 삭제됩니다.
+            </Typography>
+            <Typography variant="body1">
+              정말로{" "}
+              <Box
+                component="span"
+                sx={{ color: "error.main", fontWeight: "bold" }}
+              >
+                탈퇴
+              </Box>
+              하시겠습니까?
+            </Typography>
+
+            {loginState.loginType === "normal" && (
+              <OutlinedTextField
+                label="비밀번호 확인"
+                type="password"
+                value={deleteConfirmPassword}
+                onChange={(e) => setDeleteConfirmPassword(e.target.value)}
+                autoComplete="current-password"
+                fullWidth
+                margin="dense"
+                sx={{ mt: 2 }}
+              />
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog}>취소</Button>
+            <Button
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              sx={{ color: "red" }}
+            >
+              {isDeleting ? <CircularProgress size={24} /> : "확인"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
 
       {/* 알림 메시지 */}
