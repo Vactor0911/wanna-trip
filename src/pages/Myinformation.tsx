@@ -110,7 +110,13 @@ const Myinformation = () => {
         const userData = response.data.data;
         setUserInfo(userData);
         setNickname(userData.nickname);
-        setProfileImage(`${SERVER_HOST}${userData.profileImage}`);
+        
+        // userData.profileImage가 null 또는 빈 문자열이 아닐 때만 URL 설정
+        if (userData.profileImage) {
+          setProfileImage(`${SERVER_HOST}${userData.profileImage}`);
+        } else {
+          setProfileImage(null); // 명시적으로 null 설정하여 기본 아이콘 표시되도록 함
+        }
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
