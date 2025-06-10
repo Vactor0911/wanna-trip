@@ -1,19 +1,23 @@
 import {
   Box,
   Button,
-  ClickAwayListener,
   Dialog,
   DialogTitle,
   Divider,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  MenuList,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
-import { theme } from "../utils/theme";
-import PlaceRoundedIcon from "@mui/icons-material/PlaceRounded";
-import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
+import { useCallback, useEffect, useRef, useState } from "react";
+import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import Tooltip from "./Tooltip";
@@ -30,13 +34,34 @@ import {
   updateBoardCardAtom,
 } from "../state/template";
 import dayjs from "dayjs";
+import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 const CardEditDialog = () => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
   const [currentEditCard] = useAtom(currentEditCardAtom);
   const [template] = useAtom(templateAtom); // 템플릿 상태 추가
+
+  const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
+  const [isSaving, setIsSaving] = useState(false); // 저장 중 상태
+  const [content, setContent] = useState(""); // 카드 내용
+  const [startTime, setStartTime] = useState(dayjs("2001-01-01T01:00")); // 시작 시간
+  const [endTime, setEndTime] = useState(dayjs("2001-01-01T02:00")); // 종료 시간
+  const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
+  const [errorMessage, setErrorMessage] = useState(""); // 오류 메시지 상태
+  const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
+
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
     (board) => board.id === currentEditCard?.boardId
@@ -44,18 +69,8 @@ const CardEditDialog = () => {
 
   // 동적 제목 생성
   const dialogTitle = currentBoard
-    ? `${template.title} - Day ${currentBoard.dayNumber || ""}`
+    ? `${currentBoard.dayNumber || "N"}일차`
     : "새 카드 작성";
-
-  const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
-  const [isSaving, setIsSaving] = useState(false); // 저장 중 상태
-  const [content, setContent] = useState(""); // 카드 내용
-  const [startTime, setStartTime] = useState(dayjs("2001-01-01T01:00")); // 시작 시간
-  const [endTime, setEndTime] = useState(dayjs("2001-01-01T02:00")); // 종료 시간
-  const [isStartTimeEditing, setIsStartTimeEditing] = useState(false); // 시작 시간 편집 상태
-  const [isEndTimeEditing, setIsEndTimeEditing] = useState(false); // 종료 시간 편집 상태
-  const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
-  const [errorMessage, setErrorMessage] = useState("");
 
   // 대화상자 열 때 시간 초기화
   useEffect(() => {
@@ -100,11 +115,6 @@ const CardEditDialog = () => {
     setIsCardLocked((prev) => !prev);
   }, [setIsCardLocked]);
 
-  // 시작 시간 클릭
-  const handleStartTimeClick = useCallback(() => {
-    setIsStartTimeEditing((prev) => !prev);
-  }, []);
-
   // 시작 시간 변경
   const handleStartTimeChange = useCallback(
     (newTime: dayjs.Dayjs | null) => {
@@ -115,16 +125,6 @@ const CardEditDialog = () => {
     [endTime]
   );
 
-  // 시작 시간 변경 완료
-  const handleStartTimeClickAway = useCallback(() => {
-    setIsStartTimeEditing(false);
-  }, []);
-
-  // 종료 시간 클릭
-  const handleEndTimeClick = useCallback(() => {
-    setIsEndTimeEditing((prev) => !prev);
-  }, []);
-
   // 종료 시간 변경
   const handleEndTimeChange = useCallback(
     (newTime: dayjs.Dayjs | null) => {
@@ -134,11 +134,6 @@ const CardEditDialog = () => {
     },
     [startTime]
   );
-
-  // 종료 시간 변경 완료
-  const handleEndTimeClickAway = useCallback(() => {
-    setIsEndTimeEditing(false);
-  }, []);
 
   // 카드 내용 변경 시 서버에 업데이트
   const saveCardToServer = useCallback(async () => {
@@ -230,224 +225,289 @@ const CardEditDialog = () => {
     saveCardToServer();
   }, [content, endTime, saveCardToServer, startTime]);
 
+  // 더보기 메뉴 열기
+  const handleMoreMenuOpen = useCallback(() => {
+    setIsMoreMenuOpen(true);
+  }, []);
+
+  // 더보기 메뉴 닫기
+  const handleMoreMenuClose = useCallback(() => {
+    setIsMoreMenuOpen(false);
+  }, []);
+
   return (
-    <Dialog
-      fullWidth
-      open={cardEditDialogOpen}
-      onClose={handleCardEditDialogClose}
-      maxWidth="md"
-    >
-      {/* 제목 */}
-      <DialogTitle
-        sx={{
-          paddingX: {
-            xs: 2,
-            sm: 5,
+    <>
+      <Dialog
+        fullWidth
+        fullScreen={fullScreen}
+        slotProps={{
+          paper: {
+            sx: { margin: 1 },
           },
         }}
+        open={cardEditDialogOpen}
+        onClose={handleCardEditDialogClose}
+        maxWidth="md"
       >
-        <Stack gap={1}>
-          <Stack direction="row" alignItems="center" gap={1}>
-            {/* 카드 잠금 버튼 */}
-            <Tooltip
-              title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
-              placement="top"
-            >
-              <IconButton
-                color="primary"
-                size="small"
-                onClick={handleCardLockToggle}
-              >
-                {isCardLocked ? (
-                  <LockOutlineRoundedIcon fontSize="large" />
-                ) : (
-                  <LockOpenRoundedIcon fontSize="large" />
-                )}
-              </IconButton>
-            </Tooltip>
-
-            {/* 카드 제목 */}
-            <Typography variant="h4">{dialogTitle}</Typography>
-          </Stack>
-
-          {/* 구분선 */}
-          <Divider />
-        </Stack>
-      </DialogTitle>
-
-      {/* 내용 */}
-      <Stack
-        px={{
-          xs: 2,
-          sm: 5,
-        }}
-        pb={3}
-        gap={3}
-      >
-        <Stack
-          direction={{
-            sm: "column",
-            md: "row",
-          }}
-          justifyContent="space-between"
-          gap={{
-            xs: 5,
-            md: 0,
+        {/* 헤더 부분 */}
+        <DialogTitle
+          sx={{
+            paddingX: {
+              xs: 2,
+              sm: 5,
+            },
           }}
         >
-          {/* 텍스트 편집기 */}
-          <Box
-            width={{
-              xs: "100%",
-              md: "70%",
-            }}
-            height="400px"
-          >
-            <CardTextEditor
-              setContent={setContent}
-              initialContent={content} // 현재 카드 내용을 초기값으로 전달
-            />
-          </Box>
+          <Stack gap={1}>
+            <Stack direction="row" alignItems="center" gap={1}>
+              {/* 카드 잠금 버튼 */}
+              <Tooltip
+                title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
+                placement="top"
+              >
+                <IconButton
+                  color="primary"
+                  size="small"
+                  onClick={handleCardLockToggle}
+                >
+                  {isCardLocked ? (
+                    <LockOutlineRoundedIcon fontSize="large" />
+                  ) : (
+                    <LockOpenRoundedIcon fontSize="large" />
+                  )}
+                </IconButton>
+              </Tooltip>
 
+              {/* 카드 제목 */}
+              <Typography variant="h4">{dialogTitle}</Typography>
+
+              <Stack
+                direction="row"
+                flex={1}
+                justifyContent="flex-end"
+                alignItems="center"
+                gap={1}
+              >
+                {/* 메뉴 버튼 */}
+                <Tooltip title="메뉴" placement="top">
+                  <IconButton
+                    onClick={handleMoreMenuOpen}
+                    size="small"
+                    ref={moreMenuAnchorElement}
+                  >
+                    <MoreVertIcon
+                      fontSize="large"
+                      sx={{ color: theme.palette.black.main }}
+                    />
+                  </IconButton>
+                </Tooltip>
+
+                {/* 닫기 버튼 */}
+                <Tooltip title="닫기" placement="top">
+                  <IconButton onClick={handleCardEditDialogClose} size="small">
+                    <CloseRoundedIcon
+                      fontSize="large"
+                      sx={{ color: theme.palette.black.main }}
+                    />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Stack>
+
+            {/* 구분선 */}
+            <Divider />
+          </Stack>
+        </DialogTitle>
+
+        {/* 컨텐츠 부분 */}
+        <Stack
+          px={{
+            xs: 2,
+            sm: 5,
+          }}
+          pb={3}
+          gap={3}
+        >
           <Stack
             direction={{
-              xs: "column",
-              sm: "row",
-              md: "column",
+              sm: "column",
+              md: "row",
             }}
-            gap={1}
+            justifyContent="space-between"
+            gap={2}
           >
-            {/* 지도 뷰어 */}
-            <NaverMap width={200} height={200} />
+            <Stack direction="column" justifyContent="space-between" gap={2}>
+              {/* 장소 */}
+              <Stack gap={1}>
+                {/* 제목 */}
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <PlaceOutlinedIcon />
+                  <Typography variant="h6">장소</Typography>
+                </Stack>
 
-            <Stack>
-              {/* 선택된 장소 설명 */}
-              <Stack
-                direction="row"
-                alignItems="center"
-                gap={0.5}
-                sx={{
-                  color: theme.palette.black.main,
-                }}
-              >
-                <PlaceRoundedIcon />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    padding: "6px 8px",
-                  }}
-                >
-                  장소
-                </Typography>
+                {/* 지도 뷰어 */}
+                <NaverMap width={200} height={200} />
               </Stack>
 
-              {/* 시간 선택기 */}
-              <Stack
-                direction="row"
-                alignItems="center"
-                gap={0.5}
-                sx={{
-                  color: theme.palette.black.main,
-                }}
-              >
-                <AccessTimeRoundedIcon />
-                {/* 시간 선택 */}
-                <Stack direction="row" alignItems="center">
+              {/* 시간 */}
+
+              <Stack gap={1}>
+                {/* 제목 */}
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <ScheduleRoundedIcon />
+                  <Typography variant="h6">시간</Typography>
+                </Stack>
+
+                <Stack
+                  direction={{
+                    xs: "row",
+                    md: "column",
+                  }}
+                  alignItems="center"
+                  gap={2}
+                >
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     {/* 시작 시간 */}
-                    {isStartTimeEditing ? (
-                      <ClickAwayListener onClickAway={handleStartTimeClickAway}>
-                        <Box width="80px">
-                          <TimeField
-                            label="시작 시간"
-                            ampm={false}
-                            value={startTime}
-                            maxTime={endTime}
-                            onChange={handleStartTimeChange}
-                          />
-                        </Box>
-                      </ClickAwayListener>
-                    ) : (
-                      <Button onClick={handleStartTimeClick}>
-                        <Typography variant="h6" color="black">
-                          {startTime.format("HH:mm")}
-                        </Typography>
-                      </Button>
-                    )}
+                    <TimeField
+                      label="시작 시간"
+                      value={startTime}
+                      onChange={handleStartTimeChange}
+                      ampm={false}
+                    />
 
                     {/* 구분자 */}
-                    <Typography variant="h6" color="black">
+                    <Typography
+                      variant="h5"
+                      display={{
+                        xs: "inline-flex",
+                        md: "none",
+                      }}
+                    >
                       ~
                     </Typography>
 
                     {/* 종료 시간 */}
-                    {isEndTimeEditing ? (
-                      <ClickAwayListener onClickAway={handleEndTimeClickAway}>
-                        <Box width="80px">
-                          <TimeField
-                            label="종료 시간"
-                            ampm={false}
-                            value={endTime}
-                            minTime={startTime}
-                            onChange={handleEndTimeChange}
-                          />
-                        </Box>
-                      </ClickAwayListener>
-                    ) : (
-                      <Button onClick={handleEndTimeClick}>
-                        <Typography variant="h6" color="black">
-                          {endTime.format("HH:mm")}
-                        </Typography>
-                      </Button>
-                    )}
+                    <TimeField
+                      label="종료 시간"
+                      value={endTime}
+                      onChange={handleEndTimeChange}
+                      ampm={false}
+                    />
                   </LocalizationProvider>
                 </Stack>
               </Stack>
             </Stack>
+
+            {/* 내용 */}
+            <Stack
+              width={{
+                xs: "100%",
+                md: "70%",
+              }}
+              height="450px"
+              gap={1}
+            >
+              {/* 제목 */}
+              <Stack direction="row" alignItems="center" gap={1}>
+                <SubjectRoundedIcon />
+                <Typography variant="h6">내용</Typography>
+              </Stack>
+
+              {/* 텍스트 편집기 */}
+              <Box width="100%" flex={1}>
+                <CardTextEditor
+                  setContent={setContent}
+                  initialContent={content} // 현재 카드 내용을 초기값으로 전달
+                />
+              </Box>
+            </Stack>
+          </Stack>
+
+          {/* 오류 메시지 표시 부분 - 지워도 됨 */}
+          {errorMessage && (
+            <Typography color="error" align="center">
+              {errorMessage}
+            </Typography>
+          )}
+
+          {/* 버튼 컨테이너 */}
+          <Stack
+            direction="row"
+            gap={2}
+            alignSelf="flex-end"
+            color={theme.palette.black.main}
+          >
+            {/* 취소 버튼 */}
+            <Button
+              variant="outlined"
+              color="inherit"
+              sx={{
+                px: 3,
+              }}
+              onClick={handleCardEditDialogClose}
+              disabled={isSaving}
+            >
+              <Typography>취소</Typography>
+            </Button>
+
+            {/* 저장 버튼 */}
+            <Button
+              variant="contained"
+              sx={{
+                px: 3,
+              }}
+              onClick={handleSaveButtonClick}
+              disabled={isSaving}
+            >
+              <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
+            </Button>
           </Stack>
         </Stack>
+      </Dialog>
 
-        {/* 오류 메시지 표시 부분 - 지워도 됨 */}
-        {errorMessage && (
-          <Typography color="error" align="center">
-            {errorMessage}
-          </Typography>
-        )}
+      {/* 더보기 메뉴 */}
+      <Menu
+        anchorEl={moreMenuAnchorElement.current}
+        open={isMoreMenuOpen}
+        onClose={handleMoreMenuClose}
+      >
+        <MenuList disablePadding>
+          {/* 카드 복제 */}
+          <MenuItem onClick={handleMoreMenuClose}>
+            <ListItemIcon>
+              <ContentCopyRoundedIcon />
+            </ListItemIcon>
+            <ListItemText>복제하기</ListItemText>
+          </MenuItem>
 
-        {/* 버튼 컨테이너 */}
-        <Stack
-          direction="row"
-          gap={2}
-          alignSelf="flex-end"
-          color={theme.palette.black.main}
-        >
-          {/* 취소 버튼 */}
-          <Button
-            variant="outlined"
-            color="inherit"
-            sx={{
-              px: 3,
-            }}
-            onClick={handleCardEditDialogClose}
-            disabled={isSaving}
-          >
-            <Typography>취소</Typography>
-          </Button>
+          {/* 카드 이동 */}
+          <MenuItem onClick={handleMoreMenuClose}>
+            <ListItemIcon>
+              <SwapHorizRoundedIcon />
+            </ListItemIcon>
+            <ListItemText>이동하기</ListItemText>
+          </MenuItem>
 
-          {/* 저장 버튼 */}
-          <Button
-            variant="contained"
-            sx={{
-              px: 3,
-            }}
-            onClick={handleSaveButtonClick}
-            disabled={isSaving}
-          >
-            <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
-          </Button>
-        </Stack>
-      </Stack>
-    </Dialog>
+          {/* 카드 삭제 */}
+          <MenuItem onClick={handleMoreMenuClose}>
+            <ListItemIcon>
+              <DeleteOutlineRoundedIcon
+                sx={{
+                  color: theme.palette.error.main,
+                }}
+              />
+            </ListItemIcon>
+            <ListItemText
+              sx={{
+                color: theme.palette.error.main,
+              }}
+            >
+              삭제하기
+            </ListItemText>
+          </MenuItem>
+        </MenuList>
+      </Menu>
+    </>
   );
 };
 
