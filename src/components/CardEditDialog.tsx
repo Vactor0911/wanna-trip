@@ -79,7 +79,6 @@ const CardEditDialog = () => {
   const [, deleteBoardCard] = useAtom(deleteBoardCardAtom); // 보드 카드 삭제 함수 추가
   const [, insertBoardCard] = useAtom(insertBoardCardAtom); // 보드 특정 위치 카드 삽입 함수 추가
 
-
   // 동적 제목 생성
   const dialogTitle = currentBoard
     ? `${currentBoard.dayNumber || "N"}일차`
@@ -160,16 +159,22 @@ const CardEditDialog = () => {
 
       // 새 카드 생성 또는 기존 카드 업데이트
       if (currentEditCard && currentEditCard.boardId) {
-        const cardData = {
+        // 내용 수정할 때는 orderIndex를 전송하지 않도록 수정
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cardData: any = {
           content, // 카드 내용
           startTime: startTime.format("YYYY-MM-DD HH:mm:ss"), // 시작 시간
           endTime: endTime.format("YYYY-MM-DD HH:mm:ss"), // 종료 시간
-          orderIndex: currentEditCard.orderIndex || 0, // 카드 순서 인덱스
           locked: isCardLocked, // 잠금 상태
         };
 
-        let response;
+        // 새 카드 생성 시에만 orderIndex 포함 (드래그 앤 드롭으로 위치 변경하는 경우는 별도 처리)
         const isNewCard = !currentEditCard.cardId;
+        if (isNewCard) {
+          cardData.orderIndex = currentEditCard.orderIndex || 0;
+        }
+
+        let response;
 
         // 기존 카드 수정
         if (currentEditCard.cardId) {
@@ -310,7 +315,17 @@ const CardEditDialog = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [currentEditCard.cardId, currentEditCard.boardId, currentEditCard.orderIndex, content, startTime, endTime, isCardLocked, insertBoardCard, setCardEditDialogOpen]);
+  }, [
+    currentEditCard.cardId,
+    currentEditCard.boardId,
+    currentEditCard.orderIndex,
+    content,
+    startTime,
+    endTime,
+    isCardLocked,
+    insertBoardCard,
+    setCardEditDialogOpen,
+  ]);
 
   // 카드 삭제 핸들러
   const handleCardDelete = useCallback(async () => {
