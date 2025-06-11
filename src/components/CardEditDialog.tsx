@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
+import AspectRatioIcon from '@mui/icons-material/AspectRatio';
 import Tooltip from "./Tooltip";
 import CardTextEditor from "./text_editor/CardTextEditor";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -41,6 +42,7 @@ import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FullScreenMapDialog from "./FullScreenMapDialog";
 
 const CardEditDialog = () => {
   const theme = useTheme();
@@ -61,6 +63,9 @@ const CardEditDialog = () => {
   const [errorMessage, setErrorMessage] = useState(""); // 오류 메시지 상태
   const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
+
+  // 전체화면 지도 상태
+  const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
 
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
@@ -235,6 +240,16 @@ const CardEditDialog = () => {
     setIsMoreMenuOpen(false);
   }, []);
 
+  // 지도 클릭 시 전체화면 모달 열기
+  const handleMapClick = useCallback(() => {
+    setIsMapDialogOpen(true);
+  }, []);
+
+  // 전체화면 지도 모달 닫기
+  const handleMapDialogClose = useCallback(() => {
+    setIsMapDialogOpen(false);
+  }, []);
+
   return (
     <>
       <Dialog
@@ -345,21 +360,67 @@ const CardEditDialog = () => {
                   <Typography variant="h6">장소</Typography>
                 </Stack>
 
-                {/* 지도 뷰어 */}
-                <NaverMap
-                  width="100%"
-                  height={{
-                    xs: "200px",
-                    md: "auto",
-                  }}
+                {/* 지도 뷰어 - 정적 모드로 변경하고 클릭 이벤트 추가 */}
+                <Box
+                  position="relative"
                   sx={{
+                    width: "100%",
+                    height: {
+                      xs: "200px",
+                      md: "auto",
+                    },
                     aspectRatio: "1/1",
                   }}
-                />
+                >
+                  <NaverMap
+                    width="100%"
+                    height="100%"
+                    interactive={false} // 상호작용 비활성화
+                    sx={{
+                      borderRadius: 2,
+                    }}
+                  />
+
+                  {/* 전체화면 버튼 */}
+                  <Tooltip title="전체화면으로 보기" placement="left">
+                    <IconButton
+                      onClick={handleMapClick}
+                      disableRipple // 클릭 시 ripple 효과 제거
+                      sx={{
+                        position: "absolute",
+                        top: 4,
+                        right: 4,
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        color: theme.palette.primary.main,
+                        boxShadow: 1,
+                        zIndex: 1,
+                      }}
+                      size="small"
+                    >
+                      <AspectRatioIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* 클릭 가능한 투명 오버레이 */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    width="100%"
+                    height="100%"
+                    onClick={handleMapClick}
+                    sx={{
+                      cursor: "pointer",
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      },
+                    }}
+                  />
+                </Box>
               </Stack>
 
               {/* 시간 */}
-
               <Stack gap={1}>
                 {/* 제목 */}
                 <Stack direction="row" alignItems="center" gap={1}>
@@ -516,6 +577,12 @@ const CardEditDialog = () => {
           </MenuItem>
         </MenuList>
       </Menu>
+
+      {/* 전체화면 지도 모달 */}
+      <FullScreenMapDialog
+        open={isMapDialogOpen}
+        onClose={handleMapDialogClose}
+      />
     </>
   );
 };
