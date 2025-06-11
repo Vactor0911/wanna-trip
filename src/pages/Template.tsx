@@ -27,6 +27,7 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import CardEditDialog from "../components/CardEditDialog";
 import dayjs from "dayjs";
 import {
+  reorderBoardCardsAtom,
   templateAtom,
   templateModeAtom,
   TemplateModes,
@@ -75,6 +76,7 @@ const Template = () => {
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
+  const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
 
   // 템플릿 데이터 가져오기
   const fetchTemplateData = useCallback(async () => {
@@ -91,12 +93,8 @@ const Template = () => {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
-      console.log("템플릿 데이터:", response.data);
-
       if (response.data.success) {
         const backendTemplate = response.data.template as BackendTemplate;
-        console.log("백엔드 템플릿:", backendTemplate);
-        console.log("보드 개수:", backendTemplate.boards?.length || 0);
 
         // 보드와 카드 정보를 포함한 템플릿 데이터로 변환
         const transformedTemplate = {
@@ -122,9 +120,12 @@ const Template = () => {
           })),
         };
 
-        console.log("변환된 템플릿:", transformedTemplate);
         setTemplate(transformedTemplate);
         setTemplateTitle(backendTemplate.title);
+
+        // 카드 순서 정렬
+        reorderBoardCards();
+        
       } else {
         setError("템플릿 데이터를 불러올 수 없습니다.");
       }
@@ -134,7 +135,7 @@ const Template = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [setTemplate, uuid]);
+  }, [reorderBoardCards, setTemplate, uuid]);
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
