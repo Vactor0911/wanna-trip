@@ -69,6 +69,60 @@ export const boardAtomFamily = atomFamily((boardId: number) =>
 // 보드 맵 객체 - 모든 보드를 포함
 export const boardsMapAtom = atom<Map<number, BoardInterface>>(new Map());
 
+// 기존 templateAtom 유지 (이전 코드와의 호환성을 위해)
+export const templateAtom = atom(
+  // getter - 개별 atom들을 조합해 템플릿 객체 생성
+  (get) => {
+    const templateInfo = get(templateInfoAtom);
+    const boardOrder = get(boardOrderAtom);
+    const boardsMap = get(boardsMapAtom);
+
+    const boards = boardOrder.map((boardId) =>
+      boardsMap.has(boardId)
+        ? boardsMap.get(boardId)!
+        : { id: boardId, cards: [] }
+    );
+
+    return {
+      ...templateInfo,
+      boards,
+    };
+  },
+  // setter - 템플릿 객체를 받아 개별 atom들 업데이트
+  (get, set, newTemplate: TemplateInterface) => {
+    // 템플릿 기본 정보 업데이트
+    set(templateInfoAtom, {
+      uuid: newTemplate.uuid,
+      title: newTemplate.title,
+    });
+
+    const newBoardsMap = new Map<number, BoardInterface>();
+    const newBoardOrder: number[] = [];
+
+    // 각 보드 처리
+    newTemplate.boards.forEach((board) => {
+      if (board.id) {
+        newBoardsMap.set(board.id, board);
+        newBoardOrder.push(board.id);
+      }
+    });
+
+    set(boardsMapAtom, newBoardsMap);
+    set(boardOrderAtom, newBoardOrder);
+  }
+);
+
+export const templateModeAtom = atom(TemplateModes.EDIT); // 템플릿 모드 상태
+
+export const cardEditDialogOpenAtom = atom(false); // 카드 편집 다이얼로그 열림 상태
+
+// 현재 편집 중인 카드 정보
+export const currentEditCardAtom = atom({
+  cardId: null as number | null | undefined,
+  boardId: null as number | null | undefined,
+  orderIndex: 0,
+});
+
 // 카드 추가/수정 atom
 export const updateBoardCardAtom = atom(
   null,
@@ -125,56 +179,115 @@ export const updateBoardCardAtom = atom(
   }
 );
 
-// 기존 templateAtom 유지 (이전 코드와의 호환성을 위해)
-export const templateAtom = atom(
-  // getter - 개별 atom들을 조합해 템플릿 객체 생성
-  (get) => {
-    const templateInfo = get(templateInfoAtom);
-    const boardOrder = get(boardOrderAtom);
-    const boardsMap = get(boardsMapAtom);
+// 보드에서 카드 삭제하는 atom
+export const deleteBoardCardAtom = atom(
+  null,
+  (get, set, { boardId, cardId }: { boardId: number; cardId: number }) => {
+    const template = get(templateAtom);
 
-    const boards = boardOrder.map((boardId) =>
-      boardsMap.has(boardId)
-        ? boardsMap.get(boardId)!
-        : { id: boardId, cards: [] }
+    // 해당 보드 찾기
+    const boardIndex = template.boards.findIndex(
+      (board) => board.id === boardId
     );
+    if (boardIndex === -1) return;
 
-    return {
-      ...templateInfo,
-      boards,
+    // 템플릿 복사 (불변성 유지)
+    const newTemplate = { ...template };
+    // 보드 배열 복사
+    newTemplate.boards = [...template.boards];
+
+    // 특정 보드 복사
+    newTemplate.boards[boardIndex] = {
+      ...template.boards[boardIndex],
+      // 해당 카드를 제외한 카드 배열 생성
+      cards: template.boards[boardIndex].cards.filter(
+        (card) => card.id !== cardId
+      ),
     };
-  },
-  // setter - 템플릿 객체를 받아 개별 atom들 업데이트
-  (get, set, newTemplate: TemplateInterface) => {
-    // 템플릿 기본 정보 업데이트
-    set(templateInfoAtom, {
-      uuid: newTemplate.uuid,
-      title: newTemplate.title,
+
+    // 템플릿 상태 업데이트
+    set(templateAtom, newTemplate);
+
+    // 변경 로그 출력 (디버깅용)
+    console.log("카드 삭제 완료:", {
+      boardId,
+      cardId,
+      newTemplate,
     });
-
-    const newBoardsMap = new Map<number, BoardInterface>();
-    const newBoardOrder: number[] = [];
-
-    // 각 보드 처리
-    newTemplate.boards.forEach((board) => {
-      if (board.id) {
-        newBoardsMap.set(board.id, board);
-        newBoardOrder.push(board.id);
-      }
-    });
-
-    set(boardsMapAtom, newBoardsMap);
-    set(boardOrderAtom, newBoardOrder);
   }
 );
 
-export const templateModeAtom = atom(TemplateModes.EDIT); // 템플릿 모드 상태
+// 특정 위치에 카드를 삽입하는 atom
+export const insertBoardCardAtom = atom(
+  null,
+  (
+    get,
+    set,
+    update: { boardId: number; card: CardInterface; afterCardId: number }
+  ) => {
+    const { boardId, card, afterCardId } = update;
+    const template = get(templateAtom);
 
-export const cardEditDialogOpenAtom = atom(false); // 카드 편집 다이얼로그 열림 상태
+    // 해당 보드 찾기
+    const boardIndex = template.boards.findIndex(
+      (board) => board.id === boardId
+    );
+    if (boardIndex === -1) return;
 
-// 현재 편집 중인 카드 정보
-export const currentEditCardAtom = atom({
-  cardId: null as number | null | undefined,
-  boardId: null as number | null | undefined,
-  orderIndex: 0,
+    // 템플릿 복사 (불변성 유지)
+    const newTemplate = { ...template };
+    newTemplate.boards = [...template.boards];
+
+    // 특정 보드 복사
+    newTemplate.boards[boardIndex] = {
+      ...template.boards[boardIndex],
+      cards: [...template.boards[boardIndex].cards],
+    };
+
+    // afterCardId 카드의 위치 찾기
+    const afterCardIndex = newTemplate.boards[boardIndex].cards.findIndex(
+      (c) => c.id === afterCardId
+    );
+
+    if (afterCardIndex !== -1) {
+      // 찾은 카드의 바로 다음 위치에 새 카드 삽입
+      newTemplate.boards[boardIndex].cards.splice(afterCardIndex + 1, 0, card);
+    } else {
+      // 카드를 찾지 못했으면 맨 끝에 추가
+      newTemplate.boards[boardIndex].cards.push(card);
+    }
+
+    // 템플릿 상태 업데이트
+    set(templateAtom, newTemplate);
+
+    console.log("카드 삽입 완료:", {
+      boardId,
+      cardId: card.id,
+      afterCardId,
+      insertPosition: afterCardIndex + 1,
+      newTemplate,
+    });
+  }
+);
+
+// 템플릿의 모든 보드 카드 정렬하는 함수
+export const reorderBoardCardsAtom = atom(null, (get, set) => {
+  const template = get(templateAtom);
+
+  // 템플릿 복사 (불변성 유지)
+  const newTemplate = { ...template };
+  newTemplate.boards = [...template.boards];
+
+  // 모든 보드의 카드 순서 정렬
+  newTemplate.boards = newTemplate.boards.map((board) => ({
+    ...board,
+    cards: [...board.cards].sort(
+      (a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)
+    ),
+  }));
+
+  // 템플릿 상태 업데이트
+  set(templateAtom, newTemplate);
+
+  console.log("모든 보드의 카드 순서 정렬 완료");
 });

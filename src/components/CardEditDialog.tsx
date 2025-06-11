@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
+import AspectRatioIcon from "@mui/icons-material/AspectRatio";
 import Tooltip from "./Tooltip";
 import CardTextEditor from "./text_editor/CardTextEditor";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -30,6 +31,8 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import {
   cardEditDialogOpenAtom,
   currentEditCardAtom,
+  deleteBoardCardAtom,
+  insertBoardCardAtom,
   templateAtom,
   updateBoardCardAtom,
 } from "../state/template";
@@ -41,6 +44,7 @@ import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import FullScreenMapDialog from "./FullScreenMapDialog";
 
 const CardEditDialog = () => {
   const theme = useTheme();
@@ -49,23 +53,31 @@ const CardEditDialog = () => {
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
   );
-  const [currentEditCard] = useAtom(currentEditCardAtom);
-  const [template] = useAtom(templateAtom); // 템플릿 상태 추가
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
 
   const [isCardLocked, setIsCardLocked] = useState(false); // 카드 잠금 상태
   const [isSaving, setIsSaving] = useState(false); // 저장 중 상태
   const [content, setContent] = useState(""); // 카드 내용
   const [startTime, setStartTime] = useState(dayjs("2001-01-01T01:00")); // 시작 시간
   const [endTime, setEndTime] = useState(dayjs("2001-01-01T02:00")); // 종료 시간
-  const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
   const [errorMessage, setErrorMessage] = useState(""); // 오류 메시지 상태
   const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
+
+  // 전체화면 지도 상태
+  const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
+
+  const [currentEditCard] = useAtom(currentEditCardAtom); // 현재 편집 중인 카드 정보
+  const [template] = useAtom(templateAtom); // 템플릿 상태 추가
 
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
     (board) => board.id === currentEditCard?.boardId
   );
+
+  // 보드 카드 업데이트 함수
+  const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
+  const [, deleteBoardCard] = useAtom(deleteBoardCardAtom); // 보드 카드 삭제 함수 추가
+  const [, insertBoardCard] = useAtom(insertBoardCardAtom); // 보드 특정 위치 카드 삽입 함수 추가
 
   // 동적 제목 생성
   const dialogTitle = currentBoard
@@ -147,16 +159,22 @@ const CardEditDialog = () => {
 
       // 새 카드 생성 또는 기존 카드 업데이트
       if (currentEditCard && currentEditCard.boardId) {
-        const cardData = {
+        // 내용 수정할 때는 orderIndex를 전송하지 않도록 수정
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cardData: any = {
           content, // 카드 내용
           startTime: startTime.format("YYYY-MM-DD HH:mm:ss"), // 시작 시간
           endTime: endTime.format("YYYY-MM-DD HH:mm:ss"), // 종료 시간
-          orderIndex: currentEditCard.orderIndex || 0, // 카드 순서 인덱스
           locked: isCardLocked, // 잠금 상태
         };
 
-        let response;
+        // 새 카드 생성 시에만 orderIndex 포함 (드래그 앤 드롭으로 위치 변경하는 경우는 별도 처리)
         const isNewCard = !currentEditCard.cardId;
+        if (isNewCard) {
+          cardData.orderIndex = currentEditCard.orderIndex || 0;
+        }
+
+        let response;
 
         // 기존 카드 수정
         if (currentEditCard.cardId) {
@@ -234,6 +252,138 @@ const CardEditDialog = () => {
   const handleMoreMenuClose = useCallback(() => {
     setIsMoreMenuOpen(false);
   }, []);
+
+  // 지도 클릭 시 전체화면 모달 열기
+  const handleMapClick = useCallback(() => {
+    setIsMapDialogOpen(true);
+  }, []);
+
+  // 전체화면 지도 모달 닫기
+  const handleMapDialogClose = useCallback(() => {
+    setIsMapDialogOpen(false);
+  }, []);
+
+  // 카드 복제 핸들러
+  const handleCardDuplicate = useCallback(async () => {
+    if (!currentEditCard?.cardId || !currentEditCard?.boardId) {
+      setErrorMessage("복제할 카드가 없거나 보드 정보가 없습니다.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setErrorMessage("");
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 카드 복제 API 호출
+      const response = await axiosInstance.post(
+        `/card/duplicate/${currentEditCard.cardId}`,
+        {},
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        console.log("카드 복제 성공:", response.data);
+
+        // 현재 카드 정보를 기반으로 새 카드 객체 생성
+        const duplicatedCard = {
+          id: response.data.cardId,
+          content,
+          startTime,
+          endTime,
+          isLocked: isCardLocked,
+          orderIndex: (currentEditCard.orderIndex || 0) + 1, // 현재 카드 다음 위치
+        };
+
+        // 원본 카드 바로 다음 위치에 카드 삽입
+        insertBoardCard({
+          boardId: currentEditCard.boardId,
+          card: duplicatedCard,
+          afterCardId: currentEditCard.cardId,
+        });
+
+        // 복제 후 대화상자 닫기
+        setCardEditDialogOpen(false);
+      } else {
+        setErrorMessage("카드 복제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("카드 복제 중 오류 발생:", error);
+      setErrorMessage("카드 복제 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    currentEditCard.cardId,
+    currentEditCard.boardId,
+    currentEditCard.orderIndex,
+    content,
+    startTime,
+    endTime,
+    isCardLocked,
+    insertBoardCard,
+    setCardEditDialogOpen,
+  ]);
+
+  // 카드 삭제 핸들러
+  const handleCardDelete = useCallback(async () => {
+    if (!currentEditCard?.cardId || !currentEditCard?.boardId) {
+      setErrorMessage("삭제할 카드가 없거나 보드 정보가 없습니다.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setErrorMessage("");
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 카드 삭제 API 호출
+      const response = await axiosInstance.delete(
+        `/card/${currentEditCard.cardId}`,
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        console.log("카드 삭제 성공:", response.data);
+
+        // 보드에서 카드 제거
+        deleteBoardCard({
+          boardId: currentEditCard.boardId,
+          cardId: currentEditCard.cardId,
+        });
+
+        // 삭제 후 대화상자 닫기
+        setCardEditDialogOpen(false);
+      } else {
+        setErrorMessage("카드 삭제에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("카드 삭제 중 오류 발생:", error);
+      setErrorMessage("카드 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    currentEditCard.boardId,
+    currentEditCard.cardId,
+    deleteBoardCard,
+    setCardEditDialogOpen,
+  ]);
+
+  // 메뉴 아이템 클릭 핸들러들
+  const handleDuplicateMenuClick = useCallback(() => {
+    handleMoreMenuClose();
+    handleCardDuplicate();
+  }, [handleMoreMenuClose, handleCardDuplicate]);
+
+  const handleDeleteMenuClick = useCallback(() => {
+    handleMoreMenuClose();
+    handleCardDelete();
+  }, [handleMoreMenuClose, handleCardDelete]);
 
   return (
     <>
@@ -345,21 +495,67 @@ const CardEditDialog = () => {
                   <Typography variant="h6">장소</Typography>
                 </Stack>
 
-                {/* 지도 뷰어 */}
-                <NaverMap
-                  width="100%"
-                  height={{
-                    xs: "200px",
-                    md: "auto",
-                  }}
+                {/* 지도 뷰어 - 정적 모드로 변경하고 클릭 이벤트 추가 */}
+                <Box
+                  position="relative"
                   sx={{
+                    width: "100%",
+                    height: {
+                      xs: "200px",
+                      md: "auto",
+                    },
                     aspectRatio: "1/1",
                   }}
-                />
+                >
+                  <NaverMap
+                    width="100%"
+                    height="100%"
+                    interactive={false} // 상호작용 비활성화
+                    sx={{
+                      borderRadius: 2,
+                    }}
+                  />
+
+                  {/* 전체화면 버튼 */}
+                  <Tooltip title="전체화면으로 보기" placement="left">
+                    <IconButton
+                      onClick={handleMapClick}
+                      disableRipple // 클릭 시 ripple 효과 제거
+                      sx={{
+                        position: "absolute",
+                        top: 4,
+                        right: 4,
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        color: theme.palette.primary.main,
+                        boxShadow: 1,
+                        zIndex: 1,
+                      }}
+                      size="small"
+                    >
+                      <AspectRatioIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+
+                  {/* 클릭 가능한 투명 오버레이 */}
+                  <Box
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    width="100%"
+                    height="100%"
+                    onClick={handleMapClick}
+                    sx={{
+                      cursor: "pointer",
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.05)",
+                      },
+                    }}
+                  />
+                </Box>
               </Stack>
 
               {/* 시간 */}
-
               <Stack gap={1}>
                 {/* 제목 */}
                 <Stack direction="row" alignItems="center" gap={1}>
@@ -482,7 +678,10 @@ const CardEditDialog = () => {
       >
         <MenuList disablePadding>
           {/* 카드 복제 */}
-          <MenuItem onClick={handleMoreMenuClose}>
+          <MenuItem
+            onClick={handleDuplicateMenuClick}
+            disabled={!currentEditCard?.cardId}
+          >
             <ListItemIcon>
               <ContentCopyRoundedIcon />
             </ListItemIcon>
@@ -498,7 +697,10 @@ const CardEditDialog = () => {
           </MenuItem>
 
           {/* 카드 삭제 */}
-          <MenuItem onClick={handleMoreMenuClose}>
+          <MenuItem
+            onClick={handleDeleteMenuClick}
+            disabled={!currentEditCard?.cardId}
+          >
             <ListItemIcon>
               <DeleteOutlineRoundedIcon
                 sx={{
@@ -516,6 +718,12 @@ const CardEditDialog = () => {
           </MenuItem>
         </MenuList>
       </Menu>
+
+      {/* 전체화면 지도 모달 */}
+      <FullScreenMapDialog
+        open={isMapDialogOpen}
+        onClose={handleMapDialogClose}
+      />
     </>
   );
 };
