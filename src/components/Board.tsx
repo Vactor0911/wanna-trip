@@ -12,12 +12,14 @@ import { MAX_BOARDS } from "../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
+  CardInterface,
   currentEditCardAtom,
   templateAtom,
 } from "../state/template";
-import React from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
+import dayjs from "dayjs";
+import { useAddCard } from "../hooks/template";
 
 interface BoardProps {
   boardId: string;
@@ -26,12 +28,14 @@ interface BoardProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
 }
 
-const Board = React.memo((props: BoardProps) => {
+const Board = ((props: BoardProps) => {
   const { day, boardData, fetchTemplateData } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
+
+  const addCard = useAddCard();
 
   // 카드 클릭 핸들러
   const handleCardClick = useCallback(
@@ -48,15 +52,35 @@ const Board = React.memo((props: BoardProps) => {
   );
 
   // 카드 생성 버튼 클릭 핸들러
-  const handleAddCardButtonClick = useCallback(() => {
-    // 새 카드 생성을 위한 상태 설정
-    setCurrentEditCard({
-      cardId: null,
-      boardId: boardData.id,
-      orderIndex: boardData.cards.length,
-    });
-    setCardEditDialogOpen(true);
-  }, [boardData, setCurrentEditCard, setCardEditDialogOpen]);
+  const handleAddCardButtonClick = useCallback(async () => {
+    // 보드 Id가 없으면 중단
+    if (!boardData.id) {
+      return;
+    }
+
+    // 생성할 새 카드
+    const newCard: CardInterface = {
+      content: "",
+      startTime: dayjs(),
+      endTime: dayjs().add(1, "hour"),
+      isLocked: false,
+    };
+
+    // 카드 추가 훅 호출
+    try{
+      const newCardId = await addCard(newCard, boardData.id);
+
+      // 카드 편집 대화상자 열기
+      setCurrentEditCard({
+        cardId: newCardId,
+        boardId: boardData.id,
+        orderIndex: boardData.cards.length,
+      });
+      setCardEditDialogOpen(true);
+    }catch (error) {
+      console.error("카드 추가 오류:", error);
+    }
+  }, [boardData, setCurrentEditCard, setCardEditDialogOpen, addCard]);
 
   // 보드 추가 버튼 클릭 - 현재 보드 바로 뒤에 새 보드 추가
   const handleAddBoardButtonClick = useCallback(async () => {

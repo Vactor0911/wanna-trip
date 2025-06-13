@@ -19,7 +19,6 @@ export interface TemplateInterface {
 // 보드 객체 인터페이스
 export interface BoardInterface {
   id?: string; // board_id
-  title?: string; // 보드 제목 (기본값: Day N)
   dayNumber?: number; // 날짜 번호
   cards: CardInterface[]; // 카드 목록
 }
@@ -32,7 +31,7 @@ export enum CardTypes {
 
 // 카드 객체 인터페이스
 export interface CardInterface {
-  id: string; // card_id
+  id?: string; // card_id
   content: string; // 카드 내용
   startTime: Dayjs; // 카드 시작 시간
   endTime: Dayjs; // 카드 종료 시간
@@ -61,7 +60,6 @@ export const boardAtomFamily = atomFamily((boardId: string) =>
   atom<BoardInterface>({
     id: boardId,
     dayNumber: 1,
-    title: `Day 1`,
     cards: [],
   })
 );
