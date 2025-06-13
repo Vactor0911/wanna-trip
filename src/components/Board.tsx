@@ -160,108 +160,106 @@ const Board = React.memo((props: BoardProps) => {
   }, [template, boardData, fetchTemplateData]);
 
   return (
-      <Stack height="100%">
-        <Paper
-          elevation={3}
-          sx={{
-            maxHeight: "100%",
-            background: theme.palette.secondary.main,
-          }}
-        >
-          <Stack padding={1} width="300px" maxHeight="inherit" gap={1}>
-            {/* 헤더 메뉴바 */}
-            <Stack direction="row" justifyContent="space-between">
-              {/* 좌측 컨테이너 */}
-              <Stack direction="row" alignItems="center" gap={1}>
-                {/* 보드 날짜 */}
-                <Typography variant="h6">Day {day}</Typography>
+    <Stack height="100%">
+      <Paper
+        elevation={3}
+        sx={{
+          maxHeight: "100%",
+          background: theme.palette.secondary.main,
+        }}
+      >
+        <Stack padding={1} width="300px" maxHeight="inherit" gap={1}>
+          {/* 헤더 메뉴바 */}
+          <Stack direction="row" justifyContent="space-between">
+            {/* 좌측 컨테이너 */}
+            <Stack direction="row" alignItems="center" gap={1}>
+              {/* 보드 날짜 */}
+              <Typography variant="h6">Day {day}</Typography>
 
-                {/* 정렬하기 버튼 */}
-                <Tooltip title="정렬하기" placement="top">
-                  <IconButton size="small">
-                    <SortRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-
-              {/* 우측 컨테이너 */}
-              <Stack direction="row" alignItems="center">
-                {/* 보드 추가하기 버튼 */}
-                <Tooltip title="보드 추가하기" placement="top">
-                  <IconButton size="small" onClick={handleAddBoardButtonClick}>
-                    <AddRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                {/* 보드 복제하기 버튼 */}
-                <Tooltip title="보드 복제하기" placement="top">
-                  <IconButton size="small" onClick={handleCopyBoardButtonClick}>
-                    <ContentCopyRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-
-                {/* 보드 삭제하기 버튼 */}
-                <Tooltip title="보드 삭제하기" placement="top">
-                  <IconButton
-                    size="small"
-                    onClick={handleDeleteBoardButtonClick}
-                  >
-                    <DeleteOutlineRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+              {/* 정렬하기 버튼 */}
+              <Tooltip title="정렬하기" placement="top">
+                <IconButton size="small">
+                  <SortRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Stack>
 
-            {/* 카드 드롭 영역 */}
-            <Droppable droppableId={String(boardData.id) || "1"} type="card">
-              {(provided, snapshot) => (
-                // 카드 컨테이너
-                <Stack
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  flex={1}
-                  gap={2}
-                  paddingBottom={0.5}
-                  sx={{
-                    overflowY: "auto",
-                  }}
-                >
-                  {/* 카드 목록 렌더링 */}
-                  {(boardData?.cards || []).map((card, index) => (
-                    <Draggable
-                      key={`card-${card.id || `new-${index}`}`}
-                      draggableId={`card-${card.id || `new-${index}`}`}
-                      index={index}
-                    >
-                      {(provided, snapshot) => (
-                        <Card
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          key={`card-${card.id || `new-${index}`}`}
-                          content={card.content || ""}
-                          startTime={card.startTime}
-                          endTime={card.endTime}
-                          isLocked={card.isLocked}
-                          onClick={() => handleCardClick(index)}
-                        />
-                      )}
-                    </Draggable>
-                  ))}
-                </Stack>
-              )}
-            </Droppable>
+            {/* 우측 컨테이너 */}
+            <Stack direction="row" alignItems="center">
+              {/* 보드 추가하기 버튼 */}
+              <Tooltip title="보드 추가하기" placement="top">
+                <IconButton size="small" onClick={handleAddBoardButtonClick}>
+                  <AddRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
 
-            <Button
-              fullWidth
-              startIcon={<AddRoundedIcon sx={{ color: "inherit" }} />}
-              onClick={handleAddCardButtonClick}
-            >
-              <Typography variant="subtitle1">계획 추가하기</Typography>
-            </Button>
+              {/* 보드 복제하기 버튼 */}
+              <Tooltip title="보드 복제하기" placement="top">
+                <IconButton size="small" onClick={handleCopyBoardButtonClick}>
+                  <ContentCopyRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
+              {/* 보드 삭제하기 버튼 */}
+              <Tooltip title="보드 삭제하기" placement="top">
+                <IconButton size="small" onClick={handleDeleteBoardButtonClick}>
+                  <DeleteOutlineRoundedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
           </Stack>
-        </Paper>
-      </Stack>
+
+          {/* 카드 드롭 영역 */}
+          <Droppable droppableId={String(boardData.id) || "1"} type="card">
+            {(provided, snapshot) => (
+              // 카드 컨테이너
+              <Stack
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                flex={1}
+                gap={2}
+                paddingBottom={0.5}
+                sx={{
+                  overflowY: "auto",
+                }}
+              >
+                {/* 카드 목록 렌더링 */}
+                {(boardData?.cards || []).map((card, index) => (
+                  <Draggable
+                    key={`card-${card.id || `new-${index}`}`}
+                    draggableId={`card-${card.id || `new-${index}`}`}
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <Card
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        key={`card-${card.id || `new-${index}`}`}
+                        content={card.content || ""}
+                        startTime={card.startTime}
+                        endTime={card.endTime}
+                        isLocked={card.isLocked}
+                        onClick={() => handleCardClick(index)}
+                      />
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </Stack>
+            )}
+          </Droppable>
+
+          <Button
+            fullWidth
+            startIcon={<AddRoundedIcon sx={{ color: "inherit" }} />}
+            onClick={handleAddCardButtonClick}
+          >
+            <Typography variant="subtitle1">계획 추가하기</Typography>
+          </Button>
+        </Stack>
+      </Paper>
+    </Stack>
   );
 });
 
