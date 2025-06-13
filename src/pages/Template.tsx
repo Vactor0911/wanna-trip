@@ -34,6 +34,7 @@ import {
 } from "../state/template";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { useMoveCard } from "../hooks/template";
+import { useMutation } from "@tanstack/react-query";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -225,24 +226,15 @@ const Template = () => {
   const onDragEnd = useCallback(
     async (result) => {
       const { source, destination, type } = result;
-      //TODO: 보드 | 카드 드래그 & 드롭 처리
-
-      // source = 출발지
-      // destination = 도착지
+      //TODO: 보드 드래그 & 드롭 처리
       // type = 드래그된 요소의 타입 (보드: board, 카드: card)
-      console.log("드래그 종료:", { source, destination, type });
 
       // 카드 드래그 & 드롭 처리
       if (type === "card") {
-        try {
-          await moveCard(
-            { boardId: source.droppableId, orderIndex: source.index },
-            { boardId: destination.droppableId, orderIndex: destination.index }
-          );
-        } catch (error) {
-          console.error("카드 이동 중 오류 발생:", error);
-          setError("카드 이동에 실패했습니다.");
-        }
+        moveCard.mutate({
+          source: { boardId: source.droppableId, orderIndex: source.index },
+          destination: { boardId: destination.droppableId, orderIndex: destination.index },
+        });
       }
     },
     [moveCard]

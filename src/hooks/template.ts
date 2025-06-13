@@ -1,7 +1,12 @@
 import { useAtom } from "jotai";
-import { CardInterface, templateAtom } from "../state/template";
+import {
+  CardInterface,
+  templateAtom,
+  TemplateInterface,
+} from "../state/template";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
  * 카드 추가 훅
@@ -74,14 +79,22 @@ export const useAddCard = () => {
   return addCard;
 };
 
+/**
+ * 카드 이동 훅
+ * @returns 카드 이동을 위한 훅
+ */
 export const useMoveCard = () => {
   const [template, setTemplate] = useAtom(templateAtom);
+  const queryClient = useQueryClient();
 
-  const moveCard = useCallback(
-    async (
-      source: { boardId: string; orderIndex: number },
-      destination: { boardId: string; orderIndex: number }
-    ) => {
+  const moveCard = useMutation({
+    mutationFn: async ({
+      source,
+      destination,
+    }: {
+      source: { boardId: string; orderIndex: number };
+      destination: { boardId: string; orderIndex: number };
+    }) => {
       // 보드가 존재하지 않으면 종료
       if (!source.boardId || !destination.boardId) {
         return;
@@ -102,21 +115,34 @@ export const useMoveCard = () => {
       const csrfToken = await getCsrfToken();
 
       // 카드 이동 API 요청
-      const response = await axiosInstance.post(endPoint, moveData, {
+      await axiosInstance.post(endPoint, moveData, {
         headers: { "X-CSRF-Token": csrfToken },
       });
+    },
+    onMutate: async ({
+      source,
+      destination,
+    }: {
+      source: { boardId: string; orderIndex: number };
+      destination: { boardId: string; orderIndex: number };
+    }) => {
+      // 기존 쿼리 취소
+      await queryClient.cancelQueries({ queryKey: ["move-card"] });
 
-      // 오류 처리
-      if (!response.data.success) {
-        throw new Error("카드 이동에 실패했습니다.");
+      // 이전 상태의 템플릿 저장
+      const previousTemplate = queryClient.getQueryData<TemplateInterface>([
+        "template",
+      ]);
+
+      // 보드가 존재하지 않으면 종료
+      if (!source.boardId || !destination.boardId) {
+        return;
       }
 
-      // 카드 이동 성공
       // 이동된 카드 정보 가져오기
       const movedCard = template.boards.find(
         (board) => board.id == source.boardId
       )?.cards[source.orderIndex];
-      console.log("이동된 카드:", movedCard);
 
       // 기존 위치에서 카드 제거
       let newTemplate = {
@@ -139,8 +165,7 @@ export const useMoveCard = () => {
         ...newTemplate,
         boards: newTemplate.boards
           .map((board) => {
-            if (board && board.id == destination.boardId) {
-              // 대상 보드에 카드 추가
+            if (board.id == destination.boardId) {
               const updatedCards = [...board.cards];
               updatedCards.splice(
                 destination.orderIndex,
@@ -153,13 +178,22 @@ export const useMoveCard = () => {
           })
           .filter((board): board is typeof board => board !== undefined),
       };
-
+      setTemplate(newTemplate);
       console.log("이동 후 템플릿:", newTemplate);
 
-      setTemplate(newTemplate);
+      // 롤백시 사용할 이전 템플릿 반환
+      return { previousTemplate };
     },
-    [setTemplate, template]
-  );
+    onError: (_error, _newTemplate, context) => {
+      console.error("카드 이동 실패:", _error);
+      if (context?.previousTemplate) {
+        setTemplate(context.previousTemplate);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
 
   return moveCard;
 };
