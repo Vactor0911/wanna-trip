@@ -215,59 +215,6 @@ export const deleteBoardCardAtom = atom(
   }
 );
 
-// 특정 위치에 카드를 삽입하는 atom
-export const insertBoardCardAtom = atom(
-  null,
-  (
-    get,
-    set,
-    update: { boardId: string; card: CardInterface; afterCardId: string }
-  ) => {
-    const { boardId, card, afterCardId } = update;
-    const template = get(templateAtom);
-
-    // 해당 보드 찾기
-    const boardIndex = template.boards.findIndex(
-      (board) => board.id === boardId
-    );
-    if (boardIndex === -1) return;
-
-    // 템플릿 복사 (불변성 유지)
-    const newTemplate = { ...template };
-    newTemplate.boards = [...template.boards];
-
-    // 특정 보드 복사
-    newTemplate.boards[boardIndex] = {
-      ...template.boards[boardIndex],
-      cards: [...template.boards[boardIndex].cards],
-    };
-
-    // afterCardId 카드의 위치 찾기
-    const afterCardIndex = newTemplate.boards[boardIndex].cards.findIndex(
-      (c) => c.id === afterCardId
-    );
-
-    if (afterCardIndex !== -1) {
-      // 찾은 카드의 바로 다음 위치에 새 카드 삽입
-      newTemplate.boards[boardIndex].cards.splice(afterCardIndex + 1, 0, card);
-    } else {
-      // 카드를 찾지 못했으면 맨 끝에 추가
-      newTemplate.boards[boardIndex].cards.push(card);
-    }
-
-    // 템플릿 상태 업데이트
-    set(templateAtom, newTemplate);
-
-    console.log("카드 삽입 완료:", {
-      boardId,
-      cardId: card.id,
-      afterCardId,
-      insertPosition: afterCardIndex + 1,
-      newTemplate,
-    });
-  }
-);
-
 // 템플릿의 모든 보드 카드 정렬하는 함수
 export const reorderBoardCardsAtom = atom(null, (get, set) => {
   const template = get(templateAtom);
