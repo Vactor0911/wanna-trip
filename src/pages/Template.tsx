@@ -33,6 +33,7 @@ import {
   TemplateModes,
 } from "../state/template";
 import { DragDropContext } from "@hello-pangea/dnd";
+import { useMoveCard } from "../hooks/template";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -69,6 +70,8 @@ interface BackendCard {
 
 const Template = () => {
   const navigate = useNavigate();
+
+  const moveCard = useMoveCard(); // 카드 이동 훅
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
@@ -219,14 +222,31 @@ const Template = () => {
     }
   }, [setTemplate, template, templateTitle]);
 
-  const onDradEnd = useCallback((result) => {
-    const { source, destination, type } = result;
-    //TODO: 보드 | 카드 드래그 & 드롭 처리
+  const onDragEnd = useCallback(
+    async (result) => {
+      const { source, destination, type } = result;
+      //TODO: 보드 | 카드 드래그 & 드롭 처리
 
-    // source = 출발지
-    // destination = 도착지
-    // type = 드래그된 요소의 타입 (보드: board, 카드: card)
-  }, []);
+      // source = 출발지
+      // destination = 도착지
+      // type = 드래그된 요소의 타입 (보드: board, 카드: card)
+      console.log("드래그 종료:", { source, destination, type });
+
+      // 카드 드래그 & 드롭 처리
+      if (type === "card") {
+        try {
+          await moveCard(
+            { boardId: source.droppableId, orderIndex: source.index },
+            { boardId: destination.droppableId, orderIndex: destination.index }
+          );
+        } catch (error) {
+          console.error("카드 이동 중 오류 발생:", error);
+          setError("카드 이동에 실패했습니다.");
+        }
+      }
+    },
+    [moveCard]
+  );
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -378,7 +398,7 @@ const Template = () => {
         </Container>
 
         {/* 드래그 & 드롭 wrapper */}
-        <DragDropContext onDragEnd={onDradEnd}>
+        <DragDropContext onDragEnd={onDragEnd}>
           {/* 보드 컨테이너 */}
           <Stack
             direction="row"
