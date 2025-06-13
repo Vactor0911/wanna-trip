@@ -32,7 +32,6 @@ import {
   cardEditDialogOpenAtom,
   currentEditCardAtom,
   deleteBoardCardAtom,
-  insertBoardCardAtom,
   templateAtom,
   updateBoardCardAtom,
 } from "../state/template";
@@ -42,13 +41,14 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FullScreenMapDialog from "./FullScreenMapDialog";
+import { useAddCard } from "../hooks/template";
 
 const CardEditDialog = () => {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const addCard = useAddCard(); // 카드 추가 훅
 
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
@@ -77,7 +77,6 @@ const CardEditDialog = () => {
   // 보드 카드 업데이트 함수
   const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
   const [, deleteBoardCard] = useAtom(deleteBoardCardAtom); // 보드 카드 삭제 함수 추가
-  const [, insertBoardCard] = useAtom(insertBoardCardAtom); // 보드 특정 위치 카드 삽입 함수 추가
 
   // 동적 제목 생성
   const dialogTitle = currentBoard
@@ -263,68 +262,49 @@ const CardEditDialog = () => {
     setIsMapDialogOpen(false);
   }, []);
 
-  // 카드 복제 핸들러
-  const handleCardDuplicate = useCallback(async () => {
+  // 카드 복제 버튼 클릭
+  const handleDuplicateCardButtonClick = useCallback(async () => {
+    // 현재 편집 중인 카드가 없거나 보드 정보가 없으면 오류 출력
     if (!currentEditCard?.cardId || !currentEditCard?.boardId) {
       setErrorMessage("복제할 카드가 없거나 보드 정보가 없습니다.");
       return;
     }
 
+    setIsSaving(true); // 저장 중 상태로 변경
+    setErrorMessage(""); // 오류 메시지 초기화
+
+    // 복제 카드 데이터
+    const newCard = {
+      content,
+      startTime,
+      endTime,
+      isLocked: false, // 복제 시 잠금 해제
+    };
+
+    // 카드 추가 훅 호출
     try {
-      setIsSaving(true);
-      setErrorMessage("");
-
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
-
-      // 카드 복제 API 호출
-      const response = await axiosInstance.post(
-        `/card/duplicate/${currentEditCard.cardId}`,
-        {},
-        { headers: { "X-CSRF-Token": csrfToken } }
+      await addCard(
+        newCard,
+        currentEditCard.boardId,
+        currentEditCard.orderIndex
       );
-
-      if (response.data.success) {
-        console.log("카드 복제 성공:", response.data);
-
-        // 현재 카드 정보를 기반으로 새 카드 객체 생성
-        const duplicatedCard = {
-          id: response.data.cardId,
-          content,
-          startTime,
-          endTime,
-          isLocked: isCardLocked,
-          orderIndex: (currentEditCard.orderIndex || 0) + 1, // 현재 카드 다음 위치
-        };
-
-        // 원본 카드 바로 다음 위치에 카드 삽입
-        insertBoardCard({
-          boardId: currentEditCard.boardId,
-          card: duplicatedCard,
-          afterCardId: currentEditCard.cardId,
-        });
-
-        // 복제 후 대화상자 닫기
-        setCardEditDialogOpen(false);
-      } else {
-        setErrorMessage("카드 복제에 실패했습니다.");
-      }
     } catch (error) {
-      console.error("카드 복제 중 오류 발생:", error);
-      setErrorMessage("카드 복제 중 오류가 발생했습니다.");
+      console.error("카드 추가 중 오류 발생:", error);
     } finally {
-      setIsSaving(false);
+      setIsSaving(false); // 저장 중 상태 해제
+      handleMoreMenuClose(); // 메뉴 닫기
+      setCardEditDialogOpen(false); // 대화상자 닫기
     }
   }, [
-    currentEditCard.cardId,
-    currentEditCard.boardId,
-    currentEditCard.orderIndex,
+    addCard,
     content,
-    startTime,
+    currentEditCard.boardId,
+    currentEditCard?.cardId,
+    currentEditCard.orderIndex,
     endTime,
-    isCardLocked,
-    insertBoardCard,
+    handleMoreMenuClose,
     setCardEditDialogOpen,
+    startTime,
   ]);
 
   // 카드 삭제 핸들러
@@ -375,11 +355,6 @@ const CardEditDialog = () => {
   ]);
 
   // 메뉴 아이템 클릭 핸들러들
-  const handleDuplicateMenuClick = useCallback(() => {
-    handleMoreMenuClose();
-    handleCardDuplicate();
-  }, [handleMoreMenuClose, handleCardDuplicate]);
-
   const handleDeleteMenuClick = useCallback(() => {
     handleMoreMenuClose();
     handleCardDelete();
@@ -679,7 +654,7 @@ const CardEditDialog = () => {
         <MenuList disablePadding>
           {/* 카드 복제 */}
           <MenuItem
-            onClick={handleDuplicateMenuClick}
+            onClick={handleDuplicateCardButtonClick}
             disabled={!currentEditCard?.cardId}
           >
             <ListItemIcon>
