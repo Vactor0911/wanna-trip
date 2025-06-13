@@ -688,14 +688,6 @@ const CardEditDialog = () => {
             <ListItemText>복제하기</ListItemText>
           </MenuItem>
 
-          {/* 카드 이동 */}
-          <MenuItem onClick={handleMoreMenuClose}>
-            <ListItemIcon>
-              <SwapHorizRoundedIcon />
-            </ListItemIcon>
-            <ListItemText>이동하기</ListItemText>
-          </MenuItem>
-
           {/* 카드 삭제 */}
           <MenuItem
             onClick={handleDeleteMenuClick}
