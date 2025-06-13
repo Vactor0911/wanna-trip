@@ -1,9 +1,9 @@
-import { Paper, Stack, Typography } from "@mui/material";
+import { Paper, PaperProps, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
 import { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 
-interface CardProps {
+interface CardProps extends PaperProps {
   content?: string;
   startTime?: Dayjs;
   endTime?: Dayjs;
@@ -12,7 +12,7 @@ interface CardProps {
 }
 
 const Card = (props: CardProps) => {
-  const { content, startTime, endTime, isLocked, onClick } = props;
+  const { content, startTime, endTime, isLocked, onClick, ...others } = props;
 
   // 시간 형식 설정
   const formatTime = (time?: Dayjs) => {
@@ -35,6 +35,7 @@ const Card = (props: CardProps) => {
           border: `2px solid ${theme.palette.primary.main}`,
         },
       }}
+      {...others}
     >
       <Stack gap={1}>
         {/* 카드 시간 */}
