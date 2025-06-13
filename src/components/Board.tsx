@@ -28,7 +28,7 @@ interface BoardProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
 }
 
-const Board = ((props: BoardProps) => {
+const Board = (props: BoardProps) => {
   const { day, boardData, fetchTemplateData } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
@@ -67,7 +67,7 @@ const Board = ((props: BoardProps) => {
     };
 
     // 카드 추가 훅 호출
-    try{
+    try {
       const newCardId = await addCard(newCard, boardData.id);
 
       // 카드 편집 대화상자 열기
@@ -77,8 +77,8 @@ const Board = ((props: BoardProps) => {
         orderIndex: boardData.cards.length,
       });
       setCardEditDialogOpen(true);
-    }catch (error) {
-      console.error("카드 추가 오류:", error);
+    } catch (error) {
+      console.error("카드 추가 중 오류 발생:", error);
     }
   }, [boardData, setCurrentEditCard, setCardEditDialogOpen, addCard]);
 
@@ -285,6 +285,6 @@ const Board = ((props: BoardProps) => {
       </Paper>
     </Stack>
   );
-});
+};
 
 export default Board;
