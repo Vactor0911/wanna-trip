@@ -1,9 +1,9 @@
 import { Paper, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
 import { Dayjs } from "dayjs";
+import parse from "html-react-parser";
 
 interface CardProps {
-  title?: string;
   content?: string;
   startTime?: Dayjs;
   endTime?: Dayjs;
@@ -12,21 +12,11 @@ interface CardProps {
 }
 
 const Card = (props: CardProps) => {
-  const { title, content, startTime, endTime, isLocked, onClick } = props;
+  const { content, startTime, endTime, isLocked, onClick } = props;
 
   // 시간 형식 설정
   const formatTime = (time?: Dayjs) => {
     return time ? time.format("HH:mm") : "";
-  };
-
-  // HTML 태그를 제거하고 일부 텍스트만 표시하는 함수
-  const stripHtmlAndTruncate = (html: string, maxLength: number = 100) => {
-    const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    const text = tmp.textContent || tmp.innerText || "";
-    return text.length > maxLength
-      ? text.substring(0, maxLength) + "..."
-      : text;
   };
 
   return (
@@ -49,29 +39,27 @@ const Card = (props: CardProps) => {
       <Stack gap={1}>
         {/* 카드 시간 */}
         {(startTime || endTime) && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-            gutterBottom
-          >
+          <Typography variant="caption" color="text.secondary" display="block">
             {formatTime(startTime)} {endTime ? `- ${formatTime(endTime)}` : ""}
           </Typography>
         )}
 
-        {/* 카드 제목 */}
-        {title && (
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-            {title}
-          </Typography>
-        )}
-
         {/* 카드 내용 */}
-        {content && (
-          <Typography variant="body2">
-            {stripHtmlAndTruncate(content)}
-          </Typography>
-        )}
+        <Stack
+          gap={0.5}
+          sx={{
+            "& p, & ol, & ul": {
+              margin: 0,
+              padding: 0,
+              boxSizing: "border-box",
+            },
+            "& ol, & ul": {
+              paddingLeft: "1em",
+            },
+          }}
+        >
+          {content && parse(content)}
+        </Stack>
       </Stack>
     </Paper>
   );
