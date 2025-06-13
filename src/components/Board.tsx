@@ -250,8 +250,8 @@ const Board = (props: BoardProps) => {
                 {/* 카드 목록 렌더링 */}
                 {(boardData?.cards || []).map((card, index) => (
                   <Draggable
-                    key={`card-${card.id || `new-${index}`}`}
-                    draggableId={`card-${card.id || `new-${index}`}`}
+                    key={`card-${card.id}`}
+                    draggableId={`card-${card.id}`}
                     index={index}
                   >
                     {(provided, snapshot) => (
@@ -259,7 +259,7 @@ const Board = (props: BoardProps) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        key={`card-${card.id || `new-${index}`}`}
+                        key={`card-${card.id}`}
                         content={card.content || ""}
                         startTime={card.startTime}
                         endTime={card.endTime}
