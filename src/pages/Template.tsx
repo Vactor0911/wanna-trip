@@ -32,6 +32,7 @@ import {
   templateModeAtom,
   TemplateModes,
 } from "../state/template";
+import { DragDropContext } from "@hello-pangea/dnd";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -49,7 +50,7 @@ interface BackendTemplate {
 
 // 백엔드 보드 인터페이스
 interface BackendBoard {
-  board_id: number;
+  board_id: string;
   board_uuid: string;
   day_number: number;
   title: string;
@@ -58,7 +59,7 @@ interface BackendBoard {
 
 // 백엔드 카드 인터페이스
 interface BackendCard {
-  card_id: number; // 카드 ID
+  card_id: string; // 카드 ID
   content: string; // 카드 내용
   start_time: string; // 카드 시작 시간
   end_time: string; // 카드 종료 시간
@@ -125,7 +126,6 @@ const Template = () => {
 
         // 카드 순서 정렬
         reorderBoardCards();
-        
       } else {
         setError("템플릿 데이터를 불러올 수 없습니다.");
       }
@@ -218,6 +218,15 @@ const Template = () => {
       setIsTemplateTitleEditing(false);
     }
   }, [setTemplate, template, templateTitle]);
+
+  const onDradEnd = useCallback((result) => {
+    const { source, destination, type } = result;
+    //TODO: 보드 | 카드 드래그 & 드롭 처리
+
+    // source = 출발지
+    // destination = 도착지
+    // type = 드래그된 요소의 타입 (보드: board, 카드: card)
+  }, []);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -368,77 +377,80 @@ const Template = () => {
           </Stack>
         </Container>
 
-        {/* 보드 컨테이너 */}
-        <Stack
-          direction="row"
-          height="100%"
-          gap={5}
-          paddingX={{
-            xs: "16px",
-            sm: "24px",
-            xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
-          }}
-          paddingY={5}
-          sx={{
-            overflowX: "auto",
-          }}
-        >
-          {template.boards.map((board, index) => (
-            <Board
-              key={`board-${board.id || index}`}
-              boardId={board.id!}
-              day={board.dayNumber || index + 1}
-              boardData={board} // 보드 데이터 직접 전달
-              fetchTemplateData={fetchTemplateData} // 함수 전달
-            />
-          ))}
+        {/* 드래그 & 드롭 wrapper */}
+        <DragDropContext onDragEnd={onDradEnd}>
+          {/* 보드 컨테이너 */}
+          <Stack
+            direction="row"
+            height="100%"
+            gap={5}
+            paddingX={{
+              xs: "16px",
+              sm: "24px",
+              xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
+            }}
+            paddingY={5}
+            sx={{
+              overflowX: "auto",
+            }}
+          >
+            {template.boards.map((board, index) => (
+              <Board
+                key={`board-${board.id || index}`}
+                boardId={board.id!}
+                day={board.dayNumber || index + 1}
+                boardData={board} // 보드 데이터 직접 전달
+                fetchTemplateData={fetchTemplateData} // 함수 전달
+              />
+            ))}
 
-          {/* 보드 추가 버튼 */}
-          {template.boards.length < MAX_BOARDS && (
-            <Box>
-              <Tooltip title="보드 추가하기" placement="top">
-                <Button
-                  onClick={handleAddBoardToEnd}
-                  sx={{
-                    padding: 0,
-                  }}
-                >
-                  <Paper
-                    elevation={3}
+            {/* 보드 추가 버튼 */}
+            {template.boards.length < MAX_BOARDS && (
+              <Box>
+                <Tooltip title="보드 추가하기" placement="top">
+                  <Button
+                    onClick={handleAddBoardToEnd}
                     sx={{
-                      width: "300px",
-                      height: "80px",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      background: theme.palette.secondary.main,
-                      borderRadius: "inherit",
-                      overflow: "hidden",
+                      padding: 0,
                     }}
                   >
                     <Paper
                       elevation={3}
                       sx={{
+                        width: "300px",
+                        height: "80px",
                         display: "flex",
-                        padding: 0.5,
                         justifyContent: "center",
                         alignItems: "center",
-                        borderRadius: "50%",
+                        background: theme.palette.secondary.main,
+                        borderRadius: "inherit",
+                        overflow: "hidden",
                       }}
                     >
-                      <AddRoundedIcon
+                      <Paper
+                        elevation={3}
                         sx={{
-                          color: theme.palette.primary.main,
-                          fontSize: "2.5rem",
+                          display: "flex",
+                          padding: 0.5,
+                          justifyContent: "center",
+                          alignItems: "center",
+                          borderRadius: "50%",
                         }}
-                      />
+                      >
+                        <AddRoundedIcon
+                          sx={{
+                            color: theme.palette.primary.main,
+                            fontSize: "2.5rem",
+                          }}
+                        />
+                      </Paper>
                     </Paper>
-                  </Paper>
-                </Button>
-              </Tooltip>
-            </Box>
-          )}
-        </Stack>
+                  </Button>
+                </Tooltip>
+              </Box>
+            )}
+          </Stack>
+        </DragDropContext>
       </Stack>
 
       {/* 카드 편집 대화상자 */}

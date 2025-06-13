@@ -13,13 +13,12 @@ export interface TemplateInterface {
   uuid: string | null; // 템플릿 UUID
   title: string; // 템플릿 이름
   boards: BoardInterface[]; // 보드 목록
-  template_id?: number; // 이 줄을 추가
+  template_id?: string; // 이 줄을 추가
 }
 
 // 보드 객체 인터페이스
 export interface BoardInterface {
-  id?: number; // board_id
-  title?: string; // 보드 제목 (기본값: Day N)
+  id?: string; // board_id
   dayNumber?: number; // 날짜 번호
   cards: CardInterface[]; // 카드 목록
 }
@@ -32,7 +31,7 @@ export enum CardTypes {
 
 // 카드 객체 인터페이스
 export interface CardInterface {
-  id: number; // card_id
+  id?: string; // card_id
   content: string; // 카드 내용
   startTime: Dayjs; // 카드 시작 시간
   endTime: Dayjs; // 카드 종료 시간
@@ -54,20 +53,19 @@ export const templateInfoAtom = atom<TemplateInfoInterface>({
 });
 
 // 보드 ID 배열을 저장하는 atom (순서 유지 목적)
-export const boardOrderAtom = atom<number[]>([]);
+export const boardOrderAtom = atom<string[]>([]);
 
 // 특정 보드 ID에 해당하는 보드 데이터를 관리하는 atomFamily
-export const boardAtomFamily = atomFamily((boardId: number) =>
+export const boardAtomFamily = atomFamily((boardId: string) =>
   atom<BoardInterface>({
     id: boardId,
     dayNumber: 1,
-    title: `Day 1`,
     cards: [],
   })
 );
 
 // 보드 맵 객체 - 모든 보드를 포함
-export const boardsMapAtom = atom<Map<number, BoardInterface>>(new Map());
+export const boardsMapAtom = atom<Map<string, BoardInterface>>(new Map());
 
 // 기존 templateAtom 유지 (이전 코드와의 호환성을 위해)
 export const templateAtom = atom(
@@ -96,8 +94,8 @@ export const templateAtom = atom(
       title: newTemplate.title,
     });
 
-    const newBoardsMap = new Map<number, BoardInterface>();
-    const newBoardOrder: number[] = [];
+    const newBoardsMap = new Map<string, BoardInterface>();
+    const newBoardOrder: string[] = [];
 
     // 각 보드 처리
     newTemplate.boards.forEach((board) => {
@@ -118,8 +116,8 @@ export const cardEditDialogOpenAtom = atom(false); // 카드 편집 다이얼로
 
 // 현재 편집 중인 카드 정보
 export const currentEditCardAtom = atom({
-  cardId: null as number | null | undefined,
-  boardId: null as number | null | undefined,
+  cardId: null as string | null | undefined,
+  boardId: null as string | null | undefined,
   orderIndex: 0,
 });
 
@@ -129,7 +127,7 @@ export const updateBoardCardAtom = atom(
   (
     get,
     set,
-    update: { boardId: number; card: CardInterface; isNew: boolean }
+    update: { boardId: string; card: CardInterface; isNew: boolean }
   ) => {
     const { boardId, card, isNew } = update;
     const template = get(templateAtom);
@@ -182,7 +180,7 @@ export const updateBoardCardAtom = atom(
 // 보드에서 카드 삭제하는 atom
 export const deleteBoardCardAtom = atom(
   null,
-  (get, set, { boardId, cardId }: { boardId: number; cardId: number }) => {
+  (get, set, { boardId, cardId }: { boardId: string; cardId: string }) => {
     const template = get(templateAtom);
 
     // 해당 보드 찾기
@@ -212,59 +210,6 @@ export const deleteBoardCardAtom = atom(
     console.log("카드 삭제 완료:", {
       boardId,
       cardId,
-      newTemplate,
-    });
-  }
-);
-
-// 특정 위치에 카드를 삽입하는 atom
-export const insertBoardCardAtom = atom(
-  null,
-  (
-    get,
-    set,
-    update: { boardId: number; card: CardInterface; afterCardId: number }
-  ) => {
-    const { boardId, card, afterCardId } = update;
-    const template = get(templateAtom);
-
-    // 해당 보드 찾기
-    const boardIndex = template.boards.findIndex(
-      (board) => board.id === boardId
-    );
-    if (boardIndex === -1) return;
-
-    // 템플릿 복사 (불변성 유지)
-    const newTemplate = { ...template };
-    newTemplate.boards = [...template.boards];
-
-    // 특정 보드 복사
-    newTemplate.boards[boardIndex] = {
-      ...template.boards[boardIndex],
-      cards: [...template.boards[boardIndex].cards],
-    };
-
-    // afterCardId 카드의 위치 찾기
-    const afterCardIndex = newTemplate.boards[boardIndex].cards.findIndex(
-      (c) => c.id === afterCardId
-    );
-
-    if (afterCardIndex !== -1) {
-      // 찾은 카드의 바로 다음 위치에 새 카드 삽입
-      newTemplate.boards[boardIndex].cards.splice(afterCardIndex + 1, 0, card);
-    } else {
-      // 카드를 찾지 못했으면 맨 끝에 추가
-      newTemplate.boards[boardIndex].cards.push(card);
-    }
-
-    // 템플릿 상태 업데이트
-    set(templateAtom, newTemplate);
-
-    console.log("카드 삽입 완료:", {
-      boardId,
-      cardId: card.id,
-      afterCardId,
-      insertPosition: afterCardIndex + 1,
       newTemplate,
     });
   }
