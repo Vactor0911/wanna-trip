@@ -20,7 +20,7 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 
 interface BoardProps {
-  boardId: number;
+  boardId: string;
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가

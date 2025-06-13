@@ -50,7 +50,7 @@ interface BackendTemplate {
 
 // 백엔드 보드 인터페이스
 interface BackendBoard {
-  board_id: number;
+  board_id: string;
   board_uuid: string;
   day_number: number;
   title: string;
@@ -59,7 +59,7 @@ interface BackendBoard {
 
 // 백엔드 카드 인터페이스
 interface BackendCard {
-  card_id: number; // 카드 ID
+  card_id: string; // 카드 ID
   content: string; // 카드 내용
   start_time: string; // 카드 시작 시간
   end_time: string; // 카드 종료 시간
