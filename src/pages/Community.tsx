@@ -7,15 +7,33 @@ import SearchBox from "../components/SearchBox";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { useNavigate } from "react-router-dom";
 
-// 이미지 파일
-import seoulImg from "../images/서울.jpg";
-import busanImg from "../images/부산.jpg";
-import gangneungImg from "../images/강릉.jpg";
-import incheonImg from "../images/인천.jpg";
-import gyeongjuImg from "../images/경주.jpg";
-import jejuImg from "../images/제주.jpg";
-import sokchoImg from "../images/속초.jpg";
-import yeosuImg from "../images/여수.jpg";
+// 이미지 파일들
+import seoulImg from "../assets/images/seoul.jpg";
+import busanImg from "../assets/images/busan.jpg";
+import gangneungImg from "../assets/images/gangneung.jpg";
+import incheonImg from "../assets/images/incheon.jpg";
+import gyeongjuImg from "../assets/images/gyeongju.jpg";
+import jejuImg from "../assets/images/jeju.jpg";
+import sokchoImg from "../assets/images/sokcho.jpg";
+import yeosuImg from "../assets/images/yeosu.jpg";
+
+// 지역 이미지 데이터 타입 정의
+type RegionImage = {
+  name: string;
+  imgSrc: string;
+};
+
+// 지역 이미지 데이터
+const regionImages: RegionImage[] = [
+  { name: "서울", imgSrc: seoulImg },
+  { name: "부산", imgSrc: busanImg },
+  { name: "강릉", imgSrc: gangneungImg },
+  { name: "인천", imgSrc: incheonImg },
+  { name: "경주", imgSrc: gyeongjuImg },
+  { name: "제주", imgSrc: jejuImg },
+  { name: "속초", imgSrc: sokchoImg },
+  { name: "여수", imgSrc: yeosuImg },
+];
 
 // 게시글 데이터
 export const temporaryPosts = [
@@ -87,16 +105,8 @@ const Community = () => {
     useHorizontalScroll();
   const navigate = useNavigate();
 
-  const regionTags = [
-    "서울",
-    "부산",
-    "강릉",
-    "인천",
-    "경주",
-    "제주",
-    "속초",
-    "여수",
-  ];
+  // regionTags를 regionImages에서 자동으로 생성
+  const regionTags = regionImages.map((region) => region.name);
 
   // 검색 실행 핸들러
   const handleSearch = (selectedTags: string[], inputValue: string) => {
@@ -171,41 +181,7 @@ const Community = () => {
               scrollbarWidth: "none",
             }}
           >
-            {/* 각 여행 카테고리 항목 */}
-            {[
-              {
-                name: "서울",
-                imgSrc: seoulImg,
-              },
-              {
-                name: "부산",
-                imgSrc: busanImg,
-              },
-              {
-                name: "강릉",
-                imgSrc: gangneungImg,
-              },
-              {
-                name: "인천",
-                imgSrc: incheonImg,
-              },
-              {
-                name: "경주",
-                imgSrc: gyeongjuImg,
-              },
-              {
-                name: "제주",
-                imgSrc: jejuImg,
-              },
-              {
-                name: "속초",
-                imgSrc: sokchoImg,
-              },
-              {
-                name: "여수",
-                imgSrc: yeosuImg,
-              },
-            ].map((category) => (
+            {regionImages.map((category) => (
               <Stack key={category.name} gap={1.1}>
                 <Stack
                   direction="column"
