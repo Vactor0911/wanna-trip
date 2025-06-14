@@ -22,7 +22,6 @@ import dayjs from "dayjs";
 import { useAddCard } from "../hooks/template";
 
 interface BoardProps {
-  boardId: string;
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
@@ -235,7 +234,7 @@ const Board = (props: BoardProps) => {
 
           {/* 카드 드롭 영역 */}
           <Droppable droppableId={String(boardData.id) || "1"} type="card">
-            {(provided, snapshot) => (
+            {(provided) => (
               // 카드 컨테이너
               <Stack
                 ref={provided.innerRef}
@@ -254,7 +253,7 @@ const Board = (props: BoardProps) => {
                     draggableId={`card-${card.id}`}
                     index={index}
                   >
-                    {(provided, snapshot) => (
+                    {(provided) => (
                       <Card
                         ref={provided.innerRef}
                         {...provided.draggableProps}

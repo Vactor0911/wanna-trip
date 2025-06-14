@@ -32,9 +32,10 @@ import {
   templateModeAtom,
   TemplateModes,
 } from "../state/template";
-import { DragDropContext } from "@hello-pangea/dnd";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useMoveCard } from "../hooks/template";
-import { useMutation } from "@tanstack/react-query";
+import { produce } from "immer";
+import { useQueryClient } from "@tanstack/react-query";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -52,7 +53,7 @@ interface BackendTemplate {
 
 // 백엔드 보드 인터페이스
 interface BackendBoard {
-  board_id: string;
+  board_id: number;
   board_uuid: string;
   day_number: number;
   title: string;
@@ -61,7 +62,7 @@ interface BackendBoard {
 
 // 백엔드 카드 인터페이스
 interface BackendCard {
-  card_id: string; // 카드 ID
+  card_id: number; // 카드 ID
   content: string; // 카드 내용
   start_time: string; // 카드 시작 시간
   end_time: string; // 카드 종료 시간
@@ -71,7 +72,7 @@ interface BackendCard {
 
 const Template = () => {
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
@@ -223,21 +224,69 @@ const Template = () => {
     }
   }, [setTemplate, template, templateTitle]);
 
+  // 드래그 & 드롭 핸들러
+
   const onDragEnd = useCallback(
-    async (result) => {
+    (result: DropResult) => {
       const { source, destination, type } = result;
+
+      // destination이 없으면 중단
+      if (!destination) return;
+
       //TODO: 보드 드래그 & 드롭 처리
       // type = 드래그된 요소의 타입 (보드: board, 카드: card)
+
+      // 이전 상태의 템플릿 저장
+      const prevTemplate = template;
+
+      // 변경된 템플릿 생성
+      const newTemplate = produce(prevTemplate, (draft) => {
+        // 원본, 대상 보드 찾기
+        const sourceBoard = draft.boards.find(
+          (b) => b.id === Number(source.droppableId)
+        );
+        const destinationBoard = draft.boards.find(
+          (b) => b.id === Number(destination.droppableId)
+        );
+        console.log(sourceBoard, destinationBoard);
+
+        // 보드가 존재하지 않으면 중단
+        if (!sourceBoard || !destinationBoard) return;
+
+        // 원본 보드에서 카드 추출
+        const [movedCard] = sourceBoard.cards.splice(source.index, 1);
+        if (!movedCard) return;
+
+        // 대상 보드에 카드 추가
+        destinationBoard.cards.splice(destination.index, 0, movedCard);
+
+        // 두 보드의 orderIndex 재계산
+        [sourceBoard, destinationBoard].forEach((board) =>
+          board.cards.forEach((c, idx) => (c.orderIndex = idx))
+        );
+      });
+      console.log("드래그 & 드롭 후 템플릿:", newTemplate);
+
+      // 캐시와 jotai atom 동시 반영
+      queryClient.setQueryData(["template"], newTemplate);
+      setTemplate(newTemplate);
 
       // 카드 드래그 & 드롭 처리
       if (type === "card") {
         moveCard.mutate({
-          source: { boardId: source.droppableId, orderIndex: source.index },
-          destination: { boardId: destination.droppableId, orderIndex: destination.index },
+          source: {
+            boardId: Number(source.droppableId),
+            orderIndex: source.index,
+          },
+          destination: {
+            boardId: Number(destination.droppableId),
+            orderIndex: destination.index,
+          },
+          prevTemplate: prevTemplate,
         });
       }
     },
-    [moveCard]
+    [moveCard, queryClient, setTemplate, template]
   );
 
   // 로딩 상태 표시
@@ -409,7 +458,6 @@ const Template = () => {
             {template.boards.map((board, index) => (
               <Board
                 key={`board-${board.id || index}`}
-                boardId={board.id!}
                 day={board.dayNumber || index + 1}
                 boardData={board} // 보드 데이터 직접 전달
                 fetchTemplateData={fetchTemplateData} // 함수 전달

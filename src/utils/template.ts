@@ -1,7 +1,10 @@
-import { BoardInterface, CardInterface, TemplateInterface } from "../state/template";
+import {
+  BoardInterface,
+  CardInterface,
+  TemplateInterface,
+} from "../state/template";
 
 export const MAX_BOARDS = 15; // 최대 보드 개수
-
 
 /**
  * 특정 위치에 보드를 추가하는 함수
