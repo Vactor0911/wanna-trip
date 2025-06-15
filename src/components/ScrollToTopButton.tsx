@@ -40,12 +40,12 @@ const ScrollToTopButton = () => {
         <Box
           sx={{
             position: "fixed",
-            bottom: "40px",
-            right: "50px",
+            bottom: { xs: "100px", sm: "60px", md: "40px" },
+            right: { xs: "30px", sm: "40px", md: "50px" },
             zIndex: 1000,
 
-            width: "56px",
-            height: "56px",
+            width: { xs: "48px", sm: "52px", md: "56px" },
+            height: { xs: "48px", sm: "52px", md: "56px" },
             borderRadius: "50%",
             backgroundColor: "white",
             boxShadow: "0 3px 5px rgba(0,0,0,0.5)",
