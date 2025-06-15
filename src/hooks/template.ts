@@ -1,7 +1,12 @@
-import { useAtom } from "jotai";
-import { CardInterface, templateAtom } from "../state/template";
+import { useAtom, useSetAtom } from "jotai";
+import {
+  CardInterface,
+  templateAtom,
+  TemplateInterface,
+} from "../state/template";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
  * 카드 추가 훅
@@ -14,7 +19,7 @@ export const useAddCard = () => {
   const [template, setTemplate] = useAtom(templateAtom);
 
   const addCard = useCallback(
-    async (newCard: CardInterface, boardId: string, index?: number) => {
+    async (newCard: CardInterface, boardId: number, index?: number) => {
       // 보드가 존재하지 않으면 종료
       if (!boardId) return;
 
@@ -28,7 +33,9 @@ export const useAddCard = () => {
 
       // 백엔드 API 엔드포인트 설정
       const endPoint =
-        index !== undefined ? `/card/${boardId}/${index}` : `/card/${boardId}`;
+        index !== undefined
+          ? `/card/add/${boardId}/${index}`
+          : `/card/add/${boardId}`;
 
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -38,14 +45,15 @@ export const useAddCard = () => {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
+      // 오류 처리
       if (!response.data.success) {
-        // 오류 처리
         throw new Error("카드 추가에 실패했습니다.");
       }
 
       // 카드 추가 성공
       const newCardId = response.data.cardId;
 
+      // 템플릿 업데이트
       const newTemplate = {
         ...template,
         boards: template.boards.map((board) => {
@@ -60,10 +68,8 @@ export const useAddCard = () => {
           }
           return board;
         }),
-      }
-
+      };
       setTemplate(newTemplate);
-      console.log("카드 추가 완료:", newTemplate);
 
       return newCardId; // 새 카드 ID 반환
     },
@@ -71,4 +77,115 @@ export const useAddCard = () => {
   );
 
   return addCard;
+};
+
+interface MoveCardParams {
+  source: { boardId: number; orderIndex: number };
+  destination: { boardId: number; orderIndex: number };
+  prevTemplate: TemplateInterface;
+}
+
+/**
+ * 카드 이동 훅
+ * @returns 카드 이동 훅
+ */
+export const useMoveCard = () => {
+  const setTemplate = useSetAtom(templateAtom);
+  const queryClient = useQueryClient();
+
+  const moveCard = useMutation({
+    mutationFn: async ({ source, destination }: MoveCardParams) => {
+      // 보드가 존재하지 않으면 종료
+      if (!source.boardId || !destination.boardId) {
+        return;
+      }
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 카드 이동 API 요청
+      await axiosInstance.post(
+        "/card/move",
+        {
+          sourceBoardId: source.boardId,
+          sourceOrderIndex: source.orderIndex,
+          destinationBoardId: destination.boardId,
+          destinationOrderIndex: destination.orderIndex,
+        },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+    },
+    onError: (_error, context) => {
+      if (context?.prevTemplate) {
+        queryClient.setQueryData(["template"], context.prevTemplate);
+        setTemplate(context.prevTemplate);
+      }
+      console.error("카드 이동 실패:", _error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
+
+  return moveCard;
+};
+
+interface MoveBoardParams {
+  templateUuid: string;
+  sourceDay: number;
+  destinationDay: number;
+  prevTemplate: TemplateInterface;
+}
+
+/**
+ * 보드 이동 훅
+ * @returns 보드 이동 훅
+ */
+export const useMoveBoard = () => {
+  const setTemplate = useSetAtom(templateAtom);
+  const queryClient = useQueryClient();
+
+  const moveBoard = useMutation({
+    mutationFn: async ({
+      templateUuid,
+      sourceDay,
+      destinationDay,
+    }: MoveBoardParams) => {
+      // 템플릿 UUID가 없으면 종료
+      if (!templateUuid) {
+        return;
+      }
+
+      // 보드가 존재하지 않으면 종료
+      if (!sourceDay || !destinationDay) {
+        return;
+      }
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 보드 이동 API 요청
+      await axiosInstance.post(
+        "/board/move",
+        {
+          templateUuid,
+          sourceDay,
+          destinationDay,
+        },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+    },
+    onError: (_error, context) => {
+      if (context?.prevTemplate) {
+        queryClient.setQueryData(["template"], context.prevTemplate);
+        setTemplate(context.prevTemplate);
+      }
+      console.error("보드 이동 실패:", _error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
+
+  return moveBoard;
 };

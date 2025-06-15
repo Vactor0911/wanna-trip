@@ -1,7 +1,10 @@
-import { BoardInterface, CardInterface, TemplateInterface } from "../state/template";
+import {
+  BoardInterface,
+  CardInterface,
+  TemplateInterface,
+} from "../state/template";
 
 export const MAX_BOARDS = 15; // 최대 보드 개수
-
 
 /**
  * 특정 위치에 보드를 추가하는 함수
@@ -55,7 +58,6 @@ export const insertNewCard = (
     return template;
   }
   const board = template.boards[day - 1];
-  console.log("board", board);
 
   // index가 유효하지 않으면 중단
   if (index < 0 || index > board.cards.length) {
@@ -71,7 +73,6 @@ export const insertNewCard = (
       ...board.cards.slice(index),
     ],
   };
-  console.log("newBoard", newBoard);
 
   // 새 템플릿 객체
   const newTemplate = {
