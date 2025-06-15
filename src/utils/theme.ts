@@ -1,11 +1,19 @@
 import { createTheme, responsiveFontSizes } from "@mui/material";
 
+// MUI Palette 확장
 declare module "@mui/material/styles" {
   interface Palette {
     black: Palette["primary"];
   }
   interface PaletteOptions {
     black?: PaletteOptions["primary"];
+  }
+}
+
+// SVG 아이콘 색상 확장
+declare module "@mui/material/SvgIcon" {
+  interface SvgIconPropsColorOverrides {
+    black: true;
   }
 }
 

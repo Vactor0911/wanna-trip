@@ -2,6 +2,7 @@ import { Paper, PaperProps, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
 import { Dayjs } from "dayjs";
 import parse from "html-react-parser";
+import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 
 interface CardProps extends PaperProps {
   content?: string;
@@ -36,12 +37,33 @@ const Card = (props: CardProps) => {
       {...others}
     >
       <Stack gap={1}>
-        {/* 카드 시간 */}
-        {(startTime || endTime) && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {formatTime(startTime)} {endTime ? `- ${formatTime(endTime)}` : ""}
-          </Typography>
-        )}
+        {/* 카드 제목 */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          {/* 카드 시간 */}
+          {(startTime || endTime) && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              {formatTime(startTime)}{" "}
+              {endTime ? `- ${formatTime(endTime)}` : ""}
+            </Typography>
+          )}
+
+          {/* 잠금 여부 */}
+          <LockOutlineRoundedIcon
+            fontSize="small"
+            color="black"
+            sx={{
+              visibility: isLocked ? "visible" : "hidden",
+            }}
+          />
+        </Stack>
 
         {/* 카드 내용 */}
         <Stack
