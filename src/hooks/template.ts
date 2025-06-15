@@ -79,16 +79,16 @@ export const useAddCard = () => {
   return addCard;
 };
 
-/**
- * 카드 이동 훅
- * @returns 카드 이동을 위한 훅
- */
 interface MoveCardParams {
   source: { boardId: number; orderIndex: number };
   destination: { boardId: number; orderIndex: number };
   prevTemplate: TemplateInterface;
 }
 
+/**
+ * 카드 이동 훅
+ * @returns 카드 이동 훅
+ */
 export const useMoveCard = () => {
   const setTemplate = useSetAtom(templateAtom);
   const queryClient = useQueryClient();
@@ -128,4 +128,64 @@ export const useMoveCard = () => {
   });
 
   return moveCard;
+};
+
+interface MoveBoardParams {
+  templateUuid: string;
+  sourceDay: number;
+  destinationDay: number;
+  prevTemplate: TemplateInterface;
+}
+
+/**
+ * 보드 이동 훅
+ * @returns 보드 이동 훅
+ */
+export const useMoveBoard = () => {
+  const setTemplate = useSetAtom(templateAtom);
+  const queryClient = useQueryClient();
+
+  const moveBoard = useMutation({
+    mutationFn: async ({
+      templateUuid,
+      sourceDay,
+      destinationDay,
+    }: MoveBoardParams) => {
+      // 템플릿 UUID가 없으면 종료
+      if (!templateUuid) {
+        return;
+      }
+
+      // 보드가 존재하지 않으면 종료
+      if (!sourceDay || !destinationDay) {
+        return;
+      }
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 보드 이동 API 요청
+      await axiosInstance.post(
+        "/board/move",
+        {
+          templateUuid,
+          sourceDay,
+          destinationDay,
+        },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+    },
+    onError: (_error, context) => {
+      if (context?.prevTemplate) {
+        queryClient.setQueryData(["template"], context.prevTemplate);
+        setTemplate(context.prevTemplate);
+      }
+      console.error("보드 이동 실패:", _error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
+
+  return moveBoard;
 };

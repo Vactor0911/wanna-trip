@@ -32,8 +32,13 @@ import {
   templateModeAtom,
   TemplateModes,
 } from "../state/template";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import { useMoveCard } from "../hooks/template";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from "@hello-pangea/dnd";
+import { useMoveBoard, useMoveCard } from "../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -74,6 +79,7 @@ const Template = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
+  const moveBoard = useMoveBoard(); // 보드 이동 훅
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
@@ -233,46 +239,50 @@ const Template = () => {
       // destination이 없으면 중단
       if (!destination) return;
 
+      // 변경점이 없는 경우 종료
+      if (
+        source.droppableId === destination.droppableId &&
+        source.index === destination.index
+      ) {
+        return;
+      }
+
       //TODO: 보드 드래그 & 드롭 처리
       // type = 드래그된 요소의 타입 (보드: board, 카드: card)
 
       // 이전 상태의 템플릿 저장
       const prevTemplate = template;
+      let newTemplate; // 변경된 템플릿을 저장할 변수
 
-      // 변경된 템플릿 생성
-      const newTemplate = produce(prevTemplate, (draft) => {
-        // 원본, 대상 보드 찾기
-        const sourceBoard = draft.boards.find(
-          (b) => b.id === Number(source.droppableId)
-        );
-        const destinationBoard = draft.boards.find(
-          (b) => b.id === Number(destination.droppableId)
-        );
-        console.log(sourceBoard, destinationBoard);
-
-        // 보드가 존재하지 않으면 중단
-        if (!sourceBoard || !destinationBoard) return;
-
-        // 원본 보드에서 카드 추출
-        const [movedCard] = sourceBoard.cards.splice(source.index, 1);
-        if (!movedCard) return;
-
-        // 대상 보드에 카드 추가
-        destinationBoard.cards.splice(destination.index, 0, movedCard);
-
-        // 두 보드의 orderIndex 재계산
-        [sourceBoard, destinationBoard].forEach((board) =>
-          board.cards.forEach((c, idx) => (c.orderIndex = idx))
-        );
-      });
-      console.log("드래그 & 드롭 후 템플릿:", newTemplate);
-
-      // 캐시와 jotai atom 동시 반영
-      queryClient.setQueryData(["template"], newTemplate);
-      setTemplate(newTemplate);
-
-      // 카드 드래그 & 드롭 처리
       if (type === "card") {
+        // 카드 드래그 & 드롭 처리
+        // 변경된 템플릿 생성
+        newTemplate = produce(prevTemplate, (draft) => {
+          // 원본, 대상 보드 찾기
+          const sourceBoard = draft.boards.find(
+            (b) => b.id === Number(source.droppableId)
+          );
+          const destinationBoard = draft.boards.find(
+            (b) => b.id === Number(destination.droppableId)
+          );
+
+          // 보드가 존재하지 않으면 중단
+          if (!sourceBoard || !destinationBoard) return;
+
+          // 원본 보드에서 카드 추출
+          const [movedCard] = sourceBoard.cards.splice(source.index, 1);
+          if (!movedCard) return;
+
+          // 대상 보드에 카드 추가
+          destinationBoard.cards.splice(destination.index, 0, movedCard);
+
+          // 두 보드의 orderIndex 재계산
+          [sourceBoard, destinationBoard].forEach((board) =>
+            board.cards.forEach((c, idx) => (c.orderIndex = idx))
+          );
+        });
+
+        // 카드 이동 API 호출
         moveCard.mutate({
           source: {
             boardId: Number(source.droppableId),
@@ -284,9 +294,35 @@ const Template = () => {
           },
           prevTemplate: prevTemplate,
         });
+      } else {
+        // 보드 드래그 & 드롭 처리
+        newTemplate = produce(prevTemplate, (draft) => {
+          // 원본 보드 추출
+          const sourceBoard = draft.boards.splice(source.index, 1);
+
+          // 대상 위치에 보드 삽입
+          draft.boards.splice(destination.index, 0, sourceBoard[0]);
+
+          // 보드의 dayNumber 업데이트
+          draft.boards.forEach((board, index) => {
+            board.dayNumber = index + 1; // dayNumber는 1부터 시작
+          });
+        });
+
+        // 보드 이동 API 호출
+        moveBoard.mutate({
+          templateUuid: template.uuid || "",
+          sourceDay: source.index + 1, // dayNumber는 1부터 시작하므로 +1
+          destinationDay: destination.index + 1, // dayNumber는 1부터 시작하므로 +1
+          prevTemplate: prevTemplate,
+        });
       }
+
+      // 캐시와 jotai atom 동시 반영
+      queryClient.setQueryData(["template"], newTemplate);
+      setTemplate(newTemplate);
     },
-    [moveCard, queryClient, setTemplate, template]
+    [moveBoard, moveCard, queryClient, setTemplate, template]
   );
 
   // 로딩 상태 표시
@@ -455,14 +491,38 @@ const Template = () => {
               overflowX: "auto",
             }}
           >
-            {template.boards.map((board, index) => (
-              <Board
-                key={`board-${board.id || index}`}
-                day={board.dayNumber || index + 1}
-                boardData={board} // 보드 데이터 직접 전달
-                fetchTemplateData={fetchTemplateData} // 함수 전달
-              />
-            ))}
+            <Droppable droppableId="board" direction="horizontal" type="board">
+              {(provided) => (
+                <Stack
+                  direction="row"
+                  height="100%"
+                  gap={5}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                >
+                  {template.boards.map((board, index) => (
+                    <Draggable
+                      key={`board-${board.id || index}`}
+                      draggableId={`board-${board.id || index}`}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <Board
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          key={`board-${board.id || index}`}
+                          day={board.dayNumber || index + 1}
+                          boardData={board} // 보드 데이터 직접 전달
+                          fetchTemplateData={fetchTemplateData} // 함수 전달
+                        />
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Stack>
+              )}
+            </Droppable>
 
             {/* 보드 추가 버튼 */}
             {template.boards.length < MAX_BOARDS && (

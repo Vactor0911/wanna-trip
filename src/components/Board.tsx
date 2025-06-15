@@ -1,4 +1,11 @@
-import { Button, IconButton, Paper, Stack, Typography } from "@mui/material";
+import {
+  Button,
+  IconButton,
+  Paper,
+  Stack,
+  StackProps,
+  Typography,
+} from "@mui/material";
 import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
@@ -21,14 +28,14 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
 import { useAddCard } from "../hooks/template";
 
-interface BoardProps {
+interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
 }
 
 const Board = (props: BoardProps) => {
-  const { day, boardData, fetchTemplateData } = props;
+  const { day, boardData, fetchTemplateData, ...others } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
@@ -183,7 +190,7 @@ const Board = (props: BoardProps) => {
   }, [template, boardData, fetchTemplateData]);
 
   return (
-    <Stack height="100%">
+    <Stack height="100%" {...others}>
       <Paper
         elevation={3}
         sx={{
@@ -233,7 +240,7 @@ const Board = (props: BoardProps) => {
           </Stack>
 
           {/* 카드 드롭 영역 */}
-          <Droppable droppableId={String(boardData.id) || "1"} type="card">
+          <Droppable droppableId={String(boardData.id)} type="card">
             {(provided) => (
               // 카드 컨테이너
               <Stack
