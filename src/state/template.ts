@@ -27,13 +27,12 @@ export interface BoardInterface {
 export interface LocationInfo {
   title: string; // 장소명 (예: "서울특별시청")
   address: string; // 주소
-  category: string; // 카테고리 (예: "음식점 > 한식")
-  description: string; // 설명
-  link: string; // 링크
-  mapx: string; // 경도 (예: "1269796830")
-  mapy: string; // 위도 (예: "375704149")
-  roadAddress: string; // 도로명 주소
-  telephone: string; // 전화번호
+  latitude: number; // 위도 (예: "375704149")
+  longitude: number; // 경도 (예: "1269796830")
+  category?: string; // 카테고리 (예: "음식점 > 한식")
+  description?: string; // 설명
+  telephone?: string; // 전화번호
+  link?: string; // 링크
 }
 
 // 카드 객체 인터페이스
