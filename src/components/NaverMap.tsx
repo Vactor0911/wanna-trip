@@ -14,6 +14,7 @@ interface MapProps extends BoxProps {
   lng?: number;
   zoom?: number;
   interactive?: boolean; // 상호작용 가능 여부
+  disabled?: boolean; // 비활성화 여부
 }
 
 const DEFAULT_LAT = 37.5665; // 서울 시청 위도
@@ -29,6 +30,7 @@ const NaverMap = (props: MapProps) => {
     interactive = true, // 기본값은 상호작용 가능
     sx,
     onClick,
+    disabled,
     ...others
   } = props;
 
@@ -89,7 +91,14 @@ const NaverMap = (props: MapProps) => {
     return (
       <Skeleton
         variant="rounded"
-        sx={{ width, height, borderRadius: 2, ...sx }}
+        sx={{
+          width,
+          height,
+          borderRadius: 2,
+          pointer: disabled ? "default" : "pointer",
+          ...sx,
+        }}
+        onClick={disabled ? undefined : onClick}
       />
     );
   }
@@ -102,9 +111,10 @@ const NaverMap = (props: MapProps) => {
         height,
         borderRadius: 2, // 모서리 둥글게
         overflow: "hidden", // 자식 요소가 경계 밖으로 나가지 않도록 설정
-        cursor: onClick ? "pointer" : "default", // 클릭 가능할 때 포인터 커서
+        cursor: disabled ? "default" : "pointer", // 비활성화 시 커서 변경
         ...sx,
       }}
+      onClick={disabled ? undefined : onClick}
       {...others}
     />
   );

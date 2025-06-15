@@ -489,13 +489,15 @@ const CardEditDialog = () => {
                     sx={{
                       borderRadius: 2,
                     }}
+                    onClick={handleMapClick} // 클릭 이벤트 핸들러 추가
+                    disabled={isCardLocked}
                   />
 
                   {/* 전체화면 버튼 */}
                   <Tooltip title="전체화면으로 보기" placement="left">
                     <IconButton
                       onClick={handleMapClick}
-                      disableRipple // 클릭 시 ripple 효과 제거
+                      disableRipple
                       sx={{
                         position: "absolute",
                         top: 4,
@@ -506,27 +508,11 @@ const CardEditDialog = () => {
                         zIndex: 1,
                       }}
                       size="small"
+                      disabled={isCardLocked}
                     >
                       <AspectRatioIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-
-                  {/* 클릭 가능한 투명 오버레이 */}
-                  <Box
-                    position="absolute"
-                    top={0}
-                    left={0}
-                    width="100%"
-                    height="100%"
-                    onClick={handleMapClick}
-                    sx={{
-                      cursor: "pointer",
-                      borderRadius: 2,
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.05)",
-                      },
-                    }}
-                  />
                 </Box>
               </Stack>
 
@@ -553,6 +539,7 @@ const CardEditDialog = () => {
                       value={startTime}
                       onChange={handleStartTimeChange}
                       ampm={false}
+                      disabled={isCardLocked}
                     />
 
                     {/* 구분자 */}
@@ -572,6 +559,7 @@ const CardEditDialog = () => {
                       value={endTime}
                       onChange={handleEndTimeChange}
                       ampm={false}
+                      disabled={isCardLocked}
                     />
                   </LocalizationProvider>
                 </Stack>
@@ -598,6 +586,7 @@ const CardEditDialog = () => {
                 <CardTextEditor
                   setContent={setContent}
                   initialContent={content} // 현재 카드 내용을 초기값으로 전달
+                  disabled={isCardLocked}
                 />
               </Box>
             </Stack>
