@@ -1,11 +1,12 @@
 import { Box, Stack, Typography, IconButton } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import CommunityPostItem from "../components/CommunityPostItem";
 import SearchBox from "../components/SearchBox";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { useNavigate } from "react-router-dom";
+import Pagination from "@mui/material/Pagination";
 
 // 이미지 파일들
 import seoulImg from "../assets/images/seoul.jpg";
@@ -104,6 +105,21 @@ const Community = () => {
   const { scrollRef, handleScrollLeft, handleScrollRight } =
     useHorizontalScroll();
   const navigate = useNavigate();
+
+  // 페이지네이션을 위한 현재 페이지 상태 정의
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // 실제 게시글 수에 따라 동적으로 계산 해야되는 부분
+  const totalPages = 5;
+
+  // 페이지 변경 핸들러 함수
+  const handlePageChange = (
+    event: React.ChangeEvent<unknown>,
+    value: number
+  ) => {
+    setCurrentPage(value); // 현재 페이지 상태 업데이트
+    console.log("페이지 변경됨: ", value);
+  };
 
   // regionTags를 regionImages에서 자동으로 생성
   const regionTags = regionImages.map((region) => region.name);
@@ -260,7 +276,7 @@ const Community = () => {
       </Box>
 
       {/* 일반 게시판 목록  */}
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ mt: 4 }}>
         {temporaryPosts.map((post) => (
           <CommunityPostItem
             key={post.id}
@@ -269,6 +285,36 @@ const Community = () => {
           />
         ))}
       </Stack>
+
+      {/* 게시판 번호  */}
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 6 }}>
+        <Pagination
+          count={totalPages} // 전체 페이지 수 설정
+          page={currentPage} // 현재 활성화된 페이지 번호
+          onChange={handlePageChange} // 페이지 번호 변경 시 호출될 함수
+          sx={{
+            // 모든 페이지네이션 항목 (번호, 이전/다음 버튼)에 적용되는 스타일
+            "& .MuiPaginationItem-root": {
+              backgroundColor: "transparent", // 배경색 투명하게 설정
+              border: "none",
+              "&:hover": {
+                backgroundColor: "transparent", //  배경 투명
+              },
+              "&:focus": {
+                backgroundColor: "transparent", //  배경 투명
+              },
+              color: "#aaa", // 선택되지 않은 페이지 번호(회색)
+              fontSize: "1.1em", // 페이지 번호 폰트 크기
+            },
+            // 현재 선택된 페이지 번호에만 적용되는 것
+            "& .Mui-selected": {
+              backgroundColor: "transparent", // 선택된 페이지의 배경도 투명하게 설정
+              color: "#000", // 선택된 페이지 번호의 색상 (검정색)
+              fontWeight: 700, // 선택된 페이지 번호 굵게 표시
+            },
+          }}
+        />
+      </Box>
 
       {/* 스크롤 맨 위로 이동 버튼 */}
       <ScrollToTopButton />
