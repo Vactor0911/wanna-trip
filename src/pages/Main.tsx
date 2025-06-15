@@ -193,7 +193,7 @@ const Main = () => {
               gap={{ xs: 8, md: 3 }}
               sx={{
                 position: 'relative',
-                minHeight: { xs: 'auto', md: '100vh' },
+                minHeight: { xs: 'auto', md: PAGE_HEIGHT },
               }}
             >
               {/* 왼쪽: 소제목, 제목 */}
@@ -240,14 +240,6 @@ const Main = () => {
                   <Typography variant="body1" sx={{ mb: 2 }}>여행, 약속, 해야 할 일까지 하루하루의 계획을 깔끔하게 정리해보세요.</Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>2. 다가오는 일정 미리 알림</Typography>
                   <Typography variant="body1" sx={{ mb: 2 }}>중요한 계획을 깜빡하지 않게! 날짜가 가까워질수록 알림으로 챙겨드려요.</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>1. 이번 주 일정 한눈에</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>여행, 약속, 해야 할 일까지 하루하루의 계획을 깔끔하게 정리해보세요.</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>2. 다가오는 일정 미리 알림</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>중요한 계획을 깜빡하지 않게! 날짜가 가까워질수록 알림으로 챙겨드려요.</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>1. 이번 주 일정 한눈에</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>여행, 약속, 해야 할 일까지 하루하루의 계획을 깔끔하게 정리해보세요.</Typography>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>2. 다가오는 일정 미리 알림</Typography>
-                  <Typography variant="body1" sx={{ mb: 2 }}>중요한 계획을 깜빡하지 않게! 날짜가 가까워질수록 알림으로 챙겨드려요.</Typography>
                 </Box>
               </Box>
             </Stack>
@@ -258,7 +250,7 @@ const Main = () => {
               gap={{ xs: 10, md: 3 }}
               sx={{
                 position: 'relative',
-                minHeight: { xs: 'auto', md: '100vh' },
+                minHeight: { xs: 'auto', md: PAGE_HEIGHT },
               }}
             >
               {/* 왼쪽: 소제목, 제목 */}
