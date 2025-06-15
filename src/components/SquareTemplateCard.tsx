@@ -88,8 +88,8 @@ const SquareTemplateCard = ({
 
         {/* 새 템플릿 아이콘 */}
         {type === "new" ? (
-          <AddRoundedIcon
-            sx={{ fontSize: "40px", color: theme.palette.black.main }}
+          <AddRoundedIcon color="black"
+            sx={{ fontSize: "40px" }}
           />
         ) : (
           children

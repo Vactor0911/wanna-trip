@@ -422,7 +422,7 @@ const CardEditDialog = () => {
                   >
                     <MoreVertIcon
                       fontSize="large"
-                      sx={{ color: theme.palette.black.main }}
+                      color="black"
                     />
                   </IconButton>
                 </Tooltip>
@@ -432,7 +432,7 @@ const CardEditDialog = () => {
                   <IconButton onClick={handleCardEditDialogClose} size="small">
                     <CloseRoundedIcon
                       fontSize="large"
-                      sx={{ color: theme.palette.black.main }}
+                      color="black"
                     />
                   </IconButton>
                 </Tooltip>

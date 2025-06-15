@@ -376,7 +376,7 @@ const Header = () => {
                     color={
                       location.pathname == link.to
                         ? "primary"
-                        : theme.palette.black.main
+                        : "black"
                     }
                   >
                     {link.text}
@@ -482,7 +482,7 @@ const Header = () => {
                 >
                   <Typography
                     variant="subtitle1"
-                    color={theme.palette.black.main}
+                    color="black"
                     fontWeight={500}
                   >
                     {link.text}
