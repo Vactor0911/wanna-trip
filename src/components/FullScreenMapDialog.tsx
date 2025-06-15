@@ -203,40 +203,24 @@ const FullScreenMapDialog = ({
     [handleSearch]
   );
 
-  // 카테고리에 따른 썸네일 URL 생성 함수 (필요에 따라 수정)
-  const getThumbnailByCategory = (category?: string) => {
-    if (!category) return "/images/place-default.jpg";
-    const categoryLower = category.toLowerCase();
-    if (categoryLower.includes("식당") || categoryLower.includes("음식"))
-      return "/images/place-restaurant.jpg";
-    if (categoryLower.includes("카페") || categoryLower.includes("coffee"))
-      return "/images/place-cafe.jpg";
-    if (categoryLower.includes("관광") || categoryLower.includes("명소"))
-      return "/images/place-attraction.jpg";
-    if (categoryLower.includes("숙박") || categoryLower.includes("호텔"))
-      return "/images/place-hotel.jpg";
-    return "/images/place-default.jpg";
-  };
-
   // 확인 버튼 클릭 핸들러 – 선택된 결과를 부모에 전달하고 dialog 닫기
   const handleConfirm = useCallback(() => {
     if (chosenPlace) {
       const latitude = parseFloat(chosenPlace.mapy) / 10000000;
       const longitude = parseFloat(chosenPlace.mapx) / 10000000;
 
-      // 선택된 이미지 또는 기본 이미지 사용
-      const thumbnailUrl =
-        placeImage?.thumbnailUrl ||
-        getThumbnailByCategory(chosenPlace.category);
-
+      // 백엔드에서 제공된 이미지만 사용
       onSelectPlace({
         placeName: chosenPlace.title.replace(/<[^>]*>/g, ""),
         address: chosenPlace.roadAddress || chosenPlace.address,
         latitude,
         longitude,
         category: chosenPlace.category,
-        thumbnailUrl,
-        imageUrl: placeImage?.imageUrl,
+        // thumbnailUrl이 있는 경우에만 전달
+        ...(placeImage?.thumbnailUrl && {
+          thumbnailUrl: placeImage.thumbnailUrl,
+        }),
+        ...(placeImage?.imageUrl && { imageUrl: placeImage.imageUrl }),
       });
     }
     onClose();
@@ -407,8 +391,8 @@ const FullScreenMapDialog = ({
               {imageLoading ? (
                 <Box
                   sx={{
-                    width: "100%",
-                    height: "auto",
+                    width: 80,
+                    height: 80,
                     borderRadius: 1,
                     display: "flex",
                     alignItems: "center",
@@ -418,14 +402,10 @@ const FullScreenMapDialog = ({
                 >
                   <CircularProgress size={30} />
                 </Box>
-              ) : (
+              ) : placeImage?.thumbnailUrl ? (
                 <Box
                   component="img"
-                  src={
-                    placeImage?.thumbnailUrl ||
-                    getThumbnailByCategory(chosenPlace.category)
-                  }
-                  alt="썸네일"
+                  src={placeImage.thumbnailUrl}
                   sx={{
                     width: 80,
                     height: 80,
@@ -433,7 +413,7 @@ const FullScreenMapDialog = ({
                     objectFit: "cover",
                   }}
                 />
-              )}
+              ) : null}
 
               {/* 메인 정보 영역 */}
               <Box flex={1}>
