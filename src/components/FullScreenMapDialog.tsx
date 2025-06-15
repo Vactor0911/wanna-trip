@@ -14,7 +14,7 @@ import {
   Drawer,
   Link,
 } from "@mui/material";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -40,7 +40,6 @@ interface SearchResult {
   link: string; // 링크
   mapx: string; // 경도 (예: "1269796830")
   mapy: string; // 위도 (예: "375704149")
-  roadAddress: string; // 도로명 주소
   telephone: string; // 전화번호
 }
 
@@ -48,7 +47,7 @@ interface FullScreenMapDialogProps {
   open: boolean;
   onClose: () => void;
   onSelectPlace: (place: {
-    placeName: string;
+    title: string;
     address: string;
     latitude: number;
     longitude: number;
@@ -59,6 +58,16 @@ interface FullScreenMapDialogProps {
   lat?: number; // 카드에 저장된 위치가 있을 경우 값 전달
   lng?: number;
   zoom?: number;
+  // locationInfoFromCard를 선택사항으로 변경하고 내부 프로퍼티도 조정
+  locationInfoFromCard?: {
+    title: string;
+    address: string;
+    category?: string;
+    thumbnailUrl?: string; // 선택사항으로 변경
+    imageUrl?: string | null; // 선택사항으로 변경
+    latitude?: number; // latitude 추가 (있을 수도 있으므로)
+    longitude?: number; // longitude 추가 (있을 수도 있으므로)
+  } | null;
 }
 
 const FullScreenMapDialog = ({
@@ -68,6 +77,7 @@ const FullScreenMapDialog = ({
   lat = 37.5665, // 기본 서울 시청 위도
   lng = 126.978, // 기본 서울 시청 경도
   zoom = 15, // 기본 줌 레벨
+  locationInfoFromCard, // 카드에서 전달받은 위치 정보
 }: FullScreenMapDialogProps) => {
   const [searchQuery, setSearchQuery] = useState(""); // 검색어 상태
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // 검색 결과 상태
@@ -91,6 +101,49 @@ const FullScreenMapDialog = ({
 
   const [drawerOpen, setDrawerOpen] = useState(true);
   const DRAWER_WIDTH = 350; // 검색 패널 너비
+
+  // 다이얼로그가 처음 열릴 때만 실행 (검색 상태 초기화 용도)
+  useEffect(() => {
+    if (open) {
+      // 검색 관련 상태 초기화
+      setSearchQuery("");
+      setSearchResults([]);
+      setError("");
+      setIsLoading(false);
+    }
+  }, [open]); // open 상태가 변경될 때만 실행
+
+  // 위치 정보와 마커 설정 용도
+  useEffect(() => {
+    if (open && lat && lng) {
+      setSelectedLocation({ lat, lng });
+      setMarker({ lat, lng });
+      setCurrentZoom(zoom);
+
+      // 카드에서 넘어왔을 때 상세 정보 표시 로직
+      if (!chosenPlace && locationInfoFromCard) {
+        setChosenPlace({
+          title: locationInfoFromCard.title || `위치 (${lat}, ${lng})`,
+          address: locationInfoFromCard.address || "",
+          category: locationInfoFromCard.category || "",
+          description: "",
+          link: "",
+          mapx: String(lng * 10000000),
+          mapy: String(lat * 10000000),
+          telephone: "",
+        });
+
+        // 이미지 정보가 있는 경우에만 설정
+        if (locationInfoFromCard?.thumbnailUrl) {
+          setPlaceImage({
+            imageUrl: locationInfoFromCard.imageUrl || null,
+            thumbnailUrl: locationInfoFromCard.thumbnailUrl,
+          });
+          setImageLoading(false);
+        }
+      }
+    }
+  }, [open, lat, lng, zoom, chosenPlace, locationInfoFromCard]);
 
   // 검색어 초기화 핸들러 추가
   const handleClearSearch = useCallback(() => {
@@ -159,14 +212,14 @@ const FullScreenMapDialog = ({
     setCurrentZoom(17); // 줌 레벨 확대
 
     // HTML 태그 제거한 장소명으로 이미지 검색
-    const placeName = place.title.replace(/<[^>]*>/g, "");
+    const title = place.title.replace(/<[^>]*>/g, "");
     setImageLoading(true);
     setPlaceImage(null); // 이전 이미지 초기화
 
     try {
       const response = await axiosInstance.get("/naver-map/place-images", {
         params: {
-          query: placeName,
+          query: title,
         },
         headers: {
           "Content-Type": "application/json",
@@ -211,8 +264,8 @@ const FullScreenMapDialog = ({
 
       // 백엔드에서 제공된 이미지만 사용
       onSelectPlace({
-        placeName: chosenPlace.title.replace(/<[^>]*>/g, ""),
-        address: chosenPlace.roadAddress || chosenPlace.address,
+        title: chosenPlace.title.replace(/<[^>]*>/g, ""),
+        address: chosenPlace.address,
         latitude,
         longitude,
         category: chosenPlace.category,
@@ -225,6 +278,19 @@ const FullScreenMapDialog = ({
     }
     onClose();
   }, [chosenPlace, onClose, onSelectPlace, placeImage]);
+
+  // 닫기 버튼 핸들러
+  const handleClose = useCallback(() => {
+    // 상세 정보 초기화
+    setChosenPlace(null);
+    setPlaceImage(null);
+    setImageLoading(false);
+    setSearchResults([]);
+    setSearchQuery("");
+
+    // 부모 컴포넌트의 onClose 호출
+    onClose();
+  }, [onClose]);
 
   return (
     <Dialog
@@ -257,6 +323,24 @@ const FullScreenMapDialog = ({
           markerPosition={marker}
         />
       </Box>
+
+      {/* 닫기 버튼 */}
+      <IconButton
+        onClick={handleClose}
+        sx={{
+          position: "absolute",
+          right: 16,
+          top: 16,
+          bgcolor: "rgba(255, 255, 255, 0.9)",
+          zIndex: 1200,
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+          "&:hover": {
+            bgcolor: "rgba(255, 255, 255, 1)",
+          },
+        }}
+      >
+        <CloseRoundedIcon />
+      </IconButton>
 
       {/* 토글 버튼 */}
       <Box
@@ -345,7 +429,7 @@ const FullScreenMapDialog = ({
                         </Typography>
                       </Stack>
                       <Typography variant="body2" color="text.secondary">
-                        {place.roadAddress || place.address}
+                        {place.address}
                       </Typography>
                       {place.category && (
                         <Typography variant="caption" color="text.secondary">
@@ -453,21 +537,13 @@ const FullScreenMapDialog = ({
           {/* 상세 정보 영역 */}
           <Box sx={{ p: 2, pt: 1.5 }}>
             {/* 주소 정보 */}
-            {(chosenPlace.roadAddress || chosenPlace.address) && (
+            {chosenPlace.address && (
               <Stack direction="row" spacing={1.5} mb={1.5}>
                 <LocationOnIcon color="action" />
                 <Box>
-                  {chosenPlace.roadAddress && (
-                    <Typography variant="body2" paragraph={false} mb={0}>
-                      {chosenPlace.roadAddress}
-                    </Typography>
-                  )}
-                  {chosenPlace.address &&
-                    chosenPlace.roadAddress !== chosenPlace.address && (
-                      <Typography variant="body2" color="text.secondary">
-                        {chosenPlace.address}
-                      </Typography>
-                    )}
+                  <Typography variant="body2" color="text.secondary">
+                    {chosenPlace.address}
+                  </Typography>
                 </Box>
               </Stack>
             )}
