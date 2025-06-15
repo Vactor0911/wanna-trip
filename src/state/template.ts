@@ -23,6 +23,19 @@ export interface BoardInterface {
   cards: CardInterface[]; // 카드 목록
 }
 
+// 위치 정보 인터페이스 추가
+export interface LocationInfo {
+  title: string; // 장소명 (예: "서울특별시청")
+  address: string; // 주소
+  category: string; // 카테고리 (예: "음식점 > 한식")
+  description: string; // 설명
+  link: string; // 링크
+  mapx: string; // 경도 (예: "1269796830")
+  mapy: string; // 위도 (예: "375704149")
+  roadAddress: string; // 도로명 주소
+  telephone: string; // 전화번호
+}
+
 // 카드 객체 인터페이스
 export interface CardInterface {
   id?: number; // card_id
@@ -31,7 +44,7 @@ export interface CardInterface {
   endTime: Dayjs; // 카드 종료 시간
   isLocked: boolean; // 카드 잠금 여부
   orderIndex?: number; // 카드 순서 인덱스 (보드 내에서의 위치)
-  // location?: string; // 장소 정보 (옵션)
+  location?: LocationInfo; // 위치 정보
 }
 
 // 템플릿 기본 정보 (보드 배열 제외)
