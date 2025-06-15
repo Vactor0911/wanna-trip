@@ -28,9 +28,7 @@ const Card = (props: CardProps) => {
         px: 1,
         cursor: "pointer",
         // 잠금 상태에 따라 테두리 스타일 변경
-        border: isLocked
-          ? `1px solid ${theme.palette.error.light}`
-          : `2px solid transparent`,
+        border: `2px solid transparent`,
         "&:hover": {
           border: `2px solid ${theme.palette.primary.main}`,
         },
