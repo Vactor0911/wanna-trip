@@ -34,6 +34,7 @@ import {
   deleteBoardCardAtom,
   templateAtom,
   updateBoardCardAtom,
+  LocationInfo,
 } from "../state/template";
 import dayjs from "dayjs";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
@@ -44,6 +45,101 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import FullScreenMapDialog from "./FullScreenMapDialog";
 import { useAddCard } from "../hooks/template";
+import React from "react";
+
+// 지도 컴포넌트 분리
+const MapSection = React.memo(
+  ({
+    locationInfo,
+    handleMapClick,
+  }: {
+    locationInfo: {
+      title: string;
+      address: string;
+      latitude: number;
+      longitude: number;
+      category?: string;
+      thumbnailUrl?: string;
+    } | null;
+    handleMapClick: () => void;
+  }) => {
+    const theme = useTheme();
+
+    return (
+      <Box
+        position="relative"
+        sx={{
+          width: "100%",
+          height: { xs: "200px", md: "auto" },
+          aspectRatio: "1/1",
+        }}
+      >
+        <NaverMap
+          width="100%"
+          height="100%"
+          interactive={false}
+          lat={locationInfo?.latitude || 37.5665}
+          lng={locationInfo?.longitude || 126.978}
+          markerPosition={
+            locationInfo
+              ? {
+                  lat: locationInfo.latitude,
+                  lng: locationInfo.longitude,
+                }
+              : null
+          }
+          sx={{ borderRadius: 2 }}
+        />
+
+        {/* 전체화면 버튼 */}
+        <Tooltip title="전체화면으로 보기" placement="left">
+          <IconButton
+            onClick={handleMapClick}
+            disableRipple
+            sx={{
+              position: "absolute",
+              top: 4,
+              right: 4,
+              backgroundColor: "rgba(255, 255, 255, 0.9)",
+              color: theme.palette.primary.main,
+              boxShadow: 1,
+              zIndex: 1,
+            }}
+            size="small"
+          >
+            <AspectRatioIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+
+        {/* 클릭 가능한 투명 오버레이 */}
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          onClick={handleMapClick}
+          sx={{
+            cursor: "pointer",
+            borderRadius: 2,
+            "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.05)" },
+          }}
+        />
+      </Box>
+    );
+  },
+  // 메모이제이션 최적화를 위한 비교 함수
+  (prevProps, nextProps) => {
+    // locationInfo가 변경되지 않았다면 리렌더링하지 않음
+    if (!prevProps.locationInfo && !nextProps.locationInfo) return true;
+    if (!prevProps.locationInfo || !nextProps.locationInfo) return false;
+
+    return (
+      prevProps.locationInfo.latitude === nextProps.locationInfo.latitude &&
+      prevProps.locationInfo.longitude === nextProps.locationInfo.longitude
+    );
+  }
+);
 
 const CardEditDialog = () => {
   const theme = useTheme();
@@ -65,6 +161,16 @@ const CardEditDialog = () => {
 
   // 전체화면 지도 상태
   const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
+
+  // 위치 정보 상태 추가
+  const [locationInfo, setLocationInfo] = useState<{
+    title: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    category?: string;
+    thumbnailUrl?: string;
+  } | null>(null);
 
   const [currentEditCard] = useAtom(currentEditCardAtom); // 현재 편집 중인 카드 정보
   const [template] = useAtom(templateAtom); // 템플릿 상태 추가
@@ -92,6 +198,7 @@ const CardEditDialog = () => {
         setIsCardLocked(false); // 기본값 - 잠금 해제
         setStartTime(dayjs("2001-01-01T01:00"));
         setEndTime(dayjs("2001-01-01T02:00"));
+        setLocationInfo(null); // 위치 정보 초기화
       }
       // 기존 카드인 경우 데이터 로드
       else {
@@ -110,6 +217,42 @@ const CardEditDialog = () => {
           setStartTime(currentCard.startTime || dayjs("2001-01-01T01:00"));
           setEndTime(currentCard.endTime || dayjs("2001-01-01T02:00"));
           setIsCardLocked(currentCard.isLocked || false); // 카드의 잠금 상태 설정
+
+          // 카드에 위치 정보가 있으면 설정
+          if (currentCard.location) {
+            setLocationInfo(currentCard.location);
+          } else {
+            // 서버에서 위치 정보 조회
+            const fetchLocationInfo = async () => {
+              try {
+                const response = await axiosInstance.get(
+                  `/card/location/${currentEditCard.cardId}`
+                );
+                if (
+                  response.data &&
+                  response.data.success &&
+                  response.data.location
+                ) {
+                  // 서버 응답에서 위치 정보 변환
+                  const locationData = {
+                    title: response.data.location.title,
+                    address: response.data.location.address,
+                    latitude: parseFloat(response.data.location.latitude),
+                    longitude: parseFloat(response.data.location.longitude),
+                    category: response.data.location.category,
+                    thumbnailUrl: response.data.location.thumbnail_url,
+                  };
+
+                  // 위치 정보 설정
+                  setLocationInfo(locationData);
+                }
+              } catch (error) {
+                console.error("위치 정보 로드 실패:", error);
+                setLocationInfo(null);
+              }
+            };
+            fetchLocationInfo();
+          }
         }
       }
     }
@@ -165,6 +308,17 @@ const CardEditDialog = () => {
           startTime: startTime.format("YYYY-MM-DD HH:mm:ss"), // 시작 시간
           endTime: endTime.format("YYYY-MM-DD HH:mm:ss"), // 종료 시간
           locked: isCardLocked, // 잠금 상태
+          // 위치 정보가 있는 경우에만 포함
+          ...(locationInfo && {
+            location: {
+              title: locationInfo.title,
+              address: locationInfo.address,
+              latitude: locationInfo.latitude,
+              longitude: locationInfo.longitude,
+              category: locationInfo.category || "",
+              thumbnail_url: locationInfo.thumbnailUrl || "",
+            },
+          }),
         };
 
         // 새 카드 생성 시에만 orderIndex 포함 (드래그 앤 드롭으로 위치 변경하는 경우는 별도 처리)
@@ -195,14 +349,20 @@ const CardEditDialog = () => {
         if (response.data.success) {
           console.log("카드가 성공적으로 저장되었습니다:", response.data);
 
+          // 카드 ID 가져오기 (신규 카드면 응답에서, 기존 카드면 현재 ID 사용)
+          const cardId = isNewCard
+            ? response.data.cardId
+            : currentEditCard.cardId;
+
           // 카드 객체 생성 (새 카드든 수정된 카드든)
           const updatedCard = {
-            id: isNewCard ? response.data.cardId : currentEditCard.cardId,
+            id: cardId,
             content,
             startTime,
             endTime,
             isLocked: isCardLocked,
             orderIndex: currentEditCard.orderIndex || 0,
+            ...(locationInfo ? { location: locationInfo } : {}),
           };
 
           // 카드 상태 업데이트 - 모든 경우에 항상 업데이트
@@ -231,6 +391,7 @@ const CardEditDialog = () => {
     currentEditCard,
     endTime,
     isCardLocked,
+    locationInfo,
     setCardEditDialogOpen,
     startTime,
     updateBoardCard,
@@ -360,6 +521,15 @@ const CardEditDialog = () => {
     handleCardDelete();
   }, [handleMoreMenuClose, handleCardDelete]);
 
+  const handleSelectPlace = useCallback(
+    (place: LocationInfo) => {
+      console.log("선택된 위치:", place);
+      // 위치 정보 저장
+      setLocationInfo(place);
+    },
+    [setLocationInfo]
+  );
+
   return (
     <>
       <Dialog
@@ -471,63 +641,31 @@ const CardEditDialog = () => {
                 </Stack>
 
                 {/* 지도 뷰어 - 정적 모드로 변경하고 클릭 이벤트 추가 */}
-                <Box
-                  position="relative"
-                  sx={{
-                    width: "100%",
-                    height: {
-                      xs: "200px",
-                      md: "auto",
-                    },
-                    aspectRatio: "1/1",
-                  }}
-                >
-                  <NaverMap
-                    width="100%"
-                    height="100%"
-                    interactive={false} // 상호작용 비활성화
-                    sx={{
-                      borderRadius: 2,
-                    }}
-                  />
+                <MapSection
+                  locationInfo={locationInfo}
+                  handleMapClick={handleMapClick}
+                />
 
-                  {/* 전체화면 버튼 */}
-                  <Tooltip title="전체화면으로 보기" placement="left">
-                    <IconButton
-                      onClick={handleMapClick}
-                      disableRipple // 클릭 시 ripple 효과 제거
-                      sx={{
-                        position: "absolute",
-                        top: 4,
-                        right: 4,
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        color: theme.palette.primary.main,
-                        boxShadow: 1,
-                        zIndex: 1,
-                      }}
-                      size="small"
-                    >
-                      <AspectRatioIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-
-                  {/* 클릭 가능한 투명 오버레이 */}
-                  <Box
-                    position="absolute"
-                    top={0}
-                    left={0}
-                    width="100%"
-                    height="100%"
-                    onClick={handleMapClick}
-                    sx={{
-                      cursor: "pointer",
-                      borderRadius: 2,
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.05)",
-                      },
-                    }}
-                  />
-                </Box>
+                {/* 선택된 장소 정보 표시 */}
+                {locationInfo && (
+                  <Box sx={{ mt: 1, px: 1 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                      {locationInfo.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {locationInfo.address}
+                    </Typography>
+                    {locationInfo.category && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                      >
+                        {locationInfo.category}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
               </Stack>
 
               {/* 시간 */}
@@ -690,6 +828,11 @@ const CardEditDialog = () => {
       <FullScreenMapDialog
         open={isMapDialogOpen}
         onClose={handleMapDialogClose}
+        onSelectPlace={handleSelectPlace}
+        lat={locationInfo?.latitude} // 현재 위치 위도 전달
+        lng={locationInfo?.longitude} // 현재 위치 경도 전달
+        zoom={17} // 적절한 줌 레벨 설정
+        locationInfoFromCard={locationInfo} // 위치 정보 전달
       />
     </>
   );
