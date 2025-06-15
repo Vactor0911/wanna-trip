@@ -615,12 +615,11 @@ const CardEditDialog = () => {
             direction="row"
             gap={2}
             alignSelf="flex-end"
-            color={theme.palette.black.main}
           >
             {/* 취소 버튼 */}
             <Button
               variant="outlined"
-              color="inherit"
+              color="black"
               sx={{
                 px: 3,
               }}

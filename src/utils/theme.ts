@@ -10,6 +10,13 @@ declare module "@mui/material/styles" {
   }
 }
 
+// MUI Button 색상 확장
+declare module "@mui/material/Button" {
+  interface ButtonPropsColorOverrides {
+    black: true;
+  }
+}
+
 // SVG 아이콘 색상 확장
 declare module "@mui/material/SvgIcon" {
   interface SvgIconPropsColorOverrides {
