@@ -28,7 +28,7 @@ const NaverMap = (props: MapProps) => {
     height,
     lat = DEFAULT_LAT,
     lng = DEFAULT_LNG,
-    zoom = 13,
+    zoom = 17,
     interactive = true, // 기본값은 상호작용 가능
     markerPosition = null, // 마커 위치 (없으면 null)
     drawerOpen = false, // 기본값 false
