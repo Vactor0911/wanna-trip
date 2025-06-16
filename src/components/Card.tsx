@@ -83,7 +83,7 @@ const Card = (props: CardProps) => {
                 <Box
                   sx={{
                     position: "absolute",
-                    bottom: 12,
+                    bottom: "3px",
                     maxWidth: "90%",
                     background: "#D9D9D9",
                     borderRadius: 2,

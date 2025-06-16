@@ -534,7 +534,7 @@ const CardEditDialog = () => {
   const handleSelectPlace = useCallback(
     (place: LocationInfo) => {
       console.log("선택된 위치:", place);
-      
+
       // 위치 정보 저장 전에 필수 필드들에 대한 기본값 제공
       setLocationInfo({
         title: place.title,
@@ -667,12 +667,28 @@ const CardEditDialog = () => {
                 {/* 선택된 장소 정보 표시 */}
                 {locationInfo && (
                   <Box sx={{ mt: 1, px: 1 }}>
+
+                    {/* 장소명 */}
                     <Typography variant="subtitle2" fontWeight="bold" noWrap>
                       {locationInfo.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
+                    
+                    {/* 주소 */}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
                       {locationInfo.address}
                     </Typography>
+
+                    {/* 장소 카테고리 */}
                     {locationInfo.category && (
                       <Typography
                         variant="caption"
