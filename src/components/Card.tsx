@@ -1,7 +1,17 @@
-import { Paper, PaperProps, Stack, Typography } from "@mui/material";
+import { Box, Paper, PaperProps, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
 import { Dayjs } from "dayjs";
 import parse from "html-react-parser";
+
+// 위치 정보 인터페이스 추가
+interface LocationInfo {
+  title: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  category?: string;
+  thumbnailUrl?: string;
+}
 
 interface CardProps extends PaperProps {
   content?: string;
@@ -9,10 +19,20 @@ interface CardProps extends PaperProps {
   endTime?: Dayjs;
   isLocked?: boolean; // 카드 잠금 여부
   onClick?: () => void;
+  location?: LocationInfo; // 위치 정보 추가
 }
 
 const Card = (props: CardProps) => {
-  const { content, startTime, endTime, isLocked, onClick, ...others } = props;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const {
+    content,
+    startTime,
+    endTime,
+    isLocked,
+    onClick,
+    location,
+    ...others
+  } = props;
 
   // 시간 형식 설정
   const formatTime = (time?: Dayjs) => {
@@ -43,6 +63,52 @@ const Card = (props: CardProps) => {
           <Typography variant="caption" color="text.secondary" display="block">
             {formatTime(startTime)} {endTime ? `- ${formatTime(endTime)}` : ""}
           </Typography>
+        )}
+
+        {/* 위치 정보와 썸네일 */}
+        {location && (
+          <Box sx={{ position: "relative" }}>
+            {location.thumbnailUrl && (
+              <>
+                <Box
+                  component="img"
+                  src={location.thumbnailUrl}
+                  sx={{
+                    width: "100%",
+                    height: "120px",
+                    objectFit: "cover",
+                    borderRadius: 1,
+                  }}
+                />
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 12,
+                    maxWidth: "90%",
+                    background: "#D9D9D9",
+                    borderRadius: 2,
+                    padding: "3px 12px 3px 12px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight="bold"
+                    sx={{ color: "black" }}
+                  >
+                    {location.title}
+                  </Typography>
+                </Box>
+              </>
+            )}
+
+            {/* 썸네일이 없을 경우에만 타이틀 일반 표시 */}
+            {!location.thumbnailUrl && (
+              <Typography variant="subtitle2" fontWeight="bold">
+                {location.title}
+              </Typography>
+            )}
+          </Box>
         )}
 
         {/* 카드 내용 */}

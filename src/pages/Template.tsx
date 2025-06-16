@@ -73,6 +73,10 @@ interface BackendCard {
   end_time: string; // 카드 종료 시간
   order_index: number; // 카드 순서 인덱스
   locked: boolean; // 카드 잠금 상태 (0, 1으로 표현 됨)
+  location: {
+    title: string; // 장소명
+    thumbnail_url: string; // 썸네일 URL
+  };
 }
 
 const Template = () => {
@@ -128,6 +132,12 @@ const Template = () => {
                 : dayjs(),
               orderIndex: card.order_index,
               isLocked: card.locked, // 기본값 - 잠금 해제 상태
+              location: card.location
+                ? {
+                    title: card.location.title,
+                    thumbnailUrl: card.location.thumbnail_url,
+                  }
+                : undefined,
             })),
           })),
         };
@@ -231,7 +241,6 @@ const Template = () => {
   }, [setTemplate, template, templateTitle]);
 
   // 드래그 & 드롭 핸들러
-
   const onDragEnd = useCallback(
     (result: DropResult) => {
       const { source, destination, type } = result;
