@@ -47,22 +47,23 @@ import FullScreenMapDialog from "./FullScreenMapDialog";
 import { useAddCard } from "../hooks/template";
 import React from "react";
 
+interface MapSectionProps {
+  locationInfo: {
+    title: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    category?: string;
+    thumbnailUrl?: string;
+  } | null; // 위치 정보가 없을 수도 있으므로 null 허용
+  handleMapClick: () => void;
+  disabled?: boolean; // 지도 클릭 비활성화 여부
+}
+
 // 지도 컴포넌트 분리
 const MapSection = React.memo(
-  ({
-    locationInfo,
-    handleMapClick,
-  }: {
-    locationInfo: {
-      title: string;
-      address: string;
-      latitude: number;
-      longitude: number;
-      category?: string;
-      thumbnailUrl?: string;
-    } | null;
-    handleMapClick: () => void;
-  }) => {
+  (props: MapSectionProps) => {
+    const { locationInfo, handleMapClick, disabled } = props;
     const theme = useTheme();
 
     return (
@@ -95,6 +96,7 @@ const MapSection = React.memo(
         <Tooltip title="전체화면으로 보기" placement="left">
           <IconButton
             onClick={handleMapClick}
+            disabled={disabled}
             disableRipple
             sx={{
               position: "absolute",
@@ -119,7 +121,6 @@ const MapSection = React.memo(
           width="100%"
           height="100%"
           onClick={handleMapClick}
-          disabled={isCardLocked}
           sx={{
             cursor: "pointer",
             borderRadius: 2,
@@ -609,20 +610,14 @@ const CardEditDialog = () => {
                     size="small"
                     ref={moreMenuAnchorElement}
                   >
-                    <MoreVertIcon
-                      fontSize="large"
-                      color="black"
-                    />
+                    <MoreVertIcon fontSize="large" color="black" />
                   </IconButton>
                 </Tooltip>
 
                 {/* 닫기 버튼 */}
                 <Tooltip title="닫기" placement="top">
                   <IconButton onClick={handleCardEditDialogClose} size="small">
-                    <CloseRoundedIcon
-                      fontSize="large"
-                      color="black"
-                    />
+                    <CloseRoundedIcon fontSize="large" color="black" />
                   </IconButton>
                 </Tooltip>
               </Stack>
@@ -663,17 +658,17 @@ const CardEditDialog = () => {
                 <MapSection
                   locationInfo={locationInfo}
                   handleMapClick={handleMapClick}
+                  disabled={isCardLocked}
                 />
 
                 {/* 선택된 장소 정보 표시 */}
                 {locationInfo && (
                   <Box sx={{ mt: 1, px: 1 }}>
-
                     {/* 장소명 */}
                     <Typography variant="subtitle2" fontWeight="bold" noWrap>
                       {locationInfo.title}
                     </Typography>
-                    
+
                     {/* 주소 */}
                     <Typography
                       variant="body2"
@@ -787,11 +782,7 @@ const CardEditDialog = () => {
           )}
 
           {/* 버튼 컨테이너 */}
-          <Stack
-            direction="row"
-            gap={2}
-            alignSelf="flex-end"
-          >
+          <Stack direction="row" gap={2} alignSelf="flex-end">
             {/* 취소 버튼 */}
             <Button
               variant="outlined"
