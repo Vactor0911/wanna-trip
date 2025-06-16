@@ -220,7 +220,17 @@ const CardEditDialog = () => {
 
           // 카드에 위치 정보가 있으면 설정
           if (currentCard.location) {
-            setLocationInfo(currentCard.location);
+            // 필요한 필드를 추출하여 새 객체 생성
+            const extractedLocation = {
+              title: currentCard.location.title,
+              address: currentCard.location.address || "", // 주소가 없을 경우 빈 문자열 기본값
+              latitude: currentCard.location.latitude ?? 37.5665, // 위도가 없을 경우 서울시청 좌표
+              longitude: currentCard.location.longitude ?? 126.978, // 경도가 없을 경우 서울시청 좌표
+              category: currentCard.location.category,
+              thumbnailUrl: currentCard.location.thumbnailUrl,
+            };
+
+            setLocationInfo(extractedLocation);
           } else {
             // 서버에서 위치 정보 조회
             const fetchLocationInfo = async () => {
@@ -332,7 +342,7 @@ const CardEditDialog = () => {
         // 기존 카드 수정
         if (currentEditCard.cardId) {
           response = await axiosInstance.put(
-            `/card/${currentEditCard.cardId}`,
+            `/location/card/${currentEditCard.cardId}`,
             cardData,
             { headers: { "X-CSRF-Token": csrfToken } }
           );
@@ -524,8 +534,16 @@ const CardEditDialog = () => {
   const handleSelectPlace = useCallback(
     (place: LocationInfo) => {
       console.log("선택된 위치:", place);
-      // 위치 정보 저장
-      setLocationInfo(place);
+      
+      // 위치 정보 저장 전에 필수 필드들에 대한 기본값 제공
+      setLocationInfo({
+        title: place.title,
+        address: place.address || "", // 빈 문자열을 기본값으로
+        latitude: place.latitude ?? 37.5665, // 서울시청 좌표를 기본값으로
+        longitude: place.longitude ?? 126.978, // 서울시청 좌표를 기본값으로
+        category: place.category,
+        thumbnailUrl: place.thumbnailUrl,
+      });
     },
     [setLocationInfo]
   );
