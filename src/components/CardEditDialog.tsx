@@ -120,19 +120,23 @@ const MapSection = React.memo(
           left={0}
           width="100%"
           height="100%"
-          onClick={handleMapClick}
+          onClick={disabled ? undefined : handleMapClick}
           sx={{
-            cursor: "pointer",
+            cursor: disabled ? "not-allowed" : "pointer",
             borderRadius: 2,
+            pointerEvents: disabled ? "none" : "auto",  // 잠금 상태일 때는 이벤트 차단
             "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.05)" },
           }}
         />
       </Box>
     );
   },
-  // 메모이제이션 최적화를 위한 비교 함수
+  // 메모이제이션 최적화를 위한 비교 함수 수정
   (prevProps, nextProps) => {
-    // locationInfo가 변경되지 않았다면 리렌더링하지 않음
+    // disabled 상태가 변경되었으면 리렌더링
+    if (prevProps.disabled !== nextProps.disabled) return false;
+
+    // locationInfo 변경 확인 (기존 코드)
     if (!prevProps.locationInfo && !nextProps.locationInfo) return true;
     if (!prevProps.locationInfo || !nextProps.locationInfo) return false;
 
