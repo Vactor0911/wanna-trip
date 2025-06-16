@@ -7,6 +7,7 @@ import {
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import dayjs from "dayjs";
 
 /**
  * 카드 추가 및 복제 훅
@@ -107,21 +108,21 @@ interface MoveCardParams {
  * @returns 카드 이동 훅
  */
 export const useMoveCard = () => {
-  const setTemplate = useSetAtom(templateAtom);
+  const [template, setTemplate] = useAtom(templateAtom);
   const queryClient = useQueryClient();
 
   const moveCard = useMutation({
     mutationFn: async ({ source, destination }: MoveCardParams) => {
       // 보드가 존재하지 않으면 종료
       if (!source.boardId || !destination.boardId) {
-        return;
+        return null;
       }
 
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
       // 카드 이동 API 요청
-      await axiosInstance.post(
+      const response = await axiosInstance.post(
         "/card/move",
         {
           sourceBoardId: source.boardId,
@@ -131,6 +132,52 @@ export const useMoveCard = () => {
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
+
+      // 서버 응답 반환 (새 카드 ID 포함)
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      // 서버 응답에 newCardId가 있고, 다른 보드로 이동한 경우에만 처리
+      if (
+        data?.newCardId &&
+        variables.source.boardId !== variables.destination.boardId
+      ) {
+        console.log("카드 이동: 새 카드 ID 업데이트", data.newCardId);
+
+        // 템플릿 상태 복사 (레퍼런스가 아닌 완전한 복사본)
+        const currentTemplate = JSON.parse(JSON.stringify(template));
+
+        // 모든 보드의 모든 카드에 대해 시간 객체를 dayjs로 변환
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        currentTemplate.boards.forEach((board: { cards: any[]; }) => {
+          board.cards = board.cards.map((card) => ({
+            ...card,
+            startTime: dayjs(card.startTime),
+            endTime: dayjs(card.endTime),
+          }));
+        });
+
+        // 이제 대상 보드에서 카드 ID 업데이트
+        const destinationBoardIndex = currentTemplate.boards.findIndex(
+          (board: { id: number; }) => board.id === variables.destination.boardId
+        );
+
+        if (destinationBoardIndex !== -1) {
+          const destinationBoard =
+            currentTemplate.boards[destinationBoardIndex];
+
+          if (
+            destinationBoard.cards.length > variables.destination.orderIndex
+          ) {
+            // ID만 업데이트 (시간은 이미 위에서 변환됨)
+            destinationBoard.cards[variables.destination.orderIndex].id =
+              data.newCardId;
+          }
+        }
+
+        // 업데이트된 완전히 새로운 객체를 직접 전달
+        setTemplate(currentTemplate);
+      }
     },
     onError: (_error, context) => {
       if (context?.prevTemplate) {
