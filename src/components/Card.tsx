@@ -1,6 +1,6 @@
 import { Box, Paper, PaperProps, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 
@@ -24,7 +24,6 @@ interface CardProps extends PaperProps {
 }
 
 const Card = (props: CardProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const {
     content,
     startTime,
@@ -36,8 +35,18 @@ const Card = (props: CardProps) => {
   } = props;
 
   // 시간 형식 설정
-  const formatTime = (time?: Dayjs) => {
-    return time ? time.format("HH:mm") : "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const formatTime = (time: any) => {
+    // time이 dayjs 객체인지 확인
+    if (time && typeof time.format === "function") {
+      return time.format("HH:mm");
+    }
+    // 문자열이면 dayjs로 변환 시도
+    else if (typeof time === "string") {
+      return dayjs(time).format("HH:mm");
+    }
+    // 다른 타입이면 기본값 반환
+    return "--:--";
   };
 
   return (
