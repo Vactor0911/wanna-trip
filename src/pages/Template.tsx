@@ -75,6 +75,10 @@ interface BackendCard {
   locked: boolean; // 카드 잠금 상태 (0, 1으로 표현 됨)
   location: {
     title: string; // 장소명
+    address: string; // 장소 주소
+    latitude: string; // 위도
+    longitude: string; // 경도
+    category: string; // 장소 카테고리
     thumbnail_url: string; // 썸네일 URL
   };
 }
@@ -135,6 +139,10 @@ const Template = () => {
               location: card.location
                 ? {
                     title: card.location.title,
+                    address: card.location.address,
+                    latitude: parseFloat(card.location.latitude),
+                    longitude: parseFloat(card.location.longitude),
+                    category: card.location.category,
                     thumbnailUrl: card.location.thumbnail_url,
                   }
                 : undefined,
