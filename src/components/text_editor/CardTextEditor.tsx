@@ -34,10 +34,11 @@ const LICENSE_KEY = import.meta.env.VITE_CKEDITOR_LICENSE_KEY;
 interface CardTextEditorProps {
   setContent?: (content: string) => void;
   initialContent?: string; // 초기 내용을 위한 prop 추가
+  disabled?: boolean; // 에디터 비활성화 여부
 }
 
 export default function CardTextEditor(props: CardTextEditorProps) {
-  const { setContent, initialContent = "" } = props;
+  const { setContent, initialContent = "", disabled } = props;
 
   const editorContainerRef = useRef(null);
   const editorRef = useRef<ClassicEditor | null>(null); // 에디터 인스턴스를 저장하는 ref
@@ -195,6 +196,7 @@ export default function CardTextEditor(props: CardTextEditorProps) {
                   setContent(editor.getData());
                 }
               }}
+              disabled={disabled}
             />
           )}
         </div>

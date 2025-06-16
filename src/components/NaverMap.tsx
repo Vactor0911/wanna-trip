@@ -17,6 +17,7 @@ interface MapProps extends BoxProps {
   markerPosition?: { lat: number; lng: number } | null; // 마커 위치
   drawerOpen?: boolean; // 검색 패널 열림/닫힘 상태
   drawerWidth?: number; // 검색 패널 너비
+  disabled?: boolean; // 비활성화 여부
 }
 
 const DEFAULT_LAT = 37.5665; // 서울 시청 위도
@@ -35,6 +36,7 @@ const NaverMap = (props: MapProps) => {
     drawerWidth = 350, // 기본값 350px
     sx,
     onClick,
+    disabled,
     ...others
   } = props;
 
@@ -171,7 +173,14 @@ const NaverMap = (props: MapProps) => {
     return (
       <Skeleton
         variant="rounded"
-        sx={{ width, height, borderRadius: 2, ...sx }}
+        sx={{
+          width,
+          height,
+          borderRadius: 2,
+          pointer: disabled ? "default" : "pointer",
+          ...sx,
+        }}
+        onClick={disabled ? undefined : onClick}
       />
     );
   }
@@ -184,9 +193,10 @@ const NaverMap = (props: MapProps) => {
         height,
         borderRadius: 2, // 모서리 둥글게
         overflow: "hidden", // 자식 요소가 경계 밖으로 나가지 않도록 설정
-        cursor: onClick ? "pointer" : "default", // 클릭 가능할 때 포인터 커서
+        cursor: disabled ? "default" : "pointer", // 비활성화 시 커서 변경
         ...sx,
       }}
+      onClick={disabled ? undefined : onClick}
       {...others}
     />
   );

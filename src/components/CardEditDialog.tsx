@@ -119,6 +119,7 @@ const MapSection = React.memo(
           width="100%"
           height="100%"
           onClick={handleMapClick}
+          disabled={isCardLocked}
           sx={{
             cursor: "pointer",
             borderRadius: 2,
@@ -610,7 +611,7 @@ const CardEditDialog = () => {
                   >
                     <MoreVertIcon
                       fontSize="large"
-                      sx={{ color: theme.palette.black.main }}
+                      color="black"
                     />
                   </IconButton>
                 </Tooltip>
@@ -620,7 +621,7 @@ const CardEditDialog = () => {
                   <IconButton onClick={handleCardEditDialogClose} size="small">
                     <CloseRoundedIcon
                       fontSize="large"
-                      sx={{ color: theme.palette.black.main }}
+                      color="black"
                     />
                   </IconButton>
                 </Tooltip>
@@ -709,6 +710,7 @@ const CardEditDialog = () => {
                       value={startTime}
                       onChange={handleStartTimeChange}
                       ampm={false}
+                      disabled={isCardLocked}
                     />
 
                     {/* 구분자 */}
@@ -728,6 +730,7 @@ const CardEditDialog = () => {
                       value={endTime}
                       onChange={handleEndTimeChange}
                       ampm={false}
+                      disabled={isCardLocked}
                     />
                   </LocalizationProvider>
                 </Stack>
@@ -754,6 +757,7 @@ const CardEditDialog = () => {
                 <CardTextEditor
                   setContent={setContent}
                   initialContent={content} // 현재 카드 내용을 초기값으로 전달
+                  disabled={isCardLocked}
                 />
               </Box>
             </Stack>
@@ -771,12 +775,11 @@ const CardEditDialog = () => {
             direction="row"
             gap={2}
             alignSelf="flex-end"
-            color={theme.palette.black.main}
           >
             {/* 취소 버튼 */}
             <Button
               variant="outlined"
-              color="inherit"
+              color="black"
               sx={{
                 px: 3,
               }}

@@ -2,6 +2,7 @@ import { Box, Paper, PaperProps, Stack, Typography } from "@mui/material";
 import { theme } from "../utils/theme";
 import { Dayjs } from "dayjs";
 import parse from "html-react-parser";
+import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 
 // 위치 정보 인터페이스 추가
 interface LocationInfo {
@@ -48,9 +49,7 @@ const Card = (props: CardProps) => {
         px: 1,
         cursor: "pointer",
         // 잠금 상태에 따라 테두리 스타일 변경
-        border: isLocked
-          ? `1px solid ${theme.palette.error.light}`
-          : `2px solid transparent`,
+        border: `2px solid transparent`,
         "&:hover": {
           border: `2px solid ${theme.palette.primary.main}`,
         },
@@ -58,12 +57,33 @@ const Card = (props: CardProps) => {
       {...others}
     >
       <Stack gap={1}>
-        {/* 카드 시간 */}
-        {(startTime || endTime) && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {formatTime(startTime)} {endTime ? `- ${formatTime(endTime)}` : ""}
-          </Typography>
-        )}
+        {/* 카드 제목 */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          {/* 카드 시간 */}
+          {(startTime || endTime) && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
+              {formatTime(startTime)}{" "}
+              {endTime ? `- ${formatTime(endTime)}` : ""}
+            </Typography>
+          )}
+
+          {/* 잠금 여부 */}
+          <LockOutlineRoundedIcon
+            fontSize="small"
+            color="black"
+            sx={{
+              visibility: isLocked ? "visible" : "hidden",
+            }}
+          />
+        </Stack>
 
         {/* 위치 정보와 썸네일 */}
         {location && (
