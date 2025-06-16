@@ -342,7 +342,7 @@ const CardEditDialog = () => {
         // 기존 카드 수정
         if (currentEditCard.cardId) {
           response = await axiosInstance.put(
-            `/location/card/${currentEditCard.cardId}`,
+            `/card/${currentEditCard.cardId}`,
             cardData,
             { headers: { "X-CSRF-Token": csrfToken } }
           );
