@@ -9,7 +9,7 @@ import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
- * 카드 추가 훅
+ * 카드 추가 및 복제 훅
  * @param newCard 새로운 카드 데이터
  * @param boardId 카드가 추가될 보드 Id
  * @param index 카드가 추가될 위치 (선택적)
@@ -29,6 +29,17 @@ export const useAddCard = () => {
         startTime: newCard.startTime.format("YYYY-MM-DD HH:mm:ss"),
         endTime: newCard.endTime.format("YYYY-MM-DD HH:mm:ss"),
         isLocked: newCard.isLocked,
+        // 위치 정보가 있는 경우에만 포함
+        ...(newCard.location && {
+          location: {
+            title: newCard.location.title,
+            address: newCard.location.address || "",
+            latitude: newCard.location.latitude,
+            longitude: newCard.location.longitude,
+            category: newCard.location.category || "",
+            thumbnail_url: newCard.location.thumbnailUrl || "",
+          },
+        }),
       };
 
       // 백엔드 API 엔드포인트 설정
@@ -60,9 +71,15 @@ export const useAddCard = () => {
           if (board.id === boardId) {
             const updatedCards = [...board.cards];
             if (index !== undefined) {
-              updatedCards.splice(index, 0, { ...newCard, id: newCardId });
+              updatedCards.splice(index, 0, {
+                ...newCard,
+                id: newCardId,
+              });
             } else {
-              updatedCards.push({ ...newCard, id: newCardId });
+              updatedCards.push({
+                ...newCard,
+                id: newCardId,
+              });
             }
             return { ...board, cards: updatedCards };
           }

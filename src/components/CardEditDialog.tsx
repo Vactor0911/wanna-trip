@@ -456,6 +456,7 @@ const CardEditDialog = () => {
       startTime,
       endTime,
       isLocked: false, // 복제 시 잠금 해제
+      ...(locationInfo ? { location: locationInfo } : {}), // null인 경우 속성 자체를 제외
     };
 
     // 카드 추가 훅 호출
@@ -472,17 +473,7 @@ const CardEditDialog = () => {
       handleMoreMenuClose(); // 메뉴 닫기
       setCardEditDialogOpen(false); // 대화상자 닫기
     }
-  }, [
-    addCard,
-    content,
-    currentEditCard.boardId,
-    currentEditCard?.cardId,
-    currentEditCard.orderIndex,
-    endTime,
-    handleMoreMenuClose,
-    setCardEditDialogOpen,
-    startTime,
-  ]);
+  }, [addCard, content, currentEditCard.boardId, currentEditCard?.cardId, currentEditCard.orderIndex, endTime, handleMoreMenuClose, locationInfo, setCardEditDialogOpen, startTime]);
 
   // 카드 삭제 핸들러
   const handleCardDelete = useCallback(async () => {
