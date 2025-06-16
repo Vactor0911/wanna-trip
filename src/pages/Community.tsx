@@ -287,30 +287,39 @@ const Community = () => {
       </Stack>
 
       {/* 게시판 번호  */}
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 4, mb: 6 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: 4,
+          // 반응형으로 하단 여백 조정
+          mb: { xs: 30, md: 6 }, // 모바일에서 240px , PC에서 48px
+        }}
+      >
         <Pagination
           count={totalPages} // 전체 페이지 수 설정
           page={currentPage} // 현재 활성화된 페이지 번호
           onChange={handlePageChange} // 페이지 번호 변경 시 호출될 함수
           sx={{
-            // 모든 페이지네이션 항목 (번호, 이전/다음 버튼)에 적용되는 스타일
+            // 모든 페이지네이션 항목 (번호, 이전/다음 버튼) 스타일
             "& .MuiPaginationItem-root": {
-              backgroundColor: "transparent", // 배경색 투명하게 설정
+              backgroundColor: "transparent", // 기본 배경색 투명
               border: "none",
+              color: "#aaa", // 선택되지 않은 페이지 번호 및 화살표의 색상 (회색)
+              fontSize: "1.1em", // 페이지 번호 폰트 크기
               "&:hover": {
-                backgroundColor: "transparent", //  배경 투명
+                backgroundColor: "transparent", // 호버 시에도 배경 투명 유지
               },
               "&:focus": {
-                backgroundColor: "transparent", //  배경 투명
+                backgroundColor: "transparent", // 포커스 시에도 배경 투명 유지
               },
-              color: "#aaa", // 선택되지 않은 페이지 번호(회색)
-              fontSize: "1.1em", // 페이지 번호 폰트 크기
             },
-            // 현재 선택된 페이지 번호에만 적용되는 것
+            // 현재 선택된 페이지 번호에만 적용되는 스타일
             "& .Mui-selected": {
-              backgroundColor: "transparent", // 선택된 페이지의 배경도 투명하게 설정
+              backgroundColor: "#e0e0e0", // 선택된 페이지의 밝은 회색 원형 배경색
               color: "#000", // 선택된 페이지 번호의 색상 (검정색)
               fontWeight: 700, // 선택된 페이지 번호 굵게 표시
+              borderRadius: "50%",
             },
           }}
         />
