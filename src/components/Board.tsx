@@ -270,6 +270,7 @@ const Board = (props: BoardProps) => {
                         startTime={card.startTime}
                         endTime={card.endTime}
                         isLocked={card.isLocked}
+                        location={card.location}
                         onClick={() => handleCardClick(index)}
                       />
                     )}
