@@ -113,37 +113,39 @@ const FullScreenMapDialog = ({
     }
   }, [open]); // open 상태가 변경될 때만 실행
 
-  // 위치 정보와 마커 설정 용도
+  // 위치 정보와 마커 초기화 용도
   useEffect(() => {
-    if (open && lat && lng) {
+    if (open && lat && lng && !selectedLocation) {
       setSelectedLocation({ lat, lng });
       setMarker({ lat, lng });
       setCurrentZoom(zoom);
+    }
+  }, [open, lat, lng, zoom, selectedLocation]);
 
-      // 카드에서 넘어왔을 때 상세 정보 표시 로직
-      if (!chosenPlace && locationInfoFromCard) {
-        setChosenPlace({
-          title: locationInfoFromCard.title || `위치 (${lat}, ${lng})`,
-          address: locationInfoFromCard.address || "",
-          category: locationInfoFromCard.category || "",
-          description: "",
-          link: "",
-          mapx: String(lng * 10000000),
-          mapy: String(lat * 10000000),
-          telephone: "",
+  // 카드에서 넘어온 위치 정보로 상세 정보 설정 용도
+  useEffect(() => {
+    if (open && locationInfoFromCard && !chosenPlace) {
+      setChosenPlace({
+        title: locationInfoFromCard.title || `위치 (${lat}, ${lng})`,
+        address: locationInfoFromCard.address || "",
+        category: locationInfoFromCard.category || "",
+        description: "",
+        link: "",
+        mapx: String(lng * 10000000),
+        mapy: String(lat * 10000000),
+        telephone: "",
+      });
+
+      // 이미지 정보가 있는 경우에만 설정
+      if (locationInfoFromCard?.thumbnailUrl) {
+        setPlaceImage({
+          imageUrl: locationInfoFromCard.imageUrl || null,
+          thumbnailUrl: locationInfoFromCard.thumbnailUrl,
         });
-
-        // 이미지 정보가 있는 경우에만 설정
-        if (locationInfoFromCard?.thumbnailUrl) {
-          setPlaceImage({
-            imageUrl: locationInfoFromCard.imageUrl || null,
-            thumbnailUrl: locationInfoFromCard.thumbnailUrl,
-          });
-          setImageLoading(false);
-        }
+        setImageLoading(false);
       }
     }
-  }, [open, lat, lng, zoom, chosenPlace, locationInfoFromCard]);
+  }, [open, locationInfoFromCard, chosenPlace, lat, lng]);
 
   // 검색어 초기화 핸들러 추가
   const handleClearSearch = useCallback(() => {
@@ -202,49 +204,50 @@ const FullScreenMapDialog = ({
   }, [currentZoom, searchQuery]);
 
   // 리스트에서 항목 선택 시 지도 업데이트와 선택 결과 저장
-  const handleSelectPlace = useCallback(async (place: SearchResult) => {
-    // 선택한 위치로 지도 이동
-    const latitude = parseFloat(place.mapy) / 10000000;
-    const longitude = parseFloat(place.mapx) / 10000000;
-    setSelectedLocation({ lat: latitude, lng: longitude }); // 선택된 위치 업데이트
-    setMarker({ lat: latitude, lng: longitude }); // 마커 위치 업데이트
-    setChosenPlace(place); // 선택된 장소 정보 저장
-    setCurrentZoom(17); // 줌 레벨 확대
+  const handleSelectPlace = useCallback(
+    async (place: SearchResult) => {
+      // 선택한 위치 정보 추출
+      const latitude = parseFloat(place.mapy) / 10000000;
+      const longitude = parseFloat(place.mapx) / 10000000;
 
-    // HTML 태그 제거한 장소명으로 이미지 검색
-    const title = place.title.replace(/<[^>]*>/g, "");
-    setImageLoading(true);
-    setPlaceImage(null); // 이전 이미지 초기화
+      // 위치 정보 업데이트
+      setSelectedLocation({ lat: latitude, lng: longitude });
+      setMarker({ lat: latitude, lng: longitude });
+      setChosenPlace(place);
+      setCurrentZoom(17);
 
-    try {
-      const response = await axiosInstance.get("/naver-map/place-images", {
-        params: {
-          query: title,
-        },
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // 이미지 검색
+      const title = place.title.replace(/<[^>]*>/g, "");
+      setImageLoading(true);
+      setPlaceImage(null);
 
-      if (response.data && response.data.success && response.data.bestMatch) {
-        setPlaceImage(response.data.bestMatch);
-      } else {
-        // 이미지 없는 경우 기본값 사용
-        setPlaceImage({
-          imageUrl: null,
-          thumbnailUrl: null,
+      try {
+        const response = await axiosInstance.get("/naver-map/place-images", {
+          params: { query: title },
+          headers: { "Content-Type": "application/json" },
         });
+
+        if (response.data && response.data.success && response.data.bestMatch) {
+          setPlaceImage(response.data.bestMatch);
+        } else {
+          setPlaceImage({ imageUrl: null, thumbnailUrl: null });
+        }
+      } catch (err) {
+        console.error("이미지 검색 오류:", err);
+        setPlaceImage({ imageUrl: null, thumbnailUrl: null });
+      } finally {
+        setImageLoading(false);
       }
-    } catch (err) {
-      console.error("이미지 검색 오류:", err);
-      setPlaceImage({
-        imageUrl: null,
-        thumbnailUrl: null,
-      });
-    } finally {
-      setImageLoading(false);
-    }
-  }, []);
+    },
+    [
+      setSelectedLocation,
+      setMarker,
+      setChosenPlace,
+      setCurrentZoom,
+      setImageLoading,
+      setPlaceImage,
+    ]
+  );
 
   // Enter 키 입력 시 검색 실행
   const handleKeyPress = useCallback(
@@ -314,6 +317,7 @@ const FullScreenMapDialog = ({
         }}
       >
         <NaverMap
+          key={`map-${selectedLocation?.lat}-${selectedLocation?.lng}-${currentZoom}`}
           width="100%"
           height="100%"
           lat={selectedLocation?.lat ?? lat}
