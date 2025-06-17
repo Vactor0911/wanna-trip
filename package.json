@@ -28,6 +28,7 @@
     "dayjs": "^1.11.13",
     "dompurify": "^3.2.6",
     "dotenv": "^16.4.5",
+    "framer-motion": "^12.18.1",
     "gh-pages": "^6.2.0",
     "html-react-parser": "^5.2.5",
     "immer": "^10.1.1",
@@ -37,6 +38,7 @@
     "overlayscrollbars-react": "^0.5.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-fast-marquee": "^1.6.5",
     "react-router": "^6.26.1",
     "react-router-dom": "^6.30.0"
   },
