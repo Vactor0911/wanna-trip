@@ -110,7 +110,7 @@ const Myinformation = () => {
         const userData = response.data.data;
         setUserInfo(userData);
         setNickname(userData.nickname);
-        
+
         // userData.profileImage가 null 또는 빈 문자열이 아닐 때만 URL 설정
         if (userData.profileImage) {
           setProfileImage(`${SERVER_HOST}${userData.profileImage}`);
@@ -147,6 +147,7 @@ const Myinformation = () => {
     const options = {
       maxSizeMB: 1, // 최대 1MB
       maxWidthOrHeight: 1024, // 최대 해상도 1024px
+      initialQuality: 0.8,     // 초기 품질 80%
       useWebWorker: true,
     };
 
@@ -181,21 +182,21 @@ const Myinformation = () => {
         return;
       }
 
-      // 파일 크기 검증 (4MB)
-      if (file.size > 4 * 1024 * 1024) {
-        setSnackbar({
-          open: true,
-          message: "파일 크기는 4MB를 초과할 수 없습니다.",
-          severity: "error",
-        });
-        return;
-      }
-
       try {
         setIsUploading(true);
 
         // 이미지 압축
         const compressedFile = await compressImage(file);
+
+        // 파일 크기 검증 (4MB)
+        if (compressedFile.size > 4 * 1024 * 1024) {
+          setSnackbar({
+            open: true,
+            message: "파일 크기는 4MB를 초과할 수 없습니다.",
+            severity: "error",
+          });
+          return;
+        }
 
         // FormData 생성
         const formData = new FormData();
