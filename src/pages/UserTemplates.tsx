@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Container,
   Dialog,
   DialogActions,
   DialogContent,
@@ -48,7 +49,8 @@ const dummyPopularTemplates: PopularTemplateData[] = [
   },
   {
     id: "4",
-    image: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+    image:
+      "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
     label: "벚꽃 시즌 교토 산책",
     author: "벚꽃소녀",
     likes: 15,
@@ -230,111 +232,117 @@ const UserTemplates = () => {
   }, []);
 
   return (
-    <Stack mt={4} gap={8}>
-      {/* 인기 템플릿 */}
-      <Stack gap={4}>
-        <Typography variant="h5">인기 템플릿</Typography>
-        {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
-        <PopularTemplates maxCards={3} type="template" data={dummyPopularTemplates} />
-      </Stack>
-
-      {/* 내 템플릿 */}
-      <Stack gap={4}>
-        <Typography variant="h5">내 템플릿</Typography>
-
-        {isLoading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Typography color="error" py={2}>
-            {error}
-          </Typography>
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: `${CARD_GAP}px`,
-              mb: 6,
-            }}
-          >
-            {/* 새 템플릿 */}
-            <SquareTemplateCard type="new" onClick={handleOpenDialog} />
-
-            {/* 내 템플릿 목록들 (API에서 가져온 실제 데이터) */}
-            {myTemplates.map((template) => (
-              <SquareTemplateCard
-                key={`template-${template.template_id}`}
-                id={template.template_id}
-                title={template.title}
-                color={getRandomColor(template.template_id)} // 색상은 ID 기반으로 랜덤 생성, 임시
-                onClick={() => handleTemplateClick(template.template_uuid)}
-                onDelete={() => handleDeleteButtonClick(template.template_id)}
-              />
-            ))}
-          </Box>
-        )}
-      </Stack>
-
-      {/* 템플릿 이름 입력 다이얼로그 */}
-      <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
-        <DialogTitle>새 템플릿 만들기</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="템플릿 이름"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={newTemplateName}
-            onChange={(e) => {
-              setNewTemplateName(e.target.value);
-              setNameError("");
-            }}
-            error={!!nameError}
-            helperText={nameError}
-            sx={{ mt: 2 }}
+    <Container maxWidth="xl">
+      <Stack mt={4} gap={8}>
+        {/* 인기 템플릿 */}
+        <Stack gap={4}>
+          <Typography variant="h5">인기 템플릿</Typography>
+          {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
+          <PopularTemplates
+            maxCards={3}
+            type="template"
+            data={dummyPopularTemplates}
           />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="inherit">
-            취소
-          </Button>
-          <Button
-            onClick={handleCreateTemplate}
-            color="primary"
-            variant="contained"
-          >
-            생성
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Stack>
 
-      {/* 템플릿 삭제 확인 대화상자 */}
-      <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
-        <DialogTitle>템플릿 삭제</DialogTitle>
-        <DialogContent>
-          <Typography>정말로 이 템플릿을 삭제하시겠습니까?</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            삭제한 템플릿은 복구할 수 없습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDeleteDialog} color="inherit">
-            취소
-          </Button>
-          <Button
-            onClick={handleDeleteTemplate}
-            color="error"
-            variant="contained"
-          >
-            삭제
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Stack>
+        {/* 내 템플릿 */}
+        <Stack gap={4}>
+          <Typography variant="h5">내 템플릿</Typography>
+
+          {isLoading ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Typography color="error" py={2}>
+              {error}
+            </Typography>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: `${CARD_GAP}px`,
+                mb: 6,
+              }}
+            >
+              {/* 새 템플릿 */}
+              <SquareTemplateCard type="new" onClick={handleOpenDialog} />
+
+              {/* 내 템플릿 목록들 (API에서 가져온 실제 데이터) */}
+              {myTemplates.map((template) => (
+                <SquareTemplateCard
+                  key={`template-${template.template_id}`}
+                  id={template.template_id}
+                  title={template.title}
+                  color={getRandomColor(template.template_id)} // 색상은 ID 기반으로 랜덤 생성, 임시
+                  onClick={() => handleTemplateClick(template.template_uuid)}
+                  onDelete={() => handleDeleteButtonClick(template.template_id)}
+                />
+              ))}
+            </Box>
+          )}
+        </Stack>
+
+        {/* 템플릿 이름 입력 다이얼로그 */}
+        <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+          <DialogTitle>새 템플릿 만들기</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="템플릿 이름"
+              type="text"
+              fullWidth
+              variant="outlined"
+              value={newTemplateName}
+              onChange={(e) => {
+                setNewTemplateName(e.target.value);
+                setNameError("");
+              }}
+              error={!!nameError}
+              helperText={nameError}
+              sx={{ mt: 2 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} color="inherit">
+              취소
+            </Button>
+            <Button
+              onClick={handleCreateTemplate}
+              color="primary"
+              variant="contained"
+            >
+              생성
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 템플릿 삭제 확인 대화상자 */}
+        <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
+          <DialogTitle>템플릿 삭제</DialogTitle>
+          <DialogContent>
+            <Typography>정말로 이 템플릿을 삭제하시겠습니까?</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              삭제한 템플릿은 복구할 수 없습니다.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDeleteDialog} color="inherit">
+              취소
+            </Button>
+            <Button
+              onClick={handleDeleteTemplate}
+              color="error"
+              variant="contained"
+            >
+              삭제
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Stack>
+    </Container>
   );
 };
 

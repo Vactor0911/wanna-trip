@@ -1,4 +1,4 @@
-import { Box, Stack, Typography, IconButton } from "@mui/material";
+import { Box, Stack, Typography, IconButton, Container } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import { useRef } from "react";
@@ -122,181 +122,185 @@ const Community = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", p: { xs: 2, sm: 3, md: 4 } }}>
-      {/* 인기 게시글  */}
-      <Box sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
-        <Typography variant="h5" fontWeight={700} mb={2}>
-          실시간 인기 게시글
-        </Typography>
-        <Box
-          sx={{
-            height: { xs: 180, sm: 250, md: 300 },
-            bgcolor: "#e0e0e0",
-            borderRadius: 2,
-          }}
-        ></Box>
-      </Box>
-
-      {/* 여행 카테고리 섹션  */}
-      <Stack sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
-        {/* 섹션 제목 */}
-        <Typography variant="h5" fontWeight={700} mb={2}>
-          여행 카테고리
-        </Typography>
-
-        <Box
-          sx={{ position: "relative", display: "flex", alignItems: "center" }}
-        >
-          {/* 왼쪽 버튼 */}
-          <IconButton
-            onClick={handleScrollLeft}
+    <Container maxWidth="xl">
+      <Box
+        sx={{ width: "100%", minHeight: "100vh", p: { xs: 2, sm: 3, md: 4 } }}
+      >
+        {/* 인기 게시글  */}
+        <Box sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
+          <Typography variant="h5" fontWeight={700} mb={2}>
+            실시간 인기 게시글
+          </Typography>
+          <Box
             sx={{
-              ...scrollButtonStyles,
-              left: 0,
-              transform: "translateX(-50%) translateY(-40%)",
+              height: { xs: 180, sm: 250, md: 300 },
+              bgcolor: "#e0e0e0",
+              borderRadius: 2,
             }}
-          >
-            <ArrowBackIosNewRoundedIcon />
-          </IconButton>
+          ></Box>
+        </Box>
 
-          <Stack
-            ref={scrollRef}
-            direction="row"
-            gap={3}
-            sx={{
-              overflowX: "auto",
-              py: 1,
-              "&::-webkit-scrollbar": { display: "none" },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-            }}
+        {/* 여행 카테고리 섹션  */}
+        <Stack sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
+          {/* 섹션 제목 */}
+          <Typography variant="h5" fontWeight={700} mb={2}>
+            여행 카테고리
+          </Typography>
+
+          <Box
+            sx={{ position: "relative", display: "flex", alignItems: "center" }}
           >
-            {/* 각 여행 카테고리 항목 */}
-            {[
-              {
-                name: "서울",
-                imgSrc: seoulImg,
-              },
-              {
-                name: "부산",
-                imgSrc: busanImg,
-              },
-              {
-                name: "강릉",
-                imgSrc: gangneungImg,
-              },
-              {
-                name: "인천",
-                imgSrc: incheonImg,
-              },
-              {
-                name: "경주",
-                imgSrc: gyeongjuImg,
-              },
-              {
-                name: "제주",
-                imgSrc: jejuImg,
-              },
-              {
-                name: "속초",
-                imgSrc: sokchoImg,
-              },
-              {
-                name: "여수",
-                imgSrc: yeosuImg,
-              },
-            ].map((category) => (
-              <Stack key={category.name} gap={1.1}>
-                <Stack
-                  direction="column"
-                  spacing={1}
-                  sx={{
-                    flexShrink: 0,
-                    width: 280,
-                    height: 280,
-                    borderRadius: 8,
-                    boxShadow: 5,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
+            {/* 왼쪽 버튼 */}
+            <IconButton
+              onClick={handleScrollLeft}
+              sx={{
+                ...scrollButtonStyles,
+                left: 0,
+                transform: "translateX(-50%) translateY(-40%)",
+              }}
+            >
+              <ArrowBackIosNewRoundedIcon />
+            </IconButton>
+
+            <Stack
+              ref={scrollRef}
+              direction="row"
+              gap={3}
+              sx={{
+                overflowX: "auto",
+                py: 1,
+                "&::-webkit-scrollbar": { display: "none" },
+                msOverflowStyle: "none",
+                scrollbarWidth: "none",
+              }}
+            >
+              {/* 각 여행 카테고리 항목 */}
+              {[
+                {
+                  name: "서울",
+                  imgSrc: seoulImg,
+                },
+                {
+                  name: "부산",
+                  imgSrc: busanImg,
+                },
+                {
+                  name: "강릉",
+                  imgSrc: gangneungImg,
+                },
+                {
+                  name: "인천",
+                  imgSrc: incheonImg,
+                },
+                {
+                  name: "경주",
+                  imgSrc: gyeongjuImg,
+                },
+                {
+                  name: "제주",
+                  imgSrc: jejuImg,
+                },
+                {
+                  name: "속초",
+                  imgSrc: sokchoImg,
+                },
+                {
+                  name: "여수",
+                  imgSrc: yeosuImg,
+                },
+              ].map((category) => (
+                <Stack key={category.name} gap={1.1}>
+                  <Stack
+                    direction="column"
+                    spacing={1}
                     sx={{
-                      width: "100%",
+                      flexShrink: 0,
+                      width: 280,
                       height: 280,
                       borderRadius: 8,
-                      border: "1px solid #B7B7B7",
+                      boxShadow: 5,
                       overflow: "hidden",
-                      cursor: "pointer",
-                      backgroundImage: `url(${category.imgSrc})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
                     }}
-                  ></Box>
+                  >
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 280,
+                        borderRadius: 8,
+                        border: "1px solid #B7B7B7",
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        backgroundImage: `url(${category.imgSrc})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    ></Box>
+                  </Stack>
+
+                  {/* 지역 이름  */}
+                  <Typography
+                    variant="body1"
+                    fontWeight={400}
+                    fontSize={"1.2em"}
+                    color="text.primary"
+                    textAlign="left"
+                    ml={2.5}
+                  >
+                    {category.name}
+                  </Typography>
                 </Stack>
+              ))}
+            </Stack>
 
-                {/* 지역 이름  */}
-                <Typography
-                  variant="body1"
-                  fontWeight={400}
-                  fontSize={"1.2em"}
-                  color="text.primary"
-                  textAlign="left"
-                  ml={2.5}
-                >
-                  {category.name}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
+            {/* 오른쪽 버튼 */}
+            <IconButton
+              onClick={handleScrollRight}
+              sx={{
+                ...scrollButtonStyles,
+                right: 0,
+                transform: "translateX(50%) translateY(-40%)",
+              }}
+            >
+              <ArrowForwardIosRoundedIcon />
+            </IconButton>
+          </Box>
+        </Stack>
 
-          {/* 오른쪽 버튼 */}
-          <IconButton
-            onClick={handleScrollRight}
+        {/* 일반 게시판 */}
+        <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2, position: "relative" }}>
+          {/* 섹션 제목 */}
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            height="3em"
             sx={{
-              ...scrollButtonStyles,
-              right: 0,
-              transform: "translateX(50%) translateY(-40%)",
+              mb: 2,
+              display: "flex",
+              alignItems: "center",
             }}
           >
-            <ArrowForwardIosRoundedIcon />
-          </IconButton>
+            일반 게시판
+          </Typography>
+
+          {/* 검색 컴포넌트 */}
+          <SearchBox regionTags={regionTags} onSearch={handleSearch} />
         </Box>
-      </Stack>
 
-      {/* 일반 게시판 */}
-      <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2, position: "relative" }}>
-        {/* 섹션 제목 */}
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          height="3em"
-          sx={{
-            mb: 2,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          일반 게시판
-        </Typography>
+        {/* 일반 게시판 목록  */}
+        <Stack spacing={2}>
+          {temporaryPosts.map((post) => (
+            <CommunityPostItem
+              key={post.id}
+              post={post}
+              onClick={() => handlePostClick(post.id)}
+            />
+          ))}
+        </Stack>
 
-        {/* 검색 컴포넌트 */}
-        <SearchBox regionTags={regionTags} onSearch={handleSearch} />
+        {/* 스크롤 맨 위로 이동 버튼 */}
+        <ScrollToTopButton />
       </Box>
-
-      {/* 일반 게시판 목록  */}
-      <Stack spacing={2}>
-        {temporaryPosts.map((post) => (
-          <CommunityPostItem
-            key={post.id}
-            post={post}
-            onClick={() => handlePostClick(post.id)}
-          />
-        ))}
-      </Stack>
-
-      {/* 스크롤 맨 위로 이동 버튼 */}
-      <ScrollToTopButton />
-    </Box>
+    </Container>
   );
 };
 
