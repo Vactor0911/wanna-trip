@@ -273,6 +273,8 @@ const Community = () => {
 
         {/* 검색 컴포넌트 */}
         <SearchBox regionTags={regionTags} onSearch={handleSearch} />
+        {/* Chip이 많아질 때도 게시판과 겹치지 않도록 여백 추가 */}
+        <Box sx={{ height: 32 }} />
       </Box>
 
       {/* 일반 게시판 목록  */}
