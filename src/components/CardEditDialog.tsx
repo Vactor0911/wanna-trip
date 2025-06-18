@@ -16,7 +16,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { useAtom } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
@@ -124,7 +124,7 @@ const MapSection = React.memo(
           sx={{
             cursor: disabled ? "not-allowed" : "pointer",
             borderRadius: 2,
-            pointerEvents: disabled ? "none" : "auto",  // 잠금 상태일 때는 이벤트 차단
+            pointerEvents: disabled ? "none" : "auto", // 잠금 상태일 때는 이벤트 차단
             "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.05)" },
           }}
         />
@@ -180,6 +180,7 @@ const CardEditDialog = () => {
 
   const [currentEditCard] = useAtom(currentEditCardAtom); // 현재 편집 중인 카드 정보
   const [template] = useAtom(templateAtom); // 템플릿 상태 추가
+  const [isOwner, setIsOwner] = useState(true); // 템플릿 소유자 여부
 
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
@@ -190,10 +191,25 @@ const CardEditDialog = () => {
   const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
   const [, deleteBoardCard] = useAtom(deleteBoardCardAtom); // 보드 카드 삭제 함수 추가
 
-  // 동적 제목 생성
-  const dialogTitle = currentBoard
-    ? `${currentBoard.dayNumber || "N"}일차`
-    : "새 카드 작성";
+  // isOwner 상태 설정
+  useEffect(() => {
+    // localStorage에서 template_isOwner 값 가져오기
+    const ownerStatus = localStorage.getItem("template_isOwner");
+    setIsOwner(ownerStatus !== "false"); // 'false'가 아니면 true로 설정
+
+    // 소유자가 아니면 컨트롤 비활성화
+    if (ownerStatus === "false") {
+      setIsCardLocked(true); // 카드를 잠금 상태로 설정
+    }
+  }, []);
+
+  // 동적 제목 생성 수정
+  const dialogTitle = useMemo(() => {
+    if (!isOwner) return "계획 보기 (읽기 전용)";
+    return currentBoard
+      ? `${currentBoard.dayNumber || "N"}일차`
+      : "새 카드 작성";
+  }, [currentBoard, isOwner]);
 
   // 대화상자 열 때 시간 초기화
   useEffect(() => {
@@ -473,7 +489,18 @@ const CardEditDialog = () => {
       handleMoreMenuClose(); // 메뉴 닫기
       setCardEditDialogOpen(false); // 대화상자 닫기
     }
-  }, [addCard, content, currentEditCard.boardId, currentEditCard?.cardId, currentEditCard.orderIndex, endTime, handleMoreMenuClose, locationInfo, setCardEditDialogOpen, startTime]);
+  }, [
+    addCard,
+    content,
+    currentEditCard.boardId,
+    currentEditCard?.cardId,
+    currentEditCard.orderIndex,
+    endTime,
+    handleMoreMenuClose,
+    locationInfo,
+    setCardEditDialogOpen,
+    startTime,
+  ]);
 
   // 카드 삭제 핸들러
   const handleCardDelete = useCallback(async () => {
@@ -570,27 +597,28 @@ const CardEditDialog = () => {
         >
           <Stack gap={1}>
             <Stack direction="row" alignItems="center" gap={1}>
-              {/* 카드 잠금 버튼 */}
-              <Tooltip
-                title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
-                placement="top"
-              >
-                <IconButton
-                  color="primary"
-                  size="small"
-                  onClick={handleCardLockToggle}
+              {/* 카드 잠금 버튼 - 소유자일 때만 표시 */}
+              {isOwner && (
+                <Tooltip
+                  title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
+                  placement="top"
                 >
-                  {isCardLocked ? (
-                    <LockOutlineRoundedIcon fontSize="large" />
-                  ) : (
-                    <LockOpenRoundedIcon fontSize="large" />
-                  )}
-                </IconButton>
-              </Tooltip>
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    onClick={handleCardLockToggle}
+                  >
+                    {isCardLocked ? (
+                      <LockOutlineRoundedIcon fontSize="large" />
+                    ) : (
+                      <LockOpenRoundedIcon fontSize="large" />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              )}
 
               {/* 카드 제목 */}
               <Typography variant="h4">{dialogTitle}</Typography>
-
               <Stack
                 direction="row"
                 flex={1}
@@ -776,9 +804,9 @@ const CardEditDialog = () => {
             </Typography>
           )}
 
-          {/* 버튼 컨테이너 */}
+          {/* 버튼 컨테이너 - 소유자일 때만 저장 버튼 표시 */}
           <Stack direction="row" gap={2} alignSelf="flex-end">
-            {/* 취소 버튼 */}
+            {/* 닫기 버튼 */}
             <Button
               variant="outlined"
               color="black"
@@ -786,22 +814,23 @@ const CardEditDialog = () => {
                 px: 3,
               }}
               onClick={handleCardEditDialogClose}
-              disabled={isSaving}
             >
-              <Typography>취소</Typography>
+              <Typography>{isOwner ? "취소" : "닫기"}</Typography>
             </Button>
 
-            {/* 저장 버튼 */}
-            <Button
-              variant="contained"
-              sx={{
-                px: 3,
-              }}
-              onClick={handleSaveButtonClick}
-              disabled={isSaving}
-            >
-              <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
-            </Button>
+            {/* 저장 버튼 - 소유자일 때만 표시 */}
+            {isOwner && (
+              <Button
+                variant="contained"
+                sx={{
+                  px: 3,
+                }}
+                onClick={handleSaveButtonClick}
+                disabled={isSaving}
+              >
+                <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
+              </Button>
+            )}
           </Stack>
         </Stack>
       </Dialog>
