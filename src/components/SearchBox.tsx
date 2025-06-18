@@ -1,13 +1,15 @@
 import { Box, Stack, TextField, Chip, IconButton } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useState, useEffect } from "react";
+import { SxProps } from "@mui/system";
 
 interface SearchBoxProps {
   regionTags: string[];
   onSearch: (selectedTags: string[], inputValue: string) => void;
+  sx?: SxProps;
 }
 
-const SearchBox = ({ regionTags, onSearch }: SearchBoxProps) => {
+const SearchBox = ({ regionTags, onSearch, sx }: SearchBoxProps) => {
   // 검색창 텍스트 상태
   const [inputValue, setInputValue] = useState("");
   // 선택된 태그 목록 상태
@@ -162,6 +164,7 @@ const SearchBox = ({ regionTags, onSearch }: SearchBoxProps) => {
         p: 1,
         bgcolor: "white",
         mt: { xs: 2, sm: 0 },
+        ...sx,
       }}
     >
       <Box>
@@ -220,7 +223,8 @@ const SearchBox = ({ regionTags, onSearch }: SearchBoxProps) => {
             className="region-suggestions-box"
             sx={{
               display: "flex",
-              flexDirection: "column",
+              flexDirection: "row",
+              flexWrap: "wrap",
               gap: 1,
               mt: 1.5,
               pb: 1.3,
@@ -235,7 +239,13 @@ const SearchBox = ({ regionTags, onSearch }: SearchBoxProps) => {
                 variant="outlined"
                 clickable
                 sx={{
-                  justifyContent: "flex-start",
+                  display: "inline-flex",
+                  alignSelf: "flex-start",
+                  minWidth: 0,
+                  maxWidth: "100%",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
                   fontSize: "1.1rem",
                 }}
               />
