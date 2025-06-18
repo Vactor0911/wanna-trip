@@ -32,10 +32,11 @@ interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
+  isOwner: boolean; // 소유자 여부 추가
 }
 
 const Board = (props: BoardProps) => {
-  const { day, boardData, fetchTemplateData, ...others } = props;
+  const { day, boardData, fetchTemplateData, isOwner, ...others } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
@@ -46,15 +47,28 @@ const Board = (props: BoardProps) => {
   // 카드 클릭 핸들러
   const handleCardClick = useCallback(
     (cardIndex: number) => {
+      // 소유자가 아니면 카드 클릭 무시
+      if (!isOwner) {
+        return; // 소유자가 아니면 함수 실행 중단
+      }
+      // 현재 카드 설정
       const card = boardData.cards[cardIndex];
-      setCurrentEditCard({
-        cardId: card.id,
-        boardId: boardData.id,
-        orderIndex: card.orderIndex || cardIndex,
-      });
-      setCardEditDialogOpen(true);
+      if (card) {
+        setCurrentEditCard({
+          cardId: card.id,
+          boardId: boardData.id,
+          orderIndex: card.orderIndex || cardIndex,
+        });
+        setCardEditDialogOpen(true);
+      }
     },
-    [boardData, setCurrentEditCard, setCardEditDialogOpen]
+    [
+      isOwner,
+      boardData.cards,
+      boardData.id,
+      setCurrentEditCard,
+      setCardEditDialogOpen,
+    ]
   );
 
   // 카드 생성 버튼 클릭 핸들러
@@ -206,41 +220,52 @@ const Board = (props: BoardProps) => {
               {/* 보드 날짜 */}
               <Typography variant="h6">Day {day}</Typography>
 
-              {/* 정렬하기 버튼 */}
-              <Tooltip title="정렬하기" placement="top">
-                <IconButton size="small">
-                  <SortRoundedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              {/* 정렬하기 버튼 - 소유자만 볼 수 있음 */}
+              {isOwner && (
+                <Tooltip title="정렬하기" placement="top">
+                  <IconButton size="small">
+                    <SortRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Stack>
 
-            {/* 우측 컨테이너 */}
-            <Stack direction="row" alignItems="center">
-              {/* 보드 추가하기 버튼 */}
-              <Tooltip title="보드 추가하기" placement="top">
-                <IconButton size="small" onClick={handleAddBoardButtonClick}>
-                  <AddRoundedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+            {/* 우측 컨테이너 - 소유자만 볼 수 있음 */}
+            {isOwner && (
+              <Stack direction="row" alignItems="center">
+                {/* 보드 추가하기 버튼 */}
+                <Tooltip title="보드 추가하기" placement="top">
+                  <IconButton size="small" onClick={handleAddBoardButtonClick}>
+                    <AddRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
 
-              {/* 보드 복제하기 버튼 */}
-              <Tooltip title="보드 복제하기" placement="top">
-                <IconButton size="small" onClick={handleCopyBoardButtonClick}>
-                  <ContentCopyRoundedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+                {/* 보드 복제하기 버튼 */}
+                <Tooltip title="보드 복제하기" placement="top">
+                  <IconButton size="small" onClick={handleCopyBoardButtonClick}>
+                    <ContentCopyRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
 
-              {/* 보드 삭제하기 버튼 */}
-              <Tooltip title="보드 삭제하기" placement="top">
-                <IconButton size="small" onClick={handleDeleteBoardButtonClick}>
-                  <DeleteOutlineRoundedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Stack>
+                {/* 보드 삭제하기 버튼 */}
+                <Tooltip title="보드 삭제하기" placement="top">
+                  <IconButton
+                    size="small"
+                    onClick={handleDeleteBoardButtonClick}
+                  >
+                    <DeleteOutlineRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            )}
           </Stack>
 
           {/* 카드 드롭 영역 */}
-          <Droppable droppableId={String(boardData.id)} type="card">
+          <Droppable
+            droppableId={String(boardData.id)}
+            type="card"
+            isDropDisabled={!isOwner} // 소유자가 아니면 드롭 불가능
+          >
             {(provided) => (
               // 카드 컨테이너
               <Stack
@@ -259,6 +284,7 @@ const Board = (props: BoardProps) => {
                     key={`card-${card.id}`}
                     draggableId={`card-${card.id}`}
                     index={index}
+                    isDragDisabled={!isOwner || card.isLocked} // 소유자가 아니거나 카드가 잠겨있으면 드래그 불가능
                   >
                     {(provided) => (
                       <Card
@@ -272,6 +298,7 @@ const Board = (props: BoardProps) => {
                         isLocked={card.isLocked}
                         location={card.location}
                         onClick={() => handleCardClick(index)}
+                        isOwner={isOwner} // isOwner 속성 전달
                       />
                     )}
                   </Draggable>
@@ -281,13 +308,16 @@ const Board = (props: BoardProps) => {
             )}
           </Droppable>
 
-          <Button
-            fullWidth
-            startIcon={<AddRoundedIcon sx={{ color: "inherit" }} />}
-            onClick={handleAddCardButtonClick}
-          >
-            <Typography variant="subtitle1">계획 추가하기</Typography>
-          </Button>
+          {/* 카드 추가 버튼 - 소유자만 볼 수 있음 */}
+          {isOwner && (
+            <Button
+              fullWidth
+              startIcon={<AddRoundedIcon sx={{ color: "inherit" }} />}
+              onClick={handleAddCardButtonClick}
+            >
+              <Typography variant="subtitle1">계획 추가하기</Typography>
+            </Button>
+          )}
         </Stack>
       </Paper>
     </Stack>
