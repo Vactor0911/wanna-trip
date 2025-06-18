@@ -16,7 +16,11 @@ import { useNavigate } from "react-router-dom";
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
-import PopularTemplates from "../components/PopularTemplates";
+import PopularTemplates, {
+  PopularTemplateData,
+} from "../components/PopularTemplates";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 
 // 임시 인기 템플릿 데이터
 const dummyPopularTemplates: PopularTemplateData[] = [
@@ -72,6 +76,9 @@ const CARD_GAP = 24; // 카드 간격(px)
 
 const UserTemplates = () => {
   const navigate = useNavigate();
+  // 로그인 상태 확인
+  const loginState = useAtomValue(wannaTripLoginStateAtom);
+
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -249,7 +256,33 @@ const UserTemplates = () => {
         <Stack gap={4}>
           <Typography variant="h5">내 템플릿</Typography>
 
-          {isLoading ? (
+          {!loginState.isLoggedIn ? (
+            // 로그인되지 않은 경우 메시지 표시
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                py: 4,
+                px: 2,
+                borderRadius: 2,
+                bgcolor: "rgba(48, 48, 48, 0.03)",
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="h6" color="text.secondary" mb={3}>
+                템플릿을 만들고 관리하려면 로그인이 필요합니다.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate("/login")}
+              >
+                로그인하러 가기
+              </Button>
+            </Box>
+          ) : isLoading ? (
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress />
             </Box>
@@ -275,7 +308,7 @@ const UserTemplates = () => {
                   key={`template-${template.template_id}`}
                   id={template.template_id}
                   title={template.title}
-                  color={getRandomColor(template.template_id)} // 색상은 ID 기반으로 랜덤 생성, 임시
+                  color={getRandomColor(template.template_id)}
                   onClick={() => handleTemplateClick(template.template_uuid)}
                   onDelete={() => handleDeleteButtonClick(template.template_id)}
                 />
