@@ -50,6 +50,7 @@ const modes = [
 
 // 백엔드 템플릿 인터페이스
 interface BackendTemplate {
+  userUuid?: string; // 템플릿 소유자 UUID
   template_id: number;
   template_uuid: string;
   title: string;
@@ -98,7 +99,9 @@ const Template = () => {
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
 
-  // 템플릿 데이터 가져오기
+  const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
+
+  // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
     if (!uuid) return; // uuid가 없으면 종료
 
@@ -115,6 +118,20 @@ const Template = () => {
 
       if (response.data.success) {
         const backendTemplate = response.data.template as BackendTemplate;
+
+        // 백엔드에서 제공한 소유자 여부 정보 직접 사용
+        const isCurrentUserOwner = response.data.isOwner;
+
+        // 소유자 여부 상태 업데이트
+        setIsOwner(isCurrentUserOwner);
+
+        // 소유자 정보를 localStorage에 저장 (다른 컴포넌트에서 사용)
+        localStorage.setItem("template_isOwner", String(isCurrentUserOwner));
+
+        // 소유자가 아니면 강제로 열람 모드로 설정
+        if (!isCurrentUserOwner) {
+          setMode(TemplateModes.VIEW);
+        }
 
         // 보드와 카드 정보를 포함한 템플릿 데이터로 변환
         const transformedTemplate = {
@@ -164,7 +181,7 @@ const Template = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [reorderBoardCards, setTemplate, uuid]);
+  }, [reorderBoardCards, setMode, setTemplate, uuid]);
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
@@ -423,7 +440,9 @@ const Template = () => {
                     }}
                   />
                 </ClickAwayListener>
-              ) : (
+              ) : // 소유자에 따라 Button 또는 Typography 표시
+              isOwner ? (
+                // 소유자인 경우 - 클릭 가능한 버튼
                 <Button
                   onClick={handleTemplateTitleClick}
                   sx={{
@@ -450,29 +469,69 @@ const Template = () => {
                     {template.title}
                   </Typography>
                 </Button>
+              ) : (
+                // 소유자가 아닌 경우 - 클릭 불가능한 Typography
+                <Typography
+                  variant="h4"
+                  color="black"
+                  sx={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    fontWeight: "bold",
+                    flexShrink: 1,
+                    flexGrow: 1,
+                  }}
+                >
+                  {template.title}
+                </Typography>
               )}
 
-              <Tooltip title="정렬하기">
-                <IconButton size="small">
-                  <FilterListRoundedIcon />
-                </IconButton>
-              </Tooltip>
+              {/* 권한에 따른 정렬하기 보이기 여부 */}
+              {isOwner && (
+                <Tooltip title="정렬하기">
+                  <IconButton size="small">
+                    <FilterListRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
             </Stack>
 
             {/* 우측 컨테이너 */}
             <Stack direction="row" alignContent="inherit" gap={1}>
-              {/* 모드 선택 버튼 */}
-              <Tooltip
-                title={mode === modes[0].name ? "열람 모드" : "편집 모드"}
-              >
-                <IconButton size="small" onClick={handleModeChange}>
-                  {mode === modes[0].name ? (
-                    <ImportContactsRoundedIcon />
-                  ) : (
-                    <EditRoundedIcon />
-                  )}
-                </IconButton>
-              </Tooltip>
+              {/* 모드 선택 버튼 - 소유자만 볼 수 있음 */}
+              {isOwner && (
+                <Tooltip
+                  title={mode === modes[0].name ? "열람 모드" : "편집 모드"}
+                >
+                  <IconButton size="small" onClick={handleModeChange}>
+                    {mode === modes[0].name ? (
+                      <ImportContactsRoundedIcon />
+                    ) : (
+                      <EditRoundedIcon />
+                    )}
+                  </IconButton>
+                </Tooltip>
+              )}
+
+              {/* 소유자가 아니면 안내 표시 */}
+              {!isOwner && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mr: 1,
+                  }}
+                >
+                  <ImportContactsRoundedIcon
+                    fontSize="small"
+                    sx={{ mr: 0.5 }}
+                  />
+                  열람 모드 (편집 불가)
+                </Typography>
+              )}
 
               {/* 공유하기 버튼 */}
               <Tooltip title="공유하기">
@@ -492,7 +551,7 @@ const Template = () => {
         </Container>
 
         {/* 드래그 & 드롭 wrapper */}
-        <DragDropContext onDragEnd={onDragEnd}>
+        <DragDropContext onDragEnd={isOwner ? onDragEnd : () => {}}>
           {/* 보드 컨테이너 */}
           <Stack
             direction="row"
@@ -508,7 +567,12 @@ const Template = () => {
               overflowX: "auto",
             }}
           >
-            <Droppable droppableId="board" direction="horizontal" type="board">
+            <Droppable
+              droppableId="board"
+              direction="horizontal"
+              type="board"
+              isDropDisabled={!isOwner} // 소유자가 아니면 드롭 불가능
+            >
               {(provided) => (
                 <Stack
                   direction="row"
@@ -522,6 +586,7 @@ const Template = () => {
                       key={`board-${board.id || index}`}
                       draggableId={`board-${board.id || index}`}
                       index={index}
+                      isDragDisabled={!isOwner} // 소유자가 아니면 드래그 불가능
                     >
                       {(provided) => (
                         <Board
@@ -532,6 +597,7 @@ const Template = () => {
                           day={board.dayNumber || index + 1}
                           boardData={board} // 보드 데이터 직접 전달
                           fetchTemplateData={fetchTemplateData} // 함수 전달
+                          isOwner={isOwner} // 소유자 여부 전달
                         />
                       )}
                     </Draggable>
@@ -541,8 +607,8 @@ const Template = () => {
               )}
             </Droppable>
 
-            {/* 보드 추가 버튼 */}
-            {template.boards.length < MAX_BOARDS && (
+            {/* 보드 추가 버튼 - 소유자만 볼 수 있음 */}
+            {isOwner && template.boards.length < MAX_BOARDS && (
               <Box>
                 <Tooltip title="보드 추가하기" placement="top">
                   <Button
@@ -551,6 +617,7 @@ const Template = () => {
                       padding: 0,
                     }}
                   >
+                    {/* 기존 코드 유지 */}
                     <Paper
                       elevation={3}
                       sx={{
