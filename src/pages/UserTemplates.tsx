@@ -22,47 +22,6 @@ import PopularTemplates, {
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 
-// 임시 인기 템플릿 데이터
-const dummyPopularTemplates: PopularTemplateData[] = [
-  {
-    id: "1",
-    bgColor: "#76B6FF",
-    label: "파워J를 위한 일본 여행 완벽 플래너",
-    author: "고유로",
-    likes: 12,
-    shares: 3,
-    comments: 5,
-  },
-  {
-    id: "2",
-    bgColor: "#FFF0A7",
-    label: "감성 가득 오사카 2박 3일",
-    author: "여행러버",
-    likes: 8,
-    shares: 2,
-    comments: 1,
-  },
-  {
-    id: "3",
-    bgColor: "#FFB7E4",
-    label: "도쿄 핵심 맛집 투어",
-    author: "맛집헌터",
-    likes: 20,
-    shares: 7,
-    comments: 10,
-  },
-  {
-    id: "4",
-    image:
-      "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
-    label: "벚꽃 시즌 교토 산책",
-    author: "벚꽃소녀",
-    likes: 15,
-    shares: 4,
-    comments: 2,
-  },
-];
-
 // 템플릿 타입 정의
 interface Template {
   template_id: number;
@@ -91,6 +50,32 @@ const UserTemplates = () => {
 
   const [nameError, setNameError] = useState("");
 
+  // 인기 템플릿 상태 추가
+  const [popularTemplates, setPopularTemplates] = useState<
+    PopularTemplateData[]
+  >([]);
+  const [isPopularLoading, setIsPopularLoading] = useState(true);
+  const [popularError, setPopularError] = useState<string | null>(null);
+
+  // 템플릿 ID에 따라 색상 생성 함수
+  const getRandomColor = useCallback((id: number): string => {
+    const colors = [
+      "#A7C7FF",
+      "#FFF6A3",
+      "#FFB6E1",
+      "#FFB6B6",
+      "#FFD59E",
+      "#D6FFB7",
+      "#B6FFE4",
+      "#B6D9FF",
+      "#D9B6FF",
+    ];
+
+    // ID를 색상 인덱스로 변환 (반복되도 괜찮음)
+    return colors[id % colors.length];
+  }, []);
+
+  // 기존 템플릿 데이터 가져오기
   const fetchTemplates = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -116,10 +101,57 @@ const UserTemplates = () => {
     }
   }, []);
 
+  // 인기 템플릿 가져오기
+  const fetchPopularTemplates = useCallback(async () => {
+    try {
+      setIsPopularLoading(true);
+      setPopularError(null);
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 인기 템플릿 목록 가져오기
+      const response = await axiosInstance.get("/template/popular", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        // API 응답 데이터를 PopularTemplateData 형식으로 변환
+        const formattedTemplates = response.data.templates.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (template: any) => {
+            // 템플릿 UUID 값을 정확히 가져오기
+            const templateUuid = template.uuid || "";
+
+            return {
+              id: templateUuid,
+              bgColor: templateUuid
+                ? getRandomColor(templateUuid.toString().charCodeAt(0) || 0)
+                : getRandomColor(Math.floor(Math.random() * 100)), // ID가 없으면 랜덤 색상
+              title: template.title,
+              username: template.username,
+              shared_count: template.shared_count,
+            };
+          }
+        );
+
+        setPopularTemplates(formattedTemplates);
+      } else {
+        setPopularError("인기 템플릿을 불러오는 데 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("인기 템플릿 불러오기 오류:", err);
+      setPopularError("인기 템플릿을 불러오는 데 문제가 발생했습니다.");
+    } finally {
+      setIsPopularLoading(false);
+    }
+  }, [getRandomColor]);
+
   // 컴포넌트 마운트 시 사용자의 템플릿 목록 가져오기
   useEffect(() => {
     fetchTemplates();
-  }, [fetchTemplates]);
+    fetchPopularTemplates(); // 인기 템플릿도 함께 가져오기
+  }, [fetchPopularTemplates, fetchTemplates]);
 
   // 다이얼로그 열기
   const handleOpenDialog = useCallback(() => {
@@ -177,6 +209,14 @@ const UserTemplates = () => {
     [navigate]
   );
 
+  // 인기 템플릿 클릭 핸들러 추가
+  const handlePopularTemplateClick = useCallback(
+    (templateId: string) => {
+      navigate(`/template/${templateId}`);
+    },
+    [navigate]
+  );
+
   // 삭제 버튼 클릭 시 확인 대화상자 표시
   const handleDeleteButtonClick = useCallback((templateId: number) => {
     setDeleteTemplateId(templateId);
@@ -220,36 +260,28 @@ const UserTemplates = () => {
     }
   }, [deleteTemplateId, fetchTemplates]);
 
-  // 템플릿 ID에 따라 색상 생성 함수
-  const getRandomColor = useCallback((id: number): string => {
-    const colors = [
-      "#A7C7FF",
-      "#FFF6A3",
-      "#FFB6E1",
-      "#FFB6B6",
-      "#FFD59E",
-      "#D6FFB7",
-      "#B6FFE4",
-      "#B6D9FF",
-      "#D9B6FF",
-    ];
-
-    // ID를 색상 인덱스로 변환 (반복되도 괜찮음)
-    return colors[id % colors.length];
-  }, []);
-
   return (
     <Container maxWidth="xl">
       <Stack mt={4} gap={8}>
         {/* 인기 템플릿 */}
         <Stack gap={4}>
           <Typography variant="h5">인기 템플릿</Typography>
-          {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
-          <PopularTemplates
-            maxCards={3}
-            type="template"
-            data={dummyPopularTemplates}
-          />
+          {isPopularLoading ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress />
+            </Box>
+          ) : popularError ? (
+            <Typography color="error" py={2}>
+              {popularError}
+            </Typography>
+          ) : (
+            <PopularTemplates
+              maxCards={3}
+              type="template"
+              data={popularTemplates}
+              onCardClick={handlePopularTemplateClick}
+            />
+          )}
         </Stack>
 
         {/* 내 템플릿 */}
@@ -324,7 +356,7 @@ const UserTemplates = () => {
             <TextField
               autoFocus
               margin="dense"
-              label="템플릿 이름"
+              title="템플릿 이름"
               type="text"
               fullWidth
               variant="outlined"
