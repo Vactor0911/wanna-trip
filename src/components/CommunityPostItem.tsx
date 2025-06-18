@@ -97,8 +97,8 @@ const PostItem: React.FC<PostItemProps> = ({
             mt: { xs: 2, md: 0 },
             width: { xs: "100%", md: "auto" },
             justifyContent: { xs: "center", md: "flex-end" },
+            alignItems: { xs: "center", md: "flex-end" },
             display: "flex",
-            alignItems: "center",
           }}
         >
           {/* 좋아요 수 */}
