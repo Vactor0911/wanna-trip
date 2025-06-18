@@ -26,7 +26,7 @@ import CardTextEditor from "./text_editor/CardTextEditor";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TimeField } from "@mui/x-date-pickers";
-import NaverMap from "./NaverMap";
+import NaverMap from "./naver_map/NaverMap";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import {
   cardEditDialogOpenAtom,
@@ -43,19 +43,17 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import FullScreenMapDialog from "./FullScreenMapDialog";
 import { useAddCard } from "../hooks/template";
 import React from "react";
+import NaverMapDialog from "./naver_map/NaverMapDialog";
+import {
+  LocationInterface,
+  naverMapDialogOpenAtom,
+  selectedLocationAtom,
+} from "../state/naverMapDialog";
 
 interface MapSectionProps {
-  locationInfo: {
-    title: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-    category?: string;
-    thumbnailUrl?: string;
-  } | null; // 위치 정보가 없을 수도 있으므로 null 허용
+  locationInfo: LocationInterface | null; // 위치 정보가 없을 수도 있으므로 null 허용
   handleMapClick: () => void;
   disabled?: boolean; // 지도 클릭 비활성화 여부
 }
@@ -82,7 +80,9 @@ const MapSection = React.memo(
           lat={locationInfo?.latitude || 37.5665}
           lng={locationInfo?.longitude || 126.978}
           markerPosition={
-            locationInfo
+            locationInfo &&
+            locationInfo.latitude !== undefined &&
+            locationInfo.longitude !== undefined
               ? {
                   lat: locationInfo.latitude,
                   lng: locationInfo.longitude,
@@ -124,7 +124,7 @@ const MapSection = React.memo(
           sx={{
             cursor: disabled ? "not-allowed" : "pointer",
             borderRadius: 2,
-            pointerEvents: disabled ? "none" : "auto",  // 잠금 상태일 때는 이벤트 차단
+            pointerEvents: disabled ? "none" : "auto", // 잠금 상태일 때는 이벤트 차단
             "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.05)" },
           }}
         />
@@ -166,17 +166,10 @@ const CardEditDialog = () => {
   const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
 
   // 전체화면 지도 상태
-  const [isMapDialogOpen, setIsMapDialogOpen] = useState(false);
+  const [isMapDialogOpen, setIsMapDialogOpen] = useAtom(naverMapDialogOpenAtom);
 
   // 위치 정보 상태 추가
-  const [locationInfo, setLocationInfo] = useState<{
-    title: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-    category?: string;
-    thumbnailUrl?: string;
-  } | null>(null);
+  const [locationInfo, setLocationInfo] = useAtom(selectedLocationAtom); // 선택한 위치 정보 상태
 
   const [currentEditCard] = useAtom(currentEditCardAtom); // 현재 편집 중인 카드 정보
   const [template] = useAtom(templateAtom); // 템플릿 상태 추가
@@ -272,7 +265,7 @@ const CardEditDialog = () => {
         }
       }
     }
-  }, [cardEditDialogOpen, currentEditCard, template.boards]);
+  }, [cardEditDialogOpen, currentEditCard, setLocationInfo, template.boards]);
 
   // 카드 편집 대화상자 닫기
   const handleCardEditDialogClose = useCallback(() => {
@@ -432,12 +425,12 @@ const CardEditDialog = () => {
   // 지도 클릭 시 전체화면 모달 열기
   const handleMapClick = useCallback(() => {
     setIsMapDialogOpen(true);
-  }, []);
+  }, [setIsMapDialogOpen]);
 
   // 전체화면 지도 모달 닫기
   const handleMapDialogClose = useCallback(() => {
     setIsMapDialogOpen(false);
-  }, []);
+  }, [setIsMapDialogOpen]);
 
   // 카드 복제 버튼 클릭
   const handleDuplicateCardButtonClick = useCallback(async () => {
@@ -473,7 +466,18 @@ const CardEditDialog = () => {
       handleMoreMenuClose(); // 메뉴 닫기
       setCardEditDialogOpen(false); // 대화상자 닫기
     }
-  }, [addCard, content, currentEditCard.boardId, currentEditCard?.cardId, currentEditCard.orderIndex, endTime, handleMoreMenuClose, locationInfo, setCardEditDialogOpen, startTime]);
+  }, [
+    addCard,
+    content,
+    currentEditCard.boardId,
+    currentEditCard?.cardId,
+    currentEditCard.orderIndex,
+    endTime,
+    handleMoreMenuClose,
+    locationInfo,
+    setCardEditDialogOpen,
+    startTime,
+  ]);
 
   // 카드 삭제 핸들러
   const handleCardDelete = useCallback(async () => {
@@ -848,14 +852,12 @@ const CardEditDialog = () => {
       </Menu>
 
       {/* 전체화면 지도 모달 */}
-      <FullScreenMapDialog
+      <NaverMapDialog
         open={isMapDialogOpen}
         onClose={handleMapDialogClose}
         onSelectPlace={handleSelectPlace}
         lat={locationInfo?.latitude} // 현재 위치 위도 전달
         lng={locationInfo?.longitude} // 현재 위치 경도 전달
-        zoom={17} // 적절한 줌 레벨 설정
-        locationInfoFromCard={locationInfo} // 위치 정보 전달
       />
     </>
   );
