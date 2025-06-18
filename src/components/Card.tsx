@@ -3,6 +3,7 @@ import { theme } from "../utils/theme";
 import dayjs, { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
+import VisibilityIcon from "@mui/icons-material/Visibility"; // 읽기 전용 아이콘 추가
 
 // 위치 정보 인터페이스 추가
 interface LocationInfo {
@@ -21,6 +22,7 @@ interface CardProps extends PaperProps {
   isLocked?: boolean; // 카드 잠금 여부
   onClick?: () => void;
   location?: LocationInfo; // 위치 정보 추가
+  isOwner?: boolean; // 소유자 여부 추가
 }
 
 const Card = (props: CardProps) => {
@@ -31,8 +33,23 @@ const Card = (props: CardProps) => {
     isLocked,
     onClick,
     location,
+    isOwner = true, // 기본값은 true로 설정
     ...others
   } = props;
+
+  // 소유자 여부에 따른 클릭 핸들러
+  const handleClick = (e: React.MouseEvent) => {
+    // 소유자가 아니면 클릭 이벤트 무시
+    if (!isOwner) {
+      e.preventDefault();
+      return;
+    }
+
+    // 소유자면 onClick 함수 실행
+    if (onClick) {
+      onClick();
+    }
+  };
 
   // 시간 형식 설정
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,16 +68,18 @@ const Card = (props: CardProps) => {
 
   return (
     <Paper
-      onClick={onClick}
+      onClick={handleClick} // // 소유자 여부에 따라 처리하는 핸들러로 변경
       elevation={2}
       sx={{
         width: "100%",
         px: 1,
-        cursor: "pointer",
-        // 잠금 상태에 따라 테두리 스타일 변경
+        cursor: isOwner ? "pointer" : "default", // 소유자가 아니면 커서 스타일 변경
+        // 소유자가 아닐 경우 다른 테두리 색상 사용
         border: `2px solid transparent`,
         "&:hover": {
-          border: `2px solid ${theme.palette.primary.main}`,
+          border: isOwner
+            ? `2px solid ${theme.palette.primary.main}`
+            : "2px solid transparent", // 소유자가 아니면 호버 효과 제거
         },
       }}
       {...others}
@@ -84,7 +103,7 @@ const Card = (props: CardProps) => {
             </Typography>
           )}
 
-          {/* 잠금 여부 */}
+          {/* 잠금 여부 아이콘 */}
           <LockOutlineRoundedIcon
             fontSize="small"
             color="black"
@@ -157,6 +176,25 @@ const Card = (props: CardProps) => {
           {content && parse(content)}
         </Stack>
       </Stack>
+
+      {/* 소유자가 아닐 경우 읽기 전용 표시 추가 */}
+      {!isOwner && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+            backgroundColor: "rgba(0, 0, 0, 0.1)",
+            borderRadius: "50%",
+            padding: "2px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <VisibilityIcon fontSize="small" sx={{ opacity: 0.7 }} />
+        </Box>
+      )}
     </Paper>
   );
 };
