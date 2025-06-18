@@ -1,4 +1,9 @@
-import { Dialog, IconButton, Box, Paper } from "@mui/material";
+import {
+  Dialog,
+  IconButton,
+  Box,
+  Paper,
+} from "@mui/material";
 import { useCallback, useEffect } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import NaverMap from "./NaverMap";
@@ -99,12 +104,13 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
         sx={{
           position: "fixed",
           right: 16,
-          top: 16,
+          top: 24,
           borderRadius: "50%",
+          zIndex: 1000,
         }}
       >
         <IconButton onClick={handleClose}>
-          <CloseRoundedIcon />
+          <CloseRoundedIcon color="primary" />
         </IconButton>
       </Paper>
     </Dialog>
