@@ -75,7 +75,7 @@ const Card = (props: CardProps) => {
           {/* 카드 시간 */}
           {(startTime || endTime) && (
             <Typography
-              variant="caption"
+              variant="subtitle1"
               color="text.secondary"
               display="block"
             >
@@ -87,7 +87,7 @@ const Card = (props: CardProps) => {
           {/* 잠금 여부 */}
           <LockOutlineRoundedIcon
             fontSize="small"
-            color="black"
+            color="primary"
             sx={{
               visibility: isLocked ? "visible" : "hidden",
             }}
