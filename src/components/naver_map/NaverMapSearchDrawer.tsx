@@ -1,13 +1,18 @@
 import {
+  Box,
   Button,
+  Collapse,
   Divider,
   Drawer,
   IconButton,
   InputAdornment,
   OutlinedInput,
+  Paper,
   Skeleton,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
@@ -39,10 +44,18 @@ const NaverMapSearchDrawer = () => {
   const setSelectedPosition = useSetAtom(selectedPositionAtom); // 선택된 위치 상태
   const setMarker = useSetAtom(markerPositionAtom); // 마커 위치 상태
   const [zoom, setZoom] = useAtom(zoomAtom); // 현재 줌 레벨 상태
+  const theme = useTheme(); // MUI 테마
+
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부 확인
 
   // 드로어 메뉴 토글 버튼 클릭
   const handleToggleButtonClick = useCallback(() => {
     setOpen((prev) => !prev);
+  }, [setOpen]);
+
+  // 드로어 메뉴 열기
+  const handleDrawerOpen = useCallback(() => {
+    setOpen(true);
   }, [setOpen]);
 
   // 드로어 메뉴 닫기
@@ -130,6 +143,108 @@ const NaverMapSearchDrawer = () => {
     setIsLoading(false); // 로딩 상태 초기화
     setIsError(false); // 오류 상태 초기화
   }, [setKeyword, setSearchResults]);
+
+  if (isMobile) {
+    return (
+      <>
+        {/* 검색창 */}
+        <Box
+          position="fixed"
+          top={16}
+          width={open ? "100%" : "calc(100% - 56px)"}
+          px={8}
+          pr="16px"
+          zIndex={1010}
+          sx={{
+            transition: "width 0.2s ease-in-out",
+          }}
+        >
+          <OutlinedInput
+            ref={searchInputRef}
+            fullWidth
+            placeholder="장소를 검색하세요"
+            value={keyword}
+            onChange={handleKeywordChange}
+            onKeyDown={handleKeyDown}
+            onClick={handleDrawerOpen}
+            sx={{
+              borderRadius: "50px",
+              background: "white",
+            }}
+            startAdornment={
+              <InputAdornment position="start">
+                <SearchRoundedIcon />
+              </InputAdornment>
+            }
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={handleKeywordClear}>
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            }
+          />
+        </Box>
+
+        {/* 드로어 닫기 버튼 */}
+        <Paper
+          sx={{
+            position: "fixed",
+            top: 27,
+            left: 16,
+            borderRadius: "50%",
+            zIndex: 1010,
+            opacity: open ? 1 : 0,
+            transition: "opacity 0.2s ease-in-out",
+          }}
+        >
+          <IconButton
+            onClick={handleDrawerClose}
+            sx={{
+              padding: 0,
+            }}
+          >
+            <ChevronLeftRoundedIcon fontSize="large" color="primary" />
+          </IconButton>
+        </Paper>
+
+        {/* 검색 결과 드로어 메뉴 */}
+        <Box position="fixed" top={0} left={0} width="100%" zIndex={1005}>
+          <Collapse in={open} orientation="vertical">
+            <Stack
+              width="100vw"
+              height="100vh"
+              justifyContent="flex-end"
+              sx={{
+                background: "#f5f5f5",
+              }}
+            >
+              {/* 검색 결과 컨테이너 */}
+              <Stack
+                height="calc(100vh - 88px)"
+                paddingX={2}
+                gap={1.5}
+                sx={{
+                  overflowY: "auto",
+                }}
+              >
+                {searchResults.map((result, index) => (
+                  <>
+                  <NaverMapSearchItem
+                    key={`naver-map-search-item-${index}`}
+                    {...result} // result 객체의 모든 속성을 NaverMapSearchItem에 전달
+                  />
+
+                  <Divider key={`naver-map-divider-${index}`} />
+                </>
+                ))}
+              </Stack>
+            </Stack>
+          </Collapse>
+        </Box>
+      </>
+    );
+  }
 
   return (
     <>
