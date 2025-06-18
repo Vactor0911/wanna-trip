@@ -107,13 +107,8 @@ const UserTemplates = () => {
       setIsPopularLoading(true);
       setPopularError(null);
 
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
-
       // 인기 템플릿 목록 가져오기
-      const response = await axiosInstance.get("/template/popular", {
-        headers: { "X-CSRF-Token": csrfToken },
-      });
+      const response = await axiosInstance.get("/template/popular", {});
 
       if (response.data.success) {
         // API 응답 데이터를 PopularTemplateData 형식으로 변환
