@@ -5,9 +5,10 @@ import NaverMap from "./NaverMap";
 import NaverMapSearchDrawer from "./NaverMapSearchDrawer";
 import { useAtom, useSetAtom } from "jotai";
 import {
+  drawerOpenAtom,
   keywordAtom,
-  LocationInterface,
   markerPositionAtom,
+  naverMapDialogOpenAtom,
   searchResultsAtom,
   selectedPositionAtom,
   zoomAtom,
@@ -15,30 +16,20 @@ import {
 import NaverMapLocationPopup from "./NaverMapLocationPopup";
 
 interface NaverMapDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSelectPlace: (place: {
-    title: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-    category?: string;
-    thumbnailUrl?: string;
-    imageUrl?: string | null;
-  }) => void;
   lat?: number; // 카드에 저장된 위치가 있을 경우 값 전달
   lng?: number;
-  locationInfoFromCard?: LocationInterface;
 }
 
 const NaverMapDialog = (props: NaverMapDialogProps) => {
-  const { open, onClose, lat = 37.5665, lng = 126.978 } = props;
+  const { lat = 37.5665, lng = 126.978 } = props;
 
+  const [open, setOpen] = useAtom(naverMapDialogOpenAtom); // 네이버 지도 대화상자 열림 상태
   const setKeyword = useSetAtom(keywordAtom); // 검색어 상태
   const setSearchResults = useSetAtom(searchResultsAtom); // 검색 결과 상태
   const [selectedPosition, setSelectedPosition] = useAtom(selectedPositionAtom); // 선택된 위치
   const [marker, setMarker] = useAtom(markerPositionAtom); // 마커 위치
   const [zoom, setZoom] = useAtom(zoomAtom); // 현재 지도 줌 레벨
+  const setDrawerOpenAtom = useSetAtom(drawerOpenAtom); // 검색 드로어 메뉴 열림 상태
 
   // 다이얼로그가 처음 열릴 때만 실행 (검색 상태 초기화 용도)
   useEffect(() => {
@@ -46,17 +37,23 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
       // 검색 관련 상태 초기화
       setKeyword("");
       setSearchResults([]);
+      setDrawerOpenAtom(true); // 검색 드로어 메뉴 열림 상태로 설정
     }
-  }, [open, setKeyword, setSearchResults]); // open 상태가 변경될 때만 실행
+  }, [open, setDrawerOpenAtom, setKeyword, setSearchResults]);
 
   // 위치 정보와 마커 초기화 용도
   useEffect(() => {
-    if (open && lat && lng && !selectedPosition) {
+    // 다이얼로그가 닫혀있다면 종료
+    if (!open) {
+      return;
+    }
+
+    if (lat && lng) {
       setSelectedPosition({ lat, lng });
       setMarker({ lat, lng });
       setZoom(zoom);
     }
-  }, [open, lat, lng, zoom, selectedPosition, setZoom, setSelectedPosition]);
+  }, [open, lat, lng, zoom, setZoom, setMarker, setSelectedPosition]);
 
   // 닫기 버튼 핸들러
   const handleClose = useCallback(() => {
@@ -64,13 +61,11 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
     setSelectedPosition(null);
     setSearchResults([]);
     setKeyword("");
-
-    // 부모 컴포넌트의 onClose 호출
-    onClose();
-  }, [onClose, setKeyword, setSearchResults, setSelectedPosition]);
+    setOpen(false);
+  }, [setKeyword, setOpen, setSearchResults, setSelectedPosition]);
 
   return (
-    <Dialog fullScreen open={open} onClose={onClose}>
+    <Dialog fullScreen open={open} onClose={handleClose}>
       {/* 지도 배경 */}
       <Box
         sx={{

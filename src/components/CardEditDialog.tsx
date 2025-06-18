@@ -15,7 +15,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import LockOpenRoundedIcon from "@mui/icons-material/LockOpenRounded";
@@ -34,7 +34,6 @@ import {
   deleteBoardCardAtom,
   templateAtom,
   updateBoardCardAtom,
-  LocationInfo,
 } from "../state/template";
 import dayjs from "dayjs";
 import SubjectRoundedIcon from "@mui/icons-material/SubjectRounded";
@@ -166,7 +165,7 @@ const CardEditDialog = () => {
   const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
 
   // 전체화면 지도 상태
-  const [isMapDialogOpen, setIsMapDialogOpen] = useAtom(naverMapDialogOpenAtom);
+  const setIsMapDialogOpen = useSetAtom(naverMapDialogOpenAtom);
 
   // 위치 정보 상태 추가
   const [locationInfo, setLocationInfo] = useAtom(selectedLocationAtom); // 선택한 위치 정보 상태
@@ -427,11 +426,6 @@ const CardEditDialog = () => {
     setIsMapDialogOpen(true);
   }, [setIsMapDialogOpen]);
 
-  // 전체화면 지도 모달 닫기
-  const handleMapDialogClose = useCallback(() => {
-    setIsMapDialogOpen(false);
-  }, [setIsMapDialogOpen]);
-
   // 카드 복제 버튼 클릭
   const handleDuplicateCardButtonClick = useCallback(async () => {
     // 현재 편집 중인 카드가 없거나 보드 정보가 없으면 오류 출력
@@ -531,23 +525,6 @@ const CardEditDialog = () => {
     handleMoreMenuClose();
     handleCardDelete();
   }, [handleMoreMenuClose, handleCardDelete]);
-
-  const handleSelectPlace = useCallback(
-    (place: LocationInfo) => {
-      console.log("선택된 위치:", place);
-
-      // 위치 정보 저장 전에 필수 필드들에 대한 기본값 제공
-      setLocationInfo({
-        title: place.title,
-        address: place.address || "", // 빈 문자열을 기본값으로
-        latitude: place.latitude ?? 37.5665, // 서울시청 좌표를 기본값으로
-        longitude: place.longitude ?? 126.978, // 서울시청 좌표를 기본값으로
-        category: place.category,
-        thumbnailUrl: place.thumbnailUrl,
-      });
-    },
-    [setLocationInfo]
-  );
 
   return (
     <>
@@ -853,9 +830,6 @@ const CardEditDialog = () => {
 
       {/* 전체화면 지도 모달 */}
       <NaverMapDialog
-        open={isMapDialogOpen}
-        onClose={handleMapDialogClose}
-        onSelectPlace={handleSelectPlace}
         lat={locationInfo?.latitude} // 현재 위치 위도 전달
         lng={locationInfo?.longitude} // 현재 위치 경도 전달
       />
