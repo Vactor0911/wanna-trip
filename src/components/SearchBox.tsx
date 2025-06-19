@@ -6,14 +6,20 @@ import { SxProps } from "@mui/system";
 interface SearchBoxProps {
   regionTags: string[];
   onSearch: (selectedTags: string[], inputValue: string) => void;
+  selectedTags: string[];
+  setSelectedTags: (tags: string[]) => void;
   sx?: SxProps;
 }
 
-const SearchBox = ({ regionTags, onSearch, sx }: SearchBoxProps) => {
+const SearchBox = ({
+  regionTags,
+  onSearch,
+  selectedTags,
+  setSelectedTags,
+  sx,
+}: SearchBoxProps) => {
   // 검색창 텍스트 상태
   const [inputValue, setInputValue] = useState("");
-  // 선택된 태그 목록 상태
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   // 추천 태그 목록 상태
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   // 추천 목록 표시 여부 상태
@@ -101,7 +107,7 @@ const SearchBox = ({ regionTags, onSearch, sx }: SearchBoxProps) => {
   // 태그 삭제
   const handleDeleteTag = (tagToDelete: string) => () => {
     // 선택된 태그 목록에서 해당 태그 삭제
-    setSelectedTags((chips) => chips.filter((tag) => tag !== tagToDelete));
+    setSelectedTags(selectedTags.filter((tag: string) => tag !== tagToDelete));
   };
 
   // 검색창 포커스
