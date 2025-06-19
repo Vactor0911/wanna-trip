@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
-import { Container, CssBaseline } from "@mui/material";
+import { CssBaseline } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
   UserTemplates,
@@ -11,33 +11,41 @@ import {
   FindPassword,
   ChangePassword,
   Template,
+  Community,
+  Myinformation,
 } from "./pages";
+import CommunityPostDetail from "./pages/CommunityPostDetail";
 import Header from "./components/Header";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter basename="/wanna-trip">
-        <TokenRefresher>
-          <Header />
-          <Container maxWidth="xl">
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter basename="/wanna-trip">
+          <TokenRefresher>
+            <Header />
             <Routes>
               <Route path="/" element={<Main />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/userTemplates" element={<UserTemplates/>} />
+              <Route path="/template" element={<UserTemplates />} />
+              <Route path="/template/:uuid" element={<Template />} />
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/myinformation" element={<Myinformation />} />
+              <Route
+                path="/community/post/:id"
+                element={<CommunityPostDetail />}
+              />
             </Routes>
-          </Container>
-          <Routes>
-            <Route path="/template" element={<Template />} />
-            <Route path="/template/:uuid" element={<Template />} />
-          </Routes>
-
-        </TokenRefresher>
-      </BrowserRouter>
+          </TokenRefresher>
+        </BrowserRouter>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 }

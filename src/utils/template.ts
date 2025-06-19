@@ -1,39 +1,10 @@
-import { Dayjs } from "dayjs";
+import {
+  BoardInterface,
+  CardInterface,
+  TemplateInterface,
+} from "../state/template";
 
 export const MAX_BOARDS = 15; // 최대 보드 개수
-
-// 모드 Enum
-export enum TemplateModes {
-  EDIT = "편집 모드",
-  VIEW = "열람 모드",
-}
-
-// 카드 종류 Enum
-export enum CardTypes {
-  TEXT, // 텍스트
-  PLACE, // 장소
-}
-
-// 카드 객체 인터페이스
-export interface CardInterface {
-  uuid: string; // 카드 UUID
-  type: CardTypes; // 카드 종류
-  startTime: Dayjs; // 카드 시작 시간
-  endTime: Dayjs; // 카드 종료 시간
-  content: string; // 카드 내용
-}
-
-// 보드 객체 인터페이스
-export interface BoardInterface {
-  cards: CardInterface[]; // 카드 목록
-}
-
-// 템플릿 객체 인터페이스
-export interface TemplateInterface {
-  uuid: string | null; // 템플릿 UUID
-  title: string; // 템플릿 이름
-  boards: BoardInterface[]; // 보드 목록
-}
 
 /**
  * 특정 위치에 보드를 추가하는 함수
@@ -87,7 +58,6 @@ export const insertNewCard = (
     return template;
   }
   const board = template.boards[day - 1];
-  console.log("board", board);
 
   // index가 유효하지 않으면 중단
   if (index < 0 || index > board.cards.length) {
@@ -103,7 +73,6 @@ export const insertNewCard = (
       ...board.cards.slice(index),
     ],
   };
-  console.log("newBoard", newBoard);
 
   // 새 템플릿 객체
   const newTemplate = {

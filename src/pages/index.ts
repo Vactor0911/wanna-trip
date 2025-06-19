@@ -5,6 +5,8 @@ import FindPassword from "./FindPassword";
 import ChangePassword from "./ChangePassword";
 import Template from "./Template";
 import UserTemplates from "./UserTemplates";
+import Community from "./Community";
+import Myinformation from "./Myinformation";
 
 export {
   Main,
@@ -14,4 +16,6 @@ export {
   ChangePassword,
   Template,
   UserTemplates,
+  Community,
+  Myinformation,
 };
