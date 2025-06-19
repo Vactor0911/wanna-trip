@@ -98,15 +98,12 @@ export const checkTimeOverlap = (
   hasOverlap: boolean;
   overlappingCardIds: number[];
 } => {
-  // 잠긴 카드를 제외한 카드들만 필터링
-  const unlockedCards = cards.filter((card) => !card.isLocked);
-
   // 시간 중복이 있는 카드들의 ID를 저장할 배열
   const overlappingCardIds: number[] = [];
 
   // 각 카드에 대해 다른 카드와 시간 중복 여부 확인
-  for (let i = 0; i < unlockedCards.length; i++) {
-    const card1 = unlockedCards[i];
+  for (let i = 0; i < cards.length; i++) {
+    const card1 = cards[i];
 
     // ID가 없는 카드는 건너뜀
     if (!card1.id) continue;
@@ -114,8 +111,8 @@ export const checkTimeOverlap = (
     const card1Start = card1.startTime;
     const card1End = card1.endTime;
 
-    for (let j = i + 1; j < unlockedCards.length; j++) {
-      const card2 = unlockedCards[j];
+    for (let j = i + 1; j < cards.length; j++) {
+      const card2 = cards[j];
 
       // ID가 없는 카드는 건너뜀
       if (!card2.id) continue;
@@ -126,7 +123,7 @@ export const checkTimeOverlap = (
       // 시간 중복 검사:
       // (카드1의 시작이 카드2의 끝보다 이전 && 카드1의 끝이 카드2의 시작보다 이후)
       if (card1Start.isBefore(card2End) && card1End.isAfter(card2Start)) {
-        // 중복된 카드 ID 저장
+        // 중복된 카드 ID 저장 - 잠김 여부에 관계 없이 모든 카드 추가
         if (!overlappingCardIds.includes(card1.id)) {
           overlappingCardIds.push(card1.id);
         }
