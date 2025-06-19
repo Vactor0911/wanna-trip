@@ -7,10 +7,14 @@ import {
   IconButton,
   Button,
   Divider,
+  useTheme,
+  useMediaQuery,
+  Drawer,
 } from "@mui/material";
 import { useAtom, useSetAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  DEFAULT_ZOOM,
   locationDialogAnchor,
   markerPositionAtom,
   naverMapDialogOpenAtom,
@@ -34,11 +38,9 @@ const NaverMapLocationPopup = () => {
     thumbnailUrl: string | null;
   } | null>(null); // 선택한 장소 이미지
   const setNaverMapDialogOpen = useSetAtom(naverMapDialogOpenAtom);
+  const theme = useTheme(); // MUI 테마
 
-  console.log("NaverMapLocationPopup", {
-    anchorElement,
-    selectedLocation,
-  });
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부 확인
 
   // 대화상자 닫기
   const handleClose = useCallback(() => {
@@ -69,7 +71,7 @@ const NaverMapLocationPopup = () => {
 
     // 위치 정보 업데이트
     setMarkerPosition({ lat: latitude, lng: longitude });
-    setZoom(17);
+    setZoom(DEFAULT_ZOOM);
 
     // 이미지 검색
     const title = selectedLocation.title.replace(/<[^>]*>/g, "");
@@ -141,19 +143,9 @@ const NaverMapLocationPopup = () => {
     setSelectedLocation,
   ]);
 
-  return (
-    <Popover
-      open={!!anchorElement}
-      onClose={handleClose}
-      anchorEl={anchorElement}
-      anchorOrigin={{
-        vertical: "top",
-        horizontal: "right",
-      }}
-      sx={{
-        transform: "translateX(50px)",
-      }}
-    >
+  // 렌더링할 요소
+  const renderElement = useMemo(() => {
+    return (
       <Stack padding={2} gap={2} width={350} position="relative">
         {/* 상단 부분 */}
         <Stack direction="row" gap={3} alignItems="flex-start">
@@ -264,6 +256,56 @@ const NaverMapLocationPopup = () => {
           <CloseRoundedIcon />
         </IconButton>
       </Stack>
+    );
+  }, [
+    handleClose,
+    handleLinkClick,
+    handleSelectButtonClick,
+    image,
+    isLoading,
+    selectedLocation?.address,
+    selectedLocation?.category,
+    selectedLocation?.link,
+    selectedLocation?.title,
+  ]);
+
+  // 모바일 팝업
+  if (isMobile) {
+    return (
+      <Drawer
+        anchor="bottom"
+        open={!!anchorElement}
+        onClose={handleClose}
+        variant="persistent"
+        sx={{
+          "& .MuiDrawer-paper": {
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+            boxShadow: 5,
+            border: "none",
+          },
+        }}
+      >
+        {renderElement}
+      </Drawer>
+    );
+  }
+
+  // PC, 태블릿 팝업
+  return (
+    <Popover
+      open={!!anchorElement}
+      onClose={handleClose}
+      anchorEl={anchorElement}
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      sx={{
+        transform: "translateX(50px)",
+      }}
+    >
+      {renderElement}
     </Popover>
   );
 };

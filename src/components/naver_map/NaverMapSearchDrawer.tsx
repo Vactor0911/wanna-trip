@@ -18,7 +18,7 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import NaverMapSearchItem from "./NaverMapSearchItem";
 import { useAtom, useSetAtom } from "jotai";
 import {
@@ -144,6 +144,60 @@ const NaverMapSearchDrawer = () => {
     setIsError(false); // 오류 상태 초기화
   }, [setKeyword, setSearchResults]);
 
+  // 검색 결과 요소
+  const renderSearchResults = useMemo(() => {
+    if (isError) {
+      return (
+        <Stack
+          alignItems="center"
+          justifyContent="center"
+          gap={1}
+          flex={1}
+          pb="88px" // 검색창 높이를 제외한 나머지 영역
+        >
+          <WarningAmberRoundedIcon
+            sx={{
+              color: "text.secondary",
+              fontSize: "8rem",
+            }}
+          />
+          <Typography variant="h5" color="text.secondary">
+            검색 결과가 없습니다.
+          </Typography>
+        </Stack>
+      );
+    } else if (isLoading) {
+      return Array.from({ length: 3 }).map((_, index) => (
+        <>
+          <Stack key={`naver-map-skeleton-${index}`} gap={0.5}>
+            <Skeleton variant="text" width="130px" height="32px" />
+            <Skeleton variant="text" width="200px" />
+            <Skeleton variant="text" width="100px" />
+          </Stack>
+
+          <Divider key={`naver-map-skeleton-divider-${index}`} />
+        </>
+      ));
+    }
+    return (
+      <>
+        {searchResults.map((result, index) => (
+          <>
+            <NaverMapSearchItem
+              key={`naver-map-search-item-${index}`}
+              {...result} // result 객체의 모든 속성을 NaverMapSearchItem에 전달
+            />
+
+            {index < searchResults.length - 1 && (
+              <Divider key={`naver-map-divider-${index}`} />
+            )}
+          </>
+        ))}
+      </>
+    );
+  }, [isError, isLoading, searchResults]);
+
+  // 모바일 드로어 메뉴
   if (isMobile) {
     return (
       <>
@@ -228,16 +282,7 @@ const NaverMapSearchDrawer = () => {
                   overflowY: "auto",
                 }}
               >
-                {searchResults.map((result, index) => (
-                  <>
-                  <NaverMapSearchItem
-                    key={`naver-map-search-item-${index}`}
-                    {...result} // result 객체의 모든 속성을 NaverMapSearchItem에 전달
-                  />
-
-                  <Divider key={`naver-map-divider-${index}`} />
-                </>
-                ))}
+                {renderSearchResults}
               </Stack>
             </Stack>
           </Collapse>
@@ -246,6 +291,7 @@ const NaverMapSearchDrawer = () => {
     );
   }
 
+  // PC, 태블릿 드로어 메뉴
   return (
     <>
       {/* 검색 드로어 메뉴 */}
@@ -292,50 +338,7 @@ const NaverMapSearchDrawer = () => {
               height: "calc(100vh - 64px)", // 검색창 높이를 제외한 나머지 영역
             }}
           >
-            {isError && (
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-                flex={1}
-                pb="88px" // 검색창 높이를 제외한 나머지 영역
-              >
-                <WarningAmberRoundedIcon
-                  sx={{
-                    color: "text.secondary",
-                    fontSize: "8rem",
-                  }}
-                />
-                <Typography variant="h5" color="text.secondary">
-                  검색 결과가 없습니다.
-                </Typography>
-              </Stack>
-            )}
-            {!isError &&
-              isLoading &&
-              Array.from({ length: 3 }).map((_, index) => (
-                <>
-                  <Stack key={`naver-map-skeleton-${index}`} gap={0.5}>
-                    <Skeleton variant="text" width="130px" height="32px" />
-                    <Skeleton variant="text" width="200px" />
-                    <Skeleton variant="text" width="100px" />
-                  </Stack>
-
-                  <Divider key={`naver-map-skeleton-divider-${index}`} />
-                </>
-              ))}
-            {!isError &&
-              !isLoading &&
-              searchResults.map((result, index) => (
-                <>
-                  <NaverMapSearchItem
-                    key={`naver-map-search-item-${index}`}
-                    {...result} // result 객체의 모든 속성을 NaverMapSearchItem에 전달
-                  />
-
-                  <Divider key={`naver-map-divider-${index}`} />
-                </>
-              ))}
+            {renderSearchResults}
           </Stack>
         </Stack>
       </Drawer>

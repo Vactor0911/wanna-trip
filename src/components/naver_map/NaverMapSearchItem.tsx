@@ -1,6 +1,13 @@
-import { Button, Paper, Typography } from "@mui/material";
+import {
+  Button,
+  Paper,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import {
+  drawerOpenAtom,
   locationDialogAnchor,
   LocationInterface,
   selectedLocationAtom,
@@ -14,6 +21,9 @@ const NaverMapSearchItem = (props: LocationInterface) => {
   const setSelectedLocation = useSetAtom(selectedLocationAtom);
   const searchItemRef = useRef<HTMLDivElement | null>(null);
   const setLocationDialogAchor = useSetAtom(locationDialogAnchor);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const setDrawerOpen = useSetAtom(drawerOpenAtom);
 
   const handleButtonClick = useCallback(() => {
     // 클릭한 버튼 요소가 부적절하면 종료
@@ -21,12 +31,25 @@ const NaverMapSearchItem = (props: LocationInterface) => {
       return;
     }
 
+    console.log("검색 아이템 클릭:", props);
+
     // 선택한 장소 정보 설정
     setSelectedLocation(props);
 
     // 클릭한 버튼으로 앵커 설정
     setLocationDialogAchor(searchItemRef.current);
-  }, [props, setLocationDialogAchor, setSelectedLocation]);
+
+    // 모바일이면 드로어 메뉴 닫기
+    if (isMobile) {
+      setDrawerOpen(false);
+    }
+  }, [
+    isMobile,
+    props,
+    setDrawerOpen,
+    setLocationDialogAchor,
+    setSelectedLocation,
+  ]);
 
   return (
     <Paper elevation={0} ref={searchItemRef}>
