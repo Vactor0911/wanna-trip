@@ -18,7 +18,7 @@ import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState } from "react";
 import NaverMapSearchItem from "./NaverMapSearchItem";
 import { useAtom, useSetAtom } from "jotai";
 import {
@@ -168,7 +168,7 @@ const NaverMapSearchDrawer = () => {
       );
     } else if (isLoading) {
       return Array.from({ length: 3 }).map((_, index) => (
-        <>
+        <Fragment key={`naver-map-skeleton-fragment-${index}`}>
           <Stack key={`naver-map-skeleton-${index}`} gap={0.5}>
             <Skeleton variant="text" width="130px" height="32px" />
             <Skeleton variant="text" width="200px" />
@@ -176,13 +176,13 @@ const NaverMapSearchDrawer = () => {
           </Stack>
 
           <Divider key={`naver-map-skeleton-divider-${index}`} />
-        </>
+        </Fragment>
       ));
     }
     return (
       <>
         {searchResults.map((result, index) => (
-          <>
+          <Fragment key={`naver-map-fragment-${index}`}>
             <NaverMapSearchItem
               key={`naver-map-search-item-${index}`}
               {...result} // result 객체의 모든 속성을 NaverMapSearchItem에 전달
@@ -191,7 +191,7 @@ const NaverMapSearchDrawer = () => {
             {index < searchResults.length - 1 && (
               <Divider key={`naver-map-divider-${index}`} />
             )}
-          </>
+          </Fragment>
         ))}
       </>
     );
