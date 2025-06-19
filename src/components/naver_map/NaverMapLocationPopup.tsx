@@ -27,6 +27,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CategoryRoundedIcon from "@mui/icons-material/CategoryRounded";
 import LocationOnRoundedIcon from "@mui/icons-material/LocationOnRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
+import { stripHtml } from "../../utils";
 
 const NaverMapLocationPopup = () => {
   const [anchorElement, setAnchorElement] = useAtom(locationDialogAnchor); // 위치 선택 대화상자 앵커 요소
@@ -76,7 +77,7 @@ const NaverMapLocationPopup = () => {
     setZoom(DEFAULT_ZOOM);
 
     // 이미지 검색
-    const title = selectedLocation.title.replace(/<[^>]*>/g, "");
+    const title = stripHtml(selectedLocation.title);
     setIsLoading(true);
     setImage(null);
 
@@ -124,7 +125,7 @@ const NaverMapLocationPopup = () => {
 
     // 백엔드에서 제공된 이미지만 사용
     setSelectedLocation({
-      title: selectedLocation.title.replace(/<[^>]*>/g, ""),
+      title: stripHtml(selectedLocation.title),
       address: selectedLocation.address,
       latitude,
       longitude,
@@ -172,7 +173,7 @@ const NaverMapLocationPopup = () => {
             <Box
               component="img"
               src={image?.imageUrl ?? undefined}
-              alt={selectedLocation?.title.replace(/<[^>]*>/g, "")}
+              alt={stripHtml(selectedLocation?.title)}
               width={100}
               height={100}
               borderRadius={1}
@@ -183,7 +184,7 @@ const NaverMapLocationPopup = () => {
           <Stack mt={1}>
             {/* 장소명 */}
             <Typography variant="subtitle1" fontWeight="bold">
-              {selectedLocation?.title.replace(/<[^>]*>/g, "")}
+              {stripHtml(selectedLocation?.title)}
             </Typography>
 
             {/* 카테고리 */}

@@ -14,6 +14,7 @@ import {
 } from "../../state/naverMapDialog";
 import { useCallback, useRef } from "react";
 import { useSetAtom } from "jotai";
+import { stripHtml } from "../../utils";
 
 const NaverMapSearchItem = (props: LocationInterface) => {
   const { title, address, category = "" } = props;
@@ -78,7 +79,7 @@ const NaverMapSearchItem = (props: LocationInterface) => {
               mr: 1,
             }}
           />
-          {title.replace(/<[^>]*>/g, "")}
+          {stripHtml(title)}
         </Typography>
 
         {/* 주소 */}
