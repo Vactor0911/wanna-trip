@@ -23,6 +23,8 @@ import {
   selectedLocationAtom,
   selectedPositionAtom,
   zoomAtom,
+  locationDialogAnchor,
+  naverMapInitialLocationAtom,
 } from "../../state/naverMapDialog";
 import NaverMapLocationPopup from "./NaverMapLocationPopup";
 
@@ -31,12 +33,14 @@ const NaverMapDialog = () => {
   const setKeyword = useSetAtom(keywordAtom); // 검색어 상태
   const setSearchResults = useSetAtom(searchResultsAtom); // 검색 결과 상태
   const [selectedPosition, setSelectedPosition] = useAtom(selectedPositionAtom); // 선택된 위치
-  const selectedLocation = useAtomValue(selectedLocationAtom); // 선택된 위치 정보
+  const [selectedLocation, setSelectedLocation] = useAtom(selectedLocationAtom); // 선택된 위치 정보
   const [marker, setMarker] = useAtom(markerPositionAtom); // 마커 위치
   const [zoom, setZoom] = useAtom(zoomAtom); // 현재 지도 줌 레벨
-  const setDrawerOpenAtom = useSetAtom(drawerOpenAtom); // 검색 드로어 메뉴 열림 상태
+  const setDrawerOpen = useSetAtom(drawerOpenAtom); // 검색 드로어 메뉴 열림 상태
   const theme = useTheme(); // MUI 테마
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부
+  const setLocationDialogAnchor = useSetAtom(locationDialogAnchor); // 위치 선택 대화상자 앵커 요소
+  const initialLocation = useAtomValue(naverMapInitialLocationAtom); // 초기 위치 정보
 
   // 다이얼로그가 처음 열릴 때만 실행 (검색 상태 초기화 용도)
   useEffect(() => {
@@ -44,9 +48,9 @@ const NaverMapDialog = () => {
       // 검색 관련 상태 초기화
       setKeyword("");
       setSearchResults([]);
-      setDrawerOpenAtom(!isMobile); // PC, 태블릿에선 검색 드로어 메뉴 열림 상태로 설정
+      setDrawerOpen(!isMobile); // PC, 태블릿에선 검색 드로어 메뉴 열림 상태로 설정
     }
-  }, [isMobile, open, setDrawerOpenAtom, setKeyword, setSearchResults]);
+  }, [isMobile, open, setDrawerOpen, setKeyword, setSearchResults]);
 
   // 위치 정보와 마커 초기화 용도
   useEffect(() => {
@@ -73,11 +77,21 @@ const NaverMapDialog = () => {
   // 닫기 버튼 핸들러
   const handleClose = useCallback(() => {
     // 상세 정보 초기화
-    setSelectedPosition(null);
+    setSelectedLocation(initialLocation); // 선택된 위치 초기화
     setSearchResults([]);
     setKeyword("");
+    setDrawerOpen(false); // 검색 드로어 메뉴 닫기
+    setLocationDialogAnchor(null); // 위치 선택 대화상자 앵커 초기화
     setOpen(false);
-  }, [setKeyword, setOpen, setSearchResults, setSelectedPosition]);
+  }, [
+    initialLocation,
+    setDrawerOpen,
+    setKeyword,
+    setLocationDialogAnchor,
+    setOpen,
+    setSearchResults,
+    setSelectedLocation,
+  ]);
 
   return (
     <Dialog fullScreen open={open} onClose={handleClose}>

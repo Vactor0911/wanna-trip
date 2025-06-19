@@ -11,10 +11,11 @@ import {
   useMediaQuery,
   Drawer,
 } from "@mui/material";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DEFAULT_ZOOM,
+  drawerOpenAtom,
   locationDialogAnchor,
   markerPositionAtom,
   naverMapDialogOpenAtom,
@@ -39,6 +40,7 @@ const NaverMapLocationPopup = () => {
   } | null>(null); // 선택한 장소 이미지
   const setNaverMapDialogOpen = useSetAtom(naverMapDialogOpenAtom);
   const theme = useTheme(); // MUI 테마
+  const drawerOpen = useAtomValue(drawerOpenAtom); // 검색 드로어 메뉴 열림 상태
 
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부 확인
 
@@ -142,6 +144,13 @@ const NaverMapLocationPopup = () => {
     setNaverMapDialogOpen,
     setSelectedLocation,
   ]);
+
+  // 모바일의 경우 검색 드로어가 열리면 팝업 닫기
+  useEffect(() => {
+    if (isMobile && anchorElement && drawerOpen) {
+      handleClose();
+    }
+  }, [anchorElement, drawerOpen, handleClose, isMobile]);
 
   // 렌더링할 요소
   const renderElement = useMemo(() => {
