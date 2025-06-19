@@ -6,7 +6,6 @@ import {
   StackProps,
   Typography,
 } from "@mui/material";
-import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -27,16 +26,29 @@ import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
 import { useAddCard } from "../hooks/template";
+import SortMenu from "./SortMenu";
 
 interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
+  showSnackbar: (
+    message: string,
+    severity?: "success" | "error" | "warning" | "info"
+  ) => void;
+  // showSnackbar 함수 타입 추가
 }
 
 const Board = (props: BoardProps) => {
-  const { day, boardData, fetchTemplateData, isOwner, ...others } = props;
+  const {
+    day,
+    boardData,
+    fetchTemplateData,
+    isOwner,
+    showSnackbar,
+    ...others
+  } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
@@ -203,6 +215,56 @@ const Board = (props: BoardProps) => {
     }
   }, [template, boardData, fetchTemplateData]);
 
+  // 보드 내 카드 시작 시간순 정렬 함수
+  const handleSortByStartTime = useCallback(async () => {
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 백엔드 API 호출
+      const response = await axiosInstance.post(
+        `/board/${boardData.id}/sort`,
+        { sortBy: "start_time" },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 정렬 후 템플릿 데이터 다시 가져오기
+        await fetchTemplateData();
+
+        showSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", "success");
+      }
+    } catch (error) {
+      console.error("카드 정렬 오류:", error);
+      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
+    }
+  }, [boardData.id, fetchTemplateData, showSnackbar]);
+
+  // 보드 내 카드 종료 시간순 정렬 함수
+  const handleSortByEndTime = useCallback(async () => {
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 백엔드 API 호출
+      const response = await axiosInstance.post(
+        `/board/${boardData.id}/sort`,
+        { sortBy: "end_time" },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 정렬 후 템플릿 데이터 다시 가져오기
+        await fetchTemplateData();
+
+        showSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", "success");
+      }
+    } catch (error) {
+      console.error("카드 정렬 오류:", error);
+      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
+    }
+  }, [boardData.id, fetchTemplateData, showSnackbar]);
+
   return (
     <Stack height="100%" {...others}>
       <Paper
@@ -222,11 +284,11 @@ const Board = (props: BoardProps) => {
 
               {/* 정렬하기 버튼 - 소유자만 볼 수 있음 */}
               {isOwner && (
-                <Tooltip title="정렬하기" placement="top">
-                  <IconButton size="small">
-                    <SortRoundedIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                <SortMenu
+                  onSortStart={handleSortByStartTime}
+                  onSortEnd={handleSortByEndTime}
+                  tooltipTitle="보드 내 정렬하기"
+                />
               )}
             </Stack>
 
