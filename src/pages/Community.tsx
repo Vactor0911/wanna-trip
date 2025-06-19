@@ -1,7 +1,7 @@
 import { Box, Stack, Typography, IconButton } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import CommunityPostItem from "../components/CommunityPostItem";
 import SearchBox from "../components/SearchBox";
 import ScrollToTopButton from "../components/ScrollToTopButton";
@@ -18,6 +18,19 @@ import jejuImg from "../assets/images/jeju.jpg";
 import sokchoImg from "../assets/images/sokcho.jpg";
 import yeosuImg from "../assets/images/yeosu.jpg";
 import PopularTemplates from "../components/PopularTemplates";
+
+// 타입 정의 추가
+
+type PopularTemplateData = {
+  id: string;
+  bgColor?: string;
+  image?: string;
+  label: string;
+  author: string;
+  likes: number;
+  shares: number;
+  comments: number;
+};
 
 // 임시 인기 게시글 데이터
 const dummyPopularTemplates: PopularTemplateData[] = [
@@ -119,16 +132,21 @@ export const temporaryPosts = [
   },
 ];
 
+const ITEM_WIDTH = 280; // 카드의 실제 너비(px)
+const ITEM_GAP = 24; // gap={3} -> 8px * 3 = 24px
+
 const useHorizontalScroll = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isAtStart, setIsAtStart] = useState(true);
+  const [isAtEnd, setIsAtEnd] = useState(false);
 
-  // Constants for item width and margin
-  const ITEM_WIDTH = 200; // Width of each item in pixels
-  const ITEM_MARGIN = 16; // Margin between items in pixels
-
-  const scrollAmount = 3 * (ITEM_WIDTH + ITEM_MARGIN); // Total scroll amount for 3 items
+  // 한 화면에 보이는 카드 개수만큼 정확히 스크롤
   const handleScroll = (direction: "left" | "right") => {
     if (scrollRef.current) {
+      const { scrollLeft, clientWidth } = scrollRef.current;
+      const visibleCount = Math.floor(clientWidth / (ITEM_WIDTH + ITEM_GAP));
+      const moveCount = visibleCount > 0 ? visibleCount : 1;
+      const scrollAmount = moveCount * (ITEM_WIDTH + ITEM_GAP);
       scrollRef.current.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount,
         behavior: "smooth",
@@ -136,15 +154,39 @@ const useHorizontalScroll = () => {
     }
   };
 
+  // 스크롤 위치를 체크하여 화살표 표시 여부 결정
+  const checkScrollPosition = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setIsAtStart(scrollLeft <= 0);
+      setIsAtEnd(Math.ceil(scrollLeft + clientWidth) >= scrollWidth);
+    }
+  };
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener("scroll", checkScrollPosition);
+      window.addEventListener("resize", checkScrollPosition);
+      checkScrollPosition();
+      return () => {
+        scrollElement.removeEventListener("scroll", checkScrollPosition);
+        window.removeEventListener("resize", checkScrollPosition);
+      };
+    }
+  }, []);
+
   return {
     scrollRef,
+    isAtStart,
+    isAtEnd,
     handleScrollLeft: () => handleScroll("left"),
     handleScrollRight: () => handleScroll("right"),
   };
 };
 
 const Community = () => {
-  const { scrollRef, handleScrollLeft, handleScrollRight } =
+  const { scrollRef, isAtStart, isAtEnd, handleScrollLeft, handleScrollRight } =
     useHorizontalScroll();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -157,17 +199,11 @@ const Community = () => {
   // 실제 게시글 수에 따라 동적으로 계산 해야되는 부분
   const totalPages = 20;
 
-  // 페이지 변경 핸들러 함수
-  const handlePageChange = (
-    event: React.ChangeEvent<unknown>,
-    value: number
-  ) => {
-    setCurrentPage(value); // 현재 페이지 상태 업데이트
-    console.log("페이지 변경됨: ", value);
-  };
-
   // regionTags를 regionImages에서 자동으로 생성
   const regionTags = regionImages.map((region) => region.name);
+
+  // 선택된 태그 상태 추가
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // 검색 실행 핸들러
   const handleSearch = (selectedTags: string[], inputValue: string) => {
@@ -182,6 +218,13 @@ const Community = () => {
   // 게시글 클릭 핸들러
   const handlePostClick = (postId: string) => {
     navigate(`/community/post/${postId}`);
+  };
+
+  // 카테고리 클릭 시 태그 추가
+  const handleCategoryClick = (name: string) => {
+    if (!selectedTags.includes(name)) {
+      setSelectedTags([...selectedTags, name]);
+    }
   };
 
   const scrollButtonStyles = {
@@ -216,16 +259,18 @@ const Community = () => {
           sx={{ position: "relative", display: "flex", alignItems: "center" }}
         >
           {/* 왼쪽 버튼 */}
-          <IconButton
-            onClick={handleScrollLeft}
-            sx={{
-              ...scrollButtonStyles,
-              left: 0,
-              transform: "translateX(-50%) translateY(-40%)",
-            }}
-          >
-            <ArrowBackIosNewRoundedIcon />
-          </IconButton>
+          {!isAtStart && (
+            <IconButton
+              onClick={handleScrollLeft}
+              sx={{
+                ...scrollButtonStyles,
+                left: 0,
+                transform: "translateX(-50%) translateY(-40%)",
+              }}
+            >
+              <ArrowBackIosNewRoundedIcon />
+            </IconButton>
+          )}
 
           <Stack
             ref={scrollRef}
@@ -265,6 +310,7 @@ const Community = () => {
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}
+                    onClick={() => handleCategoryClick(category.name)}
                   ></Box>
                 </Stack>
 
@@ -284,16 +330,18 @@ const Community = () => {
           </Stack>
 
           {/* 오른쪽 버튼 */}
-          <IconButton
-            onClick={handleScrollRight}
-            sx={{
-              ...scrollButtonStyles,
-              right: 0,
-              transform: "translateX(50%) translateY(-40%)",
-            }}
-          >
-            <ArrowForwardIosRoundedIcon />
-          </IconButton>
+          {!isAtEnd && (
+            <IconButton
+              onClick={handleScrollRight}
+              sx={{
+                ...scrollButtonStyles,
+                right: 0,
+                transform: "translateX(50%) translateY(-40%)",
+              }}
+            >
+              <ArrowForwardIosRoundedIcon />
+            </IconButton>
+          )}
         </Box>
       </Stack>
 
@@ -314,7 +362,12 @@ const Community = () => {
         </Typography>
 
         {/* 검색 컴포넌트 */}
-        <SearchBox regionTags={regionTags} onSearch={handleSearch} />
+        <SearchBox
+          regionTags={regionTags}
+          onSearch={handleSearch}
+          selectedTags={selectedTags}
+          setSelectedTags={setSelectedTags}
+        />
         {/* Chip이 많아질 때도 게시판과 겹치지 않도록 여백 추가 */}
         <Box sx={{ height: 32 }} />
 
