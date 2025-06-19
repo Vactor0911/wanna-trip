@@ -338,7 +338,7 @@ const Community = () => {
   const totalPostPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
 
   return (
-    <Stack mt={4} gap={8}>
+    <Stack mt={4} gap={8} pb={10}>
       {/* 인기 게시글  */}
       <Stack gap={4}>
         <Typography variant="h5">인기 템플릿</Typography>
