@@ -5,7 +5,6 @@ import {
   Container,
   Divider,
   IconButton,
-  ListItemIcon,
   Menu,
   MenuItem,
   Stack,
