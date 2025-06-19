@@ -288,6 +288,7 @@ const Main = () => {
                     xs: "column",
                     sm: "row",
                   }}
+                  gap="0.25em"
                 >
                   {["여행 계획을 더욱 빠르고 스마트하게", "만들어보세요 !"].map(
                     (text, index) => (

@@ -314,7 +314,7 @@ const Header = () => {
 
                 {/* 알림 버튼 */}
                 <IconButton color="inherit" size="small">
-                  <Badge badgeContent={100} color="primary" overlap="circular">
+                  <Badge badgeContent={0} color="primary" overlap="circular">
                     <NotificationsNoneOutlinedIcon />
                   </Badge>
                 </IconButton>

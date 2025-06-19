@@ -1,5 +1,7 @@
 import { Box, BoxProps, Skeleton } from "@mui/material";
+import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
+import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM, drawerOpenAtom } from "../../state/naverMapDialog";
 
 // 네이버 지도 API를 사용하기 위한 타입 선언
 declare global {
@@ -20,19 +22,15 @@ interface MapProps extends BoxProps {
   disabled?: boolean; // 비활성화 여부
 }
 
-const DEFAULT_LAT = 37.5665; // 서울 시청 위도
-const DEFAULT_LNG = 126.978; // 서울 시청 경도
-
 const NaverMap = (props: MapProps) => {
   const {
     width = 200,
     height,
     lat = DEFAULT_LAT,
     lng = DEFAULT_LNG,
-    zoom = 17,
+    zoom = DEFAULT_ZOOM,
     interactive = true, // 기본값은 상호작용 가능
     markerPosition = null, // 마커 위치 (없으면 null)
-    drawerOpen = false, // 기본값 false
     drawerWidth = 350, // 기본값 350px
     sx,
     onClick,
@@ -45,6 +43,7 @@ const NaverMap = (props: MapProps) => {
   const mapInstanceRef = useRef<any>(null); // 지도 인스턴스 참조
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null); // 마커 인스턴스 참조
+  const drawerOpen = useAtomValue(drawerOpenAtom); // 검색 패널 열림 상태
 
   const VITE_NAVER_MAP_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
 
@@ -148,6 +147,7 @@ const NaverMap = (props: MapProps) => {
         markerPosition.lat,
         markerPosition.lng
       );
+
       mapInstanceRef.current.setCenter(position);
 
       // 마커 업데이트
@@ -166,7 +166,7 @@ const NaverMap = (props: MapProps) => {
       markerRef.current.setMap(null);
       markerRef.current = null;
     }
-  }, [markerPosition]);
+  }, [drawerOpen, markerPosition]);
 
   // 클라이언트 ID가 설정되지 않은 경우 로딩 스켈레톤 표시
   if (!VITE_NAVER_MAP_CLIENT_ID) {
