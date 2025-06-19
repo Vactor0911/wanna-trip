@@ -6,7 +6,7 @@ import CommunityPostItem from "../components/CommunityPostItem";
 import SearchBox from "../components/SearchBox";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { useNavigate } from "react-router-dom";
-import Pagination from "@mui/material/Pagination";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 // 이미지 파일들
 import seoulImg from "../assets/images/seoul.jpg";
@@ -147,12 +147,15 @@ const Community = () => {
   const { scrollRef, handleScrollLeft, handleScrollRight } =
     useHorizontalScroll();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // sm 이하: 모바일
+  const pageGroupSize = isMobile ? 5 : 8;
 
   // 페이지네이션을 위한 현재 페이지 상태 정의
   const [currentPage, setCurrentPage] = useState(1);
 
   // 실제 게시글 수에 따라 동적으로 계산 해야되는 부분
-  const totalPages = 5;
+  const totalPages = 20;
 
   // 페이지 변경 핸들러 함수
   const handlePageChange = (
@@ -331,38 +334,77 @@ const Community = () => {
           sx={{
             display: "flex",
             justifyContent: "center",
+            alignItems: "center",
             mt: 4,
-            // 반응형으로 하단 여백 조정
-            mb: { xs: 30, md: 6 }, // 모바일에서 240px , PC에서 48px
+            mb: { xs: 30, md: 6 },
+            gap: 1,
           }}
         >
-          <Pagination
-            count={totalPages} // 전체 페이지 수 설정
-            page={currentPage} // 현재 활성화된 페이지 번호
-            onChange={handlePageChange} // 페이지 번호 변경 시 호출될 함수
-            sx={{
-              // 모든 페이지네이션 항목 (번호, 이전/다음 버튼) 스타일
-              "& .MuiPaginationItem-root": {
-                backgroundColor: "transparent", // 기본 배경색 투명
-                border: "none",
-                color: "#aaa", // 선택되지 않은 페이지 번호 및 화살표의 색상 (회색)
-                fontSize: "1.1em", // 페이지 번호 폰트 크기
-                "&:hover": {
-                  backgroundColor: "transparent", // 호버 시에도 배경 투명 유지
-                },
-                "&:focus": {
-                  backgroundColor: "transparent", // 포커스 시에도 배경 투명 유지
-                },
-              },
-              // 현재 선택된 페이지 번호에만 적용되는 스타일
-              "& .Mui-selected": {
-                backgroundColor: "#e0e0e0", // 선택된 페이지의 밝은 회색 원형 배경색
-                color: "#000", // 선택된 페이지 번호의 색상 (검정색)
-                fontWeight: 700, // 선택된 페이지 번호 굵게 표시
-                borderRadius: "50%",
-              },
+          {/* 이전 그룹 버튼 */}
+          <IconButton
+            onClick={() => {
+              // 이전 그룹의 마지막 페이지를 선택
+              const prevGroupStart = Math.max(
+                1,
+                Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize -
+                  (pageGroupSize - 1)
+              );
+              const prevGroupEnd = prevGroupStart + pageGroupSize - 1;
+              setCurrentPage(Math.min(prevGroupEnd, totalPages));
             }}
-          />
+            disabled={currentPage <= pageGroupSize}
+          >
+            <ArrowBackIosNewRoundedIcon />
+          </IconButton>
+
+          {/* 페이지 번호 그룹 */}
+          {Array.from({ length: pageGroupSize }, (_, i) => {
+            const pageNum =
+              Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
+              i +
+              1;
+            if (pageNum > totalPages) return null;
+            return (
+              <IconButton
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                sx={{
+                  width: 40,
+                  height: 40,
+                  backgroundColor:
+                    currentPage === pageNum ? "#e0e0e0" : "transparent",
+                  color: currentPage === pageNum ? "#000" : "#aaa",
+                  fontWeight: currentPage === pageNum ? 700 : 400,
+                  fontSize: "1.1em",
+                  borderRadius: "50%",
+                }}
+              >
+                {pageNum}
+              </IconButton>
+            );
+          })}
+
+          {/* 다음 그룹 버튼 */}
+          <IconButton
+            onClick={() => {
+              // 다음 그룹의 첫 번째 페이지를 선택
+              const nextGroupStart = Math.min(
+                totalPages,
+                Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
+                  pageGroupSize +
+                  1
+              );
+              setCurrentPage(nextGroupStart);
+            }}
+            disabled={
+              Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
+                pageGroupSize +
+                1 >
+              totalPages
+            }
+          >
+            <ArrowForwardIosRoundedIcon />
+          </IconButton>
         </Box>
       </Box>
 
