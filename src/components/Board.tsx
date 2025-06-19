@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   IconButton,
   Paper,
@@ -14,7 +15,7 @@ import Card from "./Card";
 import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
 import { useCallback } from "react";
-import { MAX_BOARDS } from "../utils/template";
+import { checkTimeOverlap, MAX_BOARDS } from "../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
@@ -27,6 +28,7 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
 import { useAddCard } from "../hooks/template";
 import SortMenu from "./SortMenu";
+import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 
 interface BoardProps extends StackProps {
   day: number;
@@ -38,6 +40,7 @@ interface BoardProps extends StackProps {
     severity?: "success" | "error" | "warning" | "info"
   ) => void;
   // showSnackbar 함수 타입 추가
+  id?: string; // ID 속성 추가 (선택적 속성으로 설정)
 }
 
 const Board = (props: BoardProps) => {
@@ -47,6 +50,7 @@ const Board = (props: BoardProps) => {
     fetchTemplateData,
     isOwner,
     showSnackbar,
+    id, // ID 속성 추가 (선택적 속성으로 설정)
     ...others
   } = props;
   const [template] = useAtom(templateAtom); // 템플릿 상태
@@ -55,6 +59,11 @@ const Board = (props: BoardProps) => {
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
 
   const addCard = useAddCard();
+
+  // 시간 중복 체크 결과
+  const { hasOverlap, overlappingCardIds } = checkTimeOverlap(
+    boardData.cards || []
+  );
 
   // 카드 클릭 핸들러
   const handleCardClick = useCallback(
@@ -265,20 +274,50 @@ const Board = (props: BoardProps) => {
     }
   }, [boardData.id, fetchTemplateData, showSnackbar]);
 
+  // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
+  const scrollToFirstOverlappingCard = useCallback(() => {
+    // 중복되는 첫 번째 카드 ID
+    const firstOverlappingCardId = overlappingCardIds[0];
+
+    if (firstOverlappingCardId) {
+      // 해당 ID를 가진 카드 요소 찾기
+      const cardElement = document.getElementById(
+        `card-${firstOverlappingCardId}`
+      );
+
+      if (cardElement) {
+        // 부드럽게 스크롤
+        cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // 사용자에게 피드백 제공 (옵션)
+        showSnackbar("시간이 중복된 카드로 이동했습니다.", "info");
+
+        // 시각적 효과로 카드 강조 (선택 사항)
+        cardElement.classList.add("highlight-card");
+        setTimeout(() => {
+          cardElement.classList.remove("highlight-card");
+        }, 2000);
+      }
+    }
+  }, [overlappingCardIds, showSnackbar]);
+
   return (
-    <Stack height="100%" {...others}>
+    <Stack height="100%" id={id} {...others}>
       <Paper
         elevation={3}
         sx={{
           maxHeight: "100%",
           background: theme.palette.secondary.main,
+          // 시간 중복이 있는 경우 붉은색 테두리 추가
+          border: hasOverlap ? `2px solid ${theme.palette.error.main}` : "none",
+          borderRadius: "8px",
         }}
       >
-        <Stack padding={1} width="300px" maxHeight="inherit" gap={1}>
+        <Stack py={1} px={1.5} width="300px" maxHeight="inherit" gap={1}>
           {/* 헤더 메뉴바 */}
           <Stack direction="row" justifyContent="space-between">
             {/* 좌측 컨테이너 */}
-            <Stack direction="row" alignItems="center" gap={1}>
+            <Stack direction="row" alignItems="center" gap={0.5}>
               {/* 보드 날짜 */}
               <Typography variant="h6">Day {day}</Typography>
 
@@ -289,6 +328,35 @@ const Board = (props: BoardProps) => {
                   onSortEnd={handleSortByEndTime}
                   tooltipTitle="보드 내 정렬하기"
                 />
+              )}
+
+              {/* 시간 중복 경고 아이콘 */}
+              {hasOverlap && (
+                <Tooltip
+                  title={
+                    <div>
+                      <Typography variant="body2">
+                        동일한 시간대가 존재합니다.
+                      </Typography>
+                      <Typography variant="body2">
+                        시간이 겹치는 일정을 확인하세요.
+                      </Typography>
+                    </div>
+                  }
+                >
+                  <IconButton
+                    size="small"
+                    onClick={scrollToFirstOverlappingCard}
+                    sx={{ padding: 0.5 }}
+                  >
+                    <ReportProblemRoundedIcon
+                      sx={{
+                        color: `${theme.palette.error.main} !important`,
+                        fontSize: "1.2rem",
+                      }}
+                    />
+                  </IconButton>
+                </Tooltip>
               )}
             </Stack>
 
@@ -346,22 +414,30 @@ const Board = (props: BoardProps) => {
                     key={`card-${card.id}`}
                     draggableId={`card-${card.id}`}
                     index={index}
-                    isDragDisabled={!isOwner || card.isLocked} // 소유자가 아니거나 카드가 잠겨있으면 드래그 불가능
+                    isDragDisabled={!isOwner} // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
                   >
                     {(provided) => (
-                      <Card
+                      <Box
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        key={`card-${card.id}`}
-                        content={card.content || ""}
-                        startTime={card.startTime}
-                        endTime={card.endTime}
-                        isLocked={card.isLocked}
-                        location={card.location}
-                        onClick={() => handleCardClick(index)}
-                        isOwner={isOwner} // isOwner 속성 전달
-                      />
+                        id={`card-${card.id}`} // ID 속성 추가
+                        sx={{
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <Card
+                          key={`card-${card.id}`}
+                          content={card.content || ""}
+                          startTime={card.startTime}
+                          endTime={card.endTime}
+                          isLocked={card.isLocked}
+                          location={card.location}
+                          onClick={() => handleCardClick(index)}
+                          isOwner={isOwner}
+                          isTimeOverlapping={card.id !== undefined && overlappingCardIds.includes(card.id)}
+                        />
+                      </Box>
                     )}
                   </Draggable>
                 ))}
