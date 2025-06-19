@@ -96,42 +96,47 @@ const PostItem: React.FC<PostItemProps> = ({
             right: { xs: "auto", md: 16 },
             mt: { xs: 2, md: 0 },
             width: { xs: "100%", md: "auto" },
-            justifyContent: { xs: "center", md: "flex-end" },
+            justifyContent: "flex-end",
             alignItems: { xs: "center", md: "flex-end" },
             display: "flex",
+            gap: 1, // 그룹 간 간격
           }}
         >
-          {/* 좋아요 수 */}
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-            {likeCount}
-          </Typography>
-          {/* 좋아요 아이콘 */}
-          <IconButton size="small" onClick={handleLikeClick} sx={{ mr: 1.5 }}>
-            {isLiked ? (
-              <FavoriteIcon color="error" fontSize="small" />
-            ) : (
-              <FavoriteBorderOutlinedIcon fontSize="small" />
-            )}
-          </IconButton>
-
-          {/* 공유 수 */}
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-            {shares}
-          </Typography>
-
-          {/* 공유 아이콘 */}
-          <IconButton size="small" sx={{ mr: 1.5 }}>
-            <IosShareIcon fontSize="small" />
-          </IconButton>
-
-          {/* 댓글 수 */}
-          <Typography variant="body2" color="text.secondary" sx={{ mr: 0.5 }}>
-            {comments}
-          </Typography>
-          {/* 댓글 아이콘 */}
-          <IconButton size="small">
-            <ChatBubbleOutlineIcon fontSize="small" />
-          </IconButton>
+          {/* 좋아요 그룹 */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              {likeCount}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={handleLikeClick}
+              sx={{ position: "relative", top: 1 }}
+            >
+              {isLiked ? (
+                <FavoriteIcon color="error" fontSize="small" />
+              ) : (
+                <FavoriteBorderOutlinedIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Box>
+          {/* 공유 그룹 */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              {shares}
+            </Typography>
+            <IconButton size="small" sx={{ position: "relative", top: -1 }}>
+              <IosShareIcon fontSize="small" />
+            </IconButton>
+          </Box>
+          {/* 댓글 그룹 */}
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              {comments}
+            </Typography>
+            <IconButton size="small" sx={{ position: "relative", top: 1 }}>
+              <ChatBubbleOutlineIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
       </Stack>
     </Box>
