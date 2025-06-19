@@ -9,9 +9,10 @@ import {
   Stack,
   TextField,
   Typography,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import Tooltip from "../components/Tooltip";
-import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -41,6 +42,7 @@ import {
 import { useMoveBoard, useMoveCard } from "../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
+import SortMenu from "../components/SortMenu";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -100,6 +102,18 @@ const Template = () => {
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
 
   const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
+
+  // 템플릿 컴포넌트 내에 Snackbar 상태 추가
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "info" as "success" | "error" | "warning" | "info",
+  });
+
+  // Snackbar 닫기 함수
+  const handleCloseSnackbar = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
 
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
@@ -284,7 +298,7 @@ const Template = () => {
       // 이전 상태의 템플릿 저장
       const prevTemplate = template;
       let newTemplate; // 변경된 템플릿을 저장할 변수
-      
+
       // type = 드래그된 요소의 타입 (보드: board, 카드: card)
       if (type === "card") {
         // 카드 드래그 & 드롭 처리
@@ -356,6 +370,70 @@ const Template = () => {
     },
     [moveBoard, moveCard, queryClient, setTemplate, template]
   );
+
+  // 템플릿 내 모든 카드 정렬 함수 (시작 시간 순)
+  const handleSortByStartTime = useCallback(async () => {
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 백엔드 API 호출
+      const response = await axiosInstance.post(
+        `/template/uuid/${template.uuid}/sort`,
+        { sortBy: "start_time" },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 정렬 후 템플릿 데이터 다시 가져오기
+        await fetchTemplateData();
+        setSnackbar({
+          open: true,
+          message: "카드가 시작 시간 순으로 정렬되었습니다.",
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      console.error("카드 정렬 오류:", error);
+      setSnackbar({
+        open: true,
+        message: "카드 정렬 중 오류가 발생했습니다.",
+        severity: "error",
+      });
+    }
+  }, [template.uuid, fetchTemplateData]);
+
+  // 템플릿 내 모든 카드 정렬 함수 (종료 시간 순)
+  const handleSortByEndTime = useCallback(async () => {
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 백엔드 API 호출
+      const response = await axiosInstance.post(
+        `/template/uuid/${template.uuid}/sort`,
+        { sortBy: "end_time" },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 정렬 후 템플릿 데이터 다시 가져오기
+        await fetchTemplateData();
+        setSnackbar({
+          open: true,
+          message: "카드가 종료 시간 순으로 정렬되었습니다.",
+          severity: "success",
+        });
+      }
+    } catch (error) {
+      console.error("카드 정렬 오류:", error);
+      setSnackbar({
+        open: true,
+        message: "카드 정렬 중 오류가 발생했습니다.",
+        severity: "error",
+      });
+    }
+  }, [template.uuid, fetchTemplateData]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -484,14 +562,14 @@ const Template = () => {
                   {template.title}
                 </Typography>
               )}
-
+              
               {/* 권한에 따른 정렬하기 보이기 여부 */}
               {isOwner && (
-                <Tooltip title="정렬하기">
-                  <IconButton size="small">
-                    <FilterListRoundedIcon />
-                  </IconButton>
-                </Tooltip>
+                <SortMenu
+                  onSortStart={handleSortByStartTime}
+                  onSortEnd={handleSortByEndTime}
+                  tooltipTitle="템플릿 전체 정렬하기"
+                />
               )}
             </Stack>
 
@@ -657,6 +735,22 @@ const Template = () => {
 
       {/* 카드 편집 대화상자 */}
       <CardEditDialog />
+
+      {/* 알림 스낵바 */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
