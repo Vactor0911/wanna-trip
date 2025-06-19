@@ -1,5 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Box, IconButton, Typography, Paper, Avatar, BoxProps } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Typography,
+  Paper,
+  Avatar,
+  BoxProps,
+} from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -23,7 +30,7 @@ export interface PopularTemplateData {
 
 interface PopularTemplatesProps extends BoxProps {
   maxCards?: number; // 최대 카드 개수
-  type: 'template' | 'post'; // 컴포넌트 타입
+  type: "template" | "post"; // 컴포넌트 타입
   data: PopularTemplateData[];
   onCardClick?: (templateId: string) => void; // 카드 클릭 핸들러
 }
@@ -81,9 +88,7 @@ const PopularTemplates = ({
 
   // 이전/다음 버튼 핸들러
   const handlePrev = () => {
-    setIndex((prev) =>
-      prev === 0 ? data.length - 1 : prev - 1
-    );
+    setIndex((prev) => (prev === 0 ? data.length - 1 : prev - 1));
   };
   const handleNext = () => {
     setIndex((prev) => (prev + 1) % data.length);
@@ -122,7 +127,7 @@ const PopularTemplates = ({
   // 좋아요 토글 핸들러
   const handleLikeClick = (e: React.MouseEvent, templateId: string) => {
     e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-    setLikedTemplates(prev => {
+    setLikedTemplates((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(templateId)) {
         newSet.delete(templateId);
@@ -134,152 +139,169 @@ const PopularTemplates = ({
   };
 
   return (
-    <Box
-      ref={containerRef}
-      width="100%"
-      sx={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center" }}
-      {...boxProps}
-    >
-      {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
-      {showArrows && (
-        <IconButton
-          onClick={handlePrev}
-          sx={{
-            position: "absolute",
-            left: 0,
-            top: "50%",
-            transform: "translateX(-45%) translateY(-50%)",
-            zIndex: 2,
-            background: "rgba(255,255,255)",
-            boxShadow: 1,
-            '&:hover': { background: "rgba(255,255,255)" },
-          }}
-        >
-          <ArrowBackIosNewRoundedIcon />
-        </IconButton>
-      )}
-
-      {/* 카드 리스트 */}
-      <Box display="flex" gap={`${gap}px`} width="100%">
-        {getVisibleData().map((tpl) => (
-          <Paper
-            key={tpl.id}
-            onClick={() => handleCardClick(tpl.id)}
+    <Box px={{ xs: 1, md: "auto" }}>
+      <Box
+        ref={containerRef}
+        width="100%"
+        sx={{
+          position: "relative",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+        {...boxProps}
+      >
+        {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
+        {showArrows && (
+          <IconButton
+            onClick={handlePrev}
             sx={{
-              width: cardWidth,
-              height: cardHeight,
-              borderRadius: 4,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              bgcolor: tpl.image ? undefined : tpl.bgColor || "#e0f7fa",
-              backgroundImage: tpl.image
-                ? `url(${tpl.image})`
-                : undefined,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              minHeight: "250px", // 최소 높이 설정
-              position: "relative",
-              boxShadow: 2,
-              transition: "width 0.2s, height 0.2s",
-              cursor: "pointer",
+              position: "absolute",
+              left: 0,
+              top: "50%",
+              transform: "translateX(-45%) translateY(-50%)",
+              zIndex: 2,
+              background: "rgba(255,255,255)",
+              boxShadow: 1,
+              "&:hover": { background: "rgba(255,255,255)" },
             }}
           >
-            {/* 카드 하단 정보 */}
-            <Box
+            <ArrowBackIosNewRoundedIcon />
+          </IconButton>
+        )}
+
+        {/* 카드 리스트 */}
+        <Box display="flex" gap={`${gap}px`} width="100%">
+          {getVisibleData().map((tpl) => (
+            <Paper
+              key={tpl.id}
+              onClick={() => handleCardClick(tpl.id)}
               sx={{
-                position: "absolute",
-                bottom: 0,
-                width: "100%",
-                bgcolor: "rgba(255,255,255)",
-                p: 2,
+                width: cardWidth,
+                height: cardHeight,
+                borderRadius: 4,
+                overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-                gap: 0.5,
+                bgcolor: tpl.image ? undefined : tpl.bgColor || "#e0f7fa",
+                backgroundImage: tpl.image ? `url(${tpl.image})` : undefined,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                minHeight: "250px", // 최소 높이 설정
+                position: "relative",
+                boxShadow: 2,
+                transition: "width 0.2s, height 0.2s",
+                cursor: "pointer",
               }}
             >
-              {/* 상단: 아바타, 제목/작성자 */}
-              <Box display="flex" alignItems="center" gap={1.5}>
-              <Avatar sx={{ width: 32, height: 32, fontSize: 18 }}>
-                  {tpl.author[0]}
-                </Avatar>
-                <Box>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    sx={{
-                      color: "#222",
-                      lineHeight: 1.2,
-                      maxWidth: 220,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {tpl.label}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: 13, fontWeight: 400 }}
-                  >
-                    {tpl.author}
-                  </Typography>
+              {/* 카드 하단 정보 */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 0,
+                  width: "100%",
+                  bgcolor: "rgba(255,255,255)",
+                  p: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0.5,
+                }}
+              >
+                {/* 상단: 아바타, 제목/작성자 */}
+                <Box display="flex" alignItems="center" gap={1.5}>
+                  <Avatar sx={{ width: 32, height: 32, fontSize: 18 }}>
+                    {tpl.author[0]}
+                  </Avatar>
+                  <Box>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={700}
+                      sx={{
+                        color: "#222",
+                        lineHeight: 1.2,
+                        maxWidth: 220,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {tpl.label}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: 13, fontWeight: 400 }}
+                    >
+                      {tpl.author}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
+                  {type === "template" ? (
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
+                    </Typography>
+                  ) : (
+                    <>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          cursor: "pointer",
+                        }}
+                        onClick={(e) => handleLikeClick(e, tpl.id)}
+                      >
+                        {likedTemplates.has(tpl.id) ? (
+                          <FavoriteIcon
+                            sx={{ fontSize: 16, color: "error.main" }}
+                          />
+                        ) : (
+                          <FavoriteBorderOutlinedIcon
+                            sx={{ fontSize: 16, color: "text.primary" }}
+                          />
+                        )}{" "}
+                        {tpl.likes}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                      >
+                        <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} />{" "}
+                        {tpl.comments}
+                      </Typography>
+                    </>
+                  )}
                 </Box>
               </Box>
+            </Paper>
+          ))}
+        </Box>
 
-              <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
-                {type === 'template' ? (
-                  <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
-                  </Typography>
-                ) : (
-                  <>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 0.5,
-                        cursor: 'pointer'
-                      }}
-                      onClick={(e) => handleLikeClick(e, tpl.id)}
-                    >
-                      {likedTemplates.has(tpl.id) ? (
-                        <FavoriteIcon sx={{ fontSize: 16, color: 'error.main' }} />
-                      ) : (
-                        <FavoriteBorderOutlinedIcon sx={{ fontSize: 16, color: 'text.primary' }} />
-                      )} {tpl.likes}
-                    </Typography>
-                    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} /> {tpl.comments}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            </Box>
-          </Paper>
-        ))}
+        {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
+        {showArrows && (
+          <IconButton
+            onClick={handleNext}
+            sx={{
+              position: "absolute",
+              right: 0,
+              top: "50%",
+              transform: "translateX(45%) translateY(-50%)",
+              zIndex: 2,
+              background: "rgba(255,255,255)",
+              boxShadow: 1,
+              "&:hover": { background: "rgba(255,255,255)" },
+            }}
+          >
+            <ArrowForwardIosRoundedIcon />
+          </IconButton>
+        )}
       </Box>
-
-      {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
-      {showArrows && (
-        <IconButton
-          onClick={handleNext}
-          sx={{
-            position: "absolute",
-            right: 0,
-            top: "50%",
-            transform: "translateX(45%) translateY(-50%)",
-            zIndex: 2,
-            background: "rgba(255,255,255)",
-            boxShadow: 1,
-            '&:hover': { background: "rgba(255,255,255)" },
-          }}
-        >
-          <ArrowForwardIosRoundedIcon />
-        </IconButton>
-      )}
     </Box>
   );
 };
