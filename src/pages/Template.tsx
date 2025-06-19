@@ -115,6 +115,21 @@ const Template = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
+  // 스낵바 메시지 표시 함수 (하위 컴포넌트에서 호출 가능)
+  const showSnackbar = useCallback(
+    (
+      message: string,
+      severity: "success" | "error" | "warning" | "info" = "success"
+    ) => {
+      setSnackbar({
+        open: true,
+        message,
+        severity,
+      });
+    },
+    []
+  );
+
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
     if (!uuid) return; // uuid가 없으면 종료
@@ -562,7 +577,7 @@ const Template = () => {
                   {template.title}
                 </Typography>
               )}
-              
+
               {/* 권한에 따른 정렬하기 보이기 여부 */}
               {isOwner && (
                 <SortMenu
@@ -674,6 +689,7 @@ const Template = () => {
                           boardData={board} // 보드 데이터 직접 전달
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isOwner} // 소유자 여부 전달
+                          showSnackbar={showSnackbar} // 스낵바 표시 함수 전달
                         />
                       )}
                     </Draggable>
