@@ -1,7 +1,12 @@
 import { Box, BoxProps, Skeleton } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
-import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM, drawerOpenAtom } from "../../state/naverMapDialog";
+import {
+  DEFAULT_LAT,
+  DEFAULT_LNG,
+  DEFAULT_ZOOM,
+  drawerOpenAtom,
+} from "../../state/naverMapDialog";
 
 // 네이버 지도 API를 사용하기 위한 타입 선언
 declare global {

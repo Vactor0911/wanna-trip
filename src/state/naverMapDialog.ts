@@ -39,6 +39,9 @@ export const searchResultsAtom = atom<LocationInterface[]>([]); // 검색 결과
 export const selectedPositionAtom = atom<{ lat: number; lng: number } | null>(
   null
 ); // 지도에서 선택된 위치 상태
-export const selectedLocationAtom = atom<LocationInterface | null>(null);
+
+export const naverMapInitialLocationAtom = atom<LocationInterface | null>(null); // 초기 위치 정보 상태
+
+export const selectedLocationAtom = atom<LocationInterface | null>(null); // 선택된 위치 정보 상태
 
 export const locationDialogAnchor = atom<HTMLDivElement | null>(null); // 위치 선택 대화상자 앵커 요소

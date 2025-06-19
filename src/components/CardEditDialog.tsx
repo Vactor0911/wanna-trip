@@ -50,6 +50,7 @@ import {
   DEFAULT_LNG,
   LocationInterface,
   naverMapDialogOpenAtom,
+  naverMapInitialLocationAtom,
   selectedLocationAtom,
 } from "../state/naverMapDialog";
 
@@ -139,11 +140,14 @@ const MapSection = React.memo(
 
     // locationInfo 변경 확인 (기존 코드)
     if (!prevProps.selectedLocation && !nextProps.selectedLocation) return true;
-    if (!prevProps.selectedLocation || !nextProps.selectedLocation) return false;
+    if (!prevProps.selectedLocation || !nextProps.selectedLocation)
+      return false;
 
     return (
-      prevProps.selectedLocation.latitude === nextProps.selectedLocation.latitude &&
-      prevProps.selectedLocation.longitude === nextProps.selectedLocation.longitude
+      prevProps.selectedLocation.latitude ===
+        nextProps.selectedLocation.latitude &&
+      prevProps.selectedLocation.longitude ===
+        nextProps.selectedLocation.longitude
     );
   }
 );
@@ -167,7 +171,8 @@ const CardEditDialog = () => {
   const moreMenuAnchorElement = useRef<HTMLButtonElement | null>(null); // 더보기 메뉴 앵커 요소
 
   // 전체화면 지도 상태
-  const setIsMapDialogOpen = useSetAtom(naverMapDialogOpenAtom);
+  const setIsMapDialogOpen = useSetAtom(naverMapDialogOpenAtom); // 전체화면 지도 대화상자 열림 상태
+  const setNaverMapInitialLocation = useSetAtom(naverMapInitialLocationAtom); // 초기 위치 정보 상태
 
   // 위치 정보 상태 추가
   const [selectedLocation, setSelectedLocation] = useAtom(selectedLocationAtom); // 선택한 위치 정보 상태
@@ -282,7 +287,12 @@ const CardEditDialog = () => {
         }
       }
     }
-  }, [cardEditDialogOpen, currentEditCard, setSelectedLocation, template.boards]);
+  }, [
+    cardEditDialogOpen,
+    currentEditCard,
+    setSelectedLocation,
+    template.boards,
+  ]);
 
   // 카드 편집 대화상자 닫기
   const handleCardEditDialogClose = useCallback(() => {
@@ -442,7 +452,8 @@ const CardEditDialog = () => {
   // 지도 클릭 시 전체화면 모달 열기
   const handleMapClick = useCallback(() => {
     setIsMapDialogOpen(true);
-  }, [setIsMapDialogOpen]);
+    setNaverMapInitialLocation(selectedLocation);
+  }, [selectedLocation, setIsMapDialogOpen, setNaverMapInitialLocation]);
 
   // 카드 복제 버튼 클릭
   const handleDuplicateCardButtonClick = useCallback(async () => {
