@@ -94,6 +94,14 @@ export const theme = responsiveFontSizes(
           },
         },
       },
+      MuiContainer: {
+        styleOverrides: {
+          root: {
+            paddingLeft: "24px !important",
+            paddingRight: "24px !important",
+          },
+        },
+      },
     },
   })
 );
