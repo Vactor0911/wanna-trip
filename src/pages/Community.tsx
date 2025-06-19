@@ -110,7 +110,7 @@ const Community = () => {
 
   // 게시글 클릭 핸들러
   const handlePostClick = (postId: string) => {
-    navigate(`/community/post/${postId}`);
+    navigate(`/community/${postId}`);
   };
 
   const scrollButtonStyles = {

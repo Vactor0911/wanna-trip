@@ -14,7 +14,7 @@ import {
   Community,
   Myinformation,
 } from "./pages";
-import CommunityPostDetail from "./pages/CommunityPostDetail";
+import CommunityPost from "./pages/CommunityPost";
 import Header from "./components/Header";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -34,14 +34,11 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/template" element={<UserTemplates />} />
               <Route path="/template/:uuid" element={<Template />} />
+              <Route path="/myinformation" element={<Myinformation />} />
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
-              <Route path="/myinformation" element={<Myinformation />} />
-              <Route
-                path="/community/post/:id"
-                element={<CommunityPostDetail />}
-              />
+              <Route path="/community/:postId" element={<CommunityPost />} />
             </Routes>
           </TokenRefresher>
         </BrowserRouter>
