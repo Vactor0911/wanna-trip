@@ -1,7 +1,7 @@
 import { Box, BoxProps, Skeleton } from "@mui/material";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
-import { drawerOpenAtom } from "../../state/naverMapDialog";
+import { DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM, drawerOpenAtom } from "../../state/naverMapDialog";
 
 // 네이버 지도 API를 사용하기 위한 타입 선언
 declare global {
@@ -22,16 +22,13 @@ interface MapProps extends BoxProps {
   disabled?: boolean; // 비활성화 여부
 }
 
-const DEFAULT_LAT = 37.5665; // 서울 시청 위도
-const DEFAULT_LNG = 126.978; // 서울 시청 경도
-
 const NaverMap = (props: MapProps) => {
   const {
     width = 200,
     height,
     lat = DEFAULT_LAT,
     lng = DEFAULT_LNG,
-    zoom = 17,
+    zoom = DEFAULT_ZOOM,
     interactive = true, // 기본값은 상호작용 가능
     markerPosition = null, // 마커 위치 (없으면 null)
     drawerWidth = 350, // 기본값 350px

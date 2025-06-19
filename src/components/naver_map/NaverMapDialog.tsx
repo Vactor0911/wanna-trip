@@ -3,38 +3,40 @@ import {
   IconButton,
   Box,
   Paper,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import NaverMap from "./NaverMap";
 import NaverMapSearchDrawer from "./NaverMapSearchDrawer";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
+  DEFAULT_ZOOM,
+  DEFAULT_LAT,
+  DEFAULT_LNG,
   drawerOpenAtom,
   keywordAtom,
   markerPositionAtom,
   naverMapDialogOpenAtom,
   searchResultsAtom,
+  selectedLocationAtom,
   selectedPositionAtom,
   zoomAtom,
 } from "../../state/naverMapDialog";
 import NaverMapLocationPopup from "./NaverMapLocationPopup";
 
-interface NaverMapDialogProps {
-  lat?: number; // 카드에 저장된 위치가 있을 경우 값 전달
-  lng?: number;
-}
-
-const NaverMapDialog = (props: NaverMapDialogProps) => {
-  const { lat = 37.5665, lng = 126.978 } = props;
-
+const NaverMapDialog = () => {
   const [open, setOpen] = useAtom(naverMapDialogOpenAtom); // 네이버 지도 대화상자 열림 상태
   const setKeyword = useSetAtom(keywordAtom); // 검색어 상태
   const setSearchResults = useSetAtom(searchResultsAtom); // 검색 결과 상태
   const [selectedPosition, setSelectedPosition] = useAtom(selectedPositionAtom); // 선택된 위치
+  const selectedLocation = useAtomValue(selectedLocationAtom); // 선택된 위치 정보
   const [marker, setMarker] = useAtom(markerPositionAtom); // 마커 위치
   const [zoom, setZoom] = useAtom(zoomAtom); // 현재 지도 줌 레벨
   const setDrawerOpenAtom = useSetAtom(drawerOpenAtom); // 검색 드로어 메뉴 열림 상태
+  const theme = useTheme(); // MUI 테마
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부
 
   // 다이얼로그가 처음 열릴 때만 실행 (검색 상태 초기화 용도)
   useEffect(() => {
@@ -42,9 +44,9 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
       // 검색 관련 상태 초기화
       setKeyword("");
       setSearchResults([]);
-      setDrawerOpenAtom(true); // 검색 드로어 메뉴 열림 상태로 설정
+      setDrawerOpenAtom(!isMobile); // PC, 태블릿에선 검색 드로어 메뉴 열림 상태로 설정
     }
-  }, [open, setDrawerOpenAtom, setKeyword, setSearchResults]);
+  }, [isMobile, open, setDrawerOpenAtom, setKeyword, setSearchResults]);
 
   // 위치 정보와 마커 초기화 용도
   useEffect(() => {
@@ -53,12 +55,20 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
       return;
     }
 
-    if (lat && lng) {
+    console.log("선택된 위치 정보:", selectedLocation);
+    if (
+      selectedLocation &&
+      selectedLocation.latitude &&
+      selectedLocation.longitude
+    ) {
+      const lat = selectedLocation.latitude;
+      const lng = selectedLocation.longitude;
+
       setSelectedPosition({ lat, lng });
       setMarker({ lat, lng });
-      setZoom(zoom);
+      setZoom(DEFAULT_ZOOM);
     }
-  }, [open, lat, lng, zoom, setZoom, setMarker, setSelectedPosition]);
+  }, [open, selectedLocation, setMarker, setSelectedPosition, setZoom]);
 
   // 닫기 버튼 핸들러
   const handleClose = useCallback(() => {
@@ -85,8 +95,8 @@ const NaverMapDialog = (props: NaverMapDialogProps) => {
           key={`map-${selectedPosition?.lat}-${selectedPosition?.lng}-${zoom}`}
           width="100%"
           height="100%"
-          lat={selectedPosition?.lat ?? lat}
-          lng={selectedPosition?.lng ?? lng}
+          lat={selectedPosition?.lat || DEFAULT_LAT}
+          lng={selectedPosition?.lng || DEFAULT_LNG}
           zoom={zoom}
           interactive
           markerPosition={marker}
