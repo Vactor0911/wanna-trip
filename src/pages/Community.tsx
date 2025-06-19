@@ -17,6 +17,48 @@ import gyeongjuImg from "../assets/images/gyeongju.jpg";
 import jejuImg from "../assets/images/jeju.jpg";
 import sokchoImg from "../assets/images/sokcho.jpg";
 import yeosuImg from "../assets/images/yeosu.jpg";
+import PopularTemplates from "../components/PopularTemplates";
+
+// 임시 인기 게시글 데이터
+const dummyPopularTemplates: PopularTemplateData[] = [
+  {
+    id: "1",
+    bgColor: "#76B6FF",
+    label: "파워J를 위한 일본 여행 완벽 플래너",
+    author: "고유로",
+    likes: 12,
+    shares: 3,
+    comments: 5,
+  },
+  {
+    id: "2",
+    bgColor: "#FFF0A7",
+    label: "감성 가득 오사카 2박 3일",
+    author: "여행러버",
+    likes: 8,
+    shares: 2,
+    comments: 1,
+  },
+  {
+    id: "3",
+    bgColor: "#FFB7E4",
+    label: "도쿄 핵심 맛집 투어",
+    author: "맛집헌터",
+    likes: 20,
+    shares: 7,
+    comments: 10,
+  },
+  {
+    id: "4",
+    image:
+      "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+    label: "벚꽃 시즌 교토 산책",
+    author: "벚꽃소녀",
+    likes: 15,
+    shares: 4,
+    comments: 2,
+  },
+];
 
 // 지역 이미지 데이터 타입 정의
 type RegionImage = {
@@ -148,25 +190,22 @@ const Community = () => {
   };
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", p: { xs: 2, sm: 3, md: 4 } }}>
+    <Stack mt={4} gap={8}>
       {/* 인기 게시글  */}
-      <Box sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
-        <Typography variant="h5" fontWeight={700} mb={2}>
-          실시간 인기 게시글
-        </Typography>
-        <Box
-          sx={{
-            height: { xs: 180, sm: 250, md: 300 },
-            bgcolor: "#e0e0e0",
-            borderRadius: 2,
-          }}
-        ></Box>
-      </Box>
+      <Stack gap={4}>
+        <Typography variant="h5">인기 템플릿</Typography>
+        {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
+        <PopularTemplates
+          maxCards={3}
+          type="post"
+          data={dummyPopularTemplates}
+        />
+      </Stack>
 
       {/* 여행 카테고리 섹션  */}
-      <Stack sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
+      <Stack gap={4}>
         {/* 섹션 제목 */}
-        <Typography variant="h5" fontWeight={700} mb={2}>
+        <Typography variant="h5" fontWeight={700}>
           여행 카테고리
         </Typography>
 
@@ -256,7 +295,7 @@ const Community = () => {
       </Stack>
 
       {/* 일반 게시판 */}
-      <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2, position: "relative" }}>
+      <Box sx={{ position: "relative" }}>
         {/* 섹션 제목 */}
         <Typography
           variant="h5"
@@ -275,61 +314,61 @@ const Community = () => {
         <SearchBox regionTags={regionTags} onSearch={handleSearch} />
         {/* Chip이 많아질 때도 게시판과 겹치지 않도록 여백 추가 */}
         <Box sx={{ height: 32 }} />
-      </Box>
 
-      {/* 일반 게시판 목록  */}
-      <Stack spacing={2} sx={{ mt: 4 }}>
-        {temporaryPosts.map((post) => (
-          <CommunityPostItem
-            key={post.id}
-            post={post}
-            onClick={() => handlePostClick(post.id)}
-          />
-        ))}
-      </Stack>
+        {/* 일반 게시판 목록  */}
+        <Stack spacing={2} sx={{ mt: 4 }}>
+          {temporaryPosts.map((post) => (
+            <CommunityPostItem
+              key={post.id}
+              post={post}
+              onClick={() => handlePostClick(post.id)}
+            />
+          ))}
+        </Stack>
 
-      {/* 게시판 번호  */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: 4,
-          // 반응형으로 하단 여백 조정
-          mb: { xs: 30, md: 6 }, // 모바일에서 240px , PC에서 48px
-        }}
-      >
-        <Pagination
-          count={totalPages} // 전체 페이지 수 설정
-          page={currentPage} // 현재 활성화된 페이지 번호
-          onChange={handlePageChange} // 페이지 번호 변경 시 호출될 함수
+        {/* 게시판 번호  */}
+        <Box
           sx={{
-            // 모든 페이지네이션 항목 (번호, 이전/다음 버튼) 스타일
-            "& .MuiPaginationItem-root": {
-              backgroundColor: "transparent", // 기본 배경색 투명
-              border: "none",
-              color: "#aaa", // 선택되지 않은 페이지 번호 및 화살표의 색상 (회색)
-              fontSize: "1.1em", // 페이지 번호 폰트 크기
-              "&:hover": {
-                backgroundColor: "transparent", // 호버 시에도 배경 투명 유지
-              },
-              "&:focus": {
-                backgroundColor: "transparent", // 포커스 시에도 배경 투명 유지
-              },
-            },
-            // 현재 선택된 페이지 번호에만 적용되는 스타일
-            "& .Mui-selected": {
-              backgroundColor: "#e0e0e0", // 선택된 페이지의 밝은 회색 원형 배경색
-              color: "#000", // 선택된 페이지 번호의 색상 (검정색)
-              fontWeight: 700, // 선택된 페이지 번호 굵게 표시
-              borderRadius: "50%",
-            },
+            display: "flex",
+            justifyContent: "center",
+            mt: 4,
+            // 반응형으로 하단 여백 조정
+            mb: { xs: 30, md: 6 }, // 모바일에서 240px , PC에서 48px
           }}
-        />
+        >
+          <Pagination
+            count={totalPages} // 전체 페이지 수 설정
+            page={currentPage} // 현재 활성화된 페이지 번호
+            onChange={handlePageChange} // 페이지 번호 변경 시 호출될 함수
+            sx={{
+              // 모든 페이지네이션 항목 (번호, 이전/다음 버튼) 스타일
+              "& .MuiPaginationItem-root": {
+                backgroundColor: "transparent", // 기본 배경색 투명
+                border: "none",
+                color: "#aaa", // 선택되지 않은 페이지 번호 및 화살표의 색상 (회색)
+                fontSize: "1.1em", // 페이지 번호 폰트 크기
+                "&:hover": {
+                  backgroundColor: "transparent", // 호버 시에도 배경 투명 유지
+                },
+                "&:focus": {
+                  backgroundColor: "transparent", // 포커스 시에도 배경 투명 유지
+                },
+              },
+              // 현재 선택된 페이지 번호에만 적용되는 스타일
+              "& .Mui-selected": {
+                backgroundColor: "#e0e0e0", // 선택된 페이지의 밝은 회색 원형 배경색
+                color: "#000", // 선택된 페이지 번호의 색상 (검정색)
+                fontWeight: 700, // 선택된 페이지 번호 굵게 표시
+                borderRadius: "50%",
+              },
+            }}
+          />
+        </Box>
       </Box>
 
       {/* 스크롤 맨 위로 이동 버튼 */}
       <ScrollToTopButton />
-    </Box>
+    </Stack>
   );
 };
 
