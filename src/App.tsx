@@ -39,6 +39,7 @@ function App() {
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
               <Route path="/community/:postId" element={<CommunityPost />} />
+              <Route path="/community/:postId/modify" element={<CommunityPost />} />
             </Routes>
           </TokenRefresher>
         </BrowserRouter>
