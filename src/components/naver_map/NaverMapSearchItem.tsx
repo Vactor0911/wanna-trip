@@ -14,13 +14,14 @@ import {
 } from "../../state/naverMapDialog";
 import { useCallback, useRef } from "react";
 import { useSetAtom } from "jotai";
+import { stripHtml } from "../../utils";
 
 const NaverMapSearchItem = (props: LocationInterface) => {
   const { title, address, category = "" } = props;
 
   const setSelectedLocation = useSetAtom(selectedLocationAtom);
   const searchItemRef = useRef<HTMLDivElement | null>(null);
-  const setLocationDialogAchor = useSetAtom(locationDialogAnchor);
+  const setLocationDialogAnchor = useSetAtom(locationDialogAnchor);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const setDrawerOpen = useSetAtom(drawerOpenAtom);
@@ -37,7 +38,7 @@ const NaverMapSearchItem = (props: LocationInterface) => {
     setSelectedLocation(props);
 
     // 클릭한 버튼으로 앵커 설정
-    setLocationDialogAchor(searchItemRef.current);
+    setLocationDialogAnchor(searchItemRef.current);
 
     // 모바일이면 드로어 메뉴 닫기
     if (isMobile) {
@@ -47,7 +48,7 @@ const NaverMapSearchItem = (props: LocationInterface) => {
     isMobile,
     props,
     setDrawerOpen,
-    setLocationDialogAchor,
+    setLocationDialogAnchor,
     setSelectedLocation,
   ]);
 
@@ -78,7 +79,7 @@ const NaverMapSearchItem = (props: LocationInterface) => {
               mr: 1,
             }}
           />
-          {title.replace(/<[^>]*>/g, "")}
+          {stripHtml(title)}
         </Typography>
 
         {/* 주소 */}

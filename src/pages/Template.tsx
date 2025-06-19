@@ -281,13 +281,11 @@ const Template = () => {
         return;
       }
 
-      //TODO: 보드 드래그 & 드롭 처리
-      // type = 드래그된 요소의 타입 (보드: board, 카드: card)
-
       // 이전 상태의 템플릿 저장
       const prevTemplate = template;
       let newTemplate; // 변경된 템플릿을 저장할 변수
-
+      
+      // type = 드래그된 요소의 타입 (보드: board, 카드: card)
       if (type === "card") {
         // 카드 드래그 & 드롭 처리
         // 변경된 템플릿 생성

@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import minMax from "dayjs/plugin/minMax";
 import { LoginState } from "../state";
 import { setAccessToken } from "./accessToken";
-import { getDefaultStore } from 'jotai/vanilla'; // vanilla 버전은 React에 의존하지 않음
+import { getDefaultStore } from "jotai/vanilla"; // vanilla 버전은 React에 의존하지 않음
 
 dayjs.extend(minMax);
 
@@ -37,7 +37,6 @@ export const isPasswordCombinationValid = (password: string) =>
   /[0-9]/.test(password) &&
   /[!@#$%^&*?]/.test(password);
 
-
 // 로컬 import를 위한 함수
 const getKakaoLoginStateAtom = async () => {
   const { kakaoLoginStateAtom } = await import("../state");
@@ -45,12 +44,14 @@ const getKakaoLoginStateAtom = async () => {
 };
 
 /**
- * 로그인 상태를 설정하는 비동기 함수 
+ * 로그인 상태를 설정하는 비동기 함수
  * 컴포넌트 외부에서도 아톰 상태 변경 가능
- * @param setLoginState 
+ * @param setLoginState
  * @returns 로그인 상태 초기화
  */
-export const resetStates = async (setLoginState: (state: LoginState) => void) => {
+export const resetStates = async (
+  setLoginState: (state: LoginState) => void
+) => {
   setLoginState({} as LoginState); // 로그인 상태 초기화
   setAccessToken(""); // 토큰 초기화
   sessionStorage.removeItem("WannaTriploginState"); // 세션 스토리지 제거
@@ -97,4 +98,19 @@ export const isEmailValid = (email: string) => {
 
   // 이메일 형식이 올바름
   return true;
+};
+
+/**
+ * HTML 문자열에서 텍스트만 추출하는 함수
+ * @param html HTML 문자열
+ * @returns HTML 태그가 제거된 텍스트 문자열
+ */
+export const stripHtml = (html: string | undefined | null): string => {
+  if (!html) {
+    return "";
+  }
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  return doc.body.textContent ?? "";
 };
