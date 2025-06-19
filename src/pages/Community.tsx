@@ -254,101 +254,103 @@ const Community = () => {
       </Stack>
 
       {/* 여행 카테고리 섹션  */}
-      <Stack gap={4}>
-        {/* 섹션 제목 */}
-        <Typography variant="h5" fontWeight={700}>
-          여행 카테고리
-        </Typography>
+      <Box px={{ xs: 1, md: "auto" }}>
+        <Stack gap={4}>
+          {/* 섹션 제목 */}
+          <Typography variant="h5" fontWeight={700}>
+            여행 카테고리
+          </Typography>
 
-        <Box
-          sx={{ position: "relative", display: "flex", alignItems: "center" }}
-        >
-          {/* 왼쪽 버튼 */}
-          {!isAtStart && (
-            <IconButton
-              onClick={handleScrollLeft}
+          <Box
+            sx={{ position: "relative", display: "flex", alignItems: "center" }}
+          >
+            {/* 왼쪽 버튼 */}
+            {!isAtStart && (
+              <IconButton
+                onClick={handleScrollLeft}
+                sx={{
+                  ...scrollButtonStyles,
+                  left: 0,
+                  transform: "translateX(-50%) translateY(-40%)",
+                }}
+              >
+                <ArrowBackIosNewRoundedIcon />
+              </IconButton>
+            )}
+
+            <Stack
+              ref={scrollRef}
+              direction="row"
+              gap={3}
               sx={{
-                ...scrollButtonStyles,
-                left: 0,
-                transform: "translateX(-50%) translateY(-40%)",
+                overflowX: "auto",
+                py: 1,
+                "&::-webkit-scrollbar": { display: "none" },
+                msOverflowStyle: "none",
+                scrollbarWidth: "none",
               }}
             >
-              <ArrowBackIosNewRoundedIcon />
-            </IconButton>
-          )}
-
-          <Stack
-            ref={scrollRef}
-            direction="row"
-            gap={3}
-            sx={{
-              overflowX: "auto",
-              py: 1,
-              "&::-webkit-scrollbar": { display: "none" },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-            }}
-          >
-            {regionImages.map((category) => (
-              <Stack key={category.name} gap={1.1}>
-                <Stack
-                  direction="column"
-                  spacing={1}
-                  sx={{
-                    flexShrink: 0,
-                    width: 280,
-                    height: 280,
-                    borderRadius: 8,
-                    boxShadow: 5,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Box
+              {regionImages.map((category) => (
+                <Stack key={category.name} gap={1.1}>
+                  <Stack
+                    direction="column"
+                    spacing={1}
                     sx={{
-                      width: "100%",
+                      flexShrink: 0,
+                      width: 280,
                       height: 280,
                       borderRadius: 8,
-                      border: "1px solid #B7B7B7",
+                      boxShadow: 5,
                       overflow: "hidden",
-                      cursor: "pointer",
-                      backgroundImage: `url(${category.imgSrc})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
                     }}
-                    onClick={() => handleCategoryClick(category.name)}
-                  ></Box>
+                  >
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 280,
+                        borderRadius: 8,
+                        border: "1px solid #B7B7B7",
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        backgroundImage: `url(${category.imgSrc})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                      onClick={() => handleCategoryClick(category.name)}
+                    ></Box>
+                  </Stack>
+
+                  {/* 지역 이름  */}
+                  <Typography
+                    variant="body1"
+                    fontWeight={400}
+                    fontSize={"1.2em"}
+                    color="text.primary"
+                    textAlign="left"
+                    ml={2.5}
+                  >
+                    {category.name}
+                  </Typography>
                 </Stack>
+              ))}
+            </Stack>
 
-                {/* 지역 이름  */}
-                <Typography
-                  variant="body1"
-                  fontWeight={400}
-                  fontSize={"1.2em"}
-                  color="text.primary"
-                  textAlign="left"
-                  ml={2.5}
-                >
-                  {category.name}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-
-          {/* 오른쪽 버튼 */}
-          {!isAtEnd && (
-            <IconButton
-              onClick={handleScrollRight}
-              sx={{
-                ...scrollButtonStyles,
-                right: 0,
-                transform: "translateX(50%) translateY(-40%)",
-              }}
-            >
-              <ArrowForwardIosRoundedIcon />
-            </IconButton>
-          )}
-        </Box>
-      </Stack>
+            {/* 오른쪽 버튼 */}
+            {!isAtEnd && (
+              <IconButton
+                onClick={handleScrollRight}
+                sx={{
+                  ...scrollButtonStyles,
+                  right: 0,
+                  transform: "translateX(50%) translateY(-40%)",
+                }}
+              >
+                <ArrowForwardIosRoundedIcon />
+              </IconButton>
+            )}
+          </Box>
+        </Stack>
+      </Box>
 
       {/* 일반 게시판 */}
       <Box sx={{ position: "relative" }}>
@@ -441,29 +443,29 @@ const Community = () => {
               </IconButton>
             );
           })}
+        </Box>
 
-          {/* 다음 그룹 버튼 */}
-          <IconButton
-            onClick={() => {
-              // 다음 그룹의 첫 번째 페이지를 선택
-              const nextGroupStart = Math.min(
-                totalPages,
-                Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
-                  pageGroupSize +
-                  1
-              );
-              setCurrentPage(nextGroupStart);
-            }}
-            disabled={
+        {/* 다음 그룹 버튼 */}
+        <IconButton
+          onClick={() => {
+            // 다음 그룹의 첫 번째 페이지를 선택
+            const nextGroupStart = Math.min(
+              totalPages,
               Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
                 pageGroupSize +
-                1 >
-              totalPages
-            }
-          >
-            <ArrowForwardIosRoundedIcon />
-          </IconButton>
-        </Box>
+                1
+            );
+            setCurrentPage(nextGroupStart);
+          }}
+          disabled={
+            Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
+              pageGroupSize +
+              1 >
+            totalPages
+          }
+        >
+          <ArrowForwardIosRoundedIcon />
+        </IconButton>
       </Box>
 
       {/* 스크롤 맨 위로 이동 버튼 */}
