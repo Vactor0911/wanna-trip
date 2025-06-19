@@ -199,8 +199,13 @@ const Community = () => {
   // 실제 게시글 수에 따라 동적으로 계산 해야되는 부분
   const totalPages = 20;
 
-  // regionTags를 regionImages에서 자동으로 생성
-  const regionTags = regionImages.map((region) => region.name);
+  // regionTags는 regionImages에서 자동 생성 + 코드 내 직접 추가 태그 모두 포함
+  const regionTags = [
+    ...regionImages.map((region) => region.name),
+    "추가태그1",
+    "추가태그2",
+    // 필요시 직접 추가/수정
+  ];
 
   // 선택된 태그 상태 추가
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
