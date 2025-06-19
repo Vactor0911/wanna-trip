@@ -1,5 +1,10 @@
 import { atom } from "jotai";
 
+// 지도 기본값
+export const DEFAULT_LAT = 37.5665; // 지도 위도
+export const DEFAULT_LNG = 126.978; // 지도 경도
+export const DEFAULT_ZOOM = 17; // 지도 줌 레벨
+
 export const naverMapDialogOpenAtom = atom(false); // 네이버 지도 다이얼로그 열림 상태
 
 export const markerPositionAtom = atom<{ lat: number; lng: number }>({
@@ -7,7 +12,7 @@ export const markerPositionAtom = atom<{ lat: number; lng: number }>({
   lng: 0,
 }); // 마커 위치 상태
 
-export const zoomAtom = atom(17); // 지도 줌 레벨 상태
+export const zoomAtom = atom(DEFAULT_ZOOM); // 지도 줌 레벨 상태
 
 export const drawerOpenAtom = atom(false); // 검색창 드로어 메뉴 열림 상태
 
