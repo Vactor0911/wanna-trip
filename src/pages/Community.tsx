@@ -130,6 +130,79 @@ export const temporaryPosts = [
     comments: 2,
     shares: 11,
   },
+  {
+    id: "5",
+    imgbg: "#f3e5f5",
+    title:
+      "일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!",
+    hashtags: ["강릉", "단기여행", "행복", "유튜버"],
+    likes: 132,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "6",
+    imgbg: "#f0f4c3",
+    title: "일본으로 2박 여행 가볼래?",
+    hashtags: ["일본", "해외여행", "강추"],
+    likes: 312,
+    comments: 5,
+    shares: 3,
+  },
+  {
+    id: "7",
+    imgbg: "#bbdefb",
+    title: "연인끼리 추억 쌓기 (당일치기)",
+    hashtags: ["연인", "단기여행", "힐링", "즐거운", "시원한"],
+    likes: 1322,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "8",
+    imgbg: "#eeeeee",
+    title: "국내 맛집 여행",
+    hashtags: ["국내여행", "맛집", "전국", "힐링"],
+    likes: 411,
+    comments: 2,
+    shares: 11,
+  },
+  {
+    id: "9",
+    imgbg: "#f3e5f5",
+    title: "강릉 여행 재밌다",
+    hashtags: ["강릉", "맛집", "행복", "유튜버"],
+    likes: 132,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "10",
+    imgbg: "#f0f4c3",
+    title: "일본으로 2박 여행 가볼래?",
+    hashtags: ["일본", "해외여행", "서울", "맛집"],
+    likes: 312,
+    comments: 5,
+    shares: 3,
+  },
+  {
+    id: "11",
+    imgbg: "#bbdefb",
+    title: "연인끼리 추억 쌓기 (당일치기)",
+    hashtags: ["서울", "단기여행", "힐링", "즐거운", "시원한"],
+    likes: 1322,
+    comments: 3,
+    shares: 23,
+  },
+  {
+    id: "12",
+    imgbg: "#eeeeee",
+    title: "국내 맛집 여행",
+    hashtags: ["국내여행", "맛집", "전국", "힐링", "일본", "부산"],
+    likes: 411,
+    comments: 2,
+    shares: 11,
+  },
 ];
 
 const ITEM_WIDTH = 280; // 카드의 실제 너비(px)
@@ -185,6 +258,8 @@ const useHorizontalScroll = () => {
   };
 };
 
+const POSTS_PER_PAGE = 5; // 한 페이지에 보여줄 게시글 수
+
 const Community = () => {
   const { scrollRef, isAtStart, isAtEnd, handleScrollLeft, handleScrollRight } =
     useHorizontalScroll();
@@ -196,6 +271,14 @@ const Community = () => {
   // 페이지네이션을 위한 현재 페이지 상태 정의
   const [currentPage, setCurrentPage] = useState(1);
 
+  // 선택된 태그 상태 추가
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // 태그가 바뀔 때마다 페이지를 1로 초기화
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedTags]);
+
   // 실제 게시글 수에 따라 동적으로 계산 해야되는 부분
   const totalPages = 20;
 
@@ -204,11 +287,10 @@ const Community = () => {
     ...regionImages.map((region) => region.name),
     "추가태그1",
     "추가태그2",
+    "일본",
+    "맛집",
     // 필요시 직접 추가/수정
   ];
-
-  // 선택된 태그 상태 추가
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // 검색 실행 핸들러
   const handleSearch = (selectedTags: string[], inputValue: string) => {
@@ -239,6 +321,21 @@ const Community = () => {
     boxShadow: 1,
     "&:hover": { background: "rgba(255,255,255)" },
   };
+
+  // 선택된 태그가 있을 경우 해당 태그가 모두 포함된 게시글만 필터링 (AND 조건)
+  const filteredPosts =
+    selectedTags.length === 0
+      ? temporaryPosts
+      : temporaryPosts.filter((post) =>
+          selectedTags.every((tag) => post.hashtags.includes(tag))
+        );
+
+  // 페이지네이션된 게시글 목록 계산
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  );
+  const totalPostPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
 
   return (
     <Stack mt={4} gap={8}>
@@ -380,92 +477,69 @@ const Community = () => {
 
         {/* 일반 게시판 목록  */}
         <Stack spacing={2} sx={{ mt: 4 }}>
-          {temporaryPosts.map((post) => (
-            <CommunityPostItem
-              key={post.id}
-              post={post}
-              onClick={() => handlePostClick(post.id)}
-            />
-          ))}
+          {paginatedPosts.length > 0 ? (
+            paginatedPosts.map((post) => (
+              <CommunityPostItem
+                key={post.id}
+                post={post}
+                onClick={() => handlePostClick(post.id)}
+              />
+            ))
+          ) : (
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ textAlign: "center", py: 6 }}
+            >
+              게시글이 없습니다.
+            </Typography>
+          )}
         </Stack>
 
-        {/* 게시판 번호  */}
+        {/* 게시판 페이지네이션 */}
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             mt: 4,
-            mb: { xs: 30, md: 6 },
             gap: 1,
           }}
         >
-          {/* 이전 그룹 버튼 */}
           <IconButton
-            onClick={() => {
-              // 이전 그룹의 마지막 페이지를 선택
-              const prevGroupStart = Math.max(
-                1,
-                Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize -
-                  (pageGroupSize - 1)
-              );
-              const prevGroupEnd = prevGroupStart + pageGroupSize - 1;
-              setCurrentPage(Math.min(prevGroupEnd, totalPages));
-            }}
-            disabled={currentPage <= pageGroupSize}
+            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
           >
-            <ArrowBackIosNewRoundedIcon />
+            {"<"}
           </IconButton>
-
-          {/* 페이지 번호 그룹 */}
-          {Array.from({ length: pageGroupSize }, (_, i) => {
-            const pageNum =
-              Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
-              i +
-              1;
-            if (pageNum > totalPages) return null;
-            return (
-              <IconButton
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  backgroundColor:
-                    currentPage === pageNum ? "#e0e0e0" : "transparent",
-                  color: currentPage === pageNum ? "#000" : "#aaa",
-                  fontWeight: currentPage === pageNum ? 700 : 400,
-                  fontSize: "1.1em",
-                  borderRadius: "50%",
-                }}
-              >
-                {pageNum}
-              </IconButton>
-            );
-          })}
+          {Array.from({ length: Math.max(totalPostPages, 1) }, (_, i) => (
+            <IconButton
+              key={i + 1}
+              onClick={() => setCurrentPage(i + 1)}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor:
+                  currentPage === i + 1 ? "#e0e0e0" : "transparent",
+                color: currentPage === i + 1 ? "#000" : "#aaa",
+                fontWeight: currentPage === i + 1 ? 700 : 400,
+                fontSize: "1.1em",
+                borderRadius: "50%",
+              }}
+              disabled={totalPostPages === 0}
+            >
+              {i + 1}
+            </IconButton>
+          ))}
+          <IconButton
+            onClick={() =>
+              setCurrentPage(Math.min(totalPostPages, currentPage + 1))
+            }
+            disabled={currentPage === totalPostPages || totalPostPages === 0}
+          >
+            {">"}
+          </IconButton>
         </Box>
-
-        {/* 다음 그룹 버튼 */}
-        <IconButton
-          onClick={() => {
-            // 다음 그룹의 첫 번째 페이지를 선택
-            const nextGroupStart = Math.min(
-              totalPages,
-              Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
-                pageGroupSize +
-                1
-            );
-            setCurrentPage(nextGroupStart);
-          }}
-          disabled={
-            Math.floor((currentPage - 1) / pageGroupSize) * pageGroupSize +
-              pageGroupSize +
-              1 >
-            totalPages
-          }
-        >
-          <ArrowForwardIosRoundedIcon />
-        </IconButton>
       </Box>
 
       {/* 스크롤 맨 위로 이동 버튼 */}
