@@ -13,6 +13,7 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined";
 import ShareIcon from "@mui/icons-material/Share";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import IosShareIcon from "@mui/icons-material/IosShare";
 import { useNavigate } from "react-router-dom";
 
 // 인기 템플릿 데이터 타입 정의
@@ -247,34 +248,47 @@ const PopularTemplates = ({
                     </Typography>
                   ) : (
                     <>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.5,
-                          cursor: "pointer",
-                        }}
-                        onClick={(e) => handleLikeClick(e, tpl.id)}
-                      >
-                        {likedTemplates.has(tpl.id) ? (
-                          <FavoriteIcon
-                            sx={{ fontSize: 16, color: "error.main" }}
-                          />
-                        ) : (
-                          <FavoriteBorderOutlinedIcon
-                            sx={{ fontSize: 16, color: "text.primary" }}
-                          />
-                        )}{" "}
-                        {tpl.likes}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        <ChatBubbleOutlineIcon sx={{ fontSize: 16 }} />{" "}
-                        {tpl.comments}
-                      </Typography>
+                      {/* 좋아요 */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {tpl.likes}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleLikeClick(e, tpl.id)}
+                          sx={{ position: "relative", top: 1 }}
+                        >
+                          {likedTemplates.has(tpl.id) ? (
+                            <FavoriteIcon color="error" fontSize="small" />
+                          ) : (
+                            <FavoriteBorderOutlinedIcon fontSize="small" />
+                          )}
+                        </IconButton>
+                      </Box>
+                      {/* 공유 */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {tpl.shares}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          sx={{ position: "relative", top: -1 }}
+                        >
+                          <IosShareIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      {/* 댓글 */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography variant="body2" color="text.secondary">
+                          {tpl.comments}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          sx={{ position: "relative", top: 1 }}
+                        >
+                          <ChatBubbleOutlineIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </>
                   )}
                 </Box>
