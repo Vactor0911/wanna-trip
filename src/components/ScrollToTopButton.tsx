@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Box } from "@mui/material";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import { IconButton, Paper } from "@mui/material";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 
 const ScrollToTopButton = () => {
   // 버튼 표시 상태 관리
@@ -33,34 +33,22 @@ const ScrollToTopButton = () => {
     };
   }, []);
 
-  // isVisible 상태가 true일 때만 버튼 렌더링
   return (
-    <>
-      {isVisible && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: "40px",
-            right: "50px",
-            zIndex: 1000,
-
-            width: "56px",
-            height: "56px",
-            borderRadius: "50%",
-            backgroundColor: "white",
-            boxShadow: "0 3px 5px rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-          }}
-          onClick={scrollToTop}
-        >
-          {/* 위쪽 화살표 아이콘 */}
-          <ArrowUpwardIcon sx={{ color: "#3288FF", fontSize: "35px" }} />
-        </Box>
-      )}
-    </>
+    <Paper
+      elevation={3}
+      sx={{
+        position: "fixed",
+        bottom: "40px",
+        right: "40px",
+        borderRadius: "50%",
+        opacity: isVisible ? 1 : 0,
+        transition: "opacity 0.2s ease-in-out",
+      }}
+    >
+      <IconButton onClick={scrollToTop}>
+        <ArrowUpwardRoundedIcon color="primary" fontSize="large" />
+      </IconButton>
+    </Paper>
   );
 };
 

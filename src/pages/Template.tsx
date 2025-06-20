@@ -87,7 +87,32 @@ interface BackendCard {
   };
 }
 
-const Template = () => {
+interface TemplateProps {
+  uuid?: string; // 템플릿 UUID
+  height?: string; // 템플릿 높이
+  paddgingX?:
+    | string
+    | {
+        xs?: string;
+        sm?: string;
+        md?: string;
+        lg?: string;
+        xl?: string;
+      }; // 좌우 패딩
+}
+
+const Template = (props: TemplateProps) => {
+  let { uuid } = props; // props에서 uuid 가져오기
+  const {
+    height = "calc(100vh - 82px)",
+    paddgingX = {
+      xs: "16px",
+      sm: "24px",
+      xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
+    },
+  } = props;
+
+  const params = useParams(); // URL 파라미터
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
@@ -96,12 +121,10 @@ const Template = () => {
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
   const [templateTitle, setTemplateTitle] = useState(template.title); // 템플릿 이름 상태
-  const { uuid } = useParams(); // URL에서 uuid 파라미터 가져오기
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
-
   const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
 
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
@@ -134,9 +157,17 @@ const Template = () => {
     []
   );
 
+  // URL 파라미터에서 uuid 가져오기
+  if (!uuid) {
+    uuid = params.uuid;
+  }
+
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
-    if (!uuid) return; // uuid가 없으면 종료
+    // uuid가 없으면 종료
+    if (!uuid) {
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -485,11 +516,7 @@ const Template = () => {
   // 로딩 상태 표시
   if (isLoading) {
     return (
-      <Stack
-        height="calc(100vh - 82px)"
-        alignItems="center"
-        justifyContent="center"
-      >
+      <Stack height={height} alignItems="center" justifyContent="center">
         <CircularProgress />
       </Stack>
     );
@@ -498,11 +525,7 @@ const Template = () => {
   // 에러 상태 표시
   if (error) {
     return (
-      <Stack
-        height="calc(100vh - 82px)"
-        alignItems="center"
-        justifyContent="center"
-      >
+      <Stack height={height} alignItems="center" justifyContent="center">
         <Typography color="error">{error}</Typography>
         <Button
           variant="contained"
@@ -519,7 +542,7 @@ const Template = () => {
     <>
       {/* 템플릿 페이지 */}
       <Stack
-        height="calc(100vh - 82px)"
+        height={height}
         sx={{
           "& .MuiIconButton-root > svg": {
             color: theme.palette.black.main,
@@ -726,11 +749,7 @@ const Template = () => {
             direction="row"
             height="100%"
             gap={5}
-            paddingX={{
-              xs: "16px",
-              sm: "24px",
-              xl: `calc(24px + (100vw - ${theme.breakpoints.values.xl}px) / 2)`,
-            }}
+            paddingX={paddgingX}
             paddingY={5}
             sx={{
               overflowX: "auto",
