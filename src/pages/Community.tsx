@@ -341,8 +341,7 @@ const Community = () => {
     <Stack mt={4} gap={8} pb={10}>
       {/* 인기 게시글  */}
       <Stack gap={4}>
-        <Typography variant="h5">인기 템플릿</Typography>
-        {/* 임시 데이터로 PopularTemplates 컴포넌트 렌더링 */}
+        <Typography variant="h5">실시간 인기 게시글</Typography>
         <PopularTemplates
           maxCards={3}
           type="post"
