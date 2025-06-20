@@ -44,17 +44,24 @@ const CommunityPostEdit = () => {
           variant="outlined"
           sx={{
             borderRadius: 2,
+            borderColor: "#ccced1",
           }}
         >
           <Stack padding={3} paddingX={5} gap={1}>
+            {/* 헤더 */}
             <Typography variant="h6" color="text.secondary">
               제목
             </Typography>
+
+            {/* 제목 입력란 */}
             <TextField
               variant="outlined"
               placeholder="제목을 입력해 주세요."
               value={title}
               onChange={handleTitleChange}
+              sx={{
+                backgroundColor: "#f5f5f5",
+              }}
             />
           </Stack>
         </Paper>
