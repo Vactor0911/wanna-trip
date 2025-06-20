@@ -2,16 +2,19 @@ import {
   Avatar,
   Box,
   Button,
+  Collapse,
   Container,
   Divider,
   IconButton,
   Menu,
   MenuItem,
+  Paper,
   Stack,
   Typography,
 } from "@mui/material";
 import { useParams } from "react-router";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import parse from "html-react-parser";
@@ -25,18 +28,10 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
+import ShareIcon from "@mui/icons-material/Share";
+import Template from "./Template";
 
-const CommunityPost = () => {
-  const { postId } = useParams(); // 게시글 ID
-
-  const [isLoading, setIsLoading] = useState(false); // 게시글 로딩 여부
-  const [title] = useState("게시글 제목"); // 게시글 제목
-  const [authorId] = useState("1"); // 작성자 ID
-  const [authorName] = useState("작성자 이름"); // 작성자 이름
-  const [authorProfileImage] = useState(""); // 작성자 프로필 이미지 URL
-  const [createdAt] = useState("2023-10-01"); // 작성일
-  const [content] = useState(
-    `<h1>제주도 3박 4일 여행 후기</h1>
+const contentExample = `<h1>제주도 3박 4일 여행 후기</h1>
 
   <p>
     지난주, 오랜만에 제주도로 3박 4일 여행을 다녀왔습니다. 서울의 바쁜 일상에서 벗어나 푸른 바다와 싱그러운 자연을 만끽할 수 있었던 소중한 시간이었어요.
@@ -94,73 +89,99 @@ const CommunityPost = () => {
   <p>
     3박 4일이라는 시간이 짧게 느껴질 만큼 알차고 풍성한 여행이었습니다. 제주도는 계절마다 다른 매력을 가지고 있는 곳이라 언제 가도 새로운 즐거움을 느낄 수 있는 것 같아요.
     일상에 지친 분들에게 강력 추천드리고 싶은 여행지입니다. 다음엔 남쪽 해안도로 쪽도 여유 있게 돌아보고 싶네요.
-  </p>`
-  ); // 게시글 내용 (HTML 형식)
+  </p>`;
+
+// TODO: 댓글 타입 재정의 필요
+interface Comment {
+  id: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  createdAt: string;
+  likes: number;
+  parentId?: string | null; // 최상위면 null
+  liked: boolean;
+}
+
+const commentExample = [
+  {
+    id: "1",
+    authorId: "1",
+    authorName: "홍길동",
+    content: "첫 번째 댓글 내용입니다.",
+    createdAt: "2023-10-01 12:00",
+    likes: 2,
+    parentId: null,
+  },
+  {
+    id: "2",
+    authorId: "2",
+    authorName: "김철수",
+    content: "두 번째 댓글 내용입니다.",
+    createdAt: "2023-10-01 12:05",
+    likes: 1,
+    parentId: null,
+  },
+  {
+    id: "3",
+    authorId: "1",
+    authorName: "홍길동",
+    content: "첫 번째 댓글에 대한 답글입니다.",
+    createdAt: "2023-10-01 12:10",
+    likes: 0,
+    parentId: "1",
+  },
+  {
+    id: "4",
+    authorId: "3",
+    authorName: "이영희",
+    content: "세 번째 댓글 내용입니다.",
+    createdAt: "2023-10-01 12:15",
+    likes: 3,
+    parentId: null,
+  },
+  {
+    id: "5",
+    authorId: "2",
+    authorName: "김철수",
+    content: "두 번째 댓글에 대한 답글입니다.",
+    createdAt: "2023-10-01 12:20",
+    likes: 1,
+    parentId: "2",
+  },
+  {
+    id: "6",
+    authorId: "3",
+    authorName: "이영희",
+    content: "첫 번째 댓글에 대한 두번째 답글입니다.",
+    createdAt: "2023-10-01 12:50",
+    likes: 0,
+    parentId: "1",
+  },
+] as Comment[];
+
+const CommunityPost = () => {
+  const { postId } = useParams(); // 게시글 ID
+  const [isLoading, setIsLoading] = useState(false); // 게시글 로딩 여부
+  const [title] = useState("게시글 제목"); // 게시글 제목
+  const [authorId] = useState("1"); // 작성자 ID
+  const [authorName] = useState("작성자 이름"); // 작성자 이름
+  const [authorProfileImage] = useState(""); // 작성자 프로필 이미지 URL
+  const [createdAt] = useState("2023-10-01"); // 작성일
+  const [content] = useState(contentExample); // 게시글 내용 (HTML 형식)
   const [likes] = useState(10); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
-  const [comments, setComments] = useState([
-    {
-      id: "1",
-      authorId: "1",
-      authorName: "홍길동",
-      content: "첫 번째 댓글 내용입니다.",
-      createdAt: "2023-10-01 12:00",
-      likes: 2,
-      parentId: null,
-      liked: false,
-    },
-    {
-      id: "2",
-      authorId: "2",
-      authorName: "김철수",
-      content: "두 번째 댓글 내용입니다.",
-      createdAt: "2023-10-01 12:05",
-      likes: 1,
-      parentId: null,
-      liked: false,
-    },
-    {
-      id: "3",
-      authorId: "1",
-      authorName: "홍길동",
-      content: "첫 번째 댓글에 대한 답글입니다.",
-      createdAt: "2023-10-01 12:10",
-      likes: 0,
-      parentId: "1",
-      liked: false,
-    },
-    {
-      id: "4",
-      authorId: "3",
-      authorName: "이영희",
-      content: "세 번째 댓글 내용입니다.",
-      createdAt: "2023-10-01 12:15",
-      likes: 3,
-      parentId: null,
-    },
-    {
-      id: "5",
-      authorId: "2",
-      authorName: "김철수",
-      content: "두 번째 댓글에 대한 답글입니다.",
-      createdAt: "2023-10-01 12:20",
-      likes: 1,
-      parentId: "2",
-    },
-    {
-      id: "6",
-      authorId: "3",
-      authorName: "이영희",
-      content: "첫 번째 댓글에 대한 두번째 답글입니다.",
-      createdAt: "2023-10-01 12:50",
-      likes: 0,
-      parentId: "1",
-      liked: false,
-    },
-  ] as Comment[]); // 댓글 수
+  const [shares, setShares] = useState(20); // 공유수
+  const [comments, setComments] = useState(commentExample); // 댓글 수
   const [replyParentId, setReplyParentId] = useState<string | null>(null); // 댓글 부모 ID
   const moreButtonRef = useRef<HTMLButtonElement>(null); // 더보기 버튼 참조
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
+  const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false); // 템플릿 드로어 열림 상태
+
+  // 접속시 스크롤 최상단으로 이동
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // TODO: 백엔드 연동시 병합해야 할 기능
   useEffect(() => {
@@ -173,18 +194,6 @@ const CommunityPost = () => {
   const handleLikeButtonClick = useCallback(() => {
     setIsLiked((prev) => !prev);
   }, []);
-
-  // TODO: 댓글 타입 재정의 필요
-  interface Comment {
-    id: string;
-    authorId: string;
-    authorName: string;
-    content: string;
-    createdAt: string;
-    likes: number;
-    parentId?: string | null; // 최상위면 null
-    liked: boolean;
-  }
 
   // 댓글 정렬 함수
   const getSortedComments = useCallback((): Comment[] => {
@@ -256,17 +265,21 @@ const CommunityPost = () => {
     setIsMoreMenuOpen(false);
   }, []);
 
+  // 템플릿 드로어 버튼 클릭
+  const handleTemplateDrawerToggle = useCallback(() => {
+    setIsTemplateDrawerOpen((prev) => !prev);
+  }, []);
+
   return (
     <Container maxWidth="lg">
       <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
         {/* 게시판 버튼 */}
-        <Box>
+        <Box position="relative">
           <NavLink
             to="/community"
             css={{
               textDecoration: "none",
               color: "inherit",
-              position: "relative",
             }}
           >
             <Typography variant="h5" display="inline">
@@ -301,7 +314,9 @@ const CommunityPost = () => {
 
           <Stack>
             {/* 작성자 이름 */}
-            <Typography variant="subtitle1" fontWeight="bold">{authorName}</Typography>
+            <Typography variant="subtitle1" fontWeight="bold">
+              {authorName}
+            </Typography>
 
             {/* 작성일 */}
             <Typography variant="subtitle2">{createdAt}</Typography>
@@ -388,63 +403,79 @@ const CommunityPost = () => {
         </Stack>
 
         {/* 버튼 컨테이너 */}
-        <Stack direction="row" gap={2}>
-          {/* 좋아요 */}
-          <Stack direction="row" alignItems="center">
-            {/* 좋아요 버튼 */}
-            <IconButton size="small" onClick={handleLikeButtonClick}>
-              {isLiked ? (
-                <FavoriteRoundedIcon
-                  sx={{
-                    color: red[600],
-                  }}
-                />
-              ) : (
-                <FavoriteBorderRoundedIcon
-                  sx={{
-                    color: red[600],
-                  }}
-                />
-              )}
-            </IconButton>
+        <Stack
+          direction="row"
+          gap={3}
+          justifyContent="flex-end"
+          alignItems="center"
+          flexWrap="wrap"
+        >
+          {/* 왼쪽 버튼 컨테이너 */}
+          <Stack direction="row" gap={2}>
+            {/* 좋아요 */}
+            <Stack direction="row" alignItems="center">
+              {/* 좋아요 버튼 */}
+              <IconButton size="small" onClick={handleLikeButtonClick}>
+                {isLiked ? (
+                  <FavoriteRoundedIcon
+                    sx={{
+                      color: red[600],
+                    }}
+                  />
+                ) : (
+                  <FavoriteBorderRoundedIcon
+                    sx={{
+                      color: red[600],
+                    }}
+                  />
+                )}
+              </IconButton>
 
-            {/* 좋아요 수 */}
-            <Typography variant="subtitle1">
-              {likes + Number(isLiked)}
-            </Typography>
+              {/* 좋아요 수 */}
+              <Typography variant="subtitle1">
+                {likes + Number(isLiked)}
+              </Typography>
+            </Stack>
+
+            {/* 공유 */}
+            <Stack direction="row" alignItems="center">
+              {/* 공유 버튼 */}
+              <IconButton size="small">
+                <ShareIcon />
+              </IconButton>
+
+              {/* 공유 수 */}
+              <Typography variant="subtitle1">{shares}</Typography>
+            </Stack>
+
+            {/* 댓글 */}
+            <Stack direction="row" alignItems="center">
+              {/* 댓글 버튼 */}
+              <IconButton size="small">
+                <ChatBubbleOutlineRoundedIcon />
+              </IconButton>
+
+              {/* 댓글 수 */}
+              <Typography variant="subtitle1">{comments.length}</Typography>
+            </Stack>
           </Stack>
 
-          {/* 댓글 */}
-          <Stack direction="row" alignItems="center">
-            {/* 댓글 버튼 */}
-            <IconButton size="small">
-              <ChatBubbleOutlineRoundedIcon />
-            </IconButton>
+          {/* 오른쪽 버튼 컨테이너 */}
+          <Stack direction="row" justifyContent="flex-end" gap={2} flexGrow={1}>
+            {/* 수정 버튼 */}
+            <Button variant="outlined" color="black">
+              <Typography variant="subtitle2" fontWeight="bold">
+                수정
+              </Typography>
+            </Button>
 
-            {/* 좋아요 수 */}
-            <Typography variant="subtitle1">{comments.length}</Typography>
+            {/* 삭제 버튼 */}
+            <Button variant="outlined" color="error">
+              <Typography variant="subtitle2" fontWeight="bold">
+                삭제
+              </Typography>
+            </Button>
           </Stack>
-
-          {/* 중앙 공백용 박스 */}
-          <Box
-            sx={{
-              flexGrow: 1,
-            }}
-          />
-
-          {/* 수정 버튼 */}
-          <Button variant="outlined" color="black">
-            <Typography variant="subtitle2" fontWeight="bold">
-              수정
-            </Typography>
-          </Button>
-
-          {/* 삭제 버튼 */}
-          <Button variant="outlined" color="error">
-            <Typography variant="subtitle2" fontWeight="bold">
-              삭제
-            </Typography>
-          </Button>
         </Stack>
 
         {/* 댓글 */}
@@ -548,6 +579,66 @@ const CommunityPost = () => {
 
         {/* 스크롤 상단 이동 버튼 */}
         <ScrollToTopButton />
+
+        {/* 템플릿 드로어 */}
+        <Paper
+          elevation={5}
+          sx={{
+            position: "fixed",
+            top: "15vh",
+            left: 0,
+            borderRadius: 0,
+            borderTopRightRadius: 8,
+            borderBottomRightRadius: 8,
+          }}
+        >
+          <Collapse
+            in={isTemplateDrawerOpen}
+            orientation="horizontal"
+            collapsedSize={50}
+          >
+            <Box
+              height="70vh"
+              width={{
+                xs: "90vw",
+                sm: "50vw",
+              }}
+              sx={{
+                overflowX: "auto",
+              }}
+            >
+              {/* 템플릿 화면 */}
+              <Template
+                uuid="4f1e0d40-4b27-11f0-a6ef-38a746032467"
+                height="70vh"
+                paddgingX="24px"
+              />
+            </Box>
+          </Collapse>
+
+          {/* 드로어 확장/축소 버튼 */}
+          <Paper
+            elevation={2}
+            sx={{
+              position: "absolute",
+              top: "50%",
+              right: 0,
+              borderRadius: "50%",
+              transform: "translate(50%, -50%)",
+            }}
+          >
+            <IconButton size="small" onClick={handleTemplateDrawerToggle}>
+              <ChevronLeftRoundedIcon
+                color="primary"
+                fontSize="large"
+                sx={{
+                  transform: `rotate(${isTemplateDrawerOpen ? 0 : -180}deg)`,
+                  transition: "transform 0.2s ease-in-out",
+                }}
+              />
+            </IconButton>
+          </Paper>
+        </Paper>
       </Stack>
     </Container>
   );
