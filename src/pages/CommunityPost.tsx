@@ -39,6 +39,9 @@ import axiosInstance, {
 } from "../utils/axiosInstance";
 import { wannaTripLoginStateAtom } from "../state";
 import { useAtomValue } from "jotai";
+import { formatDistanceToNow } from "date-fns";
+import { ko } from "date-fns/locale";
+import React from "react";
 
 const contentExample = `<h1>제주도 3박 4일 여행 후기</h1>
 
@@ -100,74 +103,20 @@ const contentExample = `<h1>제주도 3박 4일 여행 후기</h1>
     일상에 지친 분들에게 강력 추천드리고 싶은 여행지입니다. 다음엔 남쪽 해안도로 쪽도 여유 있게 돌아보고 싶네요.
   </p>`;
 
-// TODO: 댓글 타입 재정의 필요
+// 댓글 인터페이스
 interface Comment {
-  id: string;
+  id: number;
+  uuid: string;
   authorUuid: string;
   authorName: string;
+  authorProfile?: string;
   content: string;
   createdAt: string;
   likes: number;
-  parentId?: string | null; // 최상위면 null
+  parentUuid?: string | null;
   liked: boolean;
+  isAuthor?: boolean;
 }
-
-const commentExample = [
-  {
-    id: "1",
-    authorUuid: "1",
-    authorName: "홍길동",
-    content: "첫 번째 댓글 내용입니다.",
-    createdAt: "2023-10-01 12:00",
-    likes: 2,
-    parentId: null,
-  },
-  {
-    id: "2",
-    authorUuid: "2",
-    authorName: "김철수",
-    content: "두 번째 댓글 내용입니다.",
-    createdAt: "2023-10-01 12:05",
-    likes: 1,
-    parentId: null,
-  },
-  {
-    id: "3",
-    authorUuid: "1",
-    authorName: "홍길동",
-    content: "첫 번째 댓글에 대한 답글입니다.",
-    createdAt: "2023-10-01 12:10",
-    likes: 0,
-    parentId: "1",
-  },
-  {
-    id: "4",
-    authorUuid: "3",
-    authorName: "이영희",
-    content: "세 번째 댓글 내용입니다.",
-    createdAt: "2023-10-01 12:15",
-    likes: 3,
-    parentId: null,
-  },
-  {
-    id: "5",
-    authorUuid: "2",
-    authorName: "김철수",
-    content: "두 번째 댓글에 대한 답글입니다.",
-    createdAt: "2023-10-01 12:20",
-    likes: 1,
-    parentId: "2",
-  },
-  {
-    id: "6",
-    authorUuid: "3",
-    authorName: "이영희",
-    content: "첫 번째 댓글에 대한 두번째 답글입니다.",
-    createdAt: "2023-10-01 12:50",
-    likes: 0,
-    parentId: "1",
-  },
-] as Comment[];
 
 const CommunityPost = () => {
   const { postUuid } = useParams(); // 게시글 UUID
@@ -185,7 +134,11 @@ const CommunityPost = () => {
   const [likes, setLikes] = useState(0); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
   const [shares, setShares] = useState(0); // 공유수
-  const [comments, setComments] = useState(commentExample); // 댓글 목록
+
+  const [comments, setComments] = useState<Comment[]>([]); // 댓글 목록
+  const [commentText, setCommentText] = useState(""); // 댓글 입력 텍스트
+  const [isCommentLoading, setIsCommentLoading] = useState(false); // 댓글 로딩 상태
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false); // 댓글 제출 중 상태
 
   const [replyParentId, setReplyParentId] = useState<string | null>(null); // 댓글 부모 ID
   const moreButtonRef = useRef<HTMLButtonElement>(null); // 더보기 버튼 참조
@@ -198,9 +151,15 @@ const CommunityPost = () => {
   const [isAuthor, setIsAuthor] = useState(false);
   const [currentUserUuid, setCurrentUserUuid] = useState(""); // 현재 사용자 UUID
 
-  // 삭제 확인 다이얼로그 상태 추가
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // 삭제 확인 다이얼로그
-  const [isDeleting, setIsDeleting] = useState(false); // 삭제 중 상태
+  // 게시글 삭제 확인 다이얼로그 상태 추가
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // 게시글 삭제 확인 다이얼로그
+  const [isDeleting, setIsDeleting] = useState(false); // 게시글 삭제 중 상태
+
+  // 댓글 삭제 관련 상태 추가
+  const [isCommentDeleteDialogOpen, setIsCommentDeleteDialogOpen] =
+    useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUserInfo = useCallback(async () => {
@@ -290,7 +249,6 @@ const CommunityPost = () => {
 
   // 컴포넌트 마운트 시 게시글 데이터 로드
   useEffect(() => {
-    window.scrollTo(0, 0); // 페이지 상단으로 스크롤
     fetchPostData();
   }, [fetchPostData]);
 
@@ -326,67 +284,206 @@ const CommunityPost = () => {
     }
   }, [navigate, postUuid]);
 
-  // TODO: 백엔드 연동시 병합해야 할 기능
+  // 댓글 로드 함수
+  const loadComments = useCallback(async () => {
+    if (!postUuid) return;
+
+    try {
+      setIsCommentLoading(true);
+      const response = await axiosInstance.get(`/post/comments/${postUuid}`);
+
+      if (response.data.success) {
+        // 댓글 데이터 가공
+        const formattedComments = response.data.comments.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (comment: any) => ({
+            id: comment.id,
+            uuid: comment.uuid,
+            authorUuid: comment.authorUuid,
+            authorName: comment.authorName,
+            authorProfile: comment.authorProfile
+              ? `${SERVER_HOST}${comment.authorProfile}`
+              : undefined,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            likes: comment.likes,
+            parentUuid: comment.parentUuid,
+            liked: false, // 추후 서버에서 좋아요 여부 정보를 받아올 수 있음
+            isAuthor: currentUserUuid === comment.authorUuid, // 작성자 여부 확인
+          })
+        );
+
+        setComments(formattedComments);
+      }
+    } catch (err) {
+      console.error("댓글 로드 실패:", err);
+    } finally {
+      setIsCommentLoading(false);
+    }
+  }, [postUuid, currentUserUuid]);
+
+  // 컴포넌트 마운트 시 댓글 로드
   useEffect(() => {
-    const sortedComments = getSortedComments();
-    setComments(sortedComments);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (postUuid) {
+      loadComments();
+    }
+  }, [loadComments, postUuid]);
+
+  // 댓글 작성 함수
+  const handleCommentSubmit = useCallback(
+    async (content: string, parentUuid?: string) => {
+      if (!postUuid || !content.trim() || isCommentSubmitting) return;
+
+      try {
+        setIsCommentSubmitting(true);
+
+        // CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
+
+        const response = await axiosInstance.post(
+          `/post/comments/${postUuid}`,
+          {
+            content,
+            parentCommentUuid: parentUuid || null,
+          },
+          {
+            headers: { "X-CSRF-Token": csrfToken },
+          }
+        );
+
+        if (response.data.success) {
+          // 댓글 작성 성공
+          const newComment = response.data.comment;
+
+          // 프로필 이미지 경로 처리
+          if (newComment.authorProfile) {
+            newComment.authorProfile = `${SERVER_HOST}${newComment.authorProfile}`;
+          }
+
+          // 작성자 여부 설정
+          newComment.isAuthor = true;
+          newComment.liked = false;
+
+          // 댓글 목록 업데이트
+          setComments((prev) => [...prev, newComment]);
+
+          // 입력창 초기화
+          setCommentText("");
+
+          // 답글 입력 모드 종료
+          setReplyParentId(null);
+        }
+      } catch (err) {
+        console.error("댓글 작성 실패:", err);
+      } finally {
+        setIsCommentSubmitting(false);
+      }
+    },
+    [postUuid, isCommentSubmitting]
+  );
+
+  // 댓글 삭제 다이얼로그 열기
+  const handleOpenCommentDeleteDialog = useCallback((commentUuid: string) => {
+    setCommentToDelete(commentUuid);
+    setIsCommentDeleteDialogOpen(true);
+  }, []);
+
+  // 댓글 삭제 다이얼로그 닫기
+  const handleCloseCommentDeleteDialog = useCallback(() => {
+    setIsCommentDeleteDialogOpen(false);
+    setCommentToDelete(null);
+  }, []);
+
+  // 댓글 삭제 함수
+  const handleConfirmCommentDelete = useCallback(async () => {
+    if (!commentToDelete) return;
+
+    try {
+      setIsDeletingComment(true);
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      const response = await axiosInstance.delete(
+        `/post/comments/${commentToDelete}`,
+        {
+          headers: { "X-CSRF-Token": csrfToken },
+        }
+      );
+
+      if (response.data.success) {
+        // 삭제된 댓글과 그에 달린 대댓글도 제거
+        setComments((prev) =>
+          prev.filter(
+            (comment) =>
+              comment.uuid !== commentToDelete &&
+              comment.parentUuid !== commentToDelete
+          )
+        );
+
+        // 성공 메시지를 표시할 수도 있습니다 (선택 사항)
+      }
+    } catch (err) {
+      console.error("댓글 삭제 실패:", err);
+    } finally {
+      setIsDeletingComment(false);
+      handleCloseCommentDeleteDialog();
+    }
+  }, [commentToDelete, handleCloseCommentDeleteDialog]);
+
+  // 상대 시간 포맷팅 함수
+  const formatRelativeTime = useCallback((dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return formatDistanceToNow(date, { addSuffix: true, locale: ko });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      return dateString;
+    }
+  }, []);
+
+  // 댓글 정렬: 먼저 부모 댓글, 그 다음에 대댓글이 나오도록
+  const getSortedComments = useCallback(() => {
+    // 부모 댓글과 대댓글 분리
+    const parentComments = comments.filter((comment) => !comment.parentUuid);
+    const childComments = comments.filter((comment) => !!comment.parentUuid);
+
+    // 결과 배열
+    const result: Comment[] = [];
+
+    // 부모 댓글을 먼저 추가하고, 그 아래 해당 대댓글들을 추가
+    for (const parent of parentComments) {
+      result.push(parent);
+
+      // 이 부모에 속한 대댓글들 찾기
+      const children = childComments.filter(
+        (child) => child.parentUuid === parent.uuid
+      );
+      result.push(...children);
+    }
+
+    return result;
+  }, [comments]);
+
+  // 댓글 삭제 권한 확인 함수 추가
+  const canDeleteComment = useCallback(
+    (comment: Comment) => {
+      // 댓글 작성자이거나 게시글 작성자인 경우 삭제 가능
+      return comment.isAuthor || isAuthor;
+    },
+    [isAuthor]
+  );
+
+  // 답글 작성 가능 여부 확인
+  const canReply = useCallback((comment: Comment) => {
+    // 대댓글에는 더 이상 답글을 달 수 없음
+    return !comment.parentUuid;
   }, []);
 
   // 좋아요 버튼 클릭
   const handleLikeButtonClick = useCallback(() => {
     setIsLiked((prev) => !prev);
   }, []);
-
-  // 댓글 정렬 함수
-  const getSortedComments = useCallback((): Comment[] => {
-    // 트리 구조를 위한 맵 생성
-    const childrenMap = new Map<string, Comment[]>(); // parentId : 댓글 배열 형태로 구성
-    const roots: Comment[] = []; // 부모 댓글 배열
-
-    // 트리 구조 구성
-    for (const c of comments) {
-      if (c.parentId) {
-        const list = childrenMap.get(c.parentId) ?? [];
-        list.push(c);
-        childrenMap.set(c.parentId, list);
-      } else {
-        roots.push(c);
-      }
-    }
-
-    // 시간순 정렬
-    const sortByTime = (a: Comment, b: Comment) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-
-    roots.sort(sortByTime);
-    for (const list of childrenMap.values()) {
-      list.sort(sortByTime);
-    }
-
-    // 결과 배열 생성
-    const result: Comment[] = [];
-
-    // 재귀 함수 정의
-    const dfs = (comment: Comment) => {
-      // 현재 댓글 추가
-      result.push(comment);
-
-      // 자식 댓글이 있다면 재취 호출
-      const children = childrenMap.get(comment.id);
-      if (!children) return;
-
-      for (const child of children) {
-        dfs(child);
-      }
-    };
-
-    for (const root of roots) {
-      dfs(root); // 부모 댓글부터 시작
-    }
-
-    return result;
-  }, [comments]);
 
   // 답글 쓰기 버튼 클릭
   const handleReplyButtonClick = useCallback((parentId: string) => {
@@ -418,13 +515,13 @@ const CommunityPost = () => {
     navigate("/community");
   }, [navigate]);
 
-  // 삭제 다이얼로그 열기
+  // 게시글 삭제 다이얼로그 열기
   const handleOpenDeleteDialog = useCallback(() => {
     setIsDeleteDialogOpen(true);
     setIsMoreMenuOpen(false); // 더보기 메뉴도 닫기
   }, []);
 
-  // 삭제 다이얼로그 닫기
+  // 게시글 삭제 다이얼로그 닫기
   const handleCloseDeleteDialog = useCallback(() => {
     setIsDeleteDialogOpen(false);
   }, []);
@@ -667,104 +764,172 @@ const CommunityPost = () => {
           </Stack>
         </Stack>
 
-        {/* 댓글 */}
+        {/* 댓글 섹션 */}
         <Stack gap={3}>
-          {comments.map((comment, index) => (
-            <>
-              {/* 댓글 컨테이너 */}
-              <Stack
-                key={`comment-container-${comment.id}`}
-                ml={comment.parentId ? "50px" : "0"}
-                gap={3}
-              >
-                {/* 댓글 */}
-                <Stack key={`comment-${comment.id}`} direction="row" gap={1}>
-                  {/* 댓글 작성자 프로필 이미지 */}
-                  <Avatar />
+          <Typography variant="h6">댓글 {comments.length}개</Typography>
 
-                  <Stack>
-                    {/* 댓글 작성자 이름 */}
-                    <Typography variant="subtitle1" fontWeight="bold">
-                      {comment.authorName}
-                    </Typography>
+          {/* 댓글 로딩 중 표시 */}
+          {isCommentLoading && (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={30} />
+            </Box>
+          )}
 
-                    {/* 댓글 내용 */}
-                    <Typography variant="subtitle1">
-                      {comment.content}
-                    </Typography>
+          {/* 댓글 목록 */}
+          {!isCommentLoading &&
+            getSortedComments().map((comment, index, array) => (
+              <React.Fragment key={comment.uuid}>
+                {/* 댓글 컨테이너 */}
+                <Stack ml={comment.parentUuid ? "50px" : "0"} gap={3}>
+                  {/* 댓글 내용 */}
+                  <Stack direction="row" gap={1}>
+                    {/* 댓글 작성자 프로필 이미지 */}
+                    <Avatar src={comment.authorProfile} />
 
-                    <Stack direction="row" alignItems="center" gap={1}>
-                      {/* 댓글 작성일 */}
-                      <Typography variant="subtitle2" color="text.secondary">
-                        {comment.createdAt}
+                    <Stack width="100%">
+                      {/* 댓글 작성자 이름 */}
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {comment.authorName}
                       </Typography>
 
-                      {/* 답글 쓰기 버튼 */}
-                      <Button
-                        onClick={() => handleReplyButtonClick(comment.id)}
-                        sx={{
-                          padding: 0,
-                        }}
-                      >
-                        <Typography variant="subtitle2" color="primary">
-                          답글 쓰기
-                        </Typography>
-                      </Button>
+                      {/* 댓글 내용 */}
+                      <Typography variant="subtitle1">
+                        {comment.content}
+                      </Typography>
 
-                      {/* 좋아요 버튼 */}
-                      <IconButton
-                        size="small"
-                        sx={{
-                          padding: 0.5,
-                        }}
-                      >
-                        <FavoriteBorderRoundedIcon
+                      <Stack direction="row" alignItems="center" gap={1}>
+                        {/* 댓글 작성일 */}
+                        <Typography variant="subtitle2" color="text.secondary">
+                          {formatRelativeTime(comment.createdAt)}
+                        </Typography>
+
+                        {/* 답글 쓰기 버튼 (대댓글이 아닌 경우에만 표시) */}
+                        {loginState.isLoggedIn && canReply(comment) && (
+                          <Button
+                            onClick={() => handleReplyButtonClick(comment.uuid)}
+                            sx={{
+                              padding: 0,
+                            }}
+                          >
+                            <Typography variant="subtitle2" color="primary">
+                              답글 쓰기
+                            </Typography>
+                          </Button>
+                        )}
+
+                        {/* 좋아요 버튼 */}
+                        <IconButton
+                          size="small"
                           sx={{
-                            color: red[600],
+                            padding: 0.5,
                           }}
-                        />
-                      </IconButton>
+                          onClick={() => {
+                            /* 좋아요 기능 구현 */
+                          }}
+                          color={comment.liked ? "error" : "default"}
+                        >
+                          {comment.liked ? (
+                            <FavoriteRoundedIcon
+                              sx={{ color: red[600], fontSize: 18 }}
+                            />
+                          ) : (
+                            <FavoriteBorderRoundedIcon
+                              sx={{ color: red[600], fontSize: 18 }}
+                            />
+                          )}
+
+                          {comment.likes > 0 && (
+                            <Typography variant="caption" sx={{ ml: 0.5 }}>
+                              {comment.likes}
+                            </Typography>
+                          )}
+                        </IconButton>
+
+                        {/* 삭제 버튼 (본인 댓글 또는 게시글 작성자만) */}
+                        {canDeleteComment(comment) && (
+                          <Button
+                            onClick={() =>
+                              handleOpenCommentDeleteDialog(comment.uuid)
+                            }
+                            sx={{
+                              padding: 0,
+                              color: "error.main",
+                              minWidth: "auto",
+                            }}
+                          >
+                            <Typography variant="subtitle2" color="error">
+                              삭제
+                            </Typography>
+                          </Button>
+                        )}
+                      </Stack>
                     </Stack>
                   </Stack>
+
+                  {/* 답글 입력란 */}
+                  {replyParentId === comment.uuid && (
+                    <Stack gap={2}>
+                      <Box ml={comment.parentUuid ? "0" : "50px"}>
+                        <CommentInput
+                          key={`reply-input-${comment.uuid}`}
+                          onCommentSubmit={(content) =>
+                            handleCommentSubmit(content, comment.uuid)
+                          }
+                          onCommentCancel={handleReplyCancelButtonClick}
+                          disabled={isCommentSubmitting}
+                        />
+                      </Box>
+                    </Stack>
+                  )}
                 </Stack>
 
-                {/* 답글 입력란 */}
-                {replyParentId === comment.id && (
-                  <Stack gap={3}>
-                    {/* 구분선 */}
-                    <Divider />
-
-                    {/* 답글 입력란 */}
-                    <Box ml={comment.parentId ? "0" : "50px"}>
-                      <CommentInput
-                        key={`reply-input-${comment.id}`}
-                        onCommentSubmit={() => {}}
-                        onCommentCancel={handleReplyCancelButtonClick}
-                      />
-                    </Box>
-
-                    {index >= comments.length - 1 && <Divider />}
-                  </Stack>
+                {/* 구분선 */}
+                {index < array.length - 1 && (
+                  <Divider
+                    sx={{
+                      ml:
+                        !!comment.parentUuid && !!array[index + 1].parentUuid
+                          ? "50px"
+                          : "0",
+                    }}
+                  />
                 )}
-              </Stack>
+              </React.Fragment>
+            ))}
 
-              {/* 구분선 */}
-              {index < comments.length - 1 && (
-                <Divider
-                  sx={{
-                    ml:
-                      !!comment.parentId && !!comments[index + 1].parentId
-                        ? "50px"
-                        : "0",
-                  }}
-                />
-              )}
-            </>
-          ))}
+          {/* 댓글이 없는 경우 메시지 */}
+          {!isCommentLoading && comments.length === 0 && (
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              textAlign="center"
+              py={4}
+            >
+              첫 번째 댓글을 작성해보세요!
+            </Typography>
+          )}
+
+          <Divider />
+
+          {/* 댓글 입력란 */}
+          {loginState.isLoggedIn ? (
+            <CommentInput
+              onCommentSubmit={handleCommentSubmit} // 수정
+              disabled={isCommentSubmitting}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+            />
+          ) : (
+            <Box py={3} textAlign="center">
+              <Typography variant="body1" color="text.secondary" mb={2}>
+                댓글을 작성하려면 로그인이 필요합니다.
+              </Typography>
+              <Button variant="contained" onClick={() => navigate("/login")}>
+                로그인하기
+              </Button>
+            </Box>
+          )}
         </Stack>
-
-        {/* 댓글 입력란 */}
-        <CommentInput onCommentSubmit={() => {}} />
 
         {/* 스크롤 상단 이동 버튼 */}
         <ScrollToTopButton />
@@ -856,7 +1021,7 @@ const CommunityPost = () => {
         </Paper>
       </Stack>
 
-      {/* 삭제 확인 다이얼로그 */}
+      {/* 게시글 삭제 확인 다이얼로그 */}
       <Dialog
         open={isDeleteDialogOpen}
         onClose={handleCloseDeleteDialog}
@@ -888,6 +1053,42 @@ const CommunityPost = () => {
             startIcon={isDeleting ? <CircularProgress size={20} /> : null}
           >
             {isDeleting ? "삭제 중..." : "삭제"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 댓글 삭제 확인 다이얼로그 */}
+      <Dialog
+        open={isCommentDeleteDialogOpen}
+        onClose={handleCloseCommentDeleteDialog}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>댓글 삭제</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">이 댓글을 삭제하시겠습니까?</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            삭제한 댓글은 복구할 수 없습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseCommentDeleteDialog}
+            color="inherit"
+            disabled={isDeletingComment}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleConfirmCommentDelete}
+            color="error"
+            variant="contained"
+            disabled={isDeletingComment}
+            startIcon={
+              isDeletingComment ? <CircularProgress size={16} /> : null
+            }
+          >
+            {isDeletingComment ? "삭제 중..." : "삭제"}
           </Button>
         </DialogActions>
       </Dialog>
