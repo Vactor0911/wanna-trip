@@ -4,6 +4,10 @@ import {
   Button,
   Collapse,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   Menu,
@@ -28,6 +32,13 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import ShareIcon from "@mui/icons-material/Share";
 import Template from "./Template";
+import { CircularProgress } from "@mui/material"; // 로딩 표시용
+import axiosInstance, {
+  getCsrfToken,
+  SERVER_HOST,
+} from "../utils/axiosInstance";
+import { wannaTripLoginStateAtom } from "../state";
+import { useAtomValue } from "jotai";
 
 const contentExample = `<h1>제주도 3박 4일 여행 후기</h1>
 
@@ -92,7 +103,7 @@ const contentExample = `<h1>제주도 3박 4일 여행 후기</h1>
 // TODO: 댓글 타입 재정의 필요
 interface Comment {
   id: string;
-  authorId: string;
+  authorUuid: string;
   authorName: string;
   content: string;
   createdAt: string;
@@ -104,7 +115,7 @@ interface Comment {
 const commentExample = [
   {
     id: "1",
-    authorId: "1",
+    authorUuid: "1",
     authorName: "홍길동",
     content: "첫 번째 댓글 내용입니다.",
     createdAt: "2023-10-01 12:00",
@@ -113,7 +124,7 @@ const commentExample = [
   },
   {
     id: "2",
-    authorId: "2",
+    authorUuid: "2",
     authorName: "김철수",
     content: "두 번째 댓글 내용입니다.",
     createdAt: "2023-10-01 12:05",
@@ -122,7 +133,7 @@ const commentExample = [
   },
   {
     id: "3",
-    authorId: "1",
+    authorUuid: "1",
     authorName: "홍길동",
     content: "첫 번째 댓글에 대한 답글입니다.",
     createdAt: "2023-10-01 12:10",
@@ -131,7 +142,7 @@ const commentExample = [
   },
   {
     id: "4",
-    authorId: "3",
+    authorUuid: "3",
     authorName: "이영희",
     content: "세 번째 댓글 내용입니다.",
     createdAt: "2023-10-01 12:15",
@@ -140,7 +151,7 @@ const commentExample = [
   },
   {
     id: "5",
-    authorId: "2",
+    authorUuid: "2",
     authorName: "김철수",
     content: "두 번째 댓글에 대한 답글입니다.",
     createdAt: "2023-10-01 12:20",
@@ -149,7 +160,7 @@ const commentExample = [
   },
   {
     id: "6",
-    authorId: "3",
+    authorUuid: "3",
     authorName: "이영희",
     content: "첫 번째 댓글에 대한 두번째 답글입니다.",
     createdAt: "2023-10-01 12:50",
@@ -159,29 +170,161 @@ const commentExample = [
 ] as Comment[];
 
 const CommunityPost = () => {
-  const { postId } = useParams(); // 게시글 ID
+  const { postUuid } = useParams(); // 게시글 UUID
   const navigate = useNavigate(); // 네비게이션 훅
 
   const [isLoading, setIsLoading] = useState(false); // 게시글 로딩 여부
-  const [title] = useState("게시글 제목"); // 게시글 제목
-  const [authorId] = useState("1"); // 작성자 ID
-  const [authorName] = useState("작성자 이름"); // 작성자 이름
-  const [authorProfileImage] = useState(""); // 작성자 프로필 이미지 URL
-  const [createdAt] = useState("2023-10-01"); // 작성일
-  const [content] = useState(contentExample); // 게시글 내용 (HTML 형식)
-  const [likes] = useState(10); // 좋아요 수
+  const [error, setError] = useState(""); // 에러 메시지
+  const [title, setTitle] = useState(""); // 게시글 제목
+  const [templateUuid, setTemplateUuid] = useState(""); // 템플릿 UUID
+  const [authorUuid, setAuthorUuid] = useState(""); // 작성자 UUID
+  const [authorName, setAuthorName] = useState(""); // 작성자 이름
+  const [authorProfileImage, setAuthorProfileImage] = useState(""); // 작성자 프로필 이미지 URL
+  const [createdAt, setCreatedAt] = useState(""); // 작성일
+  const [content, setContent] = useState(""); // 게시글 내용 (HTML 형식)
+  const [likes, setLikes] = useState(0); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
   const [shares, setShares] = useState(0); // 공유수
-  const [comments, setComments] = useState(commentExample); // 댓글 수
+  const [comments, setComments] = useState(commentExample); // 댓글 목록
+
   const [replyParentId, setReplyParentId] = useState<string | null>(null); // 댓글 부모 ID
   const moreButtonRef = useRef<HTMLButtonElement>(null); // 더보기 버튼 참조
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false); // 더보기 메뉴 열림 상태
   const [isTemplateDrawerOpen, setIsTemplateDrawerOpen] = useState(false); // 템플릿 드로어 열림 상태
 
-  // 접속시 스크롤 최상단으로 이동
+  // 로그인 상태 확인 추가
+  const loginState = useAtomValue(wannaTripLoginStateAtom);
+  // 현재 사용자가 작성자인지 여부를 판단하는 상태 추가
+  const [isAuthor, setIsAuthor] = useState(false);
+  const [currentUserUuid, setCurrentUserUuid] = useState(""); // 현재 사용자 UUID
+
+  // 삭제 확인 다이얼로그 상태 추가
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // 삭제 확인 다이얼로그
+  const [isDeleting, setIsDeleting] = useState(false); // 삭제 중 상태
+
+  // 현재 사용자 정보 가져오기
+  const fetchCurrentUserInfo = useCallback(async () => {
+    if (!loginState.isLoggedIn) {
+      return;
+    }
+
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 사용자 정보 조회 API 호출
+      const response = await axiosInstance.get("/auth/me", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        // 현재 사용자의 UUID 저장
+        setCurrentUserUuid(response.data.data.userUuid);
+      }
+    } catch (err) {
+      console.error("사용자 정보 조회 실패:", err);
+    }
+  }, [loginState.isLoggedIn]);
+
+  // 컴포넌트 마운트 시 현재 사용자 정보 가져오기
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    fetchCurrentUserInfo();
+  }, [fetchCurrentUserInfo]);
+
+  // 게시글 데이터 가져오기
+  const fetchPostData = useCallback(async () => {
+    if (!postUuid) return;
+
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await axiosInstance.get(`/post/${postUuid}`);
+
+      if (response.data.success) {
+        const postData = response.data.post;
+        setTitle(postData.title);
+
+        // 작성자 UUID 설정
+        const authorId = postData.authorUuid;
+        setAuthorUuid(authorId);
+
+        // 현재 사용자와 작성자 비교
+        setIsAuthor(currentUserUuid !== "" && currentUserUuid === authorId);
+
+        setAuthorName(postData.authorName);
+        setTemplateUuid(postData.templateUuid);
+
+        // 프로필 이미지 URL 설정 방식 수정
+        if (postData.authorProfile) {
+          setAuthorProfileImage(`${SERVER_HOST}${postData.authorProfile}`);
+        } else {
+          setAuthorProfileImage("");
+        }
+
+        // 날짜 형식 변환 (YYYY-MM-DD)
+        const date = new Date(postData.createdAt);
+        setCreatedAt(
+          date.toLocaleDateString("ko-KR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          })
+        );
+
+        setContent(postData.content);
+        setLikes(postData.likes);
+        setShares(postData.shares);
+
+        // 뷰 카운트는 백엔드에서 자동으로 증가
+      } else {
+        setError("게시글을 불러오는데 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("게시글 로딩 실패:", err);
+      setError("게시글을 불러오는데 오류가 발생했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentUserUuid, postUuid]);
+
+  // 컴포넌트 마운트 시 게시글 데이터 로드
+  useEffect(() => {
+    window.scrollTo(0, 0); // 페이지 상단으로 스크롤
+    fetchPostData();
+  }, [fetchPostData]);
+
+  // 삭제 확인 및 처리
+  const handleDeletePost = useCallback(async () => {
+    if (!postUuid) return;
+
+    try {
+      setIsDeleting(true);
+
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 게시글 삭제 API 호출
+      const response = await axiosInstance.delete(`/post/${postUuid}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        // 삭제 성공 시 목록 페이지로 이동
+        navigate("/community");
+      } else {
+        // 실패 시 에러 메시지 표시
+        setError("게시글 삭제에 실패했습니다.");
+        setIsDeleteDialogOpen(false);
+      }
+    } catch (err) {
+      console.error("게시글 삭제 중 오류 발생:", err);
+      setError("게시글 삭제 중 오류가 발생했습니다.");
+      setIsDeleteDialogOpen(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [navigate, postUuid]);
 
   // TODO: 백엔드 연동시 병합해야 할 기능
   useEffect(() => {
@@ -275,6 +418,49 @@ const CommunityPost = () => {
     navigate("/community");
   }, [navigate]);
 
+  // 삭제 다이얼로그 열기
+  const handleOpenDeleteDialog = useCallback(() => {
+    setIsDeleteDialogOpen(true);
+    setIsMoreMenuOpen(false); // 더보기 메뉴도 닫기
+  }, []);
+
+  // 삭제 다이얼로그 닫기
+  const handleCloseDeleteDialog = useCallback(() => {
+    setIsDeleteDialogOpen(false);
+  }, []);
+
+  // 로딩 중 표시
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  // 에러 표시
+  if (error) {
+    return (
+      <Container maxWidth="lg">
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          minHeight="50vh"
+        >
+          <Typography color="error">{error}</Typography>
+        </Box>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg">
       <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
@@ -285,6 +471,7 @@ const CommunityPost = () => {
         <Stack direction="row" alignItems="center" gap={2}>
           {/* 작성자 프로필 이미지 */}
           <Avatar
+            src={authorProfileImage || undefined}
             sx={{
               width: 48,
               height: 48,
@@ -322,18 +509,20 @@ const CommunityPost = () => {
               open={isMoreMenuOpen}
               onClose={handleMoreMenuClose}
             >
-              {/* 수정하기 버튼 */}
-              <MenuItem
-                onClick={handleMoreMenuClose}
-                sx={{
-                  gap: 4,
-                }}
-              >
-                <Typography variant="subtitle1">수정하기</Typography>
-                <EditRoundedIcon fontSize="small" />
-              </MenuItem>
+              {/* 수정하기 버튼 - 작성자일 때만 표시 */}
+              {isAuthor && (
+                <MenuItem
+                  onClick={handleMoreMenuClose}
+                  sx={{
+                    gap: 4,
+                  }}
+                >
+                  <Typography variant="subtitle1">수정하기</Typography>
+                  <EditRoundedIcon fontSize="small" />
+                </MenuItem>
+              )}
 
-              {/* 공유하기 버튼 */}
+              {/* 공유하기 버튼 - 항상 표시 */}
               <MenuItem
                 onClick={handleMoreMenuClose}
                 sx={{
@@ -344,18 +533,20 @@ const CommunityPost = () => {
                 <ShareRoundedIcon fontSize="small" />
               </MenuItem>
 
-              {/* 삭제하기 버튼 */}
-              <MenuItem
-                onClick={handleMoreMenuClose}
-                sx={{
-                  gap: 4,
-                }}
-              >
-                <Typography variant="subtitle1" color="error">
-                  삭제하기
-                </Typography>
-                <DeleteOutlineRoundedIcon fontSize="small" color="error" />
-              </MenuItem>
+              {/* 삭제하기 버튼 - 작성자일 때만 표시 */}
+              {isAuthor && (
+                <MenuItem
+                  onClick={handleOpenDeleteDialog}
+                  sx={{
+                    gap: 4,
+                  }}
+                >
+                  <Typography variant="subtitle1" color="error">
+                    삭제하기
+                  </Typography>
+                  <DeleteOutlineRoundedIcon fontSize="small" color="error" />
+                </MenuItem>
+              )}
             </Menu>
           </Box>
         </Stack>
@@ -441,19 +632,27 @@ const CommunityPost = () => {
 
           {/* 오른쪽 버튼 컨테이너 */}
           <Stack direction="row" justifyContent="flex-end" gap={2} flexGrow={1}>
-            {/* 수정 버튼 */}
-            <Button variant="outlined" color="black">
-              <Typography variant="subtitle2" fontWeight="bold">
-                수정
-              </Typography>
-            </Button>
+            {/* 수정 버튼 - 작성자일 때만 표시 */}
+            {isAuthor && (
+              <Button variant="outlined" color="black">
+                <Typography variant="subtitle2" fontWeight="bold">
+                  수정
+                </Typography>
+              </Button>
+            )}
 
-            {/* 삭제 버튼 */}
-            <Button variant="outlined" color="error">
-              <Typography variant="subtitle2" fontWeight="bold">
-                삭제
-              </Typography>
-            </Button>
+            {/* 삭제 버튼 - 작성자일 때만 표시 */}
+            {isAuthor && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleOpenDeleteDialog}
+              >
+                <Typography variant="subtitle2" fontWeight="bold">
+                  삭제
+                </Typography>
+              </Button>
+            )}
 
             {/* 목록 버튼 */}
             <Button
@@ -585,7 +784,7 @@ const CommunityPost = () => {
           <Collapse
             in={isTemplateDrawerOpen}
             orientation="horizontal"
-            collapsedSize={50}
+            collapsedSize={10}
           >
             <Box
               height="70vh"
@@ -597,12 +796,38 @@ const CommunityPost = () => {
                 overflowX: "auto",
               }}
             >
-              {/* 템플릿 화면 */}
-              <Template
-                uuid="4f1e0d40-4b27-11f0-a6ef-38a746032467"
-                height="70vh"
-                paddgingX="24px"
-              />
+              {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
+              {!loginState.isLoggedIn ? (
+                // 로그인되지 않은 경우 메시지 표시
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    py: 4,
+                    px: 2,
+                    borderRadius: 2,
+                    bgcolor: "rgba(48, 48, 48, 0.03)",
+                    textAlign: "center",
+                  }}
+                >
+                  <Typography variant="h6" color="text.secondary" mb={3}>
+                    템플릿을 확인하려면 로그인이 필요합니다.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => navigate("/login")}
+                  >
+                    로그인하러 가기
+                  </Button>
+                </Box>
+              ) : (
+                // 로그인된 경우 템플릿 표시
+                <Template uuid={templateUuid} height="70vh" paddgingX="24px" />
+              )}
             </Box>
           </Collapse>
 
@@ -630,6 +855,42 @@ const CommunityPost = () => {
           </Paper>
         </Paper>
       </Stack>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog
+        open={isDeleteDialogOpen}
+        onClose={handleCloseDeleteDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>게시글 삭제</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1">
+            이 게시글을 정말로 삭제하시겠습니까?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            삭제한 게시글은 복구할 수 없습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseDeleteDialog}
+            color="inherit"
+            disabled={isDeleting}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleDeletePost}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+          >
+            {isDeleting ? "삭제 중..." : "삭제"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
