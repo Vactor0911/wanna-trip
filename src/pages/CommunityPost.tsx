@@ -232,8 +232,10 @@ const CommunityPost = () => {
         );
 
         setContent(postData.content);
-        setLikes(postData.likes);
-        setShares(postData.shares);
+        
+        // 좋아요 정보 설정
+        setLikes(postData.likes || 0);
+        setIsLiked(postData.liked || false);
 
         // 뷰 카운트는 백엔드에서 자동으로 증가
       } else {
@@ -480,10 +482,83 @@ const CommunityPost = () => {
     return !comment.parentUuid;
   }, []);
 
-  // 좋아요 버튼 클릭
-  const handleLikeButtonClick = useCallback(() => {
-    setIsLiked((prev) => !prev);
-  }, []);
+  // 게시글 좋아요 버튼 클릭
+  const handleLikeButtonClick = useCallback(async () => {
+    // 로그인 체크
+    if (!loginState.isLoggedIn) {
+      alert("좋아요를 하려면 로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 좋아요 API 호출
+      const response = await axiosInstance.post(
+        `/post/likes/post/${postUuid}`,
+        {},
+        {
+          headers: { "X-CSRF-Token": csrfToken },
+        }
+      );
+
+      if (response.data.success) {
+        // 서버 응답에 따라 좋아요 상태 업데이트
+        setIsLiked(response.data.liked);
+
+        // 좋아요 수 업데이트 (좋아요 추가/삭제에 따라)
+        setLikes((prev) => (response.data.liked ? prev + 1 : prev - 1));
+      }
+    } catch (err) {
+      console.error("좋아요 처리 실패:", err);
+    }
+  }, [loginState.isLoggedIn, postUuid]);
+
+  // 댓글 좋아요 함수
+  const handleCommentLike = useCallback(
+    async (commentUuid: string) => {
+      // 로그인 체크
+      if (!loginState.isLoggedIn) {
+        alert("좋아요를 하려면 로그인이 필요합니다.");
+        return;
+      }
+
+      try {
+        // CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
+
+        // 좋아요 API 호출
+        const response = await axiosInstance.post(
+          `/post/likes/comment/${commentUuid}`,
+          {},
+          {
+            headers: { "X-CSRF-Token": csrfToken },
+          }
+        );
+
+        if (response.data.success) {
+          // 댓글 목록 업데이트
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.uuid === commentUuid
+                ? {
+                    ...comment,
+                    liked: response.data.liked,
+                    likes: response.data.liked
+                      ? comment.likes + 1
+                      : comment.likes - 1,
+                  }
+                : comment
+            )
+          );
+        }
+      } catch (err) {
+        console.error("댓글 좋아요 실패:", err);
+      }
+    },
+    [loginState.isLoggedIn]
+  );
 
   // 답글 쓰기 버튼 클릭
   const handleReplyButtonClick = useCallback((parentId: string) => {
@@ -823,9 +898,7 @@ const CommunityPost = () => {
                           sx={{
                             padding: 0.5,
                           }}
-                          onClick={() => {
-                            /* 좋아요 기능 구현 */
-                          }}
+                          onClick={() => handleCommentLike(comment.uuid)}
                           color={comment.liked ? "error" : "default"}
                         >
                           {comment.liked ? (
