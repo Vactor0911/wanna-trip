@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Collapse,
   Container,
   Dialog,
@@ -79,6 +80,7 @@ const CommunityPost = () => {
   const [authorProfileImage, setAuthorProfileImage] = useState(""); // 작성자 프로필 이미지 URL
   const [createdAt, setCreatedAt] = useState(""); // 작성일
   const [content, setContent] = useState(""); // 게시글 내용 (HTML 형식)
+  const [tags, setTags] = useState<string[]>([]); // 게시글 태그 목록
   const [likes, setLikes] = useState(0); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
   const [shares, setShares] = useState(0); // 공유수
@@ -187,6 +189,7 @@ const CommunityPost = () => {
         );
 
         setContent(postData.content);
+        setTags(postData.tags || []); // 태그 정보 설정
         setShares(postData.shares || 0);
 
         // 좋아요 정보 설정
@@ -263,6 +266,7 @@ const CommunityPost = () => {
               ? `${SERVER_HOST}${comment.authorProfile}`
               : undefined,
             content: comment.content,
+            tags: comment.tags || [], // 태그 정보 추가
             createdAt: comment.createdAt,
             likes: comment.likes,
             parentUuid: comment.parentUuid,
@@ -741,6 +745,13 @@ const CommunityPost = () => {
           }}
         >
           {content && parse(content)}
+        </Stack>
+
+        {/* 태그 컨테이너 */}
+        <Stack direction="row" alignItems="center" gap={1}>
+          {tags.map((tag, index) => (
+            <Chip key={`tag-${index}`} label={`# ${tag}`} />
+          ))}
         </Stack>
 
         {/* 버튼 컨테이너 */}
