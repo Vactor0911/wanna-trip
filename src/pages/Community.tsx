@@ -342,11 +342,11 @@ const Community = () => {
       {/* 인기 게시글  */}
       <Stack gap={4}>
         <Typography variant="h5">실시간 인기 게시글</Typography>
-        <PopularTemplates
+        {/* <PopularTemplates
           maxCards={3}
           type="post"
           data={dummyPopularTemplates}
-        />
+        /> */}
       </Stack>
 
       {/* 여행 카테고리 섹션  */}
