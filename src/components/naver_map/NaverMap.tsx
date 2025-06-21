@@ -178,6 +178,7 @@ const NaverMap = (props: MapProps) => {
     return (
       <Skeleton
         variant="rounded"
+        animation="wave"
         sx={{
           width,
           height,

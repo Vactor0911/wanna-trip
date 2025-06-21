@@ -396,7 +396,11 @@ const Community = () => {
                         {/* 헤더 */}
                         <Stack position="relative">
                           {/* 제목 */}
-                          <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight="bold"
+                            noWrap
+                          >
                             {post.title}
                           </Typography>
 

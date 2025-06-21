@@ -170,9 +170,9 @@ const NaverMapSearchDrawer = () => {
       return Array.from({ length: 3 }).map((_, index) => (
         <Fragment key={`naver-map-skeleton-fragment-${index}`}>
           <Stack key={`naver-map-skeleton-${index}`} gap={0.5}>
-            <Skeleton variant="text" width="130px" height="32px" />
-            <Skeleton variant="text" width="200px" />
-            <Skeleton variant="text" width="100px" />
+            <Skeleton variant="text" width="130px" height="32px" animation="wave" />
+            <Skeleton variant="text" width="200px" animation="wave" />
+            <Skeleton variant="text" width="100px" animation="wave" />
           </Stack>
 
           <Divider key={`naver-map-skeleton-divider-${index}`} />
