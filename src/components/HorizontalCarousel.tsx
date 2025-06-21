@@ -52,28 +52,37 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
       case "sm":
         setItemCounts(
           typeof visibleCount === "object"
-            ? visibleCount.sm ?? 3
+            ? visibleCount.sm ?? visibleCount.xs ?? 3
             : visibleCount ?? 3
         );
         break;
       case "md":
         setItemCounts(
           typeof visibleCount === "object"
-            ? visibleCount.md ?? 3
+            ? visibleCount.md ?? visibleCount.sm ?? visibleCount.xs ?? 3
             : visibleCount ?? 3
         );
         break;
       case "lg":
         setItemCounts(
           typeof visibleCount === "object"
-            ? visibleCount.lg ?? 3
+            ? visibleCount.lg ??
+                visibleCount.md ??
+                visibleCount.sm ??
+                visibleCount.xs ??
+                3
             : visibleCount ?? 3
         );
         break;
       case "xl":
         setItemCounts(
           typeof visibleCount === "object"
-            ? visibleCount.xl ?? 3
+            ? visibleCount.xl ??
+                visibleCount.lg ??
+                visibleCount.md ??
+                visibleCount.sm ??
+                visibleCount.xs ??
+                3
             : visibleCount ?? 3
         );
         break;
