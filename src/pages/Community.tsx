@@ -88,12 +88,12 @@ const Community = () => {
       // 게시글 목록 업데이트
       if (response.data.success) {
         // 수신된 게시글 목록이 비어있으면 더 이상 불러올 게시글이 없음을 표시
-        if (response.data.data.length <= 0) {
+        if (response.data.post.length <= 0) {
           setHasNextPage(false);
           return;
         }
 
-        const responsePosts: PostInterface[] = response.data.data.map(
+        const responsePosts: PostInterface[] = response.data.post.map(
           (post: PostInterface) => ({
             uuid: post.uuid,
             title: post.title,
@@ -109,11 +109,10 @@ const Community = () => {
         );
 
         const newPosts = [...posts, ...responsePosts];
-        console.log("새로운 게시글:", newPosts);
         setPosts(newPosts);
 
         // 수신된 게시글 목록이 10개 미만이면 더 이상 불러올 게시글이 없음을 표시
-        if (response.data.data.length < 10) {
+        if (response.data.post.length < 10) {
           setHasNextPage(false);
         }
 
@@ -136,8 +135,6 @@ const Community = () => {
       if (isPopularPostsLoading) {
         return;
       }
-
-      console.log("인기 게시글 불러오기 시작");
 
       // 인기 게시글 로딩 상태 설정
       setIsPopularPostsLoading(true);
@@ -230,10 +227,10 @@ const Community = () => {
               direction="row"
               gap={3}
               sx={{
-                "& .MuiPaper-root:nth-child(2)": {
+                "& .MuiPaper-root:nth-of-type(2)": {
                   display: breakpoint === "xs" ? "none" : "block", // 두 번째 아이템은 숨김 처리
                 },
-                "& .MuiPaper-root:nth-child(3)": {
+                "& .MuiPaper-root:nth-of-type(3)": {
                   display:
                     breakpoint === "xs" || breakpoint === "sm"
                       ? "none"
