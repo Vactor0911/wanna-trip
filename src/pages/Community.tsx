@@ -38,24 +38,12 @@ interface PostInterface {
   comments: number; // 댓글 수
 }
 
-const TEST_TAGS: string[] = [
-  "서울",
-  "여름",
-  "시원한",
-  "계곡",
-  "테스트",
-  "방학",
-  "시골",
-  "산",
-  "바다",
-];
-
 const Community = () => {
   const navigate = useNavigate();
   const breakpoint = useBreakpoint();
 
   const [popularPosts, setPopularPosts] = useState<PostInterface[]>([]); // 인기 게시글 목록
-  const [tags, setTags] = useState<string[]>(TEST_TAGS); // 태그 목록
+  const [popularTags, setPopularTags] = useState<string[]>([]); // 태그 목록
   const [keyword, setKeyword] = useState(""); // 검색어
   const [posts, setPosts] = useState<PostInterface[]>([]); // 일반 게시판 게시글 목록
   const [hasNextPage, setHasNextPage] = useState(true); // 무한 스크롤을 위한 다음 페이지 여부
@@ -63,6 +51,7 @@ const Community = () => {
   const sentinelRef = useRef<HTMLDivElement>(null); // 무한 스크롤을 위한 센티넬
   const [isPostLoading, setIsPostLoading] = useState(false); // 게시글 로딩 상태
   const [isPopularPostsLoading, setIsPopularPostsLoading] = useState(false); // 인기 게시글 로딩 상태
+  const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
 
   // 검색어 입력
   const handleKeywordChange = useCallback(
@@ -175,10 +164,40 @@ const Community = () => {
     }
   }, [isPopularPostsLoading]);
 
+  // 인기 태그 불러오기
+  const fetchTags = useCallback(async () => {
+    try {
+      // 이미 로딩 중이면 종료
+      if (isPopularTagLoading) {
+        return;
+      }
+
+      // 인기 태그 로딩 상태 설정
+      setIsPopularTagLoading(true);
+
+      // 인기 태그 목록 불러오기 API 호출
+      const response = await axiosInstance.get("/post/tags/popular");
+
+      // 인기 태그 목록 업데이트
+      if (response.data.success) {
+        const newPopularTags: string[] = response.data.tags.map(
+          (tag: { name: string }) => tag.name
+        );
+        setPopularTags(newPopularTags);
+      }
+    } catch (error) {
+      console.error("인기 태그 불러오기 실패:", error);
+    } finally {
+      // 인기 태그 로딩 상태 해제
+      setIsPopularTagLoading(false);
+    }
+  }, [isPopularTagLoading]);
+
   // 컴포넌트 마운트 시 게시글과 인기 게시글 불러오기
   useEffect(() => {
     fetchPosts();
     fetchPopularPosts();
+    fetchTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -194,6 +213,7 @@ const Community = () => {
         if (entries[0].isIntersecting) {
           //TODO: 게시글 더 불러오기
           console.log("더 불러오기");
+          fetchPosts();
         }
       },
       { rootMargin: `${window.innerHeight}px` } // rootMargin만큼 위에서 미리 트리거
@@ -204,7 +224,7 @@ const Community = () => {
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [hasNextPage]);
+  }, [fetchPosts, hasNextPage]);
 
   // 글쓰기 버튼 클릭
   const handleCreatePostButtonClick = useCallback(() => {
@@ -489,34 +509,75 @@ const Community = () => {
           {/* 헤더 */}
           <Typography variant="h5">인기 태그</Typography>
 
-          {/* 인기 게시글 목록 */}
-          <HorizontalCarousel
-            visibleCount={{
-              xs: 2,
-              sm: 3,
-              md: 5,
-            }}
-          >
-            {tags.map((tag, index) => (
-              <Paper
-                key={`tag-${index}`}
-                sx={{
-                  background: getRandomColor(index),
-                }}
-              >
-                <Stack justifyContent="center" alignItems="center" height={150}>
-                  <Typography
-                    variant="h4"
-                    width="100%"
-                    textAlign="center"
-                    noWrap
+          {isPopularTagLoading ? (
+            // 인기 태그 로딩 중
+            <Stack
+              direction="row"
+              gap={3}
+              sx={{
+                "& .MuiSkeleton-root:nth-of-type(3)": {
+                  display: breakpoint === "xs" ? "none" : "block",
+                },
+                "& .MuiSkeleton-root:nth-of-type(4), & .MuiSkeleton-root:nth-of-type(5)":
+                  {
+                    display:
+                      breakpoint === "xs" || breakpoint === "sm"
+                        ? "none"
+                        : "block",
+                  },
+              }}
+            >
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={`popular-tag-skeleton-${index}`}
+                  variant="rounded"
+                  height={150}
+                  animation="wave"
+                  sx={{
+                    width: {
+                      xs: "50%",
+                      sm: "33.33%",
+                      md: "20%",
+                    },
+                    borderRadius: 2,
+                  }}
+                />
+              ))}
+            </Stack>
+          ) : (
+            // 인기 태그 목록
+            <HorizontalCarousel
+              visibleCount={{
+                xs: 2,
+                sm: 3,
+                md: 5,
+              }}
+            >
+              {popularTags.map((tag, index) => (
+                <Paper
+                  key={`tag-${index}`}
+                  sx={{
+                    background: getRandomColor(index),
+                  }}
+                >
+                  <Stack
+                    justifyContent="center"
+                    alignItems="center"
+                    height={150}
                   >
-                    {tag}
-                  </Typography>
-                </Stack>
-              </Paper>
-            ))}
-          </HorizontalCarousel>
+                    <Typography
+                      variant="h4"
+                      width="100%"
+                      textAlign="center"
+                      noWrap
+                    >
+                      {tag}
+                    </Typography>
+                  </Stack>
+                </Paper>
+              ))}
+            </HorizontalCarousel>
+          )}
         </Stack>
 
         {/* 일반 게시판 */}
