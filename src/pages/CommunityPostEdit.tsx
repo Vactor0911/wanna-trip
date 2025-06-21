@@ -87,13 +87,9 @@ const CommunityPostEdit = () => {
     // 스크롤 제일 상단으로 이동
     window.scrollTo(0, 0);
 
-    console.log("postId:", postId); // 디버깅용 로그
     // UUID가 있으면 게시글 정보 가져오기
     if (postId) {
       fetchPostData();
-    } else {
-      // 게시글 ID가 없으면 커뮤니티 페이지로 이동
-      navigate("/community");
     }
   }, [fetchPostData, navigate, postId]);
 
