@@ -3,10 +3,10 @@ import {
   Box,
   ButtonBase,
   Container,
+  Fab,
   IconButton,
   InputAdornment,
   OutlinedInput,
-  Pagination,
   Paper,
   Stack,
   Typography,
@@ -19,8 +19,9 @@ import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import HorizontalCarousel from "../components/HorizontalCarousel";
 import { getRandomColor } from "../utils";
-import ScrollToTopButton from "../components/ScrollToTopButton";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CreateRoundedIcon from "@mui/icons-material/CreateRounded";
+import { useNavigate } from "react-router";
 
 interface PostInterface {
   id: string;
@@ -135,6 +136,7 @@ const TEST_TAGS: string[] = [
 const Community = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
   const [popularPosts, setPopularPosts] =
     useState<PostInterface[]>(TEST_POPULAR_POSTS); // 인기 게시글 목록
@@ -178,6 +180,11 @@ const Community = () => {
       if (node) observer.unobserve(node);
     };
   }, [hasNextPage]);
+
+  // 글쓰기 버튼 클릭
+  const handleCreatePostButtonClick = useCallback(() => {
+    navigate("/community/edit");
+  }, [navigate]);
 
   return (
     <Container maxWidth="xl">
@@ -469,8 +476,22 @@ const Community = () => {
         </Stack>
       </Stack>
 
-      {/* 스크롤 상단 이동 버튼 */}
-      <ScrollToTopButton />
+      {/* 글쓰기 버튼 */}
+      <Fab
+        color="primary"
+        sx={{
+          position: "fixed",
+          bottom: 40,
+          right: 40,
+        }}
+        onClick={handleCreatePostButtonClick}
+      >
+        <CreateRoundedIcon
+          sx={{
+            fontSize: "1.75rem",
+          }}
+        />
+      </Fab>
     </Container>
   );
 };
