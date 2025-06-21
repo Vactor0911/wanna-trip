@@ -8,8 +8,7 @@ const ScrollToTopButton = () => {
 
   // 스크롤 이벤트 핸들러
   const handleScroll = () => {
-    // 페이지가 특정 스크롤 위치
-    if (window.pageYOffset > 200) {
+    if (window.scrollY > 200) {
       setIsVisible(true);
     } else {
       // 그렇지 않으면 버튼 숨김
