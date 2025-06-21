@@ -257,7 +257,7 @@ const UserTemplates = () => {
 
   return (
     <Container maxWidth="xl">
-      <Stack mt={4} gap={8}>
+      <Stack my={4} gap={8}>
         {/* 인기 템플릿 */}
         <Stack gap={4}>
           <Typography variant="h5">인기 템플릿</Typography>
