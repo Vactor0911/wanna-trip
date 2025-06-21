@@ -1022,6 +1022,9 @@ const CommunityPost = () => {
           )}
         </Stack>
 
+        {/* 버튼 컨테이너 */}
+        {ButtonContainer}
+
         {/* 스크롤 상단 이동 버튼 */}
         <ScrollToTopButton />
 
@@ -1116,9 +1119,6 @@ const CommunityPost = () => {
             </Paper>
           </Paper>
         )}
-
-        {/* 버튼 컨테이너 */}
-        {ButtonContainer}
       </Stack>
 
       {/* 게시글 삭제 확인 다이얼로그 */}
