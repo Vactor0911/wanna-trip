@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import parse from "html-react-parser";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
@@ -603,6 +603,55 @@ const CommunityPost = () => {
     navigate(`/community/${postUuid}/edit`);
   }, [navigate, postUuid]);
 
+  // 버튼 컨테이너 요소
+  const ButtonContainer = useMemo(() => {
+    return (
+      <Stack direction="row" justifyContent="flex-end" gap={2} flexGrow={1}>
+        {/* 수정 버튼 - 작성자일 때만 표시 */}
+        {isAuthor && (
+          <Button
+            variant="outlined"
+            color="black"
+            onClick={handleEditButtonClick}
+          >
+            <Typography variant="subtitle2" fontWeight="bold">
+              수정
+            </Typography>
+          </Button>
+        )}
+
+        {/* 삭제 버튼 - 작성자일 때만 표시 */}
+        {isAuthor && (
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={handleOpenDeleteDialog}
+          >
+            <Typography variant="subtitle2" fontWeight="bold">
+              삭제
+            </Typography>
+          </Button>
+        )}
+
+        {/* 목록 버튼 */}
+        <Button
+          variant="outlined"
+          color="black"
+          onClick={handleReturnButtonClick}
+        >
+          <Typography variant="subtitle2" fontWeight="bold">
+            목록
+          </Typography>
+        </Button>
+      </Stack>
+    );
+  }, [
+    handleEditButtonClick,
+    handleOpenDeleteDialog,
+    handleReturnButtonClick,
+    isAuthor,
+  ]);
+
   // 로딩 중 표시
   if (isLoading) {
     return (
@@ -808,44 +857,7 @@ const CommunityPost = () => {
           </Stack>
 
           {/* 오른쪽 버튼 컨테이너 */}
-          <Stack direction="row" justifyContent="flex-end" gap={2} flexGrow={1}>
-            {/* 수정 버튼 - 작성자일 때만 표시 */}
-            {isAuthor && (
-              <Button
-                variant="outlined"
-                color="black"
-                onClick={handleEditButtonClick}
-              >
-                <Typography variant="subtitle2" fontWeight="bold">
-                  수정
-                </Typography>
-              </Button>
-            )}
-
-            {/* 삭제 버튼 - 작성자일 때만 표시 */}
-            {isAuthor && (
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={handleOpenDeleteDialog}
-              >
-                <Typography variant="subtitle2" fontWeight="bold">
-                  삭제
-                </Typography>
-              </Button>
-            )}
-
-            {/* 목록 버튼 */}
-            <Button
-              variant="outlined"
-              color="black"
-              onClick={handleReturnButtonClick}
-            >
-              <Typography variant="subtitle2" fontWeight="bold">
-                목록
-              </Typography>
-            </Button>
-          </Stack>
+          {ButtonContainer}
         </Stack>
 
         {/* 댓글 섹션 */}
@@ -1104,6 +1116,9 @@ const CommunityPost = () => {
             </Paper>
           </Paper>
         )}
+
+        {/* 버튼 컨테이너 */}
+        {ButtonContainer}
       </Stack>
 
       {/* 게시글 삭제 확인 다이얼로그 */}
