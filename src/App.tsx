@@ -41,10 +41,10 @@ function App() {
               <Route path="/community" element={<Community />} />
               <Route path="/community/edit" element={<CommunityPostEdit />} />
               <Route
-                path="/community/:postId/edit"
+                path="/community/:postUuid/edit"
                 element={<CommunityPostEdit />}
               />
-              <Route path="/community/:postId" element={<CommunityPost />} />
+              <Route path="/community/:postUuid" element={<CommunityPost />} />
             </Routes>
           </TokenRefresher>
         </BrowserRouter>

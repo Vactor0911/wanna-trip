@@ -183,25 +183,6 @@ const Card = (props: CardProps) => {
           {content && parse(content)}
         </Stack>
       </Stack>
-
-      {/* 소유자가 아닐 경우 읽기 전용 표시 추가 */}
-      {!isOwner && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 4,
-            right: 4,
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
-            borderRadius: "50%",
-            padding: "2px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <VisibilityIcon fontSize="small" sx={{ opacity: 0.7 }} />
-        </Box>
-      )}
     </Paper>
   );
 };
