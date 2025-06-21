@@ -21,6 +21,7 @@ import PopularTemplates, {
 } from "../components/PopularTemplates";
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
+import { getRandomColor } from "../utils";
 
 // 템플릿 타입 정의
 interface Template {
@@ -56,24 +57,6 @@ const UserTemplates = () => {
   >([]);
   const [isPopularLoading, setIsPopularLoading] = useState(true);
   const [popularError, setPopularError] = useState<string | null>(null);
-
-  // 템플릿 ID에 따라 색상 생성 함수
-  const getRandomColor = useCallback((id: number): string => {
-    const colors = [
-      "#A7C7FF",
-      "#FFF6A3",
-      "#FFB6E1",
-      "#FFB6B6",
-      "#FFD59E",
-      "#D6FFB7",
-      "#B6FFE4",
-      "#B6D9FF",
-      "#D9B6FF",
-    ];
-
-    // ID를 색상 인덱스로 변환 (반복되도 괜찮음)
-    return colors[id % colors.length];
-  }, []);
 
   // 기존 템플릿 데이터 가져오기
   const fetchTemplates = useCallback(async () => {
@@ -140,7 +123,7 @@ const UserTemplates = () => {
     } finally {
       setIsPopularLoading(false);
     }
-  }, [getRandomColor]);
+  }, []);
 
   // 컴포넌트 마운트 시 사용자의 템플릿 목록 가져오기
   useEffect(() => {

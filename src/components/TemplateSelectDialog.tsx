@@ -11,6 +11,7 @@ import SquareTemplateCard from "./SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { getRandomColor } from "../utils";
 
 interface TemplateSelectDialogProps {
   open: boolean;
@@ -66,24 +67,6 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
   useEffect(() => {
     fetchTemplates();
   }, [fetchTemplates]);
-
-  // 템플릿 ID에 따라 색상 생성 함수
-  const getRandomColor = useCallback((id: number): string => {
-    const colors = [
-      "#A7C7FF",
-      "#FFF6A3",
-      "#FFB6E1",
-      "#FFB6B6",
-      "#FFD59E",
-      "#D6FFB7",
-      "#B6FFE4",
-      "#B6D9FF",
-      "#D9B6FF",
-    ];
-
-    // ID를 색상 인덱스로 변환
-    return colors[id % colors.length];
-  }, []);
 
   // 템플릿 선택
   const handleTemplateClick = useCallback(
