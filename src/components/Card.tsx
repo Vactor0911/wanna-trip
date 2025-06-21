@@ -3,7 +3,6 @@ import { theme } from "../utils/theme";
 import dayjs, { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import VisibilityIcon from "@mui/icons-material/Visibility"; // 읽기 전용 아이콘 추가
 
 // 위치 정보 인터페이스 추가
 interface LocationInfo {
