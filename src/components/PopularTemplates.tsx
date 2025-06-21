@@ -11,8 +11,6 @@ import {
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
 import ShareIcon from "@mui/icons-material/Share";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import IosShareIcon from "@mui/icons-material/IosShare";
 import { useNavigate } from "react-router-dom";
 
 // 인기 템플릿 데이터 타입 정의
@@ -118,197 +116,152 @@ const PopularTemplates = ({
     }
   };
 
-  // 좋아요 토글 핸들러
-  const handleLikeClick = (e: React.MouseEvent, templateId: string) => {
-    e.stopPropagation(); // 카드 클릭 이벤트 전파 방지
-    setLikedTemplates((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(templateId)) {
-        newSet.delete(templateId);
-      } else {
-        newSet.add(templateId);
-      }
-      return newSet;
-    });
-  };
-
   return (
-    <Box px={{ xs: 1, md: "auto" }}>
-      <Box
-        ref={containerRef}
-        width="100%"
-        sx={{
-          position: "relative",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        {...boxProps}
-      >
-        {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
-        {showArrows && (
-          <IconButton
-            onClick={handlePrev}
+    <Box
+      ref={containerRef}
+      width="100%"
+      sx={{
+        position: "relative",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+      {...boxProps}
+    >
+      {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
+      {showArrows && (
+        <IconButton
+          onClick={handlePrev}
+          sx={{
+            position: "absolute",
+            left: 0,
+            top: "50%",
+            transform: "translateX(-45%) translateY(-50%)",
+            zIndex: 2,
+            background: "rgba(255,255,255)",
+            boxShadow: 1,
+            "&:hover": { background: "rgba(255,255,255)" },
+          }}
+        >
+          <ArrowBackIosNewRoundedIcon />
+        </IconButton>
+      )}
+
+      {/* 카드 리스트 */}
+      <Box display="flex" gap={`${gap}px`} width="100%">
+        {getVisibleData().map((tpl) => (
+          <Paper
+            key={tpl.id}
+            onClick={() => handleCardClick(tpl.id)}
             sx={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              transform: "translateX(-45%) translateY(-50%)",
-              zIndex: 2,
-              background: "rgba(255,255,255)",
-              boxShadow: 1,
-              "&:hover": { background: "rgba(255,255,255)" },
+              width: cardWidth,
+              height: cardHeight,
+              borderRadius: 4,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: tpl.image ? undefined : tpl.bgColor || "#e0f7fa",
+              backgroundImage: tpl.image ? `url(${tpl.image})` : undefined,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              minHeight: "250px", // 최소 높이 설정
+              position: "relative",
+              boxShadow: 2,
+              transition: "width 0.2s, height 0.2s",
+              cursor: "pointer",
             }}
           >
-            <ArrowBackIosNewRoundedIcon />
-          </IconButton>
-        )}
-
-        {/* 카드 리스트 */}
-        <Box display="flex" gap={`${gap}px`} width="100%">
-          {getVisibleData().map((tpl) => (
-            <Paper
-              key={tpl.id}
-              onClick={() => handleCardClick(tpl.id)}
+            {/* 카드 하단 정보 */}
+            <Box
               sx={{
-                width: cardWidth,
-                height: cardHeight,
-                borderRadius: 4,
-                overflow: "hidden",
+                position: "absolute",
+                bottom: 0,
+                width: "100%",
+                bgcolor: "rgba(255,255,255)",
+                p: 2,
                 display: "flex",
                 flexDirection: "column",
-                bgcolor: tpl.image ? undefined : tpl.bgColor || "#e0f7fa",
-                backgroundImage: tpl.image ? `url(${tpl.image})` : undefined,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                minHeight: "250px", // 최소 높이 설정
-                position: "relative",
-                boxShadow: 2,
-                transition: "width 0.2s, height 0.2s",
-                cursor: "pointer",
               }}
             >
-              {/* 카드 하단 정보 */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  bottom: 0,
-                  width: "100%",
-                  bgcolor: "rgba(255,255,255)",
-                  p: 2,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.5,
-                }}
-              >
-                {/* 상단: 아바타, 제목/작성자 */}
-                <Box display="flex" alignItems="center" gap={1.5}>
-                  <Avatar sx={{ width: 32, height: 32, fontSize: 18 }}>
-                    {tpl.author[0]}
-                  </Avatar>
-                  <Box>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={700}
-                      sx={{
-                        color: "#222",
-                        lineHeight: 1.2,
-                        maxWidth: 220,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {tpl.label}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: 13, fontWeight: 400 }}
-                    >
-                      {tpl.author}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
-                  {type === "template" ? (
-                    <Typography
-                      variant="caption"
-                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                    >
-                      <ShareIcon sx={{ fontSize: 16 }} /> {tpl.shares}
-                    </Typography>
-                  ) : (
-                    <>
-                      {/* 좋아요 */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {tpl.likes}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleLikeClick(e, tpl.id)}
-                          sx={{ position: "relative", top: 1 }}
-                        >
-                          {likedTemplates.has(tpl.id) ? (
-                            <FavoriteIcon color="error" fontSize="small" />
-                          ) : (
-                            <FavoriteBorderOutlinedIcon fontSize="small" />
-                          )}
-                        </IconButton>
-                      </Box>
-                      {/* 공유 */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {tpl.shares}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          sx={{ position: "relative", top: -1 }}
-                        >
-                          <IosShareIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                      {/* 댓글 */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {tpl.comments}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          sx={{ position: "relative", top: 1 }}
-                        >
-                          <ChatBubbleOutlineIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    </>
-                  )}
+              {/* 상단: 아바타, 제목/작성자 */}
+              <Box display="flex" alignItems="center" gap={1.5}>
+                <Avatar sx={{ width: 32, height: 32, fontSize: 20 }}>
+                  {tpl.username[0]}
+                </Avatar>
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={700}
+                    sx={{
+                      color: "#222",
+                      lineHeight: 1.2,
+                      maxWidth: 220,
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {tpl.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: 15, fontWeight: 400 }}
+                  >
+                    {tpl.username}
+                  </Typography>
                 </Box>
               </Box>
-            </Paper>
-          ))}
-        </Box>
 
-        {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
-        {showArrows && (
-          <IconButton
-            onClick={handleNext}
-            sx={{
-              position: "absolute",
-              right: 0,
-              top: "50%",
-              transform: "translateX(45%) translateY(-50%)",
-              zIndex: 2,
-              background: "rgba(255,255,255)",
-              boxShadow: 1,
-              "&:hover": { background: "rgba(255,255,255)" },
-            }}
-          >
-            <ArrowForwardIosRoundedIcon />
-          </IconButton>
-        )}
+              <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={0.5}
+                  sx={{ color: "text.secondary" }}
+                >
+                  <ShareIcon
+                    sx={{
+                      fontSize: 14,
+                      display: "flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      lineHeight: 1,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {tpl.shared_count}
+                  </Typography>
+                </Stack>
+              </Box>
+            </Box>
+          </Paper>
+        ))}
       </Box>
+
+      {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
+      {showArrows && (
+        <IconButton
+          onClick={handleNext}
+          sx={{
+            position: "absolute",
+            right: 0,
+            top: "50%",
+            transform: "translateX(45%) translateY(-50%)",
+            zIndex: 2,
+            background: "rgba(255,255,255)",
+            boxShadow: 1,
+            "&:hover": { background: "rgba(255,255,255)" },
+          }}
+        >
+          <ArrowForwardIosRoundedIcon />
+        </IconButton>
+      )}
     </Box>
   );
 };
