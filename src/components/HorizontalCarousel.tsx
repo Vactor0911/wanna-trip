@@ -11,22 +11,81 @@ import {
   useRef,
   useState,
 } from "react";
+import { useBreakpoint } from "../hooks";
 
 interface HorizontalCarouselProps {
   children: ReactNode;
-  visibleCount?: number; // 한 화면에 보이는 카드 수 (기본값: 3)
+  visibleCount?:
+    | number
+    | {
+        xs?: number; // xs 화면에서 보이는 카드 수
+        sm?: number; // sm 화면에서 보이는 카드 수
+        md?: number; // md 화면에서 보이는 카드 수
+        lg?: number; // lg 화면에서 보이는 카드 수
+        xl?: number; // xl 화면에서 보이는 카드 수
+      }; // 한 화면에 보이는 카드 수 (기본값: 3)
   gap?: number; // 카드 간격(px) (기본값: 24)
 }
 
 export default function HorizontalCarousel(props: HorizontalCarouselProps) {
   const { children, visibleCount = 3, gap = 24 } = props;
 
+  const [itemCounts, setItemCounts] = useState(3); // 화면 크기에 따라 보이는 카드 수
   const items = Array.isArray(children) ? children : [children];
   const x = useMotionValue(0); // 트랙 X 위치
   const firstItemRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0); // 카드 1장 폭 + gap
   const [page, setPage] = useState(0); // 페이지 인덱스
-  const totalPages = Math.max(1, Math.ceil(items.length / visibleCount));
+  const totalPages = Math.max(1, Math.ceil(items.length / itemCounts));
+  const breakpoint = useBreakpoint();
+
+  // 화면 크기에 따라 보이는 카드 수 조정
+  useLayoutEffect(() => {
+    switch (breakpoint) {
+      case "xs":
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.xs ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+      case "sm":
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.sm ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+      case "md":
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.md ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+      case "lg":
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.lg ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+      case "xl":
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.xl ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+      default:
+        setItemCounts(
+          typeof visibleCount === "object"
+            ? visibleCount.md ?? 3
+            : visibleCount ?? 3
+        );
+        break;
+    }
+  }, [visibleCount, breakpoint]);
 
   // 카드 폭 측정
   useLayoutEffect(() => {
@@ -44,14 +103,14 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
   useEffect(() => {
     if (!step) return;
     const contentW = step * items.length; // 전체 컨텐츠 폭
-    const viewportW = step * visibleCount; // 현재 보이는 영역 폭
+    const viewportW = step * itemCounts; // 현재 보이는 영역 폭
     const maxDrag = viewportW - contentW; // 최대 드래그 가능 위치
 
-    const rawX = -page * visibleCount * step;
+    const rawX = -page * itemCounts * step;
     const targetX = Math.max(maxDrag, Math.min(0, rawX));
 
     animate(x, targetX, { type: "spring", stiffness: 300, damping: 40 });
-  }, [page, step, items.length, visibleCount, x]);
+  }, [page, step, items.length, itemCounts, x]);
 
   // 페이지가 총 페이지 수를 초과하지 않도록 조정
   useLayoutEffect(() => {
@@ -129,8 +188,8 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
               sx={{
                 flex: "0 0 auto",
                 width: `calc((100% - ${
-                  (visibleCount - 1) * gap
-                }px) / ${visibleCount})`,
+                  (itemCounts - 1) * gap
+                }px) / ${itemCounts})`,
                 height: firstItemRef.current?.clientHeight,
                 borderRadius: 3,
               }}
