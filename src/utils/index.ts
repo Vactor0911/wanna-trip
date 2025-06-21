@@ -120,7 +120,7 @@ export const stripHtml = (html: string | undefined | null): string => {
  * @param seed 랜덤 시드를 지정할 수 있는 선택적 매개변수
  * @returns 랜덤 색상 코드
  */
-export const getRandomColor = (seed?: number): string => {
+export const getRandomColor = (seed?: string | number): string => {
   // 사용할 색상 배열
   const COLORS = [
     "#A7C7FF",
@@ -135,8 +135,13 @@ export const getRandomColor = (seed?: number): string => {
   ];
 
   // 랜덤 색상 반환
-  if (seed !== undefined) {
-    return COLORS[seed % COLORS.length];
+  if (seed) {
+    if (typeof seed === "string") {
+      const index = seed.length % COLORS.length;
+      return COLORS[index];
+    } else if (typeof seed === "number") {
+      return COLORS[seed % COLORS.length];
+    }
   }
 
   const randInt = Math.floor(Math.random() * COLORS.length);

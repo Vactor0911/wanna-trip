@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -7,6 +8,7 @@ import {
   Divider,
   InputBase,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -16,22 +18,26 @@ import PostEditor from "../components/text_editor/PostEditor";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { grey } from "@mui/material/colors";
+import { grey, red } from "@mui/material/colors";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import TemplateSelectDialog from "../components/TemplateSelectDialog";
 import Template from "./Template";
 import { useNavigate, useParams } from "react-router";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 
 const MAX_TAGS = 5; // 최대 태그 개수
 
 const CommunityPostEdit = () => {
   const theme = useTheme(); // MUI 테마
   const navigate = useNavigate(); // 네비게이션 훅
-  const postId = useParams().postId; // URL 파라미터에서 게시글 ID 가져오기
-  console.log("postId:", postId); // 디버깅용 로그
+  const postId = useParams().postUuid; // URL 파라미터에서 게시글 ID 가져오기
 
   const [title, setTitle] = useState(""); // 게시글 제목
+  const [titleErrorText, setTitleErrorText] = useState(""); // 제목 입력 오류 메시지]
+  const titleTextFieldRef = useRef<HTMLInputElement>(null); // 제목 입력란 참조
   const [content, setContent] = useState(""); // 게시글 내용
+  const [contentErrorText, setContentErrorText] = useState(""); // 게시글 내용 오류 메시지
+  const contentEditorContainerRef = useRef<HTMLDivElement>(null); // 내용 입력란 컨테이너 참조
   const [tags, setTags] = useState<string[]>([]); // 게시글 태그
   const tagInputRef = useRef<HTMLInputElement>(null); // 태그 입력란 참조
   const [tagInput, setTagInput] = useState(""); // 태그 입력란 값
@@ -39,33 +45,89 @@ const CommunityPostEdit = () => {
   const [isTemplateSelectDialogOpen, setIsTemplateSelectDialogOpen] =
     useState(false); // 템플릿 선택 대화상자 열림 상태
   const [templateUuid, setTemplateUuid] = useState<string | null>(null); // 선택된 템플릿
+  const [errorMessage, setErrorMessage] = useState<string>(""); // 오류 메시지
 
-  // 컴포넌트 마운트 시 태그 입력란 너비 초기화
-  useEffect(() => {
-    if (tagInputRef.current) {
-      tagInputRef.current.style.setProperty("width", "0px");
+  const fetchPostData = useCallback(async () => {
+    if (!postId) {
+      return; // 게시글 ID가 없으면 종료
     }
-  }, []);
+
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 게시글 정보 가져오기
+      const response = await axiosInstance.get(`/post/${postId}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        const postData = response.data.post;
+
+        // 게시글 정보 설정
+        setTitle(postData.title);
+        setContent(postData.content);
+        setTags(postData.tags || []);
+        setTemplateUuid(postData.templateUuid || null);
+      } else {
+        setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+      }
+    } catch (error) {
+      console.error("게시글 정보 가져오기 실패:", error);
+      setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+    }
+  }, [postId]);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 태그 입력란 너비 초기화
+    if (tagInputRef.current) {
+      tagInputRef.current.style.setProperty("width", "1px");
+    }
+
+    // 스크롤 제일 상단으로 이동
+    window.scrollTo(0, 0);
+
+    console.log("postId:", postId); // 디버깅용 로그
+    // UUID가 있으면 게시글 정보 가져오기
+    if (postId) {
+      fetchPostData();
+    } else {
+      // 게시글 ID가 없으면 커뮤니티 페이지로 이동
+      navigate("/community");
+    }
+  }, [fetchPostData, navigate, postId]);
 
   // 제목 변경
   const handleTitleChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setTitle(event.target.value);
+
+      // 제목이 변경되면 오류 메시지 초기화
+      if (titleErrorText) {
+        setTitleErrorText("");
+      }
     },
-    []
+    [titleErrorText]
   );
 
   // 내용 변경
-  const handleContentChange = useCallback((newContent: string) => {
-    setContent(newContent);
-  }, []);
+  const handleContentChange = useCallback(
+    (newContent: string) => {
+      setContent(newContent);
+
+      if (contentErrorText) {
+        setContentErrorText(""); // 내용 입력란 포커스 시 오류 메시지 초기화
+      }
+    },
+    [contentErrorText]
+  );
 
   // 태그 입력
   const handleTagInputChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setTagInput(event.target.value);
 
-      tagInputRef.current?.style.setProperty("width", "0px");
+      tagInputRef.current?.style.setProperty("width", "1px");
       tagInputRef.current?.style.setProperty(
         "width",
         `${event.target.scrollWidth + 2}px`
@@ -85,7 +147,7 @@ const CommunityPostEdit = () => {
     const trimmedTag = tagInput.trim();
     setTags((prevTags) => [...prevTags, trimmedTag]);
     setTagInput(""); // 태그 입력란 초기화
-    tagInputRef.current?.style.setProperty("width", "0px"); // 입력란 너비 초기화
+    tagInputRef.current?.style.setProperty("width", "1px"); // 입력란 너비 초기화
 
     // 태그 개수가 최대 개수에 도달한 경우 입력란 블러
     if (tags.length + 1 >= MAX_TAGS) {
@@ -132,8 +194,6 @@ const CommunityPostEdit = () => {
       return;
     }
 
-    console.log("태그 입력란 클릭");
-
     // 태그 포커스 토클
     setIsTagInputFocused(true);
     tagInputRef.current.focus();
@@ -179,6 +239,11 @@ const CommunityPostEdit = () => {
     setTemplateUuid(null);
   }, []);
 
+  // 오류 메시지 초기화
+  const handleClearErrorMessage = useCallback(() => {
+    setErrorMessage("");
+  }, []);
+
   // 취소 버튼 클릭
   const handleCancelButtonClick = useCallback(() => {
     // 게시글 ID가 존재하지 않으면 커뮤니티 페이지로 이동
@@ -188,6 +253,89 @@ const CommunityPostEdit = () => {
       navigate(`/community/${postId}`);
     }
   }, [navigate, postId]);
+
+  // 등록 버튼 클릭
+  const handleConfirmButtonClick = useCallback(async () => {
+    // 제목이 비어있으면 오류 출력
+    if (!title.trim()) {
+      setTitleErrorText("제목을 입력해 주세요.");
+      if (titleTextFieldRef.current) {
+        titleTextFieldRef.current.focus(); // 제목 입력란 포커스
+        titleTextFieldRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+      return;
+    }
+
+    // 내용이 비어있으면 오류 출력
+    if (!content.trim()) {
+      setContentErrorText("내용을 입력해 주세요.");
+      if (contentEditorContainerRef.current) {
+        contentEditorContainerRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }
+
+    // 요청 데이터 생성
+    const requestData = {
+      title: title.trim(),
+      content: content.trim(),
+      tags: tags.map((tag) => tag.trim()),
+      templateUuid: templateUuid,
+    };
+
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      if (postId) {
+        // 게시글 수정 API 호출
+        const response = await axiosInstance.put(
+          `/post/${postId}`,
+          requestData,
+          {
+            headers: { "X-CSRF-Token": csrfToken },
+          }
+        );
+
+        // API 호출 성공 시
+        if (response.data.success) {
+          const updatedPostId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
+
+          // 게시글 ID가 존재하면 해당 게시글로 이동
+          if (updatedPostId) {
+            navigate(`/community/${updatedPostId}`);
+          } else {
+            setErrorMessage("게시글을 수정하지 못했습니다.");
+          }
+        }
+      } else {
+        // 게시글 등록 API 호출
+        const response = await axiosInstance.post("/post/add", requestData, {
+          headers: { "X-CSRF-Token": csrfToken },
+        });
+
+        // API 호출 성공 시
+        if (response.data.success) {
+          const postId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
+
+          // 게시글 ID가 존재하면 해당 게시글로 이동
+          if (postId) {
+            navigate(`/community/${postId}`);
+          } else {
+            setErrorMessage("게시글을 등록하지 못했습니다.");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("게시글 등록 실패:", error);
+      setErrorMessage("게시글을 등록하지 못했습니다.");
+    }
+  }, [content, navigate, postId, tags, templateUuid, title]);
 
   return (
     <>
@@ -215,109 +363,125 @@ const CommunityPostEdit = () => {
 
               {/* 제목 입력란 */}
               <TextField
+                ref={titleTextFieldRef}
                 variant="outlined"
                 placeholder="제목을 입력해 주세요."
                 value={title}
                 onChange={handleTitleChange}
+                error={!!titleErrorText}
+                helperText={titleErrorText}
                 sx={{
-                  backgroundColor: grey[100],
+                  "& input": {
+                    backgroundColor: grey[100],
+                  },
                 }}
               />
             </Stack>
           </Paper>
 
           {/* 게시글 입력란 */}
-          <Box
-            position="relative"
-            sx={{
-              "& .ck-content": {
-                minHeight: "300px",
-                paddingBottom: "50px", // 버튼 영역을 위해 하단 패딩 추가
-              },
-            }}
-          >
-            {/* 텍스트 에디터 */}
-            <PostEditor setContent={handleContentChange} />
-
-            {/* 태그 입력란 */}
-            <Stack position="absolute" bottom={0} left={0} width="100%">
-              {/* 구분선 */}
-              <Divider
-                variant="middle"
-                sx={{
-                  borderColor: grey[300],
-                }}
+          <Box ref={contentEditorContainerRef}>
+            <Box
+              position="relative"
+              sx={{
+                "& .ck-content": {
+                  minHeight: "300px",
+                  paddingBottom: "50px", // 버튼 영역을 위해 하단 패딩 추가
+                },
+              }}
+            >
+              {/* 텍스트 에디터 */}
+              <PostEditor
+                content={content}
+                setContent={handleContentChange}
+                error={!!contentErrorText}
               />
 
-              {/* 태그 입력 컨테이너 */}
-              <ClickAwayListener onClickAway={handleTagContainerClickAway}>
-                <Stack
-                  direction="row"
-                  padding={"10px"}
-                  paddingX={2}
-                  alignItems="center"
-                  gap={1}
-                  onClick={handleTagContainerClick}
+              {/* 태그 입력란 */}
+              <Stack position="absolute" bottom={0} left={0} width="100%">
+                {/* 구분선 */}
+                <Divider
+                  variant="middle"
                   sx={{
-                    cursor: "text",
+                    borderColor: contentErrorText ? red[500] : grey[300],
                   }}
-                >
-                  {/* 태그 리스트 */}
-                  {tags.map((tag, index) => (
-                    <Chip
-                      label={tag}
-                      key={`tag-${index}`}
-                      onDelete={() => removeTag(index)}
-                    />
-                  ))}
+                />
 
-                  {/* 태그 입력란 플레이스 홀더 */}
-                  {!isTagInputFocused && tags.length <= 0 && (
-                    <Typography
-                      variant="subtitle1"
-                      color="text.secondary"
-                      whiteSpace="nowrap"
-                    >{`태그를 입력하세요. (최대 ${MAX_TAGS}개)`}</Typography>
-                  )}
-
-                  {/* 태그 입력란 */}
+                {/* 태그 입력 컨테이너 */}
+                <ClickAwayListener onClickAway={handleTagContainerClickAway}>
                   <Stack
                     direction="row"
+                    padding={"10px"}
+                    paddingX={2}
                     alignItems="center"
-                    gap={0.25}
-                    sx={
-                      isTagInputFocused
-                        ? {
-                            backgroundColor: grey[200],
-                            borderRadius: "50px",
-                            paddingX: 1.5,
-                            minWidth: "50px",
-                          }
-                        : null
-                    }
+                    gap={1}
+                    onClick={handleTagContainerClick}
+                    sx={{
+                      cursor: "text",
+                    }}
                   >
-                    {/* # 태그 */}
-                    {isTagInputFocused && (
-                      <Typography variant="subtitle2" color="black">
-                        #
-                      </Typography>
+                    {/* 태그 리스트 */}
+                    {tags.map((tag, index) => (
+                      <Chip
+                        label={tag}
+                        key={`tag-${index}`}
+                        onDelete={() => removeTag(index)}
+                      />
+                    ))}
+
+                    {/* 태그 입력란 플레이스 홀더 */}
+                    {!isTagInputFocused && tags.length <= 0 && (
+                      <Typography
+                        variant="subtitle1"
+                        color="text.secondary"
+                        whiteSpace="nowrap"
+                      >{`태그를 입력하세요. (최대 ${MAX_TAGS}개)`}</Typography>
                     )}
 
-                    {/* 태그 입력 필드 */}
-                    <InputBase
-                      inputRef={tagInputRef}
-                      value={tagInput}
-                      onChange={handleTagInputChange}
-                      onKeyDown={handleTagInputKeyDown}
-                      sx={{
-                        color: "black",
-                        fontSize: theme.typography.subtitle2.fontSize,
-                      }}
-                    />
+                    {/* 태그 입력란 */}
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      gap={0.25}
+                      sx={
+                        isTagInputFocused
+                          ? {
+                              backgroundColor: grey[200],
+                              borderRadius: "50px",
+                              paddingX: 1.5,
+                              minWidth: "50px",
+                            }
+                          : null
+                      }
+                    >
+                      {/* # 태그 */}
+                      {isTagInputFocused && (
+                        <Typography variant="subtitle2" color="black">
+                          #
+                        </Typography>
+                      )}
+
+                      {/* 태그 입력 필드 */}
+                      <InputBase
+                        inputRef={tagInputRef}
+                        value={tagInput}
+                        onChange={handleTagInputChange}
+                        onKeyDown={handleTagInputKeyDown}
+                        sx={{
+                          color: "black",
+                          fontSize: theme.typography.subtitle2.fontSize,
+                        }}
+                      />
+                    </Stack>
                   </Stack>
-                </Stack>
-              </ClickAwayListener>
-            </Stack>
+                </ClickAwayListener>
+              </Stack>
+            </Box>
+
+            {/* 에러 메시지 */}
+            <Typography variant="subtitle2" color="error" ml={2} mt={0.5}>
+              {contentErrorText}
+            </Typography>
           </Box>
 
           {/* 템플릿 선택기 */}
@@ -404,6 +568,7 @@ const CommunityPostEdit = () => {
             <Button
               variant="contained"
               endIcon={<SendRoundedIcon />}
+              onClick={handleConfirmButtonClick}
               sx={{
                 borderRadius: 2,
               }}
@@ -425,6 +590,22 @@ const CommunityPostEdit = () => {
         onClose={handleTemplateSelectDialogClose}
         onSelect={setTemplateUuid}
       />
+
+      {/* 오류 스낵바 */}
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={handleClearErrorMessage}
+      >
+        <Alert
+          onClose={handleClearErrorMessage}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

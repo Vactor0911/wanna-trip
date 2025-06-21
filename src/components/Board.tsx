@@ -142,8 +142,6 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        console.log("보드 추가 성공:", response.data);
-
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
       }
@@ -171,8 +169,6 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        console.log("보드 복제 성공:", response.data);
-
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
       }
@@ -199,8 +195,6 @@ const Board = (props: BoardProps) => {
           );
 
           if (response.data.success) {
-            console.log("보드 카드 삭제 성공:", response.data);
-
             // 템플릿 데이터 새로 불러오기
             await fetchTemplateData();
           }
@@ -214,8 +208,6 @@ const Board = (props: BoardProps) => {
       });
 
       if (response.data.success) {
-        console.log("보드 삭제 성공:", response.data);
-
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
       }

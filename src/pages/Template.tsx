@@ -278,8 +278,6 @@ const Template = (props: TemplateProps) => {
       );
 
       if (response.data.success) {
-        console.log("보드 추가 성공:", response.data);
-
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
       }
@@ -317,8 +315,6 @@ const Template = (props: TemplateProps) => {
           { title: newTemplate.title },
           { headers: { "X-CSRF-Token": csrfToken } }
         );
-
-        console.log("템플릿 제목이 성공적으로 변경되었습니다.");
       } else {
         console.error("템플릿 UUID가 유효하지 않습니다.");
       }
