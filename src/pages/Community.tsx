@@ -144,7 +144,13 @@ const Community = () => {
 
       // 인기 게시글 목록 업데이트
       if (response.data.success) {
-        const newPopularPostsData: PostInterface[] = response.data.data.map(
+        // 인기 게시글 목록이 비어있으면 종료
+        if (response.data.post.length <= 0) {
+          setPopularPosts([]);
+          throw new Error("인기 게시글이 없습니다.");
+        }
+
+        const newPopularPostsData: PostInterface[] = response.data.post.map(
           (post: PostInterface) => ({
             uuid: post.uuid,
             title: post.title,
@@ -162,7 +168,7 @@ const Community = () => {
       }
     } catch (error) {
       console.error("인기 게시글 불러오기 실패:", error);
-      // 에러 처리 로직 추가 가능
+      // TODO: 에러 처리 로직 추가 가능
     } finally {
       // 인기 게시글 로딩 상태 해제
       setIsPopularPostsLoading(false);
@@ -390,7 +396,7 @@ const Community = () => {
                         {/* 헤더 */}
                         <Stack position="relative">
                           {/* 제목 */}
-                          <Typography variant="subtitle1" fontWeight="bold">
+                          <Typography variant="subtitle1" fontWeight="bold" noWrap>
                             {post.title}
                           </Typography>
 
@@ -692,7 +698,7 @@ const Community = () => {
 
                     {/* 태그 */}
                     {post.tags && post.tags.length > 0 && (
-                      <Typography variant="subtitle1">
+                      <Typography variant="subtitle1" noWrap>
                         #{post.tags?.join(" #")}
                       </Typography>
                     )}
