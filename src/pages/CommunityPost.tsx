@@ -12,11 +12,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NavLink } from "react-router-dom";
 import parse from "html-react-parser";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
@@ -162,6 +160,8 @@ const commentExample = [
 
 const CommunityPost = () => {
   const { postId } = useParams(); // 게시글 ID
+  const navigate = useNavigate(); // 네비게이션 훅
+
   const [isLoading, setIsLoading] = useState(false); // 게시글 로딩 여부
   const [title] = useState("게시글 제목"); // 게시글 제목
   const [authorId] = useState("1"); // 작성자 ID
@@ -171,7 +171,7 @@ const CommunityPost = () => {
   const [content] = useState(contentExample); // 게시글 내용 (HTML 형식)
   const [likes] = useState(10); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
-  const [shares, setShares] = useState(20); // 공유수
+  const [shares, setShares] = useState(0); // 공유수
   const [comments, setComments] = useState(commentExample); // 댓글 수
   const [replyParentId, setReplyParentId] = useState<string | null>(null); // 댓글 부모 ID
   const moreButtonRef = useRef<HTMLButtonElement>(null); // 더보기 버튼 참조
@@ -270,35 +270,14 @@ const CommunityPost = () => {
     setIsTemplateDrawerOpen((prev) => !prev);
   }, []);
 
+  // 목록 버튼 클릭
+  const handleReturnButtonClick = useCallback(() => {
+    navigate("/community");
+  }, [navigate]);
+
   return (
     <Container maxWidth="lg">
       <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
-        {/* 게시판 버튼 */}
-        <Box position="relative">
-          <NavLink
-            to="/community"
-            css={{
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            <Typography variant="h5" display="inline">
-              게시판
-            </Typography>
-
-            {/* 아이콘 */}
-            <ChevronLeftRoundedIcon
-              fontSize="large"
-              sx={{
-                position: "absolute",
-                left: 0,
-                top: "50%",
-                transform: "translate(-100%, -50%)",
-              }}
-            />
-          </NavLink>
-        </Box>
-
         {/* 게시글 제목 */}
         <Typography variant="h4">{title}</Typography>
 
@@ -473,6 +452,17 @@ const CommunityPost = () => {
             <Button variant="outlined" color="error">
               <Typography variant="subtitle2" fontWeight="bold">
                 삭제
+              </Typography>
+            </Button>
+
+            {/* 목록 버튼 */}
+            <Button
+              variant="outlined"
+              color="black"
+              onClick={handleReturnButtonClick}
+            >
+              <Typography variant="subtitle2" fontWeight="bold">
+                목록
               </Typography>
             </Button>
           </Stack>

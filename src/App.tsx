@@ -17,6 +17,7 @@ import {
 import CommunityPost from "./pages/CommunityPost";
 import Header from "./components/Header";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import CommunityPostEdit from "./pages/CommunityPostEdit";
 
 const queryClient = new QueryClient();
 
@@ -38,8 +39,12 @@ function App() {
               <Route path="/find-password" element={<FindPassword />} />
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/community/edit" element={<CommunityPostEdit />} />
+              <Route
+                path="/community/:postId/edit"
+                element={<CommunityPostEdit />}
+              />
               <Route path="/community/:postId" element={<CommunityPost />} />
-              <Route path="/community/:postId/modify" element={<CommunityPost />} />
             </Routes>
           </TokenRefresher>
         </BrowserRouter>
