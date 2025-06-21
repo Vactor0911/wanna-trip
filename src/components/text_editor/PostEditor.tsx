@@ -7,16 +7,18 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { CKEditor, useCKEditorCloud } from "@ckeditor/ckeditor5-react";
 import "./TextEditor.css";
 import { ClassicEditor, EventInfo, HeadingOption } from "ckeditor5";
+import { red } from "@mui/material/colors";
 
 const LICENSE_KEY = import.meta.env.VITE_CKEDITOR_LICENSE_KEY;
 
 interface PostEditorProps {
   setContent?: (content: string) => void;
   initialContent?: string; // 초기 내용을 위한 prop 추가
+  error?: boolean; // 에러 상태
 }
 
 const PostEditor = (props: PostEditorProps) => {
-  const { setContent, initialContent = "" } = props;
+  const { setContent, initialContent = "", error } = props;
 
   const editorContainerRef = useRef(null);
   const editorRef = useRef(null);
@@ -287,7 +289,17 @@ const PostEditor = (props: PostEditorProps) => {
   }, [cloud, isLayoutReady]);
 
   return (
-    <div className="main-container">
+    <div
+      className="main-container"
+      css={{
+        "& .ck-sticky-panel__content": {
+          borderColor: error ? red[500] + "!important" : undefined,
+        },
+        "& .ck-editor__editable": {
+          borderColor: error ? red[500] + "!important" : undefined,
+        },
+      }}
+    >
       <div
         className="editor-container editor-container_classic-editor"
         ref={editorContainerRef}
