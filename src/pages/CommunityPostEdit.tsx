@@ -4,29 +4,51 @@ import {
   Chip,
   ClickAwayListener,
   Container,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   InputBase,
   Paper,
   Stack,
   TextField,
   Typography,
+  useTheme,
 } from "@mui/material";
 import PostEditor from "../components/text_editor/PostEditor";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { grey } from "@mui/material/colors";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import TemplateSelectDialog from "../components/TemplateSelectDialog";
+import Template from "./Template";
+import { useNavigate, useParams } from "react-router";
 
 const MAX_TAGS = 5; // 최대 태그 개수
 
 const CommunityPostEdit = () => {
+  const theme = useTheme(); // MUI 테마
+  const navigate = useNavigate(); // 네비게이션 훅
+  const postId = useParams().postId; // URL 파라미터에서 게시글 ID 가져오기
+  console.log("postId:", postId); // 디버깅용 로그
+
   const [title, setTitle] = useState(""); // 게시글 제목
   const [content, setContent] = useState(""); // 게시글 내용
   const [tags, setTags] = useState<string[]>([]); // 게시글 태그
   const tagInputRef = useRef<HTMLInputElement>(null); // 태그 입력란 참조
   const [tagInput, setTagInput] = useState(""); // 태그 입력란 값
   const [isTagInputFocused, setIsTagInputFocused] = useState(false); // 태그 입력란 포커스 상태
+  const [isTemplateSelectDialogOpen, setIsTemplateSelectDialogOpen] =
+    useState(false); // 템플릿 선택 대화상자 열림 상태
+  const [templateUuid, setTemplateUuid] = useState<string | null>(null); // 선택된 템플릿
+
+  // 컴포넌트 마운트 시 태그 입력란 너비 초기화
+  useEffect(() => {
+    if (tagInputRef.current) {
+      tagInputRef.current.style.setProperty("width", "0px");
+    }
+  }, []);
 
   // 제목 변경
   const handleTitleChange = useCallback(
@@ -66,12 +88,12 @@ const CommunityPostEdit = () => {
     const trimmedTag = tagInput.trim();
     setTags((prevTags) => [...prevTags, trimmedTag]);
     setTagInput(""); // 태그 입력란 초기화
+    tagInputRef.current?.style.setProperty("width", "0px"); // 입력란 너비 초기화
 
     // 태그 개수가 최대 개수에 도달한 경우 입력란 블러
     if (tags.length + 1 >= MAX_TAGS) {
       setIsTagInputFocused(false);
       tagInputRef.current?.blur();
-      tagInputRef.current?.style.setProperty("width", "0px"); // 입력란 너비 초기화
     }
   }, [tagInput, tags]);
 
@@ -80,15 +102,25 @@ const CommunityPostEdit = () => {
     setTags((prevTags) => prevTags.filter((_, i) => i !== index));
   }, []);
 
-  // 태그 입력란 스페이스 키 입력
+  // 태그 입력란 키 입력
   const handleTagInputKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === " ") {
-        event.preventDefault(); // 스페이스 키 기본 동작 방지
-        addTag(); // 현재 입력된 태그 추가
+      switch (event.key) {
+        case " ":
+          // 스페이스 키
+          event.preventDefault(); // 스페이스 키 기본 동작 방지
+          addTag(); // 현재 입력된 태그 추가
+          break;
+        case "Backspace":
+          if (tagInput.length <= 0 && tags.length > 0) {
+            // 백스페이스 키
+            event.preventDefault(); // 백스페이스 키 기본 동작 방지
+            removeTag(tags.length - 1); // 마지막 태그 제거
+          }
+          break;
       }
     },
-    [addTag]
+    [addTag, removeTag, tagInput.length, tags.length]
   );
 
   // 태그 컨테이너 클릭
@@ -134,6 +166,31 @@ const CommunityPostEdit = () => {
     tagInputRef.current.blur();
     addTag(); // 현재 입력된 태그 추가
   }, [addTag, isTagInputFocused]);
+
+  // 템플릿 선택 대화상자 열기
+  const handleTemplateSelectDialogOpen = useCallback(() => {
+    setIsTemplateSelectDialogOpen(true);
+  }, []);
+
+  // 템플릿 선택 대화상자 닫기
+  const handleTemplateSelectDialogClose = useCallback(() => {
+    setIsTemplateSelectDialogOpen(false);
+  }, []);
+
+  // 템플릿 선택 해제
+  const handleTemplateUnselect = useCallback(() => {
+    setTemplateUuid(null);
+  }, []);
+
+  // 취소 버튼 클릭
+  const handleCancelButtonClick = useCallback(() => {
+    // 게시글 ID가 존재하지 않으면 커뮤니티 페이지로 이동
+    if (!postId) {
+      navigate("/community");
+    } else {
+      navigate(`/community/${postId}`);
+    }
+  }, [navigate, postId]);
 
   return (
     <>
@@ -227,10 +284,24 @@ const CommunityPostEdit = () => {
                   )}
 
                   {/* 태그 입력란 */}
-                  <Stack direction="row" alignItems="center" gap={0.25}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    gap={0.25}
+                    sx={
+                      isTagInputFocused
+                        ? {
+                            backgroundColor: grey[200],
+                            borderRadius: "50px",
+                            paddingX: 1.5,
+                            minWidth: "50px",
+                          }
+                        : null
+                    }
+                  >
                     {/* # 태그 */}
                     {isTagInputFocused && (
-                      <Typography variant="subtitle1" color="text.secondary">
+                      <Typography variant="subtitle2" color="black">
                         #
                       </Typography>
                     )}
@@ -242,7 +313,8 @@ const CommunityPostEdit = () => {
                       onChange={handleTagInputChange}
                       onKeyDown={handleTagInputKeyDown}
                       sx={{
-                        color: "text.secondary",
+                        color: "black",
+                        fontSize: theme.typography.subtitle2.fontSize,
                       }}
                     />
                   </Stack>
@@ -254,21 +326,60 @@ const CommunityPostEdit = () => {
           {/* 템플릿 선택기 */}
           <Paper
             variant="outlined"
-            sx={{ borderRadius: 2, borderStyle: "dashed" }}
+            sx={{
+              borderRadius: 2,
+              borderStyle: "dashed",
+              position: "relative",
+              overflow: "hidden",
+            }}
           >
-            <Stack alignItems="center" padding={5} gap={2}>
-              {/* 템플릿 아이콘 */}
-              <CalendarMonthRoundedIcon
-                sx={{
-                  fontSize: "6rem",
-                }}
-              />
+            {templateUuid ? (
+              <>
+                <Template uuid={templateUuid} height="80vh" paddgingX="24px" />
 
-              {/* 템플릿 선택 버튼 */}
-              <Button variant="outlined">
-                <Typography variant="h6">템플릿 선택</Typography>
-              </Button>
-            </Stack>
+                <Stack
+                  direction="row"
+                  position="absolute"
+                  bottom={24}
+                  right={16}
+                  gap={2}
+                >
+                  {/* 템플릿 선택 해제 버튼 */}
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={handleTemplateUnselect}
+                  >
+                    <Typography variant="h6">선택 해제</Typography>
+                  </Button>
+
+                  {/* 템플릿 선택 버튼 */}
+                  <Button
+                    variant="contained"
+                    onClick={handleTemplateSelectDialogOpen}
+                  >
+                    <Typography variant="h6">템플릿 선택</Typography>
+                  </Button>
+                </Stack>
+              </>
+            ) : (
+              <Stack alignItems="center" padding={5} gap={2}>
+                {/* 템플릿 아이콘 */}
+                <CalendarMonthRoundedIcon
+                  sx={{
+                    fontSize: "6rem",
+                  }}
+                />
+
+                {/* 템플릿 선택 버튼 */}
+                <Button
+                  variant="outlined"
+                  onClick={handleTemplateSelectDialogOpen}
+                >
+                  <Typography variant="h6">템플릿 선택</Typography>
+                </Button>
+              </Stack>
+            )}
           </Paper>
 
           {/* 버튼 컨테이너 */}
@@ -282,6 +393,7 @@ const CommunityPostEdit = () => {
             <Button
               variant="contained"
               color="secondary"
+              onClick={handleCancelButtonClick}
               sx={{
                 borderRadius: 2,
               }}
@@ -309,6 +421,13 @@ const CommunityPostEdit = () => {
         {/* 스크롤 상단 이동 버튼 */}
         <ScrollToTopButton />
       </Container>
+
+      {/* 템플릿 선택 대화상자 */}
+      <TemplateSelectDialog
+        open={isTemplateSelectDialogOpen}
+        onClose={handleTemplateSelectDialogClose}
+        onSelect={setTemplateUuid}
+      />
     </>
   );
 };
