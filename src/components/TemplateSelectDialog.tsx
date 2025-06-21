@@ -4,6 +4,8 @@ import {
   DialogTitle,
   IconButton,
   Stack,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import SquareTemplateCard from "./SquareTemplateCard";
 import { useCallback, useEffect, useState } from "react";
@@ -27,6 +29,8 @@ interface Template {
 
 const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
   const { open, onClose, onSelect } = props;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,7 +113,12 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
 
       {/* 사용자 템플릿 목록 */}
       <DialogContent dividers>
-        <Stack direction="row" gap={2} flexWrap="wrap">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          gap={2}
+          flexWrap="wrap"
+        >
           {myTemplates.map((template) => (
             <SquareTemplateCard
               key={`template-${template.template_id}`}
@@ -117,6 +126,7 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
               title={template.title}
               color={getRandomColor(template.template_id)}
               onClick={() => handleTemplateClick(template.template_uuid)}
+              cardSize={isMobile ? 110 : 150}
             />
           ))}
         </Stack>
