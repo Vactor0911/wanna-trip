@@ -94,19 +94,19 @@ const regionImages: RegionImage[] = [
 // 게시글 데이터
 export const temporaryPosts = [
   {
-    id: "1",
+    id: "3b846b13-4e79-11f0-a7ce-38a746032467",
     imgbg: "#f3e5f5",
     title:
-      "일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!",
+      "제주도 2박 3일 게시글 테스트",
     hashtags: ["일본", "단기여행", "행복", "유튜버"],
     likes: 132,
     comments: 3,
     shares: 23,
   },
   {
-    id: "2",
+    id: "3b446b13-4e79-11f0-a7ce-38a746032457",
     imgbg: "#f0f4c3",
-    title: "일본으로 2박 여행 가볼래?",
+    title: "제주도 게시글 테스트 2",
     hashtags: ["일본", "해외여행", "강추"],
     likes: 312,
     comments: 5,
@@ -303,8 +303,8 @@ const Community = () => {
   };
 
   // 게시글 클릭 핸들러
-  const handlePostClick = (postId: string) => {
-    navigate(`/community/${postId}`);
+  const handlePostClick = (postUuid: string) => {
+    navigate(`/community/${postUuid}`);
   };
 
   // 카테고리 클릭 시 태그 추가

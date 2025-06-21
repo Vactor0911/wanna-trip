@@ -1,24 +1,45 @@
-import { Box, Button, OutlinedInput, Stack, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, OutlinedInput, Stack, Typography } from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { useCallback, useState } from "react";
 
 interface CommentInputProps {
-  onCommentSubmit: () => void;
+  onCommentSubmit: (content: string) => void;
   onCommentCancel?: () => void;
+  disabled?: boolean;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const CommentInput = (props: CommentInputProps) => {
-  const { onCommentSubmit, onCommentCancel } = props;
+  const { onCommentSubmit, onCommentCancel, disabled = false, value: externalValue, onChange } = props;
 
-  const [comment, setComment] = useState("");
+
+  // 내부 상태 관리
+  const [internalValue, setInternalValue] = useState("");
+  const isControlled = externalValue !== undefined;
+  const value = isControlled ? externalValue : internalValue;
 
   // 댓글 입력
   const handleCommentChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      setComment(event.target.value);
+      if (onChange) {
+        onChange(event);
+      } else {
+        setInternalValue(event.target.value);
+      }
     },
-    []
+    [onChange]
   );
+
+  // 댓글 제출
+  const handleSubmit = useCallback(() => {
+    if (value.trim() && !disabled) {
+      onCommentSubmit(value);
+      if (!isControlled) {
+        setInternalValue("");
+      }
+    }
+  }, [value, disabled, onCommentSubmit, isControlled]);
 
   return (
     <Box position="relative">
@@ -26,8 +47,9 @@ const CommentInput = (props: CommentInputProps) => {
         fullWidth
         multiline
         placeholder="댓글을 남겨보세요"
-        value={comment}
+        value={value}
         onChange={handleCommentChange}
+        disabled={disabled}
         sx={{
           pb: 7.5,
         }}
@@ -48,6 +70,7 @@ const CommentInput = (props: CommentInputProps) => {
             size="small"
             color="secondary"
             onClick={onCommentCancel}
+            disabled={disabled}
             sx={{
               borderRadius: "50px",
             }}
@@ -61,15 +84,16 @@ const CommentInput = (props: CommentInputProps) => {
         {/* 등록 버튼 */}
         <Button
           variant="contained"
-          endIcon={<SendRoundedIcon />}
+          endIcon={disabled ? <CircularProgress size={16} color="inherit" /> : <SendRoundedIcon />}
           size="small"
-          onClick={onCommentSubmit}
+          onClick={handleSubmit}
+          disabled={!value.trim() || disabled}
           sx={{
             borderRadius: "50px",
           }}
         >
           <Typography variant="subtitle1" fontWeight="bold">
-            등록
+            {disabled ? "등록 중..." : "등록"}
           </Typography>
         </Button>
       </Stack>
