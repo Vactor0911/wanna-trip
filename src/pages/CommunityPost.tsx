@@ -796,6 +796,16 @@ const CommunityPost = () => {
             "& ol, & ul": {
               paddingLeft: "1em",
             },
+            "& table, & table th, & table td": {
+              border: "1px solid #bfbfbf",
+              borderCollapse: "collapse",
+            },
+            "& table th, & table td": {
+              padding: "6.4px",
+            },
+            "& table thead": {
+              background: "rgba(0, 0, 0, 0.05)",
+            },
           }}
         >
           {content && parse(content)}
