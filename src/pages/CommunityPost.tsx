@@ -25,7 +25,6 @@ import parse from "html-react-parser";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
-import { red } from "@mui/material/colors";
 import CommentInput from "../components/CommentInput";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -629,7 +628,13 @@ const CommunityPost = () => {
 
   return (
     <Container maxWidth="lg">
-      <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
+      <Stack
+        minHeight="calc(100vh - 82px)"
+        gap={4}
+        py={5}
+        pb={15}
+        pl={templateUuid ? 5 : 0}
+      >
         {/* 게시글 제목 */}
         <Typography variant="h4">{title}</Typography>
 
@@ -753,17 +758,9 @@ const CommunityPost = () => {
               {/* 좋아요 버튼 */}
               <IconButton size="small" onClick={handleLikeButtonClick}>
                 {isLiked ? (
-                  <FavoriteRoundedIcon
-                    sx={{
-                      color: red[600],
-                    }}
-                  />
+                  <FavoriteRoundedIcon color="error" />
                 ) : (
-                  <FavoriteBorderRoundedIcon
-                    sx={{
-                      color: red[600],
-                    }}
-                  />
+                  <FavoriteBorderRoundedIcon />
                 )}
               </IconButton>
 
@@ -891,35 +888,32 @@ const CommunityPost = () => {
                             padding: 0.5,
                           }}
                           onClick={() => handleCommentLike(comment.uuid)}
-                          color={comment.liked ? "error" : "default"}
                         >
                           {comment.liked ? (
                             <FavoriteRoundedIcon
-                              sx={{ color: red[600], fontSize: 18 }}
+                              color="error"
+                              sx={{ fontSize: 18 }}
                             />
                           ) : (
-                            <FavoriteBorderRoundedIcon
-                              sx={{ color: red[600], fontSize: 18 }}
-                            />
+                            <FavoriteBorderRoundedIcon sx={{ fontSize: 18 }} />
                           )}
 
-                          {comment.likes > 0 && (
-                            <Typography variant="caption" sx={{ ml: 0.5 }}>
-                              {comment.likes}
-                            </Typography>
-                          )}
+                          <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+                            {comment.likes}
+                          </Typography>
                         </IconButton>
 
                         {/* 삭제 버튼 (본인 댓글 또는 게시글 작성자만) */}
                         {canDeleteComment(comment) && (
                           <Button
+                            color="error"
                             onClick={() =>
                               handleOpenCommentDeleteDialog(comment.uuid)
                             }
                             sx={{
                               padding: 0,
-                              color: "error.main",
-                              minWidth: "auto",
+                              paddingX: 0.5,
+                              minWidth: 0,
                             }}
                           >
                             <Typography variant="subtitle2" color="error">
@@ -1000,90 +994,96 @@ const CommunityPost = () => {
         <ScrollToTopButton />
 
         {/* 템플릿 드로어 */}
-        <Paper
-          elevation={5}
-          sx={{
-            position: "fixed",
-            top: "15vh",
-            left: 0,
-            borderRadius: 0,
-            borderTopRightRadius: 8,
-            borderBottomRightRadius: 8,
-          }}
-        >
-          <Collapse
-            in={isTemplateDrawerOpen}
-            orientation="horizontal"
-            collapsedSize={10}
-          >
-            <Box
-              height="70vh"
-              width={{
-                xs: "90vw",
-                sm: "50vw",
-              }}
-              sx={{
-                overflowX: "auto",
-              }}
-            >
-              {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
-              {!loginState.isLoggedIn ? (
-                // 로그인되지 않은 경우 메시지 표시
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    py: 4,
-                    px: 2,
-                    borderRadius: 2,
-                    bgcolor: "rgba(48, 48, 48, 0.03)",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h6" color="text.secondary" mb={3}>
-                    템플릿을 확인하려면 로그인이 필요합니다.
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => navigate("/login")}
-                  >
-                    로그인하러 가기
-                  </Button>
-                </Box>
-              ) : (
-                // 로그인된 경우 템플릿 표시
-                <Template uuid={templateUuid} height="70vh" paddgingX="24px" />
-              )}
-            </Box>
-          </Collapse>
-
-          {/* 드로어 확장/축소 버튼 */}
+        {templateUuid && (
           <Paper
-            elevation={2}
+            elevation={5}
             sx={{
-              position: "absolute",
-              top: "50%",
-              right: 0,
-              borderRadius: "50%",
-              transform: "translate(50%, -50%)",
+              position: "fixed",
+              top: "15vh",
+              left: 0,
+              borderRadius: 0,
+              borderTopRightRadius: 8,
+              borderBottomRightRadius: 8,
             }}
           >
-            <IconButton size="small" onClick={handleTemplateDrawerToggle}>
-              <ChevronLeftRoundedIcon
-                color="primary"
-                fontSize="large"
-                sx={{
-                  transform: `rotate(${isTemplateDrawerOpen ? 0 : -180}deg)`,
-                  transition: "transform 0.2s ease-in-out",
+            <Collapse
+              in={isTemplateDrawerOpen}
+              orientation="horizontal"
+              collapsedSize={30}
+            >
+              <Box
+                height="70vh"
+                width={{
+                  xs: "90vw",
+                  sm: "50vw",
                 }}
-              />
-            </IconButton>
+                sx={{
+                  overflowX: "auto",
+                }}
+              >
+                {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
+                {!loginState.isLoggedIn ? (
+                  // 로그인되지 않은 경우 메시지 표시
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "100%",
+                      py: 4,
+                      px: 2,
+                      borderRadius: 2,
+                      bgcolor: "rgba(48, 48, 48, 0.03)",
+                      textAlign: "center",
+                    }}
+                  >
+                    <Typography variant="h6" color="text.secondary" mb={3}>
+                      템플릿을 확인하려면 로그인이 필요합니다.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => navigate("/login")}
+                    >
+                      로그인하러 가기
+                    </Button>
+                  </Box>
+                ) : (
+                  // 로그인된 경우 템플릿 표시
+                  <Template
+                    uuid={templateUuid}
+                    height="70vh"
+                    paddgingX="24px"
+                  />
+                )}
+              </Box>
+            </Collapse>
+
+            {/* 드로어 확장/축소 버튼 */}
+            <Paper
+              elevation={2}
+              sx={{
+                position: "absolute",
+                top: "50%",
+                right: 0,
+                borderRadius: "50%",
+                transform: "translate(50%, -50%)",
+              }}
+            >
+              <IconButton size="small" onClick={handleTemplateDrawerToggle}>
+                <ChevronLeftRoundedIcon
+                  color="primary"
+                  fontSize="large"
+                  sx={{
+                    transform: `rotate(${isTemplateDrawerOpen ? 0 : -180}deg)`,
+                    transition: "transform 0.2s ease-in-out",
+                  }}
+                />
+              </IconButton>
+            </Paper>
           </Paper>
-        </Paper>
+        )}
       </Stack>
 
       {/* 게시글 삭제 확인 다이얼로그 */}

@@ -40,11 +40,14 @@ const CommunityPostEdit = () => {
     useState(false); // 템플릿 선택 대화상자 열림 상태
   const [templateUuid, setTemplateUuid] = useState<string | null>(null); // 선택된 템플릿
 
-  // 컴포넌트 마운트 시 태그 입력란 너비 초기화
   useEffect(() => {
+    // 컴포넌트 마운트 시 태그 입력란 너비 초기화
     if (tagInputRef.current) {
       tagInputRef.current.style.setProperty("width", "0px");
     }
+
+    // 스크롤 제일 상단으로 이동
+    window.scrollTo(0, 0);
   }, []);
 
   // 제목 변경
