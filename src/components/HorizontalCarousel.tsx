@@ -36,8 +36,13 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
   const firstItemRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(0); // 카드 1장 폭 + gap
   const [page, setPage] = useState(0); // 페이지 인덱스
-  const totalPages = Math.max(1, Math.ceil(items.length / itemCounts));
+  const [totalPages, setTotalPages] = useState(0); // 총 페이지 수
   const breakpoint = useBreakpoint();
+
+  // 페이지 수 계산
+  useEffect(() => {
+    setTotalPages(Math.max(1, Math.ceil(items.length / itemCounts)));
+  }, [itemCounts, items.length]);
 
   // 화면 크기에 따라 보이는 카드 수 조정
   useLayoutEffect(() => {
