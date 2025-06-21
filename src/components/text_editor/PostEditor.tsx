@@ -12,13 +12,13 @@ import { red } from "@mui/material/colors";
 const LICENSE_KEY = import.meta.env.VITE_CKEDITOR_LICENSE_KEY;
 
 interface PostEditorProps {
+  content?: string; // 초기 내용을 위한 prop 추가
   setContent?: (content: string) => void;
-  initialContent?: string; // 초기 내용을 위한 prop 추가
   error?: boolean; // 에러 상태
 }
 
 const PostEditor = (props: PostEditorProps) => {
-  const { setContent, initialContent = "", error } = props;
+  const { setContent, content = "", error } = props;
 
   const editorContainerRef = useRef(null);
   const editorRef = useRef(null);
@@ -310,7 +310,7 @@ const PostEditor = (props: PostEditorProps) => {
               <CKEditor
                 editor={ClassicEditor}
                 config={editorConfig}
-                data={initialContent} // 초기 내용 설정
+                data={content} // 초기 내용 설정
                 onChange={handleContentChange}
               />
             )}

@@ -598,6 +598,11 @@ const CommunityPost = () => {
     setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
+  // 수정 버튼 클릭
+  const handleEditButtonClick = useCallback(() => {
+    navigate(`/community/${postUuid}/edit`);
+  }, [navigate, postUuid]);
+
   // 로딩 중 표시
   if (isLoading) {
     return (
@@ -806,7 +811,11 @@ const CommunityPost = () => {
           <Stack direction="row" justifyContent="flex-end" gap={2} flexGrow={1}>
             {/* 수정 버튼 - 작성자일 때만 표시 */}
             {isAuthor && (
-              <Button variant="outlined" color="black">
+              <Button
+                variant="outlined"
+                color="black"
+                onClick={handleEditButtonClick}
+              >
                 <Typography variant="subtitle2" fontWeight="bold">
                   수정
                 </Typography>

@@ -30,8 +30,7 @@ const MAX_TAGS = 5; // 최대 태그 개수
 const CommunityPostEdit = () => {
   const theme = useTheme(); // MUI 테마
   const navigate = useNavigate(); // 네비게이션 훅
-  const postId = useParams().postId; // URL 파라미터에서 게시글 ID 가져오기
-  console.log("postId:", postId); // 디버깅용 로그
+  const postId = useParams().postUuid; // URL 파라미터에서 게시글 ID 가져오기
 
   const [title, setTitle] = useState(""); // 게시글 제목
   const [titleErrorText, setTitleErrorText] = useState(""); // 제목 입력 오류 메시지]
@@ -48,6 +47,37 @@ const CommunityPostEdit = () => {
   const [templateUuid, setTemplateUuid] = useState<string | null>(null); // 선택된 템플릿
   const [errorMessage, setErrorMessage] = useState<string>(""); // 오류 메시지
 
+  const fetchPostData = useCallback(async () => {
+    if (!postId) {
+      return; // 게시글 ID가 없으면 종료
+    }
+
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 게시글 정보 가져오기
+      const response = await axiosInstance.get(`/post/${postId}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        const postData = response.data.post;
+
+        // 게시글 정보 설정
+        setTitle(postData.title);
+        setContent(postData.content);
+        setTags(postData.tags || []);
+        setTemplateUuid(postData.templateUuid || null);
+      } else {
+        setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+      }
+    } catch (error) {
+      console.error("게시글 정보 가져오기 실패:", error);
+      setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+    }
+  }, [postId]);
+
   useEffect(() => {
     // 컴포넌트 마운트 시 태그 입력란 너비 초기화
     if (tagInputRef.current) {
@@ -56,7 +86,16 @@ const CommunityPostEdit = () => {
 
     // 스크롤 제일 상단으로 이동
     window.scrollTo(0, 0);
-  }, []);
+
+    console.log("postId:", postId); // 디버깅용 로그
+    // UUID가 있으면 게시글 정보 가져오기
+    if (postId) {
+      fetchPostData();
+    } else {
+      // 게시글 ID가 없으면 커뮤니티 페이지로 이동
+      navigate("/community");
+    }
+  }, [fetchPostData, navigate, postId]);
 
   // 제목 변경
   const handleTitleChange = useCallback(
@@ -249,26 +288,54 @@ const CommunityPostEdit = () => {
       templateUuid: templateUuid,
     };
 
-    // CSRF 토큰 가져오기
-    const csrfToken = await getCsrfToken();
+    try {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
 
-    // 게시글 등록 API 호출
-    const response = await axiosInstance.post("/post/add", requestData, {
-      headers: { "X-CSRF-Token": csrfToken },
-    });
-
-    // API 호출 성공 시
-    if (response.data.success) {
-      const postId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
-
-      // 게시글 ID가 존재하면 해당 게시글로 이동
       if (postId) {
-        navigate(`/community/${postId}`);
+        // 게시글 수정 API 호출
+        const response = await axiosInstance.put(
+          `/post/${postId}`,
+          requestData,
+          {
+            headers: { "X-CSRF-Token": csrfToken },
+          }
+        );
+
+        // API 호출 성공 시
+        if (response.data.success) {
+          const updatedPostId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
+
+          // 게시글 ID가 존재하면 해당 게시글로 이동
+          if (updatedPostId) {
+            navigate(`/community/${updatedPostId}`);
+          } else {
+            setErrorMessage("게시글을 수정하지 못했습니다.");
+          }
+        }
       } else {
-        setErrorMessage("게시글을 등록하지 못했습니다.");
+        // 게시글 등록 API 호출
+        const response = await axiosInstance.post("/post/add", requestData, {
+          headers: { "X-CSRF-Token": csrfToken },
+        });
+
+        // API 호출 성공 시
+        if (response.data.success) {
+          const postId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
+
+          // 게시글 ID가 존재하면 해당 게시글로 이동
+          if (postId) {
+            navigate(`/community/${postId}`);
+          } else {
+            setErrorMessage("게시글을 등록하지 못했습니다.");
+          }
+        }
       }
+    } catch (error) {
+      console.error("게시글 등록 실패:", error);
+      setErrorMessage("게시글을 등록하지 못했습니다.");
     }
-  }, [content, navigate, tags, templateUuid, title]);
+  }, [content, navigate, postId, tags, templateUuid, title]);
 
   return (
     <>
@@ -325,6 +392,7 @@ const CommunityPostEdit = () => {
             >
               {/* 텍스트 에디터 */}
               <PostEditor
+                content={content}
                 setContent={handleContentChange}
                 error={!!contentErrorText}
               />
