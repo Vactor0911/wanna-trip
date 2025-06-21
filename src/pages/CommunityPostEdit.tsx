@@ -260,7 +260,6 @@ const CommunityPostEdit = () => {
     // API 호출 성공 시
     if (response.data.success) {
       const postId = response.data.post.uuid; // 응답에서 게시글 ID 가져오기
-      console.log("게시글 등록 성공:", response, response.data.post.uuid);
 
       // 게시글 ID가 존재하면 해당 게시글로 이동
       if (postId) {

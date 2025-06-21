@@ -58,8 +58,6 @@ const NaverMapDialog = () => {
     if (!open) {
       return;
     }
-
-    console.log("선택된 위치 정보:", selectedLocation);
     if (
       selectedLocation &&
       selectedLocation.latitude &&

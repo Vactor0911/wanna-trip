@@ -142,8 +142,6 @@ export const useMoveCard = () => {
         data?.newCardId &&
         variables.source.boardId !== variables.destination.boardId
       ) {
-        console.log("카드 이동: 새 카드 ID 업데이트", data.newCardId);
-
         // 템플릿 상태 복사 (레퍼런스가 아닌 완전한 복사본)
         const currentTemplate = JSON.parse(JSON.stringify(template));
 
