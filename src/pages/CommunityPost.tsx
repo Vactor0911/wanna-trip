@@ -632,9 +632,32 @@ const CommunityPost = () => {
   );
 
   // 답글 쓰기 버튼 클릭
-  const handleReplyButtonClick = useCallback((parentId: string) => {
-    setReplyParentId(parentId); // 예시로 첫 번째 댓글에 답글을 작성
-  }, []);
+  const handleReplyButtonClick = useCallback(
+    (parentId: string) => {
+      // 로그인 체크
+      if (!loginState.isLoggedIn) {
+        setSnackbar({
+          open: true,
+          message: "답글 작성은 로그인 후 이용할 수 있습니다.",
+          severity: "info",
+          action: (
+            <Button
+              color="primary"
+              size="small"
+              onClick={handleNavigateToLogin}
+            >
+              로그인하기
+            </Button>
+          ),
+        });
+        return;
+      }
+
+      // 로그인된 경우에만 실행
+      setReplyParentId(parentId);
+    },
+    [loginState.isLoggedIn, handleNavigateToLogin]
+  );
 
   // 답글 취소 버튼 클릭
   const handleReplyCancelButtonClick = useCallback(() => {
