@@ -104,12 +104,29 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
   // 카드 폭 측정
   useLayoutEffect(() => {
     if (!firstItemRef.current) return;
+
     const measure = () => {
-      setStep(firstItemRef.current!.offsetWidth + gap);
+      if (firstItemRef.current) {
+        setStep(firstItemRef.current.offsetWidth + gap);
+      }
     };
+
+    // 초기 측정
     measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(firstItemRef.current);
+
+    // ResizeObserver 등록
+    const ro = new ResizeObserver(() => {
+      // 별도 함수로 감싸서 호출
+      if (firstItemRef.current) {
+        const newStep = firstItemRef.current.offsetWidth + gap;
+        setStep(newStep);
+      }
+    });
+
+    if (firstItemRef.current) {
+      ro.observe(firstItemRef.current);
+    }
+
     return () => ro.disconnect();
   }, [gap]);
 
