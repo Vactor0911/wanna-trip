@@ -205,7 +205,12 @@ const Community = () => {
         // 요청이 취소된 경우
       } else {
         console.error("게시글 불러오기 실패:", error);
-        if (error.response?.status !== 401) {
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "response" in error &&
+          (error as { response?: { status?: number } }).response?.status !== 401
+        ) {
           setHasNextPage(false);
         }
       }
@@ -582,7 +587,7 @@ const Community = () => {
                       {/* 썸네일 이미지 */}
                       <Box
                         height="55%"
-                        sx={{ bgcolor: getRandomColor(parseInt(post.uuid)) }}
+                        sx={{ bgcolor: getRandomColor(post.title.length) }}
                       />
 
                       {/* 게시글 정보 */}
@@ -832,7 +837,7 @@ const Community = () => {
                     height={150}
                     borderRadius={2}
                     sx={{
-                      background: getRandomColor(parseInt(post.uuid)),
+                      background: getRandomColor(post.title.length),
                     }}
                   />
 
