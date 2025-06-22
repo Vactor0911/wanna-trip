@@ -30,4 +30,5 @@ export const wannaTripLoginStateAtom = atom({
 
 export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
 
-
+// 인증 초기화 완료 상태를 추적하는 atom
+export const isAuthInitializedAtom = atom(false); // 초기화 완료 상태
