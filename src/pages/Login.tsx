@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import GoogleIcon from "../assets/images/google.png";
-import KakaoIcon from "../assets/images/kakao.png";
+import GoogleIcon from "../assets/icons/google.png";
+import KakaoIcon from "../assets/icons/kakao.png";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
