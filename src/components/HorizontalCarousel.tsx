@@ -183,7 +183,6 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
         <motion.div
           style={{ display: "flex", gap, x }}
           drag="x"
-          dragConstraints={{ left: 0, right: 0 }} // 상대 이동만 허용
           dragElastic={0.08}
           onDragEnd={(_, info) => {
             if (!step) return;
