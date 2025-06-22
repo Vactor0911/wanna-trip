@@ -118,6 +118,11 @@ const CommunityPost = () => {
     severity: "info",
   });
 
+  // 로그인 페이지로 이동
+  const handleNavigateToLogin = useCallback(() => {
+    navigate("/login");
+  }, [navigate]);
+
   // 현재 사용자 정보 가져오기
   const fetchCurrentUserInfo = useCallback(async () => {
     if (!loginState.isLoggedIn) {
@@ -454,7 +459,7 @@ const CommunityPost = () => {
           <Button
             color="primary"
             size="small"
-            onClick={() => navigate("/login")}
+            onClick={handleNavigateToLogin}
           >
             로그인하기
           </Button>
@@ -507,7 +512,7 @@ const CommunityPost = () => {
             <Button
               color="primary"
               size="small"
-              onClick={() => navigate("/login")}
+              onClick={handleNavigateToLogin}
             >
               로그인하기
             </Button>
@@ -1043,7 +1048,7 @@ const CommunityPost = () => {
               <Typography variant="body1" color="text.secondary" mb={2}>
                 댓글을 작성하려면 로그인이 필요합니다.
               </Typography>
-              <Button variant="contained" onClick={() => navigate("/login")}>
+              <Button variant="contained" onClick={handleNavigateToLogin}>
                 로그인하기
               </Button>
             </Box>
@@ -1107,7 +1112,7 @@ const CommunityPost = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => navigate("/login")}
+                      onClick={handleNavigateToLogin}
                     >
                       로그인하러 가기
                     </Button>
