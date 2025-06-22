@@ -35,18 +35,33 @@ import {
   normalLogin,
   processLoginSuccess,
 } from "../utils/loginUtils";
-import { set } from "date-fns";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const searchParams = new URLSearchParams(window.location.search);
+  const redirectTo = searchParams.get("redirectTo") ?? undefined;
+
+  const Navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoginLoading, setIsLoginLoading] = useState(false); // 로그인 로딩 상태
-
-  // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
-  if (wannaTripLoginState.isLoggedIn) {
-    navigate("/template");
-  }
+
+  const navigate = useCallback(
+    (redirectTo: string | undefined) => {
+      if (redirectTo) {
+        Navigate(`/${redirectTo}`, { replace: true });
+        return;
+      }
+      Navigate(-1);
+    },
+    [Navigate]
+  );
+
+  // 로그인 된 상태면 이전 페이지로 이동
+  useEffect(() => {
+    if (wannaTripLoginState.isLoggedIn) {
+      navigate(redirectTo);
+    }
+  }, [navigate, redirectTo, wannaTripLoginState.isLoggedIn]);
 
   // 로그인 기능 추가
   const [email, setEmail] = useState(""); // 이메일 값
@@ -138,7 +153,7 @@ const Login = () => {
               true,
               { email: response.data.email }
             );
-            navigate("/template");
+            navigate(redirectTo);
           }
           return;
         }
@@ -152,13 +167,13 @@ const Login = () => {
         );
 
         alert(`${loginState.userName}님 환영합니다!`);
-        navigate("/template");
+        navigate(redirectTo);
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     },
-    [navigate, setWannaTripLoginState]
+    [navigate, redirectTo, setWannaTripLoginState]
   );
 
   // 구글 로그인 버튼 클릭 시 호출
@@ -209,7 +224,7 @@ const Login = () => {
             true,
             { email: serverResponse.data.email }
           );
-          navigate("/template");
+          navigate(redirectTo);
         }
         return;
       }
@@ -224,13 +239,19 @@ const Login = () => {
 
       window.history.replaceState(null, "", "/login");
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      navigate(redirectTo);
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       setKakaoLoginState(""); // 오류 시 상태 초기화
       alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
-  }, [kakaoLoginState, navigate, setKakaoLoginState, setWannaTripLoginState]);
+  }, [
+    kakaoLoginState,
+    navigate,
+    redirectTo,
+    setKakaoLoginState,
+    setWannaTripLoginState,
+  ]);
 
   // 카카오 로그인 상태 초기화
   useEffect(() => {
@@ -277,7 +298,7 @@ const Login = () => {
       );
 
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      navigate(redirectTo);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("서버 오류:", error.response.data.message);
@@ -291,7 +312,14 @@ const Login = () => {
     } finally {
       setIsLoginLoading(false); // 로그인 완료 후 로딩 상태 해제
     }
-  }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
+  }, [
+    email,
+    isLoginStateSave,
+    navigate,
+    password,
+    redirectTo,
+    setWannaTripLoginState,
+  ]);
 
   // 엔터 입력시 로그인 처리
   const handleKeyDown = useCallback(
@@ -366,7 +394,11 @@ const Login = () => {
             </Box>
 
             {/* 로그인 버튼 */}
-            <Button variant="contained" onClick={handleLoginButtonClick} loading={isLoginLoading}>
+            <Button
+              variant="contained"
+              onClick={handleLoginButtonClick}
+              loading={isLoginLoading}
+            >
               <Typography variant="h5">로그인</Typography>
             </Button>
             <Stack direction="row">

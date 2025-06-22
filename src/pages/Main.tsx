@@ -21,6 +21,8 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import { motion } from "framer-motion";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../state";
 
 // COMMUNITY 데이터
 const communityData = [
@@ -162,11 +164,18 @@ const ResponsiveTypography = (props: ResponsiveTypographyProps) => {
 const Main = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
 
   // 시작하기 버튼 클릭
   const handleStartButtonClick = useCallback(() => {
-    navigate("/login");
-  }, [navigate]);
+    // 이미 로그인 상태라면 템플릿 페이지로 이동
+    if (wannaTripLoginState.isLoggedIn) {
+      navigate("/template");
+      return;
+    }
+
+    navigate("/login?redirectTo=template");
+  }, [navigate, wannaTripLoginState.isLoggedIn]);
 
   return (
     <Container maxWidth="xl">
