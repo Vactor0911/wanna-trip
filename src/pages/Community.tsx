@@ -129,7 +129,7 @@ const Community = () => {
           (error as { name?: string }).name === "CanceledError") ||
         axios.isCancel?.(error)
       ) {
-        console.log("요청 취소됨");
+        // 요청이 취소된 경우
       } else {
         console.error("게시글 불러오기 실패:", error);
         setHasNextPage(false);
@@ -262,8 +262,6 @@ const Community = () => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          //TODO: 게시글 더 불러오기
-          console.log("더 불러오기");
           // 로딩중이 아닐때만 불러오기
           if (!isPostLoading) {
             fetchDebouncedPosts();
