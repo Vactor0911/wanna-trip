@@ -74,7 +74,6 @@ const PostEditor = (props: PostEditorProps) => {
       ImageStyle,
       ImageTextAlternative,
       ImageToolbar,
-      ImageUpload,
       Indent,
       IndentBlock,
       Italic,
@@ -155,7 +154,6 @@ const PostEditor = (props: PostEditorProps) => {
           ImageStyle,
           ImageTextAlternative,
           ImageToolbar,
-          ImageUpload,
           Indent,
           IndentBlock,
           Italic,
@@ -298,6 +296,10 @@ const PostEditor = (props: PostEditorProps) => {
         "& .ck-editor__editable": {
           borderColor: error ? red[500] + "!important" : undefined,
         },
+        "& .ck-content h1, & .ck-content h2, & .ck-content h3, & .ck-content h4, & .ck-content h5, & .ck-content h6, & .ck-content p":
+          {
+            margin: "0.5em 0",
+          },
       }}
     >
       <div

@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import GoogleIcon from "../assets/images/google.png";
-import KakaoIcon from "../assets/images/kakao.png";
+import GoogleIcon from "../assets/icons/google.png";
+import KakaoIcon from "../assets/icons/kakao.png";
 
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -37,14 +37,33 @@ import {
 } from "../utils/loginUtils";
 
 const Login = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const redirectTo = searchParams.get("redirectTo") ?? undefined;
+
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  // 로그인 된 상태면 템플릿 페이지로 이동
+  const [isLoginLoading, setIsLoginLoading] = useState(false); // 로그인 로딩 상태
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
-  if (wannaTripLoginState.isLoggedIn) {
-    navigate("/template");
-  }
+
+  // 로그인 된 상태면 이전 페이지로 이동
+  useEffect(() => {
+    if (wannaTripLoginState.isLoggedIn) {
+      navigate(-1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRedirect = useCallback(() => {
+    console.log("Redirecting to:", redirectTo);
+
+    if (redirectTo) {
+      navigate(`/${redirectTo}`);
+      return;
+    }
+
+    console.log("No redirectTo specified, navigating back.");
+    navigate(-1);
+  }, [navigate, redirectTo]);
 
   // 로그인 기능 추가
   const [email, setEmail] = useState(""); // 이메일 값
@@ -136,7 +155,7 @@ const Login = () => {
               true,
               { email: response.data.email }
             );
-            navigate("/template");
+            handleRedirect();
           }
           return;
         }
@@ -150,13 +169,13 @@ const Login = () => {
         );
 
         alert(`${loginState.userName}님 환영합니다!`);
-        navigate("/template");
+        handleRedirect();
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
         alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
       }
     },
-    [navigate, setWannaTripLoginState]
+    [handleRedirect, setWannaTripLoginState]
   );
 
   // 구글 로그인 버튼 클릭 시 호출
@@ -207,7 +226,7 @@ const Login = () => {
             true,
             { email: serverResponse.data.email }
           );
-          navigate("/template");
+          handleRedirect();
         }
         return;
       }
@@ -222,13 +241,18 @@ const Login = () => {
 
       window.history.replaceState(null, "", "/login");
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      handleRedirect();
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       setKakaoLoginState(""); // 오류 시 상태 초기화
       alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
     }
-  }, [kakaoLoginState, navigate, setKakaoLoginState, setWannaTripLoginState]);
+  }, [
+    kakaoLoginState,
+    handleRedirect,
+    setKakaoLoginState,
+    setWannaTripLoginState,
+  ]);
 
   // 카카오 로그인 상태 초기화
   useEffect(() => {
@@ -252,14 +276,22 @@ const Login = () => {
     setIsLoginStateSave((prev) => !prev);
   }, []);
 
-  // 일반 로그인 기능
+  // 로그인 버튼 클릭
   const handleLoginButtonClick = useCallback(async () => {
     if (!email || !password) {
       alert("이메일과 비밀번호를 입력해 주세요.");
       return;
     }
 
+    // 이미 로그인 중이면 종료
+    if (isLoginLoading) {
+      return;
+    }
+
     try {
+      // 로그인 진행중 처리
+      setIsLoginLoading(true);
+
       // 1. 일반 로그인 요청 (loginUtils의 normalLogin 함수 사용)
       const response = await normalLogin(email, password);
 
@@ -272,7 +304,7 @@ const Login = () => {
       );
 
       alert(`[ ${loginState.userName} ]님 환영합니다!`);
-      navigate("/template");
+      handleRedirect();
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("서버 오류:", error.response.data.message);
@@ -283,8 +315,27 @@ const Login = () => {
       }
 
       setPassword("");
+    } finally {
+      setIsLoginLoading(false); // 로그인 완료 후 로딩 상태 해제
     }
-  }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
+  }, [
+    email,
+    password,
+    isLoginLoading,
+    setWannaTripLoginState,
+    isLoginStateSave,
+    handleRedirect,
+  ]);
+
+  // 엔터 입력시 로그인 처리
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter") {
+        handleLoginButtonClick();
+      }
+    },
+    [handleLoginButtonClick]
+  );
 
   return (
     <Container maxWidth="xs">
@@ -307,6 +358,7 @@ const Login = () => {
                 label="아이디(이메일)"
                 value={email}
                 onChange={handleEmailChange}
+                onKeyDown={handleKeyDown}
               />
             </Box>
 
@@ -315,6 +367,7 @@ const Login = () => {
               label="비밀번호"
               value={password}
               onChange={handleChangePassword}
+              onKeyDown={handleKeyDown}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -347,7 +400,11 @@ const Login = () => {
             </Box>
 
             {/* 로그인 버튼 */}
-            <Button variant="contained" onClick={handleLoginButtonClick}>
+            <Button
+              variant="contained"
+              onClick={handleLoginButtonClick}
+              loading={isLoginLoading}
+            >
               <Typography variant="h5">로그인</Typography>
             </Button>
             <Stack direction="row">
@@ -431,8 +488,8 @@ const Login = () => {
             </Stack>
           </Stack>
         </Stack>
-      </Stack >
-    </Container >
+      </Stack>
+    </Container>
   );
 };
 

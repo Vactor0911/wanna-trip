@@ -207,13 +207,10 @@ const Header = () => {
     try {
       if (response.data.success) {
         // Jotai 상태
-        //TODO: 이거 리셋 함수 해줘요
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
-
-        navigate("/"); // 메인 페이지로 이동
       } else {
         alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
       }
@@ -221,7 +218,7 @@ const Header = () => {
       console.error("로그아웃 중 오류 발생:", error);
       alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
     }
-  }, [isLoggedIn, navigate, setWannaTripLoginState]);
+  }, [isLoggedIn, setWannaTripLoginState]);
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
@@ -373,11 +370,7 @@ const Header = () => {
                   <Typography
                     variant="h6"
                     fontWeight={500}
-                    color={
-                      location.pathname == link.to
-                        ? "primary"
-                        : "black"
-                    }
+                    color={location.pathname == link.to ? "primary" : "black"}
                   >
                     {link.text}
                   </Typography>

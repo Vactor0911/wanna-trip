@@ -118,6 +118,11 @@ const CommunityPost = () => {
     severity: "info",
   });
 
+  // 로그인 페이지로 이동
+  const handleNavigateToLogin = useCallback(() => {
+    navigate("/login");
+  }, [navigate]);
+
   // 현재 사용자 정보 가져오기
   const fetchCurrentUserInfo = useCallback(async () => {
     if (!loginState.isLoggedIn) {
@@ -454,7 +459,7 @@ const CommunityPost = () => {
           <Button
             color="primary"
             size="small"
-            onClick={() => navigate("/login")}
+            onClick={handleNavigateToLogin}
           >
             로그인하기
           </Button>
@@ -507,7 +512,7 @@ const CommunityPost = () => {
             <Button
               color="primary"
               size="small"
-              onClick={() => navigate("/login")}
+              onClick={handleNavigateToLogin}
             >
               로그인하기
             </Button>
@@ -741,7 +746,10 @@ const CommunityPost = () => {
               {/* 수정하기 버튼 - 작성자일 때만 표시 */}
               {isAuthor && (
                 <MenuItem
-                  onClick={handleMoreMenuClose}
+                  onClick={() => {
+                    handleMoreMenuClose();
+                    handleEditButtonClick();
+                  }}
                   sx={{
                     gap: 4,
                   }}
@@ -795,6 +803,31 @@ const CommunityPost = () => {
             },
             "& ol, & ul": {
               paddingLeft: "1em",
+            },
+            "& table, & table th, & table td": {
+              border: "1px solid #bfbfbf",
+              borderCollapse: "collapse",
+            },
+            "& table th, & table td": {
+              padding: "6.4px",
+            },
+            "& table thead": {
+              background: "rgba(0, 0, 0, 0.05)",
+            },
+            "& figure.image > img": {
+              width: "100%",
+              height: "auto",
+            },
+            "& figure.image, & figure.image.image-style-block-align-center": {
+              marginX: "auto",
+            },
+            "& figure.image.image-style-block-align-left": {
+              marginX: 0,
+              marginRight: "auto",
+            },
+            "& figure.image.image-style-block-align-right": {
+              marginX: 0,
+              marginLeft: "auto",
             },
           }}
         >
@@ -1015,12 +1048,15 @@ const CommunityPost = () => {
               <Typography variant="body1" color="text.secondary" mb={2}>
                 댓글을 작성하려면 로그인이 필요합니다.
               </Typography>
-              <Button variant="contained" onClick={() => navigate("/login")}>
+              <Button variant="contained" onClick={handleNavigateToLogin}>
                 로그인하기
               </Button>
             </Box>
           )}
         </Stack>
+
+        {/* 버튼 컨테이너 */}
+        {ButtonContainer}
 
         {/* 스크롤 상단 이동 버튼 */}
         <ScrollToTopButton />
@@ -1076,7 +1112,7 @@ const CommunityPost = () => {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => navigate("/login")}
+                      onClick={handleNavigateToLogin}
                     >
                       로그인하러 가기
                     </Button>
@@ -1116,9 +1152,6 @@ const CommunityPost = () => {
             </Paper>
           </Paper>
         )}
-
-        {/* 버튼 컨테이너 */}
-        {ButtonContainer}
       </Stack>
 
       {/* 게시글 삭제 확인 다이얼로그 */}
