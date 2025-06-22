@@ -31,6 +31,7 @@ import axiosInstance, {
 import { resetStates } from "../utils";
 import { wannaTripLoginStateAtom } from "../state";
 import { useAtom } from "jotai";
+import Logo from "/icons/logo.svg";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -251,9 +252,20 @@ const Header = () => {
             >
               {/* 로고 */}
               <StyledLink to="/">
-                <Typography variant="h4" color="primary">
-                  Wanna Trip
-                </Typography>
+                <Stack direction="row" alignItems="center" gap={2}>
+                  {/* 로고 아이콘 */}
+                  <Box
+                    component="img"
+                    src={Logo}
+                    height={42}
+                    borderRadius={1}
+                  />
+
+                  {/* 로고 텍스트 */}
+                  <Typography variant="h4" color="primary">
+                    Wanna Trip
+                  </Typography>
+                </Stack>
               </StyledLink>
 
               {/* 네비게이션 바 */}
