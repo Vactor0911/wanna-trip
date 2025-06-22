@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { IconButton, Paper } from "@mui/material";
+import { Fab, Zoom } from "@mui/material";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 
 const ScrollToTopButton = () => {
@@ -33,21 +33,19 @@ const ScrollToTopButton = () => {
   }, []);
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        position: "fixed",
-        bottom: "40px",
-        right: "40px",
-        borderRadius: "50%",
-        opacity: isVisible ? 1 : 0,
-        transition: "opacity 0.2s ease-in-out",
-      }}
-    >
-      <IconButton onClick={scrollToTop}>
+    <Zoom in={isVisible} unmountOnExit>
+      <Fab
+        color="secondary"
+        sx={{
+          position: "fixed",
+          bottom: 40,
+          right: 40,
+        }}
+        onClick={scrollToTop}
+      >
         <ArrowUpwardRoundedIcon color="primary" fontSize="large" />
-      </IconButton>
-    </Paper>
+      </Fab>
+    </Zoom>
   );
 };
 
