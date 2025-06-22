@@ -205,7 +205,9 @@ const Community = () => {
         // 요청이 취소된 경우
       } else {
         console.error("게시글 불러오기 실패:", error);
-        setHasNextPage(false);
+        if (error.response?.status !== 401) {
+          setHasNextPage(false);
+        }
       }
     } finally {
       setIsPostLoading(false);
@@ -354,7 +356,6 @@ const Community = () => {
       fetchPosts();
     }
   }, [isAuthInitialized, fetchPopularPosts, fetchPosts]);
-
 
   // 스크롤 내리면 게시글 불러오기
   useEffect(() => {
