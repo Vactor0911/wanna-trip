@@ -1,45 +1,54 @@
-import { Box, Button, CircularProgress, OutlinedInput, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  OutlinedInput,
+  Stack,
+  Typography,
+} from "@mui/material";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface CommentInputProps {
   onCommentSubmit: (content: string) => void;
   onCommentCancel?: () => void;
   disabled?: boolean;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  defaultValue?: string;
 }
 
 const CommentInput = (props: CommentInputProps) => {
-  const { onCommentSubmit, onCommentCancel, disabled = false, value: externalValue, onChange } = props;
+  const {
+    onCommentSubmit,
+    onCommentCancel,
+    disabled = false,
+    defaultValue,
+  } = props;
 
+  const [value, setValue] = useState(""); // 입력값
 
-  // 내부 상태 관리
-  const [internalValue, setInternalValue] = useState("");
-  const isControlled = externalValue !== undefined;
-  const value = isControlled ? externalValue : internalValue;
-
-  // 댓글 입력
-  const handleCommentChange = useCallback(
+  // 입력값 변경
+  const handleValueChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (onChange) {
-        onChange(event);
-      } else {
-        setInternalValue(event.target.value);
-      }
+      setValue(event.target.value);
     },
-    [onChange]
+    []
   );
+
+  // 기본값 변경
+  useEffect(() => {
+    // 기본값이 주어지면 초기화
+    if (defaultValue) {
+      setValue(defaultValue);
+    }
+  }, [defaultValue]);
 
   // 댓글 제출
   const handleSubmit = useCallback(() => {
     if (value.trim() && !disabled) {
       onCommentSubmit(value);
-      if (!isControlled) {
-        setInternalValue("");
-      }
+      setValue("");
     }
-  }, [value, disabled, onCommentSubmit, isControlled]);
+  }, [value, disabled, onCommentSubmit]);
 
   return (
     <Box position="relative">
@@ -48,7 +57,7 @@ const CommentInput = (props: CommentInputProps) => {
         multiline
         placeholder="댓글을 남겨보세요"
         value={value}
-        onChange={handleCommentChange}
+        onChange={handleValueChange}
         disabled={disabled}
         sx={{
           pb: 7.5,
@@ -84,7 +93,13 @@ const CommentInput = (props: CommentInputProps) => {
         {/* 등록 버튼 */}
         <Button
           variant="contained"
-          endIcon={disabled ? <CircularProgress size={16} color="inherit" /> : <SendRoundedIcon />}
+          endIcon={
+            disabled ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : (
+              <SendRoundedIcon />
+            )
+          }
           size="small"
           onClick={handleSubmit}
           disabled={!value.trim() || disabled}
