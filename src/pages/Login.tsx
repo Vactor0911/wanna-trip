@@ -35,10 +35,12 @@ import {
   normalLogin,
   processLoginSuccess,
 } from "../utils/loginUtils";
+import { set } from "date-fns";
 
 const Login = () => {
   const navigate = useNavigate();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false); // 로그인 로딩 상태
 
   // 로그인 된 상태면 템플릿 페이지로 이동
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -252,7 +254,7 @@ const Login = () => {
     setIsLoginStateSave((prev) => !prev);
   }, []);
 
-  // 일반 로그인 기능
+  // 로그인 버튼 클릭
   const handleLoginButtonClick = useCallback(async () => {
     if (!email || !password) {
       alert("이메일과 비밀번호를 입력해 주세요.");
@@ -260,6 +262,9 @@ const Login = () => {
     }
 
     try {
+      // 로그인 진행중 처리
+      setIsLoginLoading(true);
+
       // 1. 일반 로그인 요청 (loginUtils의 normalLogin 함수 사용)
       const response = await normalLogin(email, password);
 
@@ -283,8 +288,20 @@ const Login = () => {
       }
 
       setPassword("");
+    } finally {
+      setIsLoginLoading(false); // 로그인 완료 후 로딩 상태 해제
     }
   }, [email, isLoginStateSave, navigate, password, setWannaTripLoginState]);
+
+  // 엔터 입력시 로그인 처리
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Enter") {
+        handleLoginButtonClick();
+      }
+    },
+    [handleLoginButtonClick]
+  );
 
   return (
     <Container maxWidth="xs">
@@ -307,6 +324,7 @@ const Login = () => {
                 label="아이디(이메일)"
                 value={email}
                 onChange={handleEmailChange}
+                onKeyDown={handleKeyDown}
               />
             </Box>
 
@@ -315,6 +333,7 @@ const Login = () => {
               label="비밀번호"
               value={password}
               onChange={handleChangePassword}
+              onKeyDown={handleKeyDown}
               type={isPasswordVisible ? "text" : "password"}
               endAdornment={
                 <InputAdornment position="end">
@@ -347,7 +366,7 @@ const Login = () => {
             </Box>
 
             {/* 로그인 버튼 */}
-            <Button variant="contained" onClick={handleLoginButtonClick}>
+            <Button variant="contained" onClick={handleLoginButtonClick} loading={isLoginLoading}>
               <Typography variant="h5">로그인</Typography>
             </Button>
             <Stack direction="row">
@@ -431,8 +450,8 @@ const Login = () => {
             </Stack>
           </Stack>
         </Stack>
-      </Stack >
-    </Container >
+      </Stack>
+    </Container>
   );
 };
 
