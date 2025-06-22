@@ -349,7 +349,9 @@ const Community = () => {
   // 토큰 초기화 완료 시점에만 인기 / 일반 게시글 호출
   useEffect(() => {
     if (isAuthInitialized) {
-      fetchPopularPosts();
+      setTimeout(() => {
+        fetchPopularPosts();
+      }, 500); // 500ms 딜레이 후 인기 게시글 불러오기
     }
   }, [isAuthInitialized, fetchPopularPosts]);
 
