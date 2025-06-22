@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Chip,
+  ClickAwayListener,
   Collapse,
   Container,
   Dialog,
@@ -18,10 +19,19 @@ import {
   Snackbar,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import parse from "html-react-parser";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
@@ -43,7 +53,8 @@ import { wannaTripLoginStateAtom } from "../state";
 import { useAtomValue } from "jotai";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
-import React from "react";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 
 // 댓글 인터페이스
 interface Comment {
@@ -86,7 +97,6 @@ const CommunityPost = () => {
   const [shares, setShares] = useState(0); // 공유수
 
   const [comments, setComments] = useState<Comment[]>([]); // 댓글 목록
-  const [commentText, setCommentText] = useState(""); // 댓글 입력 텍스트
   const [isCommentLoading, setIsCommentLoading] = useState(false); // 댓글 로딩 상태
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false); // 댓글 제출 중 상태
 
@@ -117,6 +127,17 @@ const CommunityPost = () => {
     message: "",
     severity: "info",
   });
+
+  const [selectedComment, setSelectedComment] = useState<{
+    comment: Comment;
+    element: HTMLElement;
+  } | null>(null); // 메뉴로 선택된 댓글 정보
+  const [editingCommentUuid, setEditingCommentUuid] = useState<string | null>(
+    null
+  ); // 현재 편집 중인 댓글 UUID
+
+  const theme = useTheme(); // MUI 테마 사용
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부 확인
 
   // 로그인 페이지로 이동
   const handleNavigateToLogin = useCallback(() => {
@@ -299,7 +320,10 @@ const CommunityPost = () => {
   // 댓글 작성 함수
   const handleCommentSubmit = useCallback(
     async (content: string, parentUuid?: string) => {
-      if (!postUuid || !content.trim() || isCommentSubmitting) return;
+      // 입력값 검증
+      if (!postUuid || !content.trim() || isCommentSubmitting) {
+        return;
+      }
 
       try {
         setIsCommentSubmitting(true);
@@ -334,9 +358,6 @@ const CommunityPost = () => {
           // 댓글 목록 업데이트
           setComments((prev) => [...prev, newComment]);
 
-          // 입력창 초기화
-          setCommentText("");
-
           // 답글 입력 모드 종료
           setReplyParentId(null);
         }
@@ -347,6 +368,69 @@ const CommunityPost = () => {
       }
     },
     [postUuid, isCommentSubmitting]
+  );
+
+  // 댓글 수정 함수
+  const handleCommentEdit = useCallback(
+    async (content: string, commentUuid?: string) => {
+      // 댓글을 전송하고 있는 경우 종료
+      if (isCommentSubmitting) {
+        return;
+      }
+
+      // 입력값 검증
+      if (!commentUuid || !content.trim()) {
+        return;
+      }
+
+      try {
+        setIsCommentSubmitting(true);
+
+        // CSRF 토큰 가져오기
+        const csrfToken = await getCsrfToken();
+
+        const response = await axiosInstance.put(
+          `/post/comments/${commentUuid}`,
+          {
+            content,
+          },
+          {
+            headers: { "X-CSRF-Token": csrfToken },
+          }
+        );
+
+        // 댓글 수정 성공
+        if (response.data.success) {
+          const newComment = response.data.comment;
+
+          // 댓글 목록 업데이트
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.uuid === commentUuid
+                ? {
+                    ...comment,
+                    content: newComment.content,
+                    createdAt: newComment.createdAt,
+                  }
+                : comment
+            )
+          );
+
+          // 댓글 수정 입력란 닫기
+          setEditingCommentUuid(null);
+        }
+      } catch (err) {
+        console.error("댓글 수정 실패:", err);
+        setSnackbar({
+          open: true,
+          message: "댓글 수정에 실패했습니다.",
+          severity: "error",
+        });
+      } finally {
+        setIsCommentSubmitting(false);
+      }
+    },
+    [isCommentSubmitting]
   );
 
   // 댓글 삭제 다이얼로그 열기
@@ -441,12 +525,6 @@ const CommunityPost = () => {
     [isAuthor]
   );
 
-  // 답글 작성 가능 여부 확인
-  const canReply = useCallback((comment: Comment) => {
-    // 대댓글에는 더 이상 답글을 달 수 없음
-    return !comment.parentUuid;
-  }, []);
-
   // 게시글 좋아요 버튼 클릭
   const handleLikeButtonClick = useCallback(async () => {
     // 로그인 체크
@@ -456,11 +534,7 @@ const CommunityPost = () => {
         message: "좋아요 기능은 로그인 후 이용할 수 있습니다.",
         severity: "info",
         action: (
-          <Button
-            color="primary"
-            size="small"
-            onClick={handleNavigateToLogin}
-          >
+          <Button color="primary" size="small" onClick={handleNavigateToLogin}>
             로그인하기
           </Button>
         ),
@@ -497,7 +571,7 @@ const CommunityPost = () => {
     } catch (err) {
       console.error("좋아요 처리 실패:", err);
     }
-  }, [loginState.isLoggedIn, navigate, postUuid]);
+  }, [handleNavigateToLogin, loginState.isLoggedIn, postUuid]);
 
   // 댓글 좋아요 함수
   const handleCommentLike = useCallback(
@@ -554,7 +628,7 @@ const CommunityPost = () => {
         console.error("댓글 좋아요 실패:", err);
       }
     },
-    [loginState.isLoggedIn, navigate]
+    [handleNavigateToLogin, loginState.isLoggedIn]
   );
 
   // 답글 쓰기 버튼 클릭
@@ -607,6 +681,38 @@ const CommunityPost = () => {
   const handleEditButtonClick = useCallback(() => {
     navigate(`/community/${postUuid}/edit`);
   }, [navigate, postUuid]);
+
+  // 댓글 더보기 버튼 클릭
+  const handleCommentMoreButtonClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>, comment: Comment) => {
+      // 선택한 댓글 정보 추출
+      const newSelectedComment = {
+        comment: comment,
+        element: event.currentTarget,
+      };
+
+      // 댓글 더보기 메뉴 토글
+      if (
+        selectedComment &&
+        selectedComment.comment.uuid === newSelectedComment.comment.uuid
+      ) {
+        setSelectedComment(null);
+      } else {
+        setSelectedComment(newSelectedComment);
+      }
+    },
+    [selectedComment]
+  );
+
+  // 댓글 수정 버튼 클릭
+  const handleCommentEditButtonClick = useCallback((commentUuid: string) => {
+    setEditingCommentUuid(commentUuid);
+  }, []);
+
+  // 댓글 수정 입력란 닫기
+  const handleEditCommentClose = useCallback(() => {
+    setEditingCommentUuid(null);
+  }, []);
 
   // 버튼 컨테이너 요소
   const ButtonContainer = useMemo(() => {
@@ -690,558 +796,662 @@ const CommunityPost = () => {
   }
 
   return (
-    <Container maxWidth="lg">
-      <Stack
-        minHeight="calc(100vh - 82px)"
-        gap={4}
-        py={5}
-        pb={15}
-        pl={templateUuid ? 5 : 0}
-      >
-        {/* 게시글 제목 */}
-        <Typography variant="h4">{title}</Typography>
+    <>
+      <Container maxWidth="lg">
+        <Stack
+          minHeight="calc(100vh - 82px)"
+          gap={4}
+          py={5}
+          pb={15}
+          pl={templateUuid ? 5 : 0}
+        >
+          {/* 게시글 제목 */}
+          <Typography variant="h4">{title}</Typography>
 
-        {/* 작성 정보 */}
-        <Stack direction="row" alignItems="center" gap={2}>
-          {/* 작성자 프로필 이미지 */}
-          <Avatar
-            src={authorProfileImage || undefined}
-            sx={{
-              width: 48,
-              height: 48,
-            }}
-          />
+          {/* 작성 정보 */}
+          <Stack direction="row" alignItems="center" gap={2}>
+            {/* 작성자 프로필 이미지 */}
+            <Avatar
+              src={authorProfileImage || undefined}
+              sx={{
+                width: 48,
+                height: 48,
+              }}
+            />
 
-          <Stack>
-            {/* 작성자 이름 */}
-            <Typography variant="subtitle1" fontWeight="bold">
-              {authorName}
-            </Typography>
+            <Stack>
+              {/* 작성자 이름 */}
+              <Typography variant="subtitle1" fontWeight="bold">
+                {authorName}
+              </Typography>
 
-            {/* 작성일 */}
-            <Typography variant="subtitle2">{createdAt}</Typography>
-          </Stack>
-
-          {/* 더보기 메뉴 */}
-          <Box ml="auto">
-            {/* 더보기 메뉴 버튼 */}
-            <IconButton onClick={handleMoreButtonClick} ref={moreButtonRef}>
-              <MoreVertRoundedIcon />
-            </IconButton>
+              {/* 작성일 */}
+              <Typography variant="subtitle2">{createdAt}</Typography>
+            </Stack>
 
             {/* 더보기 메뉴 */}
-            <Menu
-              anchorEl={moreButtonRef.current}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "right",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              open={isMoreMenuOpen}
-              onClose={handleMoreMenuClose}
-            >
-              {/* 수정하기 버튼 - 작성자일 때만 표시 */}
-              {isAuthor && (
-                <MenuItem
-                  onClick={() => {
-                    handleMoreMenuClose();
-                    handleEditButtonClick();
-                  }}
-                  sx={{
-                    gap: 4,
-                  }}
-                >
-                  <Typography variant="subtitle1">수정하기</Typography>
-                  <EditRoundedIcon fontSize="small" />
-                </MenuItem>
-              )}
+            <Box ml="auto">
+              {/* 더보기 메뉴 버튼 */}
+              <IconButton onClick={handleMoreButtonClick} ref={moreButtonRef}>
+                <MoreVertRoundedIcon />
+              </IconButton>
 
-              {/* 공유하기 버튼 - 항상 표시 */}
-              <MenuItem
-                onClick={handleMoreMenuClose}
-                sx={{
-                  gap: 4,
+              {/* 더보기 메뉴 */}
+              <Menu
+                anchorEl={moreButtonRef.current}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
                 }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={isMoreMenuOpen}
+                onClose={handleMoreMenuClose}
               >
-                <Typography variant="subtitle1">공유하기</Typography>
-                <ShareRoundedIcon fontSize="small" />
-              </MenuItem>
+                {/* 수정하기 버튼 - 작성자일 때만 표시 */}
+                {isAuthor && (
+                  <MenuItem
+                    onClick={() => {
+                      handleMoreMenuClose();
+                      handleEditButtonClick();
+                    }}
+                    sx={{
+                      gap: 4,
+                    }}
+                  >
+                    <Typography variant="subtitle1">수정하기</Typography>
+                    <EditRoundedIcon fontSize="small" />
+                  </MenuItem>
+                )}
 
-              {/* 삭제하기 버튼 - 작성자일 때만 표시 */}
-              {isAuthor && (
+                {/* 공유하기 버튼 - 항상 표시 */}
                 <MenuItem
-                  onClick={handleOpenDeleteDialog}
+                  onClick={handleMoreMenuClose}
                   sx={{
                     gap: 4,
                   }}
                 >
-                  <Typography variant="subtitle1" color="error">
-                    삭제하기
-                  </Typography>
-                  <DeleteOutlineRoundedIcon fontSize="small" color="error" />
+                  <Typography variant="subtitle1">공유하기</Typography>
+                  <ShareRoundedIcon fontSize="small" />
                 </MenuItem>
-              )}
-            </Menu>
-          </Box>
-        </Stack>
 
-        {/* 구분선 */}
-        <Divider />
-
-        {/* 게시글 내용 */}
-        <Stack
-          py={5}
-          gap={0.5}
-          sx={{
-            "& p, & ol, & ul": {
-              margin: 0,
-              padding: 0,
-              boxSizing: "border-box",
-            },
-            "& ol, & ul": {
-              paddingLeft: "1em",
-            },
-            "& table, & table th, & table td": {
-              border: "1px solid #bfbfbf",
-              borderCollapse: "collapse",
-            },
-            "& table th, & table td": {
-              padding: "6.4px",
-            },
-            "& table thead": {
-              background: "rgba(0, 0, 0, 0.05)",
-            },
-            "& figure.image > img": {
-              width: "100%",
-              height: "auto",
-            },
-            "& figure.image, & figure.image.image-style-block-align-center": {
-              marginX: "auto",
-            },
-            "& figure.image.image-style-block-align-left": {
-              marginX: 0,
-              marginRight: "auto",
-            },
-            "& figure.image.image-style-block-align-right": {
-              marginX: 0,
-              marginLeft: "auto",
-            },
-          }}
-        >
-          {content && parse(content)}
-        </Stack>
-
-        {/* 태그 컨테이너 */}
-        <Stack direction="row" alignItems="center" gap={1}>
-          {tags.map((tag, index) => (
-            <Chip key={`tag-${index}`} label={`# ${tag}`} />
-          ))}
-        </Stack>
-
-        {/* 버튼 컨테이너 */}
-        <Stack
-          direction="row"
-          gap={3}
-          justifyContent="flex-end"
-          alignItems="center"
-          flexWrap="wrap"
-        >
-          {/* 왼쪽 버튼 컨테이너 */}
-          <Stack direction="row" gap={2}>
-            {/* 좋아요 */}
-            <Stack direction="row" alignItems="center">
-              {/* 좋아요 버튼 */}
-              <IconButton size="small" onClick={handleLikeButtonClick}>
-                {isLiked ? (
-                  <FavoriteRoundedIcon color="error" />
-                ) : (
-                  <FavoriteBorderRoundedIcon />
+                {/* 삭제하기 버튼 - 작성자일 때만 표시 */}
+                {isAuthor && (
+                  <MenuItem
+                    onClick={handleOpenDeleteDialog}
+                    sx={{
+                      gap: 4,
+                    }}
+                  >
+                    <Typography variant="subtitle1" color="error">
+                      삭제하기
+                    </Typography>
+                    <DeleteOutlineRoundedIcon fontSize="small" color="error" />
+                  </MenuItem>
                 )}
-              </IconButton>
-
-              {/* 좋아요 수 */}
-              <Typography variant="subtitle1">{likes}</Typography>
-            </Stack>
-
-            {/* 공유 */}
-            <Stack direction="row" alignItems="center">
-              {/* 공유 버튼 */}
-              <IconButton size="small">
-                <ShareIcon />
-              </IconButton>
-
-              {/* 공유 수 */}
-              <Typography variant="subtitle1">{shares}</Typography>
-            </Stack>
-
-            {/* 댓글 */}
-            <Stack direction="row" alignItems="center">
-              {/* 댓글 버튼 */}
-              <IconButton size="small">
-                <ChatBubbleOutlineRoundedIcon />
-              </IconButton>
-
-              {/* 댓글 수 */}
-              <Typography variant="subtitle1">{comments.length}</Typography>
-            </Stack>
+              </Menu>
+            </Box>
           </Stack>
 
-          {/* 오른쪽 버튼 컨테이너 */}
-          {ButtonContainer}
-        </Stack>
+          {/* 구분선 */}
+          <Divider />
 
-        {/* 댓글 섹션 */}
-        <Stack gap={3}>
-          <Typography variant="h6">댓글 {comments.length}개</Typography>
+          {/* 게시글 내용 */}
+          <Stack
+            py={5}
+            gap={0.5}
+            sx={{
+              "& p, & ol, & ul": {
+                margin: 0,
+                padding: 0,
+                boxSizing: "border-box",
+              },
+              "& ol, & ul": {
+                paddingLeft: "1em",
+              },
+              "& table, & table th, & table td": {
+                border: "1px solid #bfbfbf",
+                borderCollapse: "collapse",
+              },
+              "& table th, & table td": {
+                padding: "6.4px",
+              },
+              "& table thead": {
+                background: "rgba(0, 0, 0, 0.05)",
+              },
+              "& figure.image > img": {
+                width: "100%",
+                height: "auto",
+              },
+              "& figure.image, & figure.image.image-style-block-align-center": {
+                marginX: "auto",
+              },
+              "& figure.image.image-style-block-align-left": {
+                marginX: 0,
+                marginRight: "auto",
+              },
+              "& figure.image.image-style-block-align-right": {
+                marginX: 0,
+                marginLeft: "auto",
+              },
+            }}
+          >
+            {content && parse(content)}
+          </Stack>
 
-          {/* 댓글 로딩 중 표시 */}
-          {isCommentLoading && (
-            <Box display="flex" justifyContent="center" py={3}>
-              <CircularProgress size={30} />
-            </Box>
-          )}
+          {/* 태그 컨테이너 */}
+          <Stack direction="row" alignItems="center" gap={1}>
+            {tags.map((tag, index) => (
+              <Chip key={`tag-${index}`} label={`# ${tag}`} />
+            ))}
+          </Stack>
 
-          {/* 댓글 목록 */}
-          {!isCommentLoading &&
-            getSortedComments().map((comment, index, array) => (
-              <React.Fragment key={comment.uuid}>
-                {/* 댓글 컨테이너 */}
-                <Stack ml={comment.parentUuid ? "50px" : "0"} gap={3}>
-                  {/* 댓글 내용 */}
-                  <Stack direction="row" gap={1}>
-                    {/* 댓글 작성자 프로필 이미지 */}
-                    <Avatar src={comment.authorProfile} />
+          {/* 버튼 컨테이너 */}
+          <Stack
+            direction="row"
+            gap={3}
+            justifyContent="flex-end"
+            alignItems="center"
+            flexWrap="wrap"
+          >
+            {/* 왼쪽 버튼 컨테이너 */}
+            <Stack direction="row" gap={2}>
+              {/* 좋아요 */}
+              <Stack direction="row" alignItems="center">
+                {/* 좋아요 버튼 */}
+                <IconButton size="small" onClick={handleLikeButtonClick}>
+                  {isLiked ? (
+                    <FavoriteRoundedIcon color="error" />
+                  ) : (
+                    <FavoriteBorderRoundedIcon />
+                  )}
+                </IconButton>
 
-                    <Stack width="100%">
-                      {/* 댓글 작성자 이름 */}
-                      <Typography variant="subtitle1" fontWeight="bold">
-                        {comment.authorName}
-                      </Typography>
+                {/* 좋아요 수 */}
+                <Typography variant="subtitle1">{likes}</Typography>
+              </Stack>
 
-                      {/* 댓글 내용 */}
-                      <Typography variant="subtitle1">
-                        {comment.content}
-                      </Typography>
+              {/* 공유 */}
+              <Stack direction="row" alignItems="center">
+                {/* 공유 버튼 */}
+                <IconButton size="small">
+                  <ShareIcon />
+                </IconButton>
 
-                      <Stack direction="row" alignItems="center" gap={1}>
-                        {/* 댓글 작성일 */}
-                        <Typography variant="subtitle2" color="text.secondary">
-                          {formatRelativeTime(comment.createdAt)}
+                {/* 공유 수 */}
+                <Typography variant="subtitle1">{shares}</Typography>
+              </Stack>
+
+              {/* 댓글 */}
+              <Stack direction="row" alignItems="center">
+                {/* 댓글 버튼 */}
+                <IconButton size="small">
+                  <ChatBubbleOutlineRoundedIcon />
+                </IconButton>
+
+                {/* 댓글 수 */}
+                <Typography variant="subtitle1">{comments.length}</Typography>
+              </Stack>
+            </Stack>
+
+            {/* 오른쪽 버튼 컨테이너 */}
+            {ButtonContainer}
+          </Stack>
+
+          {/* 댓글 섹션 */}
+          <Stack gap={3}>
+            <Typography variant="h6">댓글 {comments.length}개</Typography>
+            <Divider />
+
+            {/* 댓글 로딩 중 표시 */}
+            {isCommentLoading && (
+              <Box display="flex" justifyContent="center" py={3}>
+                <CircularProgress size={30} />
+              </Box>
+            )}
+
+            {/* 댓글 목록 */}
+            {!isCommentLoading &&
+              getSortedComments().map((comment, index, array) => (
+                <Fragment key={comment.uuid}>
+                  {/* 댓글 컨테이너 */}
+                  <Stack
+                    ml={{
+                      xs: comment.parentUuid ? "20px" : "0",
+                      sm: comment.parentUuid ? "50px" : "0",
+                    }}
+                    gap={3}
+                  >
+                    {/* 댓글 내용 */}
+                    <Stack direction="row" gap={1}>
+                      {/* 댓글 작성자 프로필 이미지 */}
+                      <Avatar src={comment.authorProfile} />
+
+                      <Stack width="100%">
+                        {/* 댓글 작성자 이름 */}
+                        <Typography variant="subtitle1" fontWeight="bold">
+                          {comment.authorName}
                         </Typography>
 
-                        {/* 답글 쓰기 버튼 (대댓글이 아닌 경우에만 표시) */}
-                        {loginState.isLoggedIn && canReply(comment) && (
+                        {/* 댓글 내용 */}
+                        {editingCommentUuid === comment.uuid ? (
+                          <ClickAwayListener
+                            onClickAway={handleEditCommentClose}
+                          >
+                            <CommentInput
+                              key={`reply-edit-input-${comment.uuid}`}
+                              onCommentSubmit={(content) =>
+                                handleCommentEdit(content, comment.uuid)
+                              }
+                              onCommentCancel={handleEditCommentClose}
+                              disabled={isCommentSubmitting}
+                              defaultValue={comment.content}
+                            />
+                          </ClickAwayListener>
+                        ) : (
+                          <Typography variant="subtitle1">
+                            {comment.content}
+                          </Typography>
+                        )}
+
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          gap={1}
+                          flexWrap="wrap"
+                        >
+                          {/* 댓글 작성일 */}
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            {formatRelativeTime(comment.createdAt)}
+                          </Typography>
+
+                          {/* 답글 쓰기 버튼 */}
                           <Button
                             onClick={() => handleReplyButtonClick(comment.uuid)}
                             sx={{
+                              display: isMobile ? "none" : "inline-flex",
                               padding: 0,
                             }}
                           >
                             <Typography variant="subtitle2" color="primary">
-                              답글 쓰기
+                              답글쓰기
                             </Typography>
                           </Button>
-                        )}
 
-                        {/* 좋아요 버튼 */}
-                        <IconButton
-                          size="small"
-                          sx={{
-                            padding: 0.5,
-                          }}
-                          onClick={() => handleCommentLike(comment.uuid)}
-                        >
-                          {comment.liked ? (
-                            <FavoriteRoundedIcon
-                              color="error"
-                              sx={{ fontSize: 18 }}
-                            />
-                          ) : (
-                            <FavoriteBorderRoundedIcon sx={{ fontSize: 18 }} />
-                          )}
+                          {/* 좋아요 버튼 */}
+                          <Stack direction="row" alignItems="center">
+                            {/* 좋아요 버튼 */}
+                            <IconButton
+                              size="small"
+                              sx={{
+                                padding: 0.5,
+                              }}
+                              onClick={() => handleCommentLike(comment.uuid)}
+                            >
+                              {comment.liked ? (
+                                <FavoriteRoundedIcon
+                                  color="error"
+                                  sx={{ fontSize: 18 }}
+                                />
+                              ) : (
+                                <FavoriteBorderRoundedIcon
+                                  sx={{ fontSize: 18 }}
+                                />
+                              )}
+                            </IconButton>
 
-                          <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
-                            {comment.likes}
-                          </Typography>
-                        </IconButton>
-
-                        {/* 삭제 버튼 (본인 댓글 또는 게시글 작성자만) */}
-                        {canDeleteComment(comment) && (
-                          <Button
-                            color="error"
-                            onClick={() =>
-                              handleOpenCommentDeleteDialog(comment.uuid)
-                            }
-                            sx={{
-                              padding: 0,
-                              paddingX: 0.5,
-                              minWidth: 0,
-                            }}
-                          >
-                            <Typography variant="subtitle2" color="error">
-                              삭제
+                            {/* 좋아요 수 */}
+                            <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
+                              {comment.likes}
                             </Typography>
-                          </Button>
-                        )}
+                          </Stack>
+                        </Stack>
                       </Stack>
+
+                      {/* 더보기 메뉴 */}
+                      <IconButton
+                        onClick={(event) =>
+                          handleCommentMoreButtonClick(event, comment)
+                        }
+                        sx={{
+                          alignSelf: "flex-start",
+                        }}
+                      >
+                        <MoreHorizRoundedIcon fontSize="small" />
+                      </IconButton>
                     </Stack>
+
+                    {/* 답글 입력란 */}
+                    {replyParentId === comment.uuid && (
+                      <Stack gap={2}>
+                        <Box ml={comment.parentUuid ? "0" : "50px"}>
+                          <CommentInput
+                            key={`reply-input-${comment.uuid}`}
+                            onCommentSubmit={(content) =>
+                              handleCommentSubmit(
+                                content,
+                                comment.parentUuid || comment.uuid
+                              )
+                            }
+                            onCommentCancel={handleReplyCancelButtonClick}
+                            disabled={isCommentSubmitting}
+                          />
+                        </Box>
+                      </Stack>
+                    )}
                   </Stack>
 
-                  {/* 답글 입력란 */}
-                  {replyParentId === comment.uuid && (
-                    <Stack gap={2}>
-                      <Box ml={comment.parentUuid ? "0" : "50px"}>
-                        <CommentInput
-                          key={`reply-input-${comment.uuid}`}
-                          onCommentSubmit={(content) =>
-                            handleCommentSubmit(content, comment.uuid)
-                          }
-                          onCommentCancel={handleReplyCancelButtonClick}
-                          disabled={isCommentSubmitting}
-                        />
-                      </Box>
-                    </Stack>
+                  {/* 구분선 */}
+                  {index < array.length - 1 && (
+                    <Divider
+                      sx={{
+                        ml:
+                          !!comment.parentUuid && !!array[index + 1].parentUuid
+                            ? "50px"
+                            : "0",
+                      }}
+                    />
                   )}
-                </Stack>
+                </Fragment>
+              ))}
 
-                {/* 구분선 */}
-                {index < array.length - 1 && (
-                  <Divider
+            {/* 댓글이 없는 경우 메시지 */}
+            {!isCommentLoading && comments.length === 0 && (
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                textAlign="center"
+                py={4}
+              >
+                첫 번째 댓글을 작성해보세요!
+              </Typography>
+            )}
+
+            <Divider />
+
+            {/* 댓글 입력란 */}
+            {loginState.isLoggedIn ? (
+              <CommentInput
+                onCommentSubmit={handleCommentSubmit} // 수정
+                disabled={isCommentSubmitting}
+              />
+            ) : (
+              <Box py={3} textAlign="center">
+                <Typography variant="body1" color="text.secondary" mb={2}>
+                  댓글을 작성하려면 로그인이 필요합니다.
+                </Typography>
+                <Button variant="contained" onClick={handleNavigateToLogin}>
+                  로그인하기
+                </Button>
+              </Box>
+            )}
+          </Stack>
+
+          {/* 버튼 컨테이너 */}
+          {ButtonContainer}
+
+          {/* 스크롤 상단 이동 버튼 */}
+          <ScrollToTopButton />
+
+          {/* 템플릿 드로어 */}
+          {templateUuid && (
+            <Paper
+              elevation={5}
+              sx={{
+                position: "fixed",
+                top: "15vh",
+                left: 0,
+                borderRadius: 0,
+                borderTopRightRadius: 8,
+                borderBottomRightRadius: 8,
+              }}
+            >
+              <Collapse
+                in={isTemplateDrawerOpen}
+                orientation="horizontal"
+                collapsedSize={30}
+              >
+                <Box
+                  height="70vh"
+                  width={{
+                    xs: "90vw",
+                    sm: "50vw",
+                  }}
+                  sx={{
+                    overflowX: "auto",
+                  }}
+                >
+                  {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
+                  {!loginState.isLoggedIn ? (
+                    // 로그인되지 않은 경우 메시지 표시
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        py: 4,
+                        px: 2,
+                        borderRadius: 2,
+                        bgcolor: "rgba(48, 48, 48, 0.03)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography variant="h6" color="text.secondary" mb={3}>
+                        템플릿을 확인하려면 로그인이 필요합니다.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleNavigateToLogin}
+                      >
+                        로그인하러 가기
+                      </Button>
+                    </Box>
+                  ) : (
+                    // 로그인된 경우 템플릿 표시
+                    <Template
+                      uuid={templateUuid}
+                      height="70vh"
+                      paddgingX="24px"
+                    />
+                  )}
+                </Box>
+              </Collapse>
+
+              {/* 드로어 확장/축소 버튼 */}
+              <Paper
+                elevation={2}
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  right: 0,
+                  borderRadius: "50%",
+                  transform: "translate(50%, -50%)",
+                }}
+              >
+                <IconButton size="small" onClick={handleTemplateDrawerToggle}>
+                  <ChevronLeftRoundedIcon
+                    color="primary"
+                    fontSize="large"
                     sx={{
-                      ml:
-                        !!comment.parentUuid && !!array[index + 1].parentUuid
-                          ? "50px"
-                          : "0",
+                      transform: `rotate(${
+                        isTemplateDrawerOpen ? 0 : -180
+                      }deg)`,
+                      transition: "transform 0.2s ease-in-out",
                     }}
                   />
-                )}
-              </React.Fragment>
-            ))}
-
-          {/* 댓글이 없는 경우 메시지 */}
-          {!isCommentLoading && comments.length === 0 && (
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              textAlign="center"
-              py={4}
-            >
-              첫 번째 댓글을 작성해보세요!
-            </Typography>
-          )}
-
-          <Divider />
-
-          {/* 댓글 입력란 */}
-          {loginState.isLoggedIn ? (
-            <CommentInput
-              onCommentSubmit={handleCommentSubmit} // 수정
-              disabled={isCommentSubmitting}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-            />
-          ) : (
-            <Box py={3} textAlign="center">
-              <Typography variant="body1" color="text.secondary" mb={2}>
-                댓글을 작성하려면 로그인이 필요합니다.
-              </Typography>
-              <Button variant="contained" onClick={handleNavigateToLogin}>
-                로그인하기
-              </Button>
-            </Box>
+                </IconButton>
+              </Paper>
+            </Paper>
           )}
         </Stack>
 
-        {/* 버튼 컨테이너 */}
-        {ButtonContainer}
-
-        {/* 스크롤 상단 이동 버튼 */}
-        <ScrollToTopButton />
-
-        {/* 템플릿 드로어 */}
-        {templateUuid && (
-          <Paper
-            elevation={5}
-            sx={{
-              position: "fixed",
-              top: "15vh",
-              left: 0,
-              borderRadius: 0,
-              borderTopRightRadius: 8,
-              borderBottomRightRadius: 8,
-            }}
-          >
-            <Collapse
-              in={isTemplateDrawerOpen}
-              orientation="horizontal"
-              collapsedSize={30}
-            >
-              <Box
-                height="70vh"
-                width={{
-                  xs: "90vw",
-                  sm: "50vw",
-                }}
-                sx={{
-                  overflowX: "auto",
-                }}
-              >
-                {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
-                {!loginState.isLoggedIn ? (
-                  // 로그인되지 않은 경우 메시지 표시
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "100%",
-                      py: 4,
-                      px: 2,
-                      borderRadius: 2,
-                      bgcolor: "rgba(48, 48, 48, 0.03)",
-                      textAlign: "center",
-                    }}
-                  >
-                    <Typography variant="h6" color="text.secondary" mb={3}>
-                      템플릿을 확인하려면 로그인이 필요합니다.
-                    </Typography>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={handleNavigateToLogin}
-                    >
-                      로그인하러 가기
-                    </Button>
-                  </Box>
-                ) : (
-                  // 로그인된 경우 템플릿 표시
-                  <Template
-                    uuid={templateUuid}
-                    height="70vh"
-                    paddgingX="24px"
-                  />
-                )}
-              </Box>
-            </Collapse>
-
-            {/* 드로어 확장/축소 버튼 */}
-            <Paper
-              elevation={2}
-              sx={{
-                position: "absolute",
-                top: "50%",
-                right: 0,
-                borderRadius: "50%",
-                transform: "translate(50%, -50%)",
-              }}
-            >
-              <IconButton size="small" onClick={handleTemplateDrawerToggle}>
-                <ChevronLeftRoundedIcon
-                  color="primary"
-                  fontSize="large"
-                  sx={{
-                    transform: `rotate(${isTemplateDrawerOpen ? 0 : -180}deg)`,
-                    transition: "transform 0.2s ease-in-out",
-                  }}
-                />
-              </IconButton>
-            </Paper>
-          </Paper>
-        )}
-      </Stack>
-
-      {/* 게시글 삭제 확인 다이얼로그 */}
-      <Dialog
-        open={isDeleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>게시글 삭제</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">
-            이 게시글을 정말로 삭제하시겠습니까?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            삭제한 게시글은 복구할 수 없습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseDeleteDialog}
-            color="inherit"
-            disabled={isDeleting}
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleDeletePost}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-            startIcon={isDeleting ? <CircularProgress size={20} /> : null}
-          >
-            {isDeleting ? "삭제 중..." : "삭제"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* 댓글 삭제 확인 다이얼로그 */}
-      <Dialog
-        open={isCommentDeleteDialogOpen}
-        onClose={handleCloseCommentDeleteDialog}
-        maxWidth="xs"
-        fullWidth
-      >
-        <DialogTitle>댓글 삭제</DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">이 댓글을 삭제하시겠습니까?</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            삭제한 댓글은 복구할 수 없습니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseCommentDeleteDialog}
-            color="inherit"
-            disabled={isDeletingComment}
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleConfirmCommentDelete}
-            color="error"
-            variant="contained"
-            disabled={isDeletingComment}
-            startIcon={
-              isDeletingComment ? <CircularProgress size={16} /> : null
-            }
-          >
-            {isDeletingComment ? "삭제 중..." : "삭제"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-          action={snackbar.action}
+        {/* 게시글 삭제 확인 다이얼로그 */}
+        <Dialog
+          open={isDeleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          maxWidth="sm"
+          fullWidth
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Container>
+          <DialogTitle>게시글 삭제</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1">
+              이 게시글을 정말로 삭제하시겠습니까?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              삭제한 게시글은 복구할 수 없습니다.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseDeleteDialog}
+              color="inherit"
+              disabled={isDeleting}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleDeletePost}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+              startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+            >
+              {isDeleting ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 댓글 삭제 확인 다이얼로그 */}
+        <Dialog
+          open={isCommentDeleteDialogOpen}
+          onClose={handleCloseCommentDeleteDialog}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>댓글 삭제</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1">이 댓글을 삭제하시겠습니까?</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              삭제한 댓글은 복구할 수 없습니다.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={handleCloseCommentDeleteDialog}
+              color="inherit"
+              disabled={isDeletingComment}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={handleConfirmCommentDelete}
+              color="error"
+              variant="contained"
+              disabled={isDeletingComment}
+              startIcon={
+                isDeletingComment ? <CircularProgress size={16} /> : null
+              }
+            >
+              {isDeletingComment ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+            sx={{ width: "100%" }}
+            action={snackbar.action}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </Container>
+
+      {/* 댓글 더보기 메뉴 */}
+      <Menu
+        anchorEl={selectedComment?.element}
+        open={selectedComment !== null}
+        onClose={() => setSelectedComment(null)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            if (selectedComment) {
+              handleReplyButtonClick(selectedComment.comment.uuid);
+            }
+            setSelectedComment(null);
+          }}
+          sx={{
+            gap: 4,
+          }}
+        >
+          <Typography variant="subtitle1">답글쓰기</Typography>
+          <AddRoundedIcon fontSize="small" />
+        </MenuItem>
+
+        {/* 수정 버튼 */}
+        <MenuItem
+          onClick={() => {
+            if (selectedComment) {
+              handleCommentEditButtonClick(selectedComment.comment.uuid);
+            }
+            setSelectedComment(null);
+          }}
+          sx={{
+            display: selectedComment?.comment.isAuthor ? "flex" : "none",
+            gap: 4,
+          }}
+        >
+          <Typography variant="subtitle1">수정하기</Typography>
+          <EditRoundedIcon fontSize="small" />
+        </MenuItem>
+
+        {/* 삭제 버튼 */}
+        <MenuItem
+          onClick={() => {
+            if (selectedComment?.comment.uuid) {
+              handleOpenCommentDeleteDialog(selectedComment.comment.uuid);
+            }
+            setSelectedComment(null);
+          }}
+          sx={{
+            display:
+              selectedComment?.comment &&
+              canDeleteComment(selectedComment.comment)
+                ? "flex"
+                : "none",
+            gap: 4,
+          }}
+        >
+          <Typography variant="subtitle1" color="error">
+            삭제하기
+          </Typography>
+          <DeleteOutlineRoundedIcon fontSize="small" color="error" />
+        </MenuItem>
+      </Menu>
+    </>
   );
 };
 

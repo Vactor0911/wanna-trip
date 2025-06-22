@@ -54,14 +54,10 @@ const Login = () => {
   }, []);
 
   const handleRedirect = useCallback(() => {
-    console.log("Redirecting to:", redirectTo);
-
     if (redirectTo) {
       navigate(`/${redirectTo}`);
       return;
     }
-
-    console.log("No redirectTo specified, navigating back.");
     navigate(-1);
   }, [navigate, redirectTo]);
 
