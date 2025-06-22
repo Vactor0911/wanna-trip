@@ -90,11 +90,6 @@ const Community = () => {
   useEffect(() => {
     // 로컬 스토리지의 좋아요 상태 로드 (첫 렌더링에만)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const likedPostsCache = JSON.parse(
-        localStorage.getItem("likedPosts") || "{}"
-      );
-
       // 현재 표시된 인기 게시글에 로컬 스토리지 좋아요 상태 적용
       if (popularPosts.length > 0) {
         const updatedPosts = popularPosts.map((post) => ({
@@ -123,113 +118,112 @@ const Community = () => {
   }, []);
 
   // 게시글 불러오기
-  const fetchPosts = useCallback(async () => {
-    // 다음 페이지가 없으면 종료
-    if (!hasNextPage) {
-      return;
-    }
+  const fetchPosts = useCallback(
+    async (keyword: string) => {
+      // 다음 페이지가 없으면 종료
+      if (!hasNextPage) {
+        return;
+      }
 
-    // 이전 요청 중지
-    cancelFetchPosts();
+      // 이전 요청 중지
+      cancelFetchPosts();
 
-    // AbortController 생성
-    const controller = new AbortController();
-    fetchControllerRef.current = controller;
+      // AbortController 생성
+      const controller = new AbortController();
+      fetchControllerRef.current = controller;
 
-    try {
-      setIsPostLoading(true);
+      try {
+        setIsPostLoading(true);
 
-      // 로그인 상태에 따라 다른 엔드포인트 호출
-      const endpoint = loginState.isLoggedIn ? "/post/auth/page" : "/post/page";
+        // 로그인 상태에 따라 다른 엔드포인트 호출
+        const endpoint = loginState.isLoggedIn
+          ? "/post/auth/page"
+          : "/post/page";
 
-      // 게시글 목록 불러오기 API 호출
-      const response = await axiosInstance.get(
-        `${endpoint}/?${
-          !keyword ? "" : `keyword=${keyword}&`
-        }page=${loadedPages}`
-      );
-
-      // 게시글 목록 업데이트
-      if (response.data.success) {
-        // 수신된 게시글 목록이 비어있으면 더 이상 불러올 게시글이 없음을 표시
-        if (response.data.post.length <= 0) {
-          setHasNextPage(false);
-          return;
-        }
-
-        const responsePosts: PostInterface[] = response.data.post.map(
-          (post: PostInterface) => {
-            // 로컬에 저장된 좋아요 상태 가져오기
-            const localLiked = getLikedStatus(post.uuid);
-
-            // 서버에서 받은 값 (로그인된 경우)
-            const serverLiked = post.liked || false;
-
-            // 서버 값 우선시하여 로컬 스토리지 업데이트
-            saveLikedStatus(post.uuid, serverLiked);
-
-            return {
-              uuid: post.uuid,
-              title: post.title,
-              authorName: post.authorName,
-              authorProfileImage: post.authorProfileImage,
-              content: post.content,
-              tags: post.tags || [],
-              liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
-              likes: post.likes,
-              shares: post.shares,
-              comments: post.comments,
-            };
-          }
+        // 게시글 목록 불러오기 API 호출
+        const response = await axiosInstance.get(
+          `${endpoint}/?${
+            !keyword ? "" : `keyword=${keyword}&`
+          }page=${loadedPages}`
         );
 
-        const newPosts = [...posts, ...responsePosts];
-        setPosts(newPosts);
+        // 게시글 목록 업데이트
+        if (response.data.success) {
+          // 수신된 게시글 목록이 비어있으면 더 이상 불러올 게시글이 없음을 표시
+          if (response.data.post.length <= 0) {
+            setHasNextPage(false);
+            return;
+          }
 
-        // 수신된 게시글 목록이 10개 미만이면 더 이상 불러올 게시글이 없음을 표시
-        if (response.data.post.length < 10) {
-          setHasNextPage(false);
+          const responsePosts: PostInterface[] = response.data.post.map(
+            (post: PostInterface) => {
+              // 로컬에 저장된 좋아요 상태 가져오기
+              const localLiked = getLikedStatus(post.uuid);
+
+              // 서버에서 받은 값 (로그인된 경우)
+              const serverLiked = post.liked || false;
+
+              // 서버 값 우선시하여 로컬 스토리지 업데이트
+              saveLikedStatus(post.uuid, serverLiked);
+
+              return {
+                uuid: post.uuid,
+                title: post.title,
+                authorName: post.authorName,
+                authorProfileImage: post.authorProfileImage,
+                content: post.content,
+                tags: post.tags || [],
+                liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
+                likes: post.likes,
+                shares: post.shares,
+                comments: post.comments,
+              };
+            }
+          );
+
+          const newPosts = [...posts, ...responsePosts];
+          setPosts(newPosts);
+
+          // 수신된 게시글 목록이 10개 미만이면 더 이상 불러올 게시글이 없음을 표시
+          if (response.data.post.length < 10) {
+            setHasNextPage(false);
+          }
+
+          // 로드한 페이지 수 증가
+          setLoadedPages(loadedPages + 1);
         }
-
-        // 로드한 페이지 수 증가
-        setLoadedPages(loadedPages + 1);
-      }
-    } catch (error) {
-      if (
-        (typeof error === "object" &&
-          error !== null &&
-          "name" in error &&
-          (error as { name?: string }).name === "CanceledError") ||
-        axios.isCancel?.(error)
-      ) {
-        // 요청이 취소된 경우
-      } else {
-        console.error("게시글 불러오기 실패:", error);
+      } catch (error) {
         if (
-          typeof error === "object" &&
-          error !== null &&
-          "response" in error &&
-          (error as { response?: { status?: number } }).response?.status !== 401
+          (typeof error === "object" &&
+            error !== null &&
+            "name" in error &&
+            (error as { name?: string }).name === "CanceledError") ||
+          axios.isCancel?.(error)
         ) {
-          setHasNextPage(false);
+          // 요청이 취소된 경우
+        } else {
+          console.error("게시글 불러오기 실패:", error);
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            (error as { response?: { status?: number } }).response?.status !==
+              401
+          ) {
+            setHasNextPage(false);
+          }
         }
+      } finally {
+        setIsPostLoading(false);
+        fetchControllerRef.current = null;
       }
-    } finally {
-      setIsPostLoading(false);
-      fetchControllerRef.current = null;
-    }
-  }, [
-    cancelFetchPosts,
-    hasNextPage,
-    keyword,
-    loadedPages,
-    loginState.isLoggedIn,
-    posts,
-  ]);
+    },
+    [cancelFetchPosts, hasNextPage, loadedPages, loginState.isLoggedIn, posts]
+  );
 
   // 디바운스된 게시글 불러오기
   const fetchDebouncedPosts = useMemo(
-    () => debounce(fetchPosts, 500),
+    () => debounce((keyword: string) => fetchPosts(keyword), 500),
     [fetchPosts]
   );
 
@@ -250,10 +244,8 @@ const Community = () => {
       setPosts([]); // 기존 게시글 목록 초기화
       setHasNextPage(true); // 다음 페이지 여부 초기화
       setLoadedPages(1); // 로드된 페이지 수 초기화
-
-      fetchDebouncedPosts(); // 디바운스된 게시글 불러오기
     },
-    [fetchDebouncedPosts]
+    []
   );
 
   // 인기 게시글 불러오기
@@ -357,10 +349,17 @@ const Community = () => {
   // 토큰 초기화 완료 시점에만 인기 / 일반 게시글 호출
   useEffect(() => {
     if (isAuthInitialized) {
-      fetchPopularPosts();
-      fetchPosts();
+      setTimeout(() => {
+        fetchPopularPosts();
+      }, 500); // 500ms 딜레이 후 인기 게시글 불러오기
     }
-  }, [isAuthInitialized, fetchPopularPosts, fetchPosts]);
+  }, [isAuthInitialized, fetchPopularPosts]);
+
+  useEffect(() => {
+    if (isAuthInitialized) {
+      fetchDebouncedPosts(keyword);
+    }
+  }, [isAuthInitialized, keyword, fetchDebouncedPosts]);
 
   // 스크롤 내리면 게시글 불러오기
   useEffect(() => {
@@ -374,7 +373,7 @@ const Community = () => {
         if (entries[0].isIntersecting) {
           // 로딩중이 아닐때만 불러오기
           if (!isPostLoading) {
-            fetchDebouncedPosts();
+            fetchDebouncedPosts(keyword);
           }
         }
       },
@@ -386,7 +385,7 @@ const Community = () => {
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [fetchDebouncedPosts, fetchPosts, hasNextPage, isPostLoading]);
+  }, [fetchDebouncedPosts, fetchPosts, hasNextPage, isPostLoading, keyword]);
 
   // 글쓰기 버튼 클릭
   const handleCreatePostButtonClick = useCallback(() => {
@@ -413,7 +412,7 @@ const Community = () => {
       setHasNextPage(true); // 다음 페이지 여부 초기화
       setLoadedPages(1); // 로드된 페이지 수 초기화
 
-      fetchDebouncedPosts(); // 디바운스된 게시글 불러오기
+      fetchDebouncedPosts(tag); // 디바운스된 게시글 불러오기
     },
     [fetchDebouncedPosts]
   );
@@ -736,7 +735,7 @@ const Community = () => {
                 <Paper
                   key={`tag-${index}`}
                   sx={{
-                    background: getRandomColor(index),
+                    background: getRandomColor(index + 1),
                     overflow: "hidden",
                   }}
                 >
