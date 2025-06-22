@@ -56,6 +56,11 @@ const Community = () => {
   const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
   const fetchControllerRef = useRef<AbortController | null>(null); // API 요청을 취소하기 위한 AbortController
 
+  // 접속시 스크롤 최상단으로 이동
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // 게시글 불러오기 중지
   const cancelFetchPosts = useCallback(() => {
     fetchControllerRef.current?.abort();
