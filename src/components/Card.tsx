@@ -3,7 +3,6 @@ import { theme } from "../utils/theme";
 import dayjs, { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import VisibilityIcon from "@mui/icons-material/Visibility"; // 읽기 전용 아이콘 추가
 
 // 위치 정보 인터페이스 추가
 interface LocationInfo {
@@ -23,6 +22,7 @@ interface CardProps extends PaperProps {
   onClick?: () => void;
   location?: LocationInfo; // 위치 정보 추가
   isOwner?: boolean; // 소유자 여부 추가
+  isTimeOverlapping?: boolean; // 시간 중복 여부 prop 추가
 }
 
 const Card = (props: CardProps) => {
@@ -34,6 +34,7 @@ const Card = (props: CardProps) => {
     onClick,
     location,
     isOwner = true, // 기본값은 true로 설정
+    isTimeOverlapping = false, // 기본값은 false
     ...others
   } = props;
 
@@ -75,11 +76,16 @@ const Card = (props: CardProps) => {
         px: 1,
         cursor: isOwner ? "pointer" : "default", // 소유자가 아니면 커서 스타일 변경
         // 소유자가 아닐 경우 다른 테두리 색상 사용
-        border: `2px solid transparent`,
+        border: isTimeOverlapping
+          ? `2px solid ${theme.palette.error.main}`
+          : `2px solid transparent`,
+        // 호버 시 - 소유자인 경우에만 파란색 테두리로 변경
         "&:hover": {
           border: isOwner
             ? `2px solid ${theme.palette.primary.main}`
-            : "2px solid transparent", // 소유자가 아니면 호버 효과 제거
+            : isTimeOverlapping
+            ? `2px solid ${theme.palette.error.main}`
+            : `2px solid transparent`,
         },
       }}
       {...others}
@@ -176,25 +182,6 @@ const Card = (props: CardProps) => {
           {content && parse(content)}
         </Stack>
       </Stack>
-
-      {/* 소유자가 아닐 경우 읽기 전용 표시 추가 */}
-      {!isOwner && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: 4,
-            right: 4,
-            backgroundColor: "rgba(0, 0, 0, 0.1)",
-            borderRadius: "50%",
-            padding: "2px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <VisibilityIcon fontSize="small" sx={{ opacity: 0.7 }} />
-        </Box>
-      )}
     </Paper>
   );
 };

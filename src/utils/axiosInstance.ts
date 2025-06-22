@@ -3,6 +3,7 @@ import { getAccessToken, setAccessToken } from "./accessToken"; // Access Token 
 
 export const SERVER_HOST = import.meta.env.VITE_SERVER_HOST;
 
+
 const axiosInstance = axios.create({
   baseURL: SERVER_HOST,
   withCredentials: true, // Refresh Token만 쿠키로 포함
@@ -24,7 +25,7 @@ export const getCsrfToken = async () => {
 
 let isInterceptorInitialized = false; // 인터셉터 초기화 상태를 저장
 
-// Axios Interceptor 설정
+// 액세스 토큰이 만료되면 자동으로 갱신하는 인터셉터
 export const setupAxiosInterceptors = () => {
   if (isInterceptorInitialized) return; // 이미 초기화된 경우 실행하지 않음
   isInterceptorInitialized = true; // 인터셉터 초기화

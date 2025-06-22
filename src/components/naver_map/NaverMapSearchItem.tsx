@@ -32,8 +32,6 @@ const NaverMapSearchItem = (props: LocationInterface) => {
       return;
     }
 
-    console.log("검색 아이템 클릭:", props);
-
     // 선택한 장소 정보 설정
     setSelectedLocation(props);
 

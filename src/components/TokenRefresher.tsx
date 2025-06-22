@@ -1,6 +1,6 @@
 import { useAtom, useSetAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
-import { wannaTripLoginStateAtom, Permission } from "../state";
+import { wannaTripLoginStateAtom, Permission, isAuthInitializedAtom } from "../state";
 import axiosInstance, {
   getCsrfToken,
   setupAxiosInterceptors,
@@ -16,6 +16,7 @@ interface TokenRefresherProps {
 const TokenRefresher = ({ children }: TokenRefresherProps) => {
   const [loginState, setLoginState] = useAtom(wannaTripLoginStateAtom);
   const [isInitialized, setIsInitialized] = useState(false); // 로그인 정보 복구 완료 여부
+  const [, setIsAuthInitialized] = useAtom(isAuthInitializedAtom); // 전역 초기화 상태 연결
   const navigate = useNavigate();
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 상태 업데이트
 
@@ -34,12 +35,14 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
       }
     } else {
       setIsInitialized(true); // 초기화 완료 상태로 변경
+      setIsAuthInitialized(true); // 전역 초기화 완료 상태로 변경
       return;
     }
 
     // 2. 로그인 상태가 확인될 때까지 기다림
     if (!loginState.isLoggedIn) {
       setIsInitialized(true); // 초기화 완료 상태로 변경
+      setIsAuthInitialized(true); // 전역 초기화 완료 상태로 변경
       return;
     }
 
@@ -105,6 +108,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
         navigate("/login"); // 로그인 페이지로 이동
       } finally {
         setIsInitialized(true); // 초기화 완료 상태로 변경
+        setIsAuthInitialized(true); // 전역 초기화 완료 상태로 변경
       }
     };
 
@@ -115,7 +119,7 @@ const TokenRefresher = ({ children }: TokenRefresherProps) => {
 
     // Axios Interceptor 설정 (자동 토큰 갱신)
     setupAxiosInterceptors();
-  }, [setLoginState, navigate, loginState, setWannaTripLoginState]);
+  }, [setLoginState, navigate, loginState, setWannaTripLoginState, setIsAuthInitialized]);
 
   //  로그인 정보가 복구될 때까지 UI 렌더링 방지
   if (!isInitialized) {

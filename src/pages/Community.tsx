@@ -1,305 +1,1026 @@
-import { Box, Stack, Typography, IconButton, Container } from "@mui/material";
-import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
-import { useRef } from "react";
-import CommunityPostItem from "../components/CommunityPostItem";
-import SearchBox from "../components/SearchBox";
-import ScrollToTopButton from "../components/ScrollToTopButton";
-import { useNavigate } from "react-router-dom";
+import {
+  Avatar,
+  Box,
+  ButtonBase,
+  Container,
+  debounce,
+  Fab,
+  IconButton,
+  InputAdornment,
+  OutlinedInput,
+  Paper,
+  Skeleton,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
+import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
+import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import HorizontalCarousel from "../components/HorizontalCarousel";
+import { getRandomColor, stripHtml } from "../utils";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CreateRoundedIcon from "@mui/icons-material/CreateRounded";
+import { useNavigate } from "react-router";
+import axiosInstance, { SERVER_HOST } from "../utils/axiosInstance";
+import { useBreakpoint } from "../hooks";
+import axios from "axios";
+import { useAtomValue } from "jotai";
+import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 
-// 이미지 파일
-import seoulImg from "../images/서울.jpg";
-import busanImg from "../images/부산.jpg";
-import gangneungImg from "../images/강릉.jpg";
-import incheonImg from "../images/인천.jpg";
-import gyeongjuImg from "../images/경주.jpg";
-import jejuImg from "../images/제주.jpg";
-import sokchoImg from "../images/속초.jpg";
-import yeosuImg from "../images/여수.jpg";
+interface PostInterface {
+  uuid: string; // 게시글 UUID
+  title: string; // 게시글 제목
+  authorName: string; // 작성자 이름
+  authorProfileImage?: string; // 프로필 이미지 URL
+  content?: string; // 게시글 내용
+  tags?: string[]; // 게시글 태그 목록
+  liked: boolean; // 좋아요 여부
+  likes: number; // 좋아요 수
+  shares: number; // 공유 수
+  comments: number; // 댓글 수
+}
 
-// 게시글 데이터
-export const temporaryPosts = [
-  {
-    id: "1",
-    imgbg: "#f3e5f5",
-    title:
-      "일본여행의 진심만을 담은 '유튜버 허니'의 계획은? 3박 4일로 완벽 일본 여행!",
-    hashtags: ["일본", "단기여행", "행복", "유튜버"],
-    likes: 132,
-    comments: 3,
-    shares: 23,
-  },
-  {
-    id: "2",
-    imgbg: "#f0f4c3",
-    title: "일본으로 2박 여행 가볼래?",
-    hashtags: ["일본", "해외여행", "강추"],
-    likes: 312,
-    comments: 5,
-    shares: 3,
-  },
-  {
-    id: "3",
-    imgbg: "#bbdefb",
-    title: "연인끼리 추억 쌓기 (당일치기)",
-    hashtags: ["연인", "단기여행", "힐링", "즐거운", "시원한"],
-    likes: 1322,
-    comments: 3,
-    shares: 23,
-  },
-  {
-    id: "4",
-    imgbg: "#eeeeee",
-    title: "국내 맛집 여행",
-    hashtags: ["국내여행", "맛집", "전국", "힐링"],
-    likes: 411,
-    comments: 2,
-    shares: 11,
-  },
-];
+// 좋아요 상태 저장/조회 헬퍼 함수
+const saveLikedStatus = (postUuid: string, liked: boolean) => {
+  try {
+    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+    likedPosts[postUuid] = liked;
+    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+  } catch (error) {
+    console.error("좋아요 상태 저장 실패:", error);
+  }
+};
 
-const useHorizontalScroll = () => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Constants for item width and margin
-  const ITEM_WIDTH = 200; // Width of each item in pixels
-  const ITEM_MARGIN = 16; // Margin between items in pixels
-
-  const scrollAmount = 3 * (ITEM_WIDTH + ITEM_MARGIN); // Total scroll amount for 3 items
-  const handleScroll = (direction: "left" | "right") => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  return {
-    scrollRef,
-    handleScrollLeft: () => handleScroll("left"),
-    handleScrollRight: () => handleScroll("right"),
-  };
+// 1. 좋아요 상태 가져오는 함수
+const getLikedStatus = (postUuid: string): boolean => {
+  try {
+    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+    return !!likedPosts[postUuid];
+  } catch (error) {
+    console.error("좋아요 상태 가져오기 실패:", error);
+    return false;
+  }
 };
 
 const Community = () => {
-  const { scrollRef, handleScrollLeft, handleScrollRight } =
-    useHorizontalScroll();
   const navigate = useNavigate();
+  const breakpoint = useBreakpoint();
 
-  const regionTags = [
-    "서울",
-    "부산",
-    "강릉",
-    "인천",
-    "경주",
-    "제주",
-    "속초",
-    "여수",
-  ];
+  const [popularPosts, setPopularPosts] = useState<PostInterface[]>([]); // 인기 게시글 목록
+  const [popularTags, setPopularTags] = useState<string[]>([]); // 태그 목록
+  const [keyword, setKeyword] = useState(""); // 검색어
+  const [posts, setPosts] = useState<PostInterface[]>([]); // 일반 게시판 게시글 목록
+  const [hasNextPage, setHasNextPage] = useState(true); // 무한 스크롤을 위한 다음 페이지 여부
+  const [loadedPages, setLoadedPages] = useState(1); // 로드된 페이지 수
+  const sentinelRef = useRef<HTMLDivElement>(null); // 무한 스크롤을 위한 센티넬
+  const [isPostLoading, setIsPostLoading] = useState(false); // 게시글 로딩 상태
+  const [isPopularPostsLoading, setIsPopularPostsLoading] = useState(false); // 인기 게시글 로딩 상태
+  const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
+  const fetchControllerRef = useRef<AbortController | null>(null); // API 요청을 취소하기 위한 AbortController
 
-  // 검색 실행 핸들러
-  const handleSearch = (selectedTags: string[], inputValue: string) => {
-    // 검색 실행 시 선택된 태그와 현재 입력된 텍스트를 조합하여 사용
-    const fullSearchTerm =
-      selectedTags.map((tag) => `#${tag}`).join(" ") +
-      (inputValue.trim() ? ` ${inputValue.trim()}` : "");
-    console.log("검색 실행 (전체 검색어):", fullSearchTerm.trim());
-    // 여기에 실제 검색 로직 구현 (예: API 호출, 데이터 필터링 등)
-  };
+  // 로그인 상태 가져오기
+  const loginState = useAtomValue(wannaTripLoginStateAtom);
 
-  // 게시글 클릭 핸들러
-  const handlePostClick = (postId: string) => {
-    navigate(`/community/post/${postId}`);
-  };
+  // 인증 초기화 상태 가져오기
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom);
 
-  const scrollButtonStyles = {
-    position: "absolute",
-    zIndex: 2,
-    background: "rgba(255,255,255)",
-    boxShadow: 1,
-    "&:hover": { background: "rgba(255,255,255)" },
-  };
+  // 컴포넌트 마운트 시 로컬 좋아요 상태 불러오기 (기존 useEffect 위에 추가)
+  useEffect(() => {
+    // 로컬 스토리지의 좋아요 상태 로드 (첫 렌더링에만)
+    try {
+      // 현재 표시된 인기 게시글에 로컬 스토리지 좋아요 상태 적용
+      if (popularPosts.length > 0) {
+        const updatedPosts = popularPosts.map((post) => ({
+          ...post,
+          liked: getLikedStatus(post.uuid), // 로컬 스토리지의 좋아요 상태 적용
+        }));
+
+        setPopularPosts(updatedPosts);
+      }
+    } catch (error) {
+      console.error("좋아요 상태 불러오기 실패:", error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
+
+  // 접속시 스크롤 최상단으로 이동
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // 게시글 불러오기 중지
+  const cancelFetchPosts = useCallback(() => {
+    fetchControllerRef.current?.abort();
+    fetchControllerRef.current = null;
+    setIsPostLoading(false);
+  }, []);
+
+  // 게시글 불러오기
+  const fetchPosts = useCallback(
+    async (keyword: string) => {
+      // 다음 페이지가 없으면 종료
+      if (!hasNextPage) {
+        return;
+      }
+
+      // 이전 요청 중지
+      cancelFetchPosts();
+
+      // AbortController 생성
+      const controller = new AbortController();
+      fetchControllerRef.current = controller;
+
+      try {
+        setIsPostLoading(true);
+
+        // 로그인 상태에 따라 다른 엔드포인트 호출
+        const endpoint = loginState.isLoggedIn
+          ? "/post/auth/page"
+          : "/post/page";
+
+        // 게시글 목록 불러오기 API 호출
+        const response = await axiosInstance.get(
+          `${endpoint}/?${
+            !keyword ? "" : `keyword=${keyword}&`
+          }page=${loadedPages}`
+        );
+
+        // 게시글 목록 업데이트
+        if (response.data.success) {
+          // 수신된 게시글 목록이 비어있으면 더 이상 불러올 게시글이 없음을 표시
+          if (response.data.post.length <= 0) {
+            setHasNextPage(false);
+            return;
+          }
+
+          const responsePosts: PostInterface[] = response.data.post.map(
+            (post: PostInterface) => {
+              // 로컬에 저장된 좋아요 상태 가져오기
+              const localLiked = getLikedStatus(post.uuid);
+
+              // 서버에서 받은 값 (로그인된 경우)
+              const serverLiked = post.liked || false;
+
+              // 서버 값 우선시하여 로컬 스토리지 업데이트
+              saveLikedStatus(post.uuid, serverLiked);
+
+              return {
+                uuid: post.uuid,
+                title: post.title,
+                authorName: post.authorName,
+                authorProfileImage: post.authorProfileImage,
+                content: post.content,
+                tags: post.tags || [],
+                liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
+                likes: post.likes,
+                shares: post.shares,
+                comments: post.comments,
+              };
+            }
+          );
+
+          const newPosts = [...posts, ...responsePosts];
+          setPosts(newPosts);
+
+          // 수신된 게시글 목록이 10개 미만이면 더 이상 불러올 게시글이 없음을 표시
+          if (response.data.post.length < 10) {
+            setHasNextPage(false);
+          }
+
+          // 로드한 페이지 수 증가
+          setLoadedPages(loadedPages + 1);
+        }
+      } catch (error) {
+        if (
+          (typeof error === "object" &&
+            error !== null &&
+            "name" in error &&
+            (error as { name?: string }).name === "CanceledError") ||
+          axios.isCancel?.(error)
+        ) {
+          // 요청이 취소된 경우
+        } else {
+          console.error("게시글 불러오기 실패:", error);
+          if (
+            typeof error === "object" &&
+            error !== null &&
+            "response" in error &&
+            (error as { response?: { status?: number } }).response?.status !==
+              401
+          ) {
+            setHasNextPage(false);
+          }
+        }
+      } finally {
+        setIsPostLoading(false);
+        fetchControllerRef.current = null;
+      }
+    },
+    [cancelFetchPosts, hasNextPage, loadedPages, loginState.isLoggedIn, posts]
+  );
+
+  // 디바운스된 게시글 불러오기
+  const fetchDebouncedPosts = useMemo(
+    () => debounce((keyword: string) => fetchPosts(keyword), 500),
+    [fetchPosts]
+  );
+
+  // 컴포넌트 언마운트 시 디바운스된 함수 정리
+  useEffect(() => {
+    return () => {
+      fetchDebouncedPosts.clear();
+      cancelFetchPosts();
+    };
+  }, [fetchDebouncedPosts, cancelFetchPosts]);
+
+  // 검색어 입력
+  const handleKeywordChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setKeyword(event.target.value);
+
+      // 게시글 다시 불러오기
+      setPosts([]); // 기존 게시글 목록 초기화
+      setHasNextPage(true); // 다음 페이지 여부 초기화
+      setLoadedPages(1); // 로드된 페이지 수 초기화
+    },
+    []
+  );
+
+  // 인기 게시글 불러오기
+  const fetchPopularPosts = useCallback(async () => {
+    try {
+      // 이미 로딩 중이면 종료
+      if (isPopularPostsLoading) {
+        return;
+      }
+
+      // 인기 게시글 로딩 상태 설정
+      setIsPopularPostsLoading(true);
+
+      // 인기 게시글 목록 불러오기 API 호출
+      // 로그인 상태에 따라 다른 엔드포인트 호출
+      const endpoint = loginState.isLoggedIn
+        ? "/post/auth/popular"
+        : "/post/popular";
+      const response = await axiosInstance.get(endpoint);
+
+      // 인기 게시글 목록 업데이트
+      if (response.data.success) {
+        // 인기 게시글 목록이 비어있으면 종료
+        if (response.data.post.length <= 0) {
+          setPopularPosts([]);
+          throw new Error("인기 게시글이 없습니다.");
+        }
+
+        const newPopularPostsData: PostInterface[] = response.data.post.map(
+          (post: PostInterface) => {
+            // 로컬에 저장된 좋아요 상태 가져오기
+            const localLiked = getLikedStatus(post.uuid);
+
+            // 서버에서 받은 값 (로그인된 경우)
+            const serverLiked = post.liked || false;
+
+            // 서버 값 우선시하여 로컬 스토리지 업데이트
+            saveLikedStatus(post.uuid, serverLiked);
+
+            return {
+              uuid: post.uuid,
+              title: post.title,
+              authorName: post.authorName,
+              authorProfileImage: post.authorProfileImage,
+              content: post.content,
+              tags: post.tags || [],
+              liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
+              likes: post.likes,
+              shares: post.shares,
+              comments: post.comments,
+            };
+          }
+        );
+
+        setPopularPosts(newPopularPostsData);
+      }
+    } catch (error) {
+      console.error("인기 게시글 불러오기 실패:", error);
+    } finally {
+      // 인기 게시글 로딩 상태 해제
+      setIsPopularPostsLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 인기 태그 불러오기
+  const fetchTags = useCallback(async () => {
+    try {
+      // 이미 로딩 중이면 종료
+      if (isPopularTagLoading) {
+        return;
+      }
+
+      // 인기 태그 로딩 상태 설정
+      setIsPopularTagLoading(true);
+
+      // 인기 태그 목록 불러오기 API 호출
+      const response = await axiosInstance.get("/post/tags/popular");
+
+      // 인기 태그 목록 업데이트
+      if (response.data.success) {
+        const newPopularTags: string[] = response.data.tags.map(
+          (tag: { name: string }) => tag.name
+        );
+        setPopularTags(newPopularTags);
+      }
+    } catch (error) {
+      console.error("인기 태그 불러오기 실패:", error);
+    } finally {
+      // 인기 태그 로딩 상태 해제
+      setIsPopularTagLoading(false);
+    }
+  }, [isPopularTagLoading]);
+
+  // 기존 useEffect는 태그만 담당
+  useEffect(() => {
+    fetchTags();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 마운트 한 번만
+
+  // 토큰 초기화 완료 시점에만 인기 / 일반 게시글 호출
+  useEffect(() => {
+    if (isAuthInitialized) {
+      setTimeout(() => {
+        fetchPopularPosts();
+      }, 500); // 500ms 딜레이 후 인기 게시글 불러오기
+    }
+  }, [isAuthInitialized, fetchPopularPosts]);
+
+  useEffect(() => {
+    if (isAuthInitialized) {
+      fetchDebouncedPosts(keyword);
+    }
+  }, [isAuthInitialized, keyword, fetchDebouncedPosts]);
+
+  // 스크롤 내리면 게시글 불러오기
+  useEffect(() => {
+    // 더 불러올 게시글이 없으면 종료
+    if (!hasNextPage) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          // 로딩중이 아닐때만 불러오기
+          if (!isPostLoading) {
+            fetchDebouncedPosts(keyword);
+          }
+        }
+      },
+      { rootMargin: `${window.innerHeight}px` } // rootMargin만큼 위에서 미리 트리거
+    );
+
+    const node = sentinelRef.current;
+    if (node) observer.observe(node);
+    return () => {
+      if (node) observer.unobserve(node);
+    };
+  }, [fetchDebouncedPosts, fetchPosts, hasNextPage, isPostLoading, keyword]);
+
+  // 글쓰기 버튼 클릭
+  const handleCreatePostButtonClick = useCallback(() => {
+    navigate("/community/edit");
+  }, [navigate]);
+
+  // 게시글 클릭 핸들러 확장
+  const handlePostClick = useCallback(
+    (postUuid: string, liked: boolean) => {
+      // 좋아요 상태 저장 (게시글로 이동하기 전에)
+      saveLikedStatus(postUuid, liked);
+      navigate(`/community/${postUuid}`);
+    },
+    [navigate]
+  );
+
+  // 인기 태그 클릭
+  const handlePopularTagClick = useCallback(
+    (tag: string) => {
+      setKeyword(tag); // 검색어 설정
+
+      // 게시글 다시 불러오기
+      setPosts([]); // 기존 게시글 목록 초기화
+      setHasNextPage(true); // 다음 페이지 여부 초기화
+      setLoadedPages(1); // 로드된 페이지 수 초기화
+
+      fetchDebouncedPosts(tag); // 디바운스된 게시글 불러오기
+    },
+    [fetchDebouncedPosts]
+  );
 
   return (
     <Container maxWidth="xl">
-      <Box
-        sx={{ width: "100%", minHeight: "100vh", p: { xs: 2, sm: 3, md: 4 } }}
-      >
-        {/* 인기 게시글  */}
-        <Box sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
-          <Typography variant="h5" fontWeight={700} mb={2}>
-            실시간 인기 게시글
-          </Typography>
-          <Box
-            sx={{
-              height: { xs: 180, sm: 250, md: 300 },
-              bgcolor: "#e0e0e0",
-              borderRadius: 2,
-            }}
-          ></Box>
-        </Box>
+      <Stack minHeight="calc(100vh - 82px)" my={8} gap={12}>
+        {/* 실시간 인기 게시글 */}
+        <Stack gap={2}>
+          {/* 헤더 */}
+          <Typography variant="h5">실시간 인기 게시글</Typography>
 
-        {/* 여행 카테고리 섹션  */}
-        <Stack sx={{ mb: { xs: 4, sm: 6, md: 8 } }}>
-          {/* 섹션 제목 */}
-          <Typography variant="h5" fontWeight={700} mb={2}>
-            여행 카테고리
-          </Typography>
-
-          <Box
-            sx={{ position: "relative", display: "flex", alignItems: "center" }}
-          >
-            {/* 왼쪽 버튼 */}
-            <IconButton
-              onClick={handleScrollLeft}
-              sx={{
-                ...scrollButtonStyles,
-                left: 0,
-                transform: "translateX(-50%) translateY(-40%)",
-              }}
-            >
-              <ArrowBackIosNewRoundedIcon />
-            </IconButton>
-
+          {/* 인기 게시글 목록 */}
+          {isPopularPostsLoading ? (
             <Stack
-              ref={scrollRef}
               direction="row"
               gap={3}
               sx={{
-                overflowX: "auto",
-                py: 1,
-                "&::-webkit-scrollbar": { display: "none" },
-                msOverflowStyle: "none",
-                scrollbarWidth: "none",
+                "& .MuiPaper-root:nth-of-type(2)": {
+                  display: breakpoint === "xs" ? "none" : "block", // 두 번째 아이템은 숨김 처리
+                },
+                "& .MuiPaper-root:nth-of-type(3)": {
+                  display:
+                    breakpoint === "xs" || breakpoint === "sm"
+                      ? "none"
+                      : "block", // 두 번째 아이템은 숨김 처리
+                },
               }}
             >
-              {/* 각 여행 카테고리 항목 */}
-              {[
-                {
-                  name: "서울",
-                  imgSrc: seoulImg,
-                },
-                {
-                  name: "부산",
-                  imgSrc: busanImg,
-                },
-                {
-                  name: "강릉",
-                  imgSrc: gangneungImg,
-                },
-                {
-                  name: "인천",
-                  imgSrc: incheonImg,
-                },
-                {
-                  name: "경주",
-                  imgSrc: gyeongjuImg,
-                },
-                {
-                  name: "제주",
-                  imgSrc: jejuImg,
-                },
-                {
-                  name: "속초",
-                  imgSrc: sokchoImg,
-                },
-                {
-                  name: "여수",
-                  imgSrc: yeosuImg,
-                },
-              ].map((category) => (
-                <Stack key={category.name} gap={1.1}>
-                  <Stack
-                    direction="column"
-                    spacing={1}
-                    sx={{
-                      flexShrink: 0,
-                      width: 280,
-                      height: 280,
-                      borderRadius: 8,
-                      boxShadow: 5,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: "100%",
-                        height: 280,
-                        borderRadius: 8,
-                        border: "1px solid #B7B7B7",
-                        overflow: "hidden",
-                        cursor: "pointer",
-                        backgroundImage: `url(${category.imgSrc})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    ></Box>
-                  </Stack>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Paper
+                  key={`popular-post-skeleton-${index}`}
+                  elevation={3}
+                  sx={{
+                    width: {
+                      xs: "100%",
+                      sm: "50%",
+                      md: "33.33%",
+                    },
+                    borderRadius: 3,
+                    overflow: "hidden",
+                  }}
+                >
+                  <Stack width="100%" height={320}>
+                    {/* 썸네일 이미지 */}
+                    <Skeleton
+                      variant="rectangular"
+                      width="100%"
+                      height="55%"
+                      animation="wave"
+                    />
 
-                  {/* 지역 이름  */}
-                  <Typography
-                    variant="body1"
-                    fontWeight={400}
-                    fontSize={"1.2em"}
-                    color="text.primary"
-                    textAlign="left"
-                    ml={2.5}
-                  >
-                    {category.name}
-                  </Typography>
-                </Stack>
+                    {/* 게시글 정보 */}
+                    <Stack gap={1} padding={2} pl={8} flex={1}>
+                      {/* 헤더 */}
+                      <Stack position="relative">
+                        {/* 제목 */}
+                        <Skeleton
+                          variant="text"
+                          width="200px"
+                          animation="wave"
+                        />
+
+                        {/* 작성자 */}
+                        <Skeleton
+                          variant="text"
+                          width="100px"
+                          animation="wave"
+                        />
+
+                        {/* 작성자 프로필 이미지 */}
+                        <Skeleton
+                          variant="circular"
+                          width={42}
+                          height={42}
+                          animation="wave"
+                          sx={{
+                            position: "absolute",
+                            top: "50%",
+                            left: -50,
+                            transform: "translateY(-50%)",
+                          }}
+                        />
+                      </Stack>
+
+                      {/* 내용 */}
+                      <Skeleton variant="text" width="80%" animation="wave" />
+
+                      <Stack
+                        direction="row"
+                        gap={1.5}
+                        justifyContent="flex-end"
+                        alignItems="center"
+                      >
+                        {/* 좋아요 */}
+                        <Stack direction="row" alignItems="center" gap={0.5}>
+                          {/* 좋아요 수 */}
+                          <Skeleton
+                            variant="text"
+                            width="30px"
+                            animation="wave"
+                          />
+
+                          {/* 좋아요 아이콘 */}
+                          <FavoriteBorderRoundedIcon />
+                        </Stack>
+
+                        {/* 공유 */}
+                        <Stack direction="row" alignItems="center" gap={0.5}>
+                          {/* 공유 수 */}
+                          <Skeleton
+                            variant="text"
+                            width="30px"
+                            animation="wave"
+                          />
+
+                          {/* 공유 아이콘 */}
+                          <IosShareRoundedIcon
+                            sx={{
+                              transform: "translateY(-2px)",
+                            }}
+                          />
+                        </Stack>
+
+                        {/* 댓글 */}
+                        <Stack direction="row" alignItems="center" gap={0.5}>
+                          {/* 댓글 수 */}
+                          <Skeleton
+                            variant="text"
+                            width="30px"
+                            animation="wave"
+                          />
+
+                          {/* 댓글 아이콘 */}
+                          <ChatBubbleOutlineRoundedIcon />
+                        </Stack>
+                      </Stack>
+                    </Stack>
+                  </Stack>
+                </Paper>
               ))}
             </Stack>
-
-            {/* 오른쪽 버튼 */}
-            <IconButton
-              onClick={handleScrollRight}
-              sx={{
-                ...scrollButtonStyles,
-                right: 0,
-                transform: "translateX(50%) translateY(-40%)",
+          ) : (
+            // 인기 게시글 목록
+            <HorizontalCarousel
+              visibleCount={{
+                xs: 1,
+                sm: 2,
+                md: 3,
               }}
             >
-              <ArrowForwardIosRoundedIcon />
-            </IconButton>
-          </Box>
+              {popularPosts.map((post, index) => (
+                <Paper
+                  key={`popular-post-${index}`}
+                  elevation={3}
+                  sx={{
+                    borderRadius: 3,
+                    overflow: "hidden",
+                  }}
+                >
+                  <ButtonBase
+                    onClick={() => handlePostClick(post.uuid, post.liked)}
+                    sx={{
+                      width: "100%",
+                      "& .MuiTypography-root": {
+                        textAlign: "left",
+                      },
+                    }}
+                  >
+                    <Stack width="100%" height={320}>
+                      {/* 썸네일 이미지 */}
+                      <Box
+                        height="55%"
+                        sx={{ bgcolor: getRandomColor(post.title.length) }}
+                      />
+
+                      {/* 게시글 정보 */}
+                      <Stack gap={1} padding={2} pl={8} flex={1}>
+                        {/* 헤더 */}
+                        <Stack position="relative">
+                          {/* 제목 */}
+                          <Typography
+                            variant="subtitle1"
+                            fontWeight="bold"
+                            noWrap
+                          >
+                            {post.title}
+                          </Typography>
+
+                          {/* 작성자 */}
+                          <Typography variant="subtitle2">
+                            {post.authorName}
+                          </Typography>
+
+                          {/* 작성자 프로필 이미지 */}
+                          <Avatar
+                            src={`${SERVER_HOST}${post.authorProfileImage}`}
+                            sx={{
+                              position: "absolute",
+                              width: 42,
+                              height: 42,
+                              top: "50%",
+                              left: -50,
+                              transform: "translateY(-50%)",
+                            }}
+                          />
+                        </Stack>
+
+                        {/* 내용 */}
+                        <Typography variant="subtitle2" noWrap>
+                          {stripHtml(post.content)}
+                        </Typography>
+
+                        <Stack
+                          direction="row"
+                          gap={1.5}
+                          justifyContent="flex-end"
+                          alignItems="center"
+                        >
+                          {/* 좋아요 */}
+                          <Stack direction="row" alignItems="center" gap={0.5}>
+                            {/* 좋아요 수 */}
+                            <Typography variant="subtitle2">
+                              {post.likes}
+                            </Typography>
+
+                            {/* 좋아요 아이콘 */}
+                            {post.liked ? (
+                              <FavoriteRoundedIcon color="error" />
+                            ) : (
+                              <FavoriteBorderRoundedIcon />
+                            )}
+                          </Stack>
+
+                          {/* 공유 */}
+                          <Stack direction="row" alignItems="center" gap={0.5}>
+                            {/* 공유 수 */}
+                            <Typography variant="subtitle2">
+                              {post.shares}
+                            </Typography>
+
+                            {/* 공유 아이콘 */}
+                            <IosShareRoundedIcon
+                              sx={{
+                                transform: "translateY(-2px)",
+                              }}
+                            />
+                          </Stack>
+
+                          {/* 댓글 */}
+                          <Stack direction="row" alignItems="center" gap={0.5}>
+                            {/* 댓글 수 */}
+                            <Typography variant="subtitle2">
+                              {post.comments}
+                            </Typography>
+
+                            {/* 댓글 아이콘 */}
+                            <ChatBubbleOutlineRoundedIcon />
+                          </Stack>
+                        </Stack>
+                      </Stack>
+                    </Stack>
+                  </ButtonBase>
+                </Paper>
+              ))}
+            </HorizontalCarousel>
+          )}
+        </Stack>
+
+        {/* 인기 태그 */}
+        <Stack gap={2}>
+          {/* 헤더 */}
+          <Typography variant="h5">인기 태그</Typography>
+
+          {isPopularTagLoading ? (
+            // 인기 태그 로딩 중
+            <Stack
+              direction="row"
+              gap={3}
+              sx={{
+                "& .MuiSkeleton-root:nth-of-type(3)": {
+                  display: breakpoint === "xs" ? "none" : "block",
+                },
+                "& .MuiSkeleton-root:nth-of-type(4), & .MuiSkeleton-root:nth-of-type(5)":
+                  {
+                    display:
+                      breakpoint === "xs" || breakpoint === "sm"
+                        ? "none"
+                        : "block",
+                  },
+              }}
+            >
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={`popular-tag-skeleton-${index}`}
+                  variant="rounded"
+                  height={150}
+                  animation="wave"
+                  sx={{
+                    width: {
+                      xs: "50%",
+                      sm: "33.33%",
+                      md: "20%",
+                    },
+                    borderRadius: 2,
+                  }}
+                />
+              ))}
+            </Stack>
+          ) : (
+            // 인기 태그 목록
+            <HorizontalCarousel
+              visibleCount={{
+                xs: 2,
+                sm: 3,
+                md: 5,
+              }}
+            >
+              {popularTags.map((tag, index) => (
+                <Paper
+                  key={`tag-${index}`}
+                  sx={{
+                    background: getRandomColor(index + 1),
+                    overflow: "hidden",
+                  }}
+                >
+                  <ButtonBase
+                    onClick={() => handlePopularTagClick(tag)}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      "& .MuiTypography-root": {
+                        textAlign: "center",
+                      },
+                    }}
+                  >
+                    <Stack
+                      justifyContent="center"
+                      alignItems="center"
+                      height={150}
+                    >
+                      <Typography
+                        variant="h4"
+                        width="100%"
+                        textAlign="center"
+                        noWrap
+                      >
+                        {tag}
+                      </Typography>
+                    </Stack>
+                  </ButtonBase>
+                </Paper>
+              ))}
+            </HorizontalCarousel>
+          )}
         </Stack>
 
         {/* 일반 게시판 */}
-        <Box sx={{ mt: { xs: 5, sm: 8, md: 10 }, mb: 2, position: "relative" }}>
-          {/* 섹션 제목 */}
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            height="3em"
-            sx={{
-              mb: 2,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            일반 게시판
-          </Typography>
+        <Stack gap={2}>
+          {/* 헤더 */}
+          <Stack direction="row" alignItems="center">
+            <Typography variant="h5">일반 게시판</Typography>
 
-          {/* 검색 컴포넌트 */}
-          <SearchBox regionTags={regionTags} onSearch={handleSearch} />
-        </Box>
+            {/* 검색창 */}
+            <Paper
+              elevation={2}
+              sx={{
+                width: "300px",
+                ml: "auto",
+              }}
+            >
+              <OutlinedInput
+                fullWidth
+                value={keyword}
+                onChange={handleKeywordChange}
+                placeholder="제목, 태그, 내용 검색"
+                endAdornment={
+                  <InputAdornment position="end">
+                    <IconButton>
+                      <SearchRoundedIcon />
+                    </IconButton>
+                  </InputAdornment>
+                }
+              />
+            </Paper>
+          </Stack>
 
-        {/* 일반 게시판 목록  */}
-        <Stack spacing={2}>
-          {temporaryPosts.map((post) => (
-            <CommunityPostItem
-              key={post.id}
-              post={post}
-              onClick={() => handlePostClick(post.id)}
-            />
+          {/* 게시글 */}
+          {posts?.map((post) => (
+            <Paper
+              elevation={2}
+              key={`post-${post.uuid}`}
+              sx={{
+                borderRadius: 2,
+              }}
+            >
+              <ButtonBase
+                onClick={() => handlePostClick(post.uuid, post.liked)}
+                sx={{
+                  width: "100%",
+                  "& .MuiTypography-root": {
+                    textAlign: "left",
+                  },
+                }}
+              >
+                <Stack
+                  width="100%"
+                  direction={{
+                    xs: "column",
+                    sm: "row",
+                  }}
+                  padding={1}
+                  gap={2}
+                >
+                  {/* 썸네일 이미지 */}
+                  <Box
+                    width={{
+                      xs: "100%",
+                      sm: 200,
+                    }}
+                    height={150}
+                    borderRadius={2}
+                    sx={{
+                      background: getRandomColor(post.title.length),
+                    }}
+                  />
+
+                  {/* 게시글 정보 */}
+                  <Stack
+                    width={{
+                      xs: "100%",
+                      sm: "calc(100% - 200px)",
+                    }}
+                  >
+                    {/* 제목 */}
+                    <Typography variant="h5" noWrap>
+                      {post.title}
+                    </Typography>
+
+                    {/* 태그 */}
+                    {post.tags && post.tags.length > 0 && (
+                      <Typography variant="subtitle1" noWrap>
+                        #{post.tags?.join(" #")}
+                      </Typography>
+                    )}
+
+                    {/* 게시글 정보 */}
+                    <Box mt="auto">
+                      <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        gap={1}
+                        mt={1}
+                      >
+                        {/* 좋아요 수 */}
+                        <Typography variant="subtitle2">
+                          {post.likes}
+                        </Typography>
+                        {post.liked ? (
+                          <FavoriteRoundedIcon color="error" />
+                        ) : (
+                          <FavoriteBorderRoundedIcon />
+                        )}
+
+                        {/* 공유 수 */}
+                        <Typography variant="subtitle2">
+                          {post.shares}
+                        </Typography>
+                        <IosShareRoundedIcon
+                          sx={{
+                            transform: "translateY(-2px)",
+                          }}
+                        />
+
+                        {/* 댓글 수 */}
+                        <Typography variant="subtitle2">
+                          {post.comments}
+                        </Typography>
+                        <ChatBubbleOutlineRoundedIcon />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Stack>
+              </ButtonBase>
+            </Paper>
           ))}
-        </Stack>
 
-        {/* 스크롤 맨 위로 이동 버튼 */}
-        <ScrollToTopButton />
-      </Box>
+          {/* 게시글 로딩 중 */}
+          {isPostLoading &&
+            Array.from({ length: 3 }).map((_, index) => (
+              <Paper
+                elevation={2}
+                key={`post-skeleton-${index}`}
+                sx={{
+                  borderRadius: 2,
+                }}
+              >
+                <Stack
+                  width="100%"
+                  direction={{
+                    xs: "column",
+                    sm: "row",
+                  }}
+                  padding={1}
+                  gap={2}
+                >
+                  {/* 썸네일 이미지 */}
+                  <Skeleton
+                    variant="rectangular"
+                    height={150}
+                    sx={{
+                      width: {
+                        xs: "100%",
+                        sm: 200,
+                      },
+                      borderRadius: 2,
+                    }}
+                    animation="wave"
+                  />
+
+                  {/* 게시글 정보 */}
+                  <Stack
+                    width={{
+                      xs: "100%",
+                      sm: "calc(100% - 200px)",
+                    }}
+                  >
+                    {/* 제목 */}
+                    <Skeleton
+                      variant="text"
+                      width="200px"
+                      height="3rem"
+                      animation="wave"
+                    />
+
+                    {/* 태그 */}
+                    <Skeleton
+                      variant="text"
+                      width="100px"
+                      height="2rem"
+                      animation="wave"
+                    />
+
+                    {/* 게시글 정보 */}
+                    <Box mt="auto">
+                      <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        gap={1}
+                        mt={1}
+                      >
+                        {/* 좋아요 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <FavoriteBorderRoundedIcon />
+
+                        {/* 공유 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <IosShareRoundedIcon
+                          sx={{
+                            transform: "translateY(-2px)",
+                          }}
+                        />
+
+                        {/* 댓글 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <ChatBubbleOutlineRoundedIcon />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Stack>
+              </Paper>
+            ))}
+
+          {/* 스크롤 감지 센티넬 */}
+          <Box ref={sentinelRef} />
+        </Stack>
+      </Stack>
+
+      {/* 글쓰기 버튼 */}
+      <Fab
+        color="primary"
+        sx={{
+          position: "fixed",
+          bottom: 40,
+          right: 40,
+        }}
+        onClick={handleCreatePostButtonClick}
+      >
+        <CreateRoundedIcon
+          sx={{
+            fontSize: "1.75rem",
+          }}
+        />
+      </Fab>
     </Container>
   );
 };

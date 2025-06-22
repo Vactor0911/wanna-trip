@@ -383,8 +383,6 @@ const CardEditDialog = () => {
         }
 
         if (response.data.success) {
-          console.log("카드가 성공적으로 저장되었습니다:", response.data);
-
           // 카드 ID 가져오기 (신규 카드면 응답에서, 기존 카드면 현재 ID 사용)
           const cardId = isNewCard
             ? response.data.cardId
@@ -435,9 +433,8 @@ const CardEditDialog = () => {
 
   // 저장 버튼 클릭
   const handleSaveButtonClick = useCallback(() => {
-    console.log("저장 버튼 클릭", content, startTime, endTime);
     saveCardToServer();
-  }, [content, endTime, saveCardToServer, startTime]);
+  }, [saveCardToServer]);
 
   // 더보기 메뉴 열기
   const handleMoreMenuOpen = useCallback(() => {
@@ -523,8 +520,6 @@ const CardEditDialog = () => {
       );
 
       if (response.data.success) {
-        console.log("카드 삭제 성공:", response.data);
-
         // 보드에서 카드 제거
         deleteBoardCard({
           boardId: currentEditCard.boardId,

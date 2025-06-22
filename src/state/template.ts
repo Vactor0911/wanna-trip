@@ -94,7 +94,7 @@ export const templateAtom = atom(
     };
   },
   // setter - 템플릿 객체를 받아 개별 atom들 업데이트
-  (get, set, newTemplate: TemplateInterface) => {
+  (_get, set, newTemplate: TemplateInterface) => {
     // 템플릿 기본 정보 업데이트
     set(templateInfoAtom, {
       uuid: newTemplate.uuid,
@@ -173,14 +173,6 @@ export const updateBoardCardAtom = atom(
 
     // 템플릿 상태 업데이트
     set(templateAtom, newTemplate);
-
-    // 변경 로그 출력 (디버깅용)
-    console.log("카드 상태 업데이트 완료:", {
-      boardId,
-      cardId: card.id,
-      isNew,
-      newTemplate,
-    });
   }
 );
 
@@ -212,13 +204,6 @@ export const deleteBoardCardAtom = atom(
 
     // 템플릿 상태 업데이트
     set(templateAtom, newTemplate);
-
-    // 변경 로그 출력 (디버깅용)
-    console.log("카드 삭제 완료:", {
-      boardId,
-      cardId,
-      newTemplate,
-    });
   }
 );
 
@@ -240,6 +225,4 @@ export const reorderBoardCardsAtom = atom(null, (get, set) => {
 
   // 템플릿 상태 업데이트
   set(templateAtom, newTemplate);
-
-  console.log("모든 보드의 카드 순서 정렬 완료");
 });

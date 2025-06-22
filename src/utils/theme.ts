@@ -44,6 +44,10 @@ export const theme = responsiveFontSizes(
       success: {
         main: "#19df79",
       },
+      text: {
+        primary: "#404040",
+        secondary: "#797979",
+      },
     },
     typography: {
       fontFamily: ["Pretendard-Regular", "Noto Sans KR", "sans-serif"].join(
@@ -91,6 +95,14 @@ export const theme = responsiveFontSizes(
         styleOverrides: {
           root: {
             wordBreak: "keep-all",
+          },
+        },
+      },
+      MuiContainer: {
+        styleOverrides: {
+          root: {
+            paddingLeft: "24px !important",
+            paddingRight: "24px !important",
           },
         },
       },

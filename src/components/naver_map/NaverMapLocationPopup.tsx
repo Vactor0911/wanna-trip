@@ -52,21 +52,15 @@ const NaverMapLocationPopup = () => {
 
   // 팝업시 선택한 장소 정보 추출 및 이미지 검색
   useEffect(() => {
-    console.log("팝업 열림");
-
     // 팝업이 닫히는 작업이라면 종료
     if (!anchorElement) {
-      console.log("팝업 닫힘 - 앵커 부적절");
       return;
     }
 
     // 위도 경도 데이터가 없다면 종료
     if (!selectedLocation || !selectedLocation.mapx || !selectedLocation.mapy) {
-      console.log("팝업 닫힘 - 선택된 위치 정보 없음");
       return;
     }
-
-    console.log("팝업 열림 - 위치 정보 추출");
 
     // 선택한 위치 정보 추출
     const latitude = parseFloat(selectedLocation.mapy) / 10000000;
@@ -165,6 +159,7 @@ const NaverMapLocationPopup = () => {
               variant="rectangular"
               width={100}
               height={100}
+              animation="wave"
               sx={{
                 borderRadius: 1,
               }}

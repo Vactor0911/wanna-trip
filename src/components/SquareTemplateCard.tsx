@@ -1,4 +1,4 @@
-import { Paper, Typography, useTheme, Box, IconButton } from "@mui/material";
+import { Paper, Typography, Box, IconButton } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SxProps } from "@mui/system";
 import { theme } from "../utils/theme";
@@ -13,9 +13,10 @@ interface TemplateCardProps {
   sx?: SxProps;
   type?: "new" | "existing";
   id?: string | number;
+  cardSize?: number;
 }
 
-const CARD_SIZE = 200;
+const DEFAULT_CARD_SIZE = 200;
 
 const SquareTemplateCard = ({
   title,
@@ -26,9 +27,8 @@ const SquareTemplateCard = ({
   sx = {},
   type = "existing",
   id,
+  cardSize = DEFAULT_CARD_SIZE,
 }: TemplateCardProps) => {
-  const theme = useTheme();
-
   // 삭제 버튼 클릭 시 이벤트 전파 방지 (카드 클릭 이벤트 실행 방지)
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,8 +45,8 @@ const SquareTemplateCard = ({
         elevation={2}
         onClick={onClick}
         sx={{
-          width: CARD_SIZE,
-          height: CARD_SIZE,
+          width: cardSize,
+          height: cardSize,
           borderRadius: 4,
           bgcolor: color,
           display: "flex",
@@ -88,9 +88,7 @@ const SquareTemplateCard = ({
 
         {/* 새 템플릿 아이콘 */}
         {type === "new" ? (
-          <AddRoundedIcon color="black"
-            sx={{ fontSize: "40px" }}
-          />
+          <AddRoundedIcon color="black" sx={{ fontSize: "40px" }} />
         ) : (
           children
         )}
@@ -102,7 +100,7 @@ const SquareTemplateCard = ({
           fontWeight={300}
           align="left"
           sx={{
-            width: CARD_SIZE,
+            width: cardSize,
             textOverflow: "ellipsis",
             overflow: "hidden",
             whiteSpace: "nowrap",
@@ -121,7 +119,7 @@ const SquareTemplateCard = ({
           fontWeight={300}
           align="left"
           sx={{
-            width: CARD_SIZE,
+            width: cardSize,
             textOverflow: "ellipsis",
             overflow: "hidden",
             whiteSpace: "nowrap",
