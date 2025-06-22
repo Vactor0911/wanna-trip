@@ -189,7 +189,6 @@ const CommunityPost = () => {
         );
 
         setContent(postData.content);
-        console.log("게시글 내용:", postData.content);
         setTags(postData.tags || []); // 태그 정보 설정
         setShares(postData.shares || 0);
 
@@ -742,7 +741,10 @@ const CommunityPost = () => {
               {/* 수정하기 버튼 - 작성자일 때만 표시 */}
               {isAuthor && (
                 <MenuItem
-                  onClick={handleMoreMenuClose}
+                  onClick={() => {
+                    handleMoreMenuClose();
+                    handleEditButtonClick();
+                  }}
                   sx={{
                     gap: 4,
                   }}
