@@ -34,8 +34,8 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setIsLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
 
   // 기존 템플릿 데이터 가져오기
   const fetchTemplates = useCallback(async () => {

@@ -90,11 +90,6 @@ const Community = () => {
   useEffect(() => {
     // 로컬 스토리지의 좋아요 상태 로드 (첫 렌더링에만)
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const likedPostsCache = JSON.parse(
-        localStorage.getItem("likedPosts") || "{}"
-      );
-
       // 현재 표시된 인기 게시글에 로컬 스토리지 좋아요 상태 적용
       if (popularPosts.length > 0) {
         const updatedPosts = popularPosts.map((post) => ({
@@ -223,14 +218,7 @@ const Community = () => {
         fetchControllerRef.current = null;
       }
     },
-    [
-      cancelFetchPosts,
-      hasNextPage,
-      keyword,
-      loadedPages,
-      loginState.isLoggedIn,
-      posts,
-    ]
+    [cancelFetchPosts, hasNextPage, loadedPages, loginState.isLoggedIn, posts]
   );
 
   // 디바운스된 게시글 불러오기

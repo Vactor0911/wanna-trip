@@ -94,7 +94,7 @@ export const templateAtom = atom(
     };
   },
   // setter - 템플릿 객체를 받아 개별 atom들 업데이트
-  (get, set, newTemplate: TemplateInterface) => {
+  (_get, set, newTemplate: TemplateInterface) => {
     // 템플릿 기본 정보 업데이트
     set(templateInfoAtom, {
       uuid: newTemplate.uuid,
