@@ -291,6 +291,21 @@ const Community = () => {
     [navigate]
   );
 
+  // 인기 태그 클릭
+  const handlePopularTagClick = useCallback(
+    (tag: string) => {
+      setKeyword(tag); // 검색어 설정
+
+      // 게시글 다시 불러오기
+      setPosts([]); // 기존 게시글 목록 초기화
+      setHasNextPage(true); // 다음 페이지 여부 초기화
+      setLoadedPages(1); // 로드된 페이지 수 초기화
+
+      fetchDebouncedPosts(); // 디바운스된 게시글 불러오기
+    },
+    [fetchDebouncedPosts]
+  );
+
   return (
     <Container maxWidth="xl">
       <Stack minHeight="calc(100vh - 82px)" my={8} gap={12}>
@@ -610,22 +625,34 @@ const Community = () => {
                   key={`tag-${index}`}
                   sx={{
                     background: getRandomColor(index),
+                    overflow: "hidden",
                   }}
                 >
-                  <Stack
-                    justifyContent="center"
-                    alignItems="center"
-                    height={150}
+                  <ButtonBase
+                    onClick={() => handlePopularTagClick(tag)}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      "& .MuiTypography-root": {
+                        textAlign: "center",
+                      },
+                    }}
                   >
-                    <Typography
-                      variant="h4"
-                      width="100%"
-                      textAlign="center"
-                      noWrap
+                    <Stack
+                      justifyContent="center"
+                      alignItems="center"
+                      height={150}
                     >
-                      {tag}
-                    </Typography>
-                  </Stack>
+                      <Typography
+                        variant="h4"
+                        width="100%"
+                        textAlign="center"
+                        noWrap
+                      >
+                        {tag}
+                      </Typography>
+                    </Stack>
+                  </ButtonBase>
                 </Paper>
               ))}
             </HorizontalCarousel>
