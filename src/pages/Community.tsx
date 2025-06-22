@@ -26,6 +26,8 @@ import { useNavigate } from "react-router";
 import axiosInstance, { SERVER_HOST } from "../utils/axiosInstance";
 import { useBreakpoint } from "../hooks";
 import axios from "axios";
+import { useAtomValue } from "jotai";
+import { isAuthInitializedAtom } from "../state";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -39,6 +41,28 @@ interface PostInterface {
   shares: number; // 공유 수
   comments: number; // 댓글 수
 }
+
+// 좋아요 상태 저장/조회 헬퍼 함수
+const saveLikedStatus = (postUuid: string, liked: boolean) => {
+  try {
+    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+    likedPosts[postUuid] = liked;
+    localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+  } catch (error) {
+    console.error("좋아요 상태 저장 실패:", error);
+  }
+};
+
+// 1. 좋아요 상태 가져오는 함수
+const getLikedStatus = (postUuid: string): boolean => {
+  try {
+    const likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+    return !!likedPosts[postUuid];
+  } catch (error) {
+    console.error("좋아요 상태 가져오기 실패:", error);
+    return false;
+  }
+};
 
 const Community = () => {
   const navigate = useNavigate();
@@ -55,6 +79,32 @@ const Community = () => {
   const [isPopularPostsLoading, setIsPopularPostsLoading] = useState(false); // 인기 게시글 로딩 상태
   const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
   const fetchControllerRef = useRef<AbortController | null>(null); // API 요청을 취소하기 위한 AbortController
+
+  // 인증 초기화 상태 가져오기
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom);
+
+  // 컴포넌트 마운트 시 로컬 좋아요 상태 불러오기 (기존 useEffect 위에 추가)
+  useEffect(() => {
+    // 로컬 스토리지의 좋아요 상태 로드 (첫 렌더링에만)
+    try {
+      const likedPostsCache = JSON.parse(
+        localStorage.getItem("likedPosts") || "{}"
+      );
+
+      // 현재 표시된 인기 게시글에 로컬 스토리지 좋아요 상태 적용
+      if (popularPosts.length > 0) {
+        const updatedPosts = popularPosts.map((post) => ({
+          ...post,
+          liked: getLikedStatus(post.uuid), // 로컬 스토리지의 좋아요 상태 적용
+        }));
+
+        setPopularPosts(updatedPosts);
+      }
+    } catch (error) {
+      console.error("좋아요 상태 불러오기 실패:", error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
 
   // 접속시 스크롤 최상단으로 이동
   useEffect(() => {
@@ -187,6 +237,7 @@ const Community = () => {
 
       // 인기 게시글 목록 불러오기 API 호출
       const response = await axiosInstance.get("/post/popular");
+      console.log("인기 게시글 불러오기 성공:", response.data.post);
 
       // 인기 게시글 목록 업데이트
       if (response.data.success) {
@@ -197,19 +248,31 @@ const Community = () => {
         }
 
         const newPopularPostsData: PostInterface[] = response.data.post.map(
-          (post: PostInterface) => ({
-            uuid: post.uuid,
-            title: post.title,
-            authorName: post.authorName,
-            authorProfileImage: post.authorProfileImage,
-            content: post.content,
-            tags: post.tags || [],
-            liked: post.liked,
-            likes: post.likes,
-            shares: post.shares,
-            comments: post.comments,
-          })
+          (post: PostInterface) => {
+            // 로컬에 저장된 좋아요 상태 가져오기
+            const localLiked = getLikedStatus(post.uuid);
+
+            // 서버에서 받은 값 (로그인된 경우)
+            const serverLiked = post.liked || false;
+
+            // 서버 값 우선시하여 로컬 스토리지 업데이트
+            saveLikedStatus(post.uuid, serverLiked);
+
+            return {
+              uuid: post.uuid,
+              title: post.title,
+              authorName: post.authorName,
+              authorProfileImage: post.authorProfileImage,
+              content: post.content,
+              tags: post.tags || [],
+              liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
+              likes: post.likes,
+              shares: post.shares,
+              comments: post.comments,
+            };
+          }
         );
+
         setPopularPosts(newPopularPostsData);
       }
     } catch (error) {
@@ -218,7 +281,8 @@ const Community = () => {
       // 인기 게시글 로딩 상태 해제
       setIsPopularPostsLoading(false);
     }
-  }, [isPopularPostsLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 인기 태그 불러오기
   const fetchTags = useCallback(async () => {
@@ -249,13 +313,20 @@ const Community = () => {
     }
   }, [isPopularTagLoading]);
 
-  // 컴포넌트 마운트 시 게시글과 인기 게시글 불러오기
+  // 기존 useEffect는 일반 게시글/태그만 담당
   useEffect(() => {
     fetchPosts();
-    fetchPopularPosts();
     fetchTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // 마운트 한 번만
+
+  // 토큰 초기화 완료 시점에만 인기 게시글 호출
+  useEffect(() => {
+    if (isAuthInitialized) {
+      console.log("인증 초기화 완료, 인기 게시글 불러오기");
+      fetchPopularPosts();
+    }
+  }, [isAuthInitialized, fetchPopularPosts]);
 
   // 스크롤 내리면 게시글 불러오기
   useEffect(() => {
@@ -288,9 +359,11 @@ const Community = () => {
     navigate("/community/edit");
   }, [navigate]);
 
-  // 게시글 클릭
+  // 게시글 클릭 핸들러 확장
   const handlePostClick = useCallback(
-    (postUuid: string) => {
+    (postUuid: string, liked: boolean) => {
+      // 좋아요 상태 저장 (게시글로 이동하기 전에)
+      saveLikedStatus(postUuid, liked);
       navigate(`/community/${postUuid}`);
     },
     [navigate]
@@ -468,7 +541,7 @@ const Community = () => {
                   }}
                 >
                   <ButtonBase
-                    onClick={() => handlePostClick(post.uuid)}
+                    onClick={() => handlePostClick(post.uuid, post.liked)}
                     sx={{
                       width: "100%",
                       "& .MuiTypography-root": {
@@ -704,7 +777,7 @@ const Community = () => {
               }}
             >
               <ButtonBase
-                onClick={() => handlePostClick(post.uuid)}
+                onClick={() => handlePostClick(post.uuid, post.liked)}
                 sx={{
                   width: "100%",
                   "& .MuiTypography-root": {
