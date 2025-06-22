@@ -119,7 +119,7 @@ const Community = () => {
         }
 
         // 로드한 페이지 수 증가
-        setLoadedPages((prev) => prev + 1);
+        setLoadedPages(loadedPages + 1);
       }
     } catch (error) {
       if (
@@ -209,7 +209,6 @@ const Community = () => {
       }
     } catch (error) {
       console.error("인기 게시글 불러오기 실패:", error);
-      // TODO: 에러 처리 로직 추가 가능
     } finally {
       // 인기 게시글 로딩 상태 해제
       setIsPopularPostsLoading(false);
@@ -265,7 +264,10 @@ const Community = () => {
         if (entries[0].isIntersecting) {
           //TODO: 게시글 더 불러오기
           console.log("더 불러오기");
-          fetchDebouncedPosts();
+          // 로딩중이 아닐때만 불러오기
+          if (!isPostLoading) {
+            fetchDebouncedPosts();
+          }
         }
       },
       { rootMargin: `${window.innerHeight}px` } // rootMargin만큼 위에서 미리 트리거
@@ -276,7 +278,7 @@ const Community = () => {
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [fetchDebouncedPosts, fetchPosts, hasNextPage]);
+  }, [fetchDebouncedPosts, fetchPosts, hasNextPage, isPostLoading]);
 
   // 글쓰기 버튼 클릭
   const handleCreatePostButtonClick = useCallback(() => {
@@ -689,105 +691,6 @@ const Community = () => {
             </Paper>
           </Stack>
 
-          {/* 게시글 로딩 중 */}
-          {isPostLoading &&
-            Array.from({ length: 3 }).map((_, index) => (
-              <Paper
-                elevation={2}
-                key={`post-skeleton-${index}`}
-                sx={{
-                  borderRadius: 2,
-                }}
-              >
-                <Stack
-                  width="100%"
-                  direction={{
-                    xs: "column",
-                    sm: "row",
-                  }}
-                  padding={1}
-                  gap={2}
-                >
-                  {/* 썸네일 이미지 */}
-                  <Skeleton
-                    variant="rectangular"
-                    height={150}
-                    sx={{
-                      width: {
-                        xs: "100%",
-                        sm: 200,
-                      },
-                      borderRadius: 2,
-                    }}
-                    animation="wave"
-                  />
-
-                  {/* 게시글 정보 */}
-                  <Stack
-                    width={{
-                      xs: "100%",
-                      sm: "calc(100% - 200px)",
-                    }}
-                  >
-                    {/* 제목 */}
-                    <Skeleton
-                      variant="text"
-                      width="200px"
-                      height="3rem"
-                      animation="wave"
-                    />
-
-                    {/* 태그 */}
-                    <Skeleton
-                      variant="text"
-                      width="100px"
-                      height="2rem"
-                      animation="wave"
-                    />
-
-                    {/* 게시글 정보 */}
-                    <Box mt="auto">
-                      <Stack
-                        direction="row"
-                        justifyContent="flex-end"
-                        alignItems="center"
-                        gap={1}
-                        mt={1}
-                      >
-                        {/* 좋아요 수 */}
-                        <Skeleton
-                          variant="text"
-                          width="30px"
-                          animation="wave"
-                        />
-                        <FavoriteBorderRoundedIcon />
-
-                        {/* 공유 수 */}
-                        <Skeleton
-                          variant="text"
-                          width="30px"
-                          animation="wave"
-                        />
-                        <IosShareRoundedIcon
-                          sx={{
-                            transform: "translateY(-2px)",
-                          }}
-                        />
-
-                        {/* 댓글 수 */}
-                        <Skeleton
-                          variant="text"
-                          width="30px"
-                          animation="wave"
-                        />
-                        <ChatBubbleOutlineRoundedIcon />
-                      </Stack>
-                    </Box>
-                  </Stack>
-                </Stack>
-              </Paper>
-            ))}
-
           {/* 게시글 */}
           {posts?.map((post) => (
             <Paper
@@ -888,6 +791,105 @@ const Community = () => {
               </ButtonBase>
             </Paper>
           ))}
+
+          {/* 게시글 로딩 중 */}
+          {isPostLoading &&
+            Array.from({ length: 3 }).map((_, index) => (
+              <Paper
+                elevation={2}
+                key={`post-skeleton-${index}`}
+                sx={{
+                  borderRadius: 2,
+                }}
+              >
+                <Stack
+                  width="100%"
+                  direction={{
+                    xs: "column",
+                    sm: "row",
+                  }}
+                  padding={1}
+                  gap={2}
+                >
+                  {/* 썸네일 이미지 */}
+                  <Skeleton
+                    variant="rectangular"
+                    height={150}
+                    sx={{
+                      width: {
+                        xs: "100%",
+                        sm: 200,
+                      },
+                      borderRadius: 2,
+                    }}
+                    animation="wave"
+                  />
+
+                  {/* 게시글 정보 */}
+                  <Stack
+                    width={{
+                      xs: "100%",
+                      sm: "calc(100% - 200px)",
+                    }}
+                  >
+                    {/* 제목 */}
+                    <Skeleton
+                      variant="text"
+                      width="200px"
+                      height="3rem"
+                      animation="wave"
+                    />
+
+                    {/* 태그 */}
+                    <Skeleton
+                      variant="text"
+                      width="100px"
+                      height="2rem"
+                      animation="wave"
+                    />
+
+                    {/* 게시글 정보 */}
+                    <Box mt="auto">
+                      <Stack
+                        direction="row"
+                        justifyContent="flex-end"
+                        alignItems="center"
+                        gap={1}
+                        mt={1}
+                      >
+                        {/* 좋아요 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <FavoriteBorderRoundedIcon />
+
+                        {/* 공유 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <IosShareRoundedIcon
+                          sx={{
+                            transform: "translateY(-2px)",
+                          }}
+                        />
+
+                        {/* 댓글 수 */}
+                        <Skeleton
+                          variant="text"
+                          width="30px"
+                          animation="wave"
+                        />
+                        <ChatBubbleOutlineRoundedIcon />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Stack>
+              </Paper>
+            ))}
 
           {/* 스크롤 감지 센티넬 */}
           <Box ref={sentinelRef} />
