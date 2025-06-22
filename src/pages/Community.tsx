@@ -322,11 +322,8 @@ const Community = () => {
 
   // 토큰 초기화 완료 시점에만 인기 게시글 호출
   useEffect(() => {
-    if (isAuthInitialized) {
-      console.log("인증 초기화 완료, 인기 게시글 불러오기");
-      fetchPopularPosts();
-    }
-  }, [isAuthInitialized, fetchPopularPosts]);
+    fetchPopularPosts();
+  }, [fetchPopularPosts]);
 
   // 스크롤 내리면 게시글 불러오기
   useEffect(() => {
