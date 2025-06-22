@@ -3,6 +3,7 @@ import {
   Box,
   ButtonBase,
   Container,
+  debounce,
   Fab,
   IconButton,
   InputAdornment,
@@ -12,7 +13,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
@@ -24,6 +25,7 @@ import CreateRoundedIcon from "@mui/icons-material/CreateRounded";
 import { useNavigate } from "react-router";
 import axiosInstance, { SERVER_HOST } from "../utils/axiosInstance";
 import { useBreakpoint } from "../hooks";
+import axios from "axios";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -52,27 +54,38 @@ const Community = () => {
   const [isPostLoading, setIsPostLoading] = useState(false); // 게시글 로딩 상태
   const [isPopularPostsLoading, setIsPopularPostsLoading] = useState(false); // 인기 게시글 로딩 상태
   const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
+  const fetchControllerRef = useRef<AbortController | null>(null); // API 요청을 취소하기 위한 AbortController
 
-  // 검색어 입력
-  const handleKeywordChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setKeyword(event.target.value);
-    },
-    []
-  );
+  // 게시글 불러오기 중지
+  const cancelFetchPosts = useCallback(() => {
+    fetchControllerRef.current?.abort();
+    fetchControllerRef.current = null;
+    setIsPostLoading(false);
+  }, []);
 
   // 게시글 불러오기
   const fetchPosts = useCallback(async () => {
-    // 이미 로딩 중이거나 다음 페이지가 없으면 종료
-    if (isPostLoading || !hasNextPage) {
+    // 다음 페이지가 없으면 종료
+    if (!hasNextPage) {
       return;
     }
+
+    // 이전 요청 중지
+    cancelFetchPosts();
+
+    // AbortController 생성
+    const controller = new AbortController();
+    fetchControllerRef.current = controller;
 
     try {
       setIsPostLoading(true);
 
       // 게시글 목록 불러오기 API 호출
-      const response = await axiosInstance.get(`/post/page/${loadedPages}`);
+      const response = await axiosInstance.get(
+        `/post/page/?${
+          !keyword ? "" : `keyword=${keyword}&`
+        }page=${loadedPages}`
+      );
 
       // 게시글 목록 업데이트
       if (response.data.success) {
@@ -109,13 +122,52 @@ const Community = () => {
         setLoadedPages((prev) => prev + 1);
       }
     } catch (error) {
-      console.error("게시글 불러오기 실패:", error);
-      // 에러 처리 로직 추가 가능
-      setHasNextPage(false); // 더 이상 불러올 게시글이 없음을 표시
+      if (
+        (typeof error === "object" &&
+          error !== null &&
+          "name" in error &&
+          (error as { name?: string }).name === "CanceledError") ||
+        axios.isCancel?.(error)
+      ) {
+        console.log("요청 취소됨");
+      } else {
+        console.error("게시글 불러오기 실패:", error);
+        setHasNextPage(false);
+      }
     } finally {
       setIsPostLoading(false);
+      fetchControllerRef.current = null;
     }
-  }, [hasNextPage, isPostLoading, loadedPages, posts]);
+  }, [cancelFetchPosts, hasNextPage, keyword, loadedPages, posts]);
+
+  // 디바운스된 게시글 불러오기
+  const fetchDebouncedPosts = useMemo(
+    () => debounce(fetchPosts, 500),
+    [fetchPosts]
+  );
+
+  // 컴포넌트 언마운트 시 디바운스된 함수 정리
+  useEffect(() => {
+    return () => {
+      fetchDebouncedPosts.clear();
+      cancelFetchPosts();
+    };
+  }, [fetchDebouncedPosts, cancelFetchPosts]);
+
+  // 검색어 입력
+  const handleKeywordChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setKeyword(event.target.value);
+
+      // 게시글 다시 불러오기
+      setPosts([]); // 기존 게시글 목록 초기화
+      setHasNextPage(true); // 다음 페이지 여부 초기화
+      setLoadedPages(1); // 로드된 페이지 수 초기화
+
+      fetchDebouncedPosts(); // 디바운스된 게시글 불러오기
+    },
+    [fetchDebouncedPosts]
+  );
 
   // 인기 게시글 불러오기
   const fetchPopularPosts = useCallback(async () => {
@@ -213,7 +265,7 @@ const Community = () => {
         if (entries[0].isIntersecting) {
           //TODO: 게시글 더 불러오기
           console.log("더 불러오기");
-          fetchPosts();
+          fetchDebouncedPosts();
         }
       },
       { rootMargin: `${window.innerHeight}px` } // rootMargin만큼 위에서 미리 트리거
@@ -224,7 +276,7 @@ const Community = () => {
     return () => {
       if (node) observer.unobserve(node);
     };
-  }, [fetchPosts, hasNextPage]);
+  }, [fetchDebouncedPosts, fetchPosts, hasNextPage]);
 
   // 글쓰기 버튼 클릭
   const handleCreatePostButtonClick = useCallback(() => {
