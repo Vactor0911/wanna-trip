@@ -650,7 +650,7 @@ const Community = () => {
                 fullWidth
                 value={keyword}
                 onChange={handleKeywordChange}
-                placeholder="제목, 작성자, 태그 검색"
+                placeholder="제목, 태그, 내용 검색"
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton>
