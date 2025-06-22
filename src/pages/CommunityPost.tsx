@@ -189,6 +189,7 @@ const CommunityPost = () => {
         );
 
         setContent(postData.content);
+        console.log("게시글 내용:", postData.content);
         setTags(postData.tags || []); // 태그 정보 설정
         setShares(postData.shares || 0);
 
@@ -805,6 +806,21 @@ const CommunityPost = () => {
             },
             "& table thead": {
               background: "rgba(0, 0, 0, 0.05)",
+            },
+            "& figure.image > img": {
+              width: "100%",
+              height: "auto",
+            },
+            "& figure.image, & figure.image.image-style-block-align-center": {
+              marginX: "auto",
+            },
+            "& figure.image.image-style-block-align-left": {
+              marginX: 0,
+              marginRight: "auto",
+            },
+            "& figure.image.image-style-block-align-right": {
+              marginX: 0,
+              marginLeft: "auto",
             },
           }}
         >
