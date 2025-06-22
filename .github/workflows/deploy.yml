@@ -35,6 +35,7 @@ jobs:
       run: npm run deploy -- --repo https://github.com/${{ github.repository }}.git
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        VITE_SERVER_HOST: ${{ secrets.VITE_SERVER_HOST }}
         VITE_KAKAO_CLIENT_ID: ${{ secrets.VITE_KAKAO_CLIENT_ID }}
         VITE_KAKAO_REDIRECT_URI: ${{ secrets.VITE_KAKAO_REDIRECT_URI }}
         VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
