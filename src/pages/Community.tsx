@@ -27,7 +27,7 @@ import axiosInstance, { SERVER_HOST } from "../utils/axiosInstance";
 import { useBreakpoint } from "../hooks";
 import axios from "axios";
 import { useAtomValue } from "jotai";
-import { isAuthInitializedAtom } from "../state";
+import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -80,6 +80,9 @@ const Community = () => {
   const [isPopularTagLoading, setIsPopularTagLoading] = useState(false); // 인기 태그 로딩 상태
   const fetchControllerRef = useRef<AbortController | null>(null); // API 요청을 취소하기 위한 AbortController
 
+  // 로그인 상태 가져오기
+  const loginState = useAtomValue(wannaTripLoginStateAtom);
+
   // 인증 초기화 상태 가져오기
   const isAuthInitialized = useAtomValue(isAuthInitializedAtom);
 
@@ -87,6 +90,7 @@ const Community = () => {
   useEffect(() => {
     // 로컬 스토리지의 좋아요 상태 로드 (첫 렌더링에만)
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const likedPostsCache = JSON.parse(
         localStorage.getItem("likedPosts") || "{}"
       );
@@ -135,9 +139,12 @@ const Community = () => {
     try {
       setIsPostLoading(true);
 
+      // 로그인 상태에 따라 다른 엔드포인트 호출
+      const endpoint = loginState.isLoggedIn ? "/post/auth/page" : "/post/page";
+
       // 게시글 목록 불러오기 API 호출
       const response = await axiosInstance.get(
-        `/post/page/?${
+        `${endpoint}/?${
           !keyword ? "" : `keyword=${keyword}&`
         }page=${loadedPages}`
       );
@@ -151,18 +158,29 @@ const Community = () => {
         }
 
         const responsePosts: PostInterface[] = response.data.post.map(
-          (post: PostInterface) => ({
-            uuid: post.uuid,
-            title: post.title,
-            authorName: post.authorName,
-            authorProfileImage: post.authorProfileImage,
-            content: post.content,
-            tags: post.tags || [],
-            liked: post.liked,
-            likes: post.likes,
-            shares: post.shares,
-            comments: post.comments,
-          })
+          (post: PostInterface) => {
+            // 로컬에 저장된 좋아요 상태 가져오기
+            const localLiked = getLikedStatus(post.uuid);
+
+            // 서버에서 받은 값 (로그인된 경우)
+            const serverLiked = post.liked || false;
+
+            // 서버 값 우선시하여 로컬 스토리지 업데이트
+            saveLikedStatus(post.uuid, serverLiked);
+
+            return {
+              uuid: post.uuid,
+              title: post.title,
+              authorName: post.authorName,
+              authorProfileImage: post.authorProfileImage,
+              content: post.content,
+              tags: post.tags || [],
+              liked: serverLiked || localLiked, // 서버 또는 로컬 좋아요 상태 사용
+              likes: post.likes,
+              shares: post.shares,
+              comments: post.comments,
+            };
+          }
         );
 
         const newPosts = [...posts, ...responsePosts];
@@ -193,7 +211,14 @@ const Community = () => {
       setIsPostLoading(false);
       fetchControllerRef.current = null;
     }
-  }, [cancelFetchPosts, hasNextPage, keyword, loadedPages, posts]);
+  }, [
+    cancelFetchPosts,
+    hasNextPage,
+    keyword,
+    loadedPages,
+    loginState.isLoggedIn,
+    posts,
+  ]);
 
   // 디바운스된 게시글 불러오기
   const fetchDebouncedPosts = useMemo(
@@ -236,8 +261,11 @@ const Community = () => {
       setIsPopularPostsLoading(true);
 
       // 인기 게시글 목록 불러오기 API 호출
-      const response = await axiosInstance.get("/post/popular");
-      console.log("인기 게시글 불러오기 성공:", response.data.post);
+      // 로그인 상태에 따라 다른 엔드포인트 호출
+      const endpoint = loginState.isLoggedIn
+        ? "/post/auth/popular"
+        : "/post/popular";
+      const response = await axiosInstance.get(endpoint);
 
       // 인기 게시글 목록 업데이트
       if (response.data.success) {
@@ -313,17 +341,20 @@ const Community = () => {
     }
   }, [isPopularTagLoading]);
 
-  // 기존 useEffect는 일반 게시글/태그만 담당
+  // 기존 useEffect는 태그만 담당
   useEffect(() => {
-    fetchPosts();
     fetchTags();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 마운트 한 번만
 
-  // 토큰 초기화 완료 시점에만 인기 게시글 호출
+  // 토큰 초기화 완료 시점에만 인기 / 일반 게시글 호출
   useEffect(() => {
-    fetchPopularPosts();
-  }, [fetchPopularPosts]);
+    if (isAuthInitialized) {
+      fetchPopularPosts();
+      fetchPosts();
+    }
+  }, [isAuthInitialized, fetchPopularPosts, fetchPosts]);
+
 
   // 스크롤 내리면 게시글 불러오기
   useEffect(() => {
