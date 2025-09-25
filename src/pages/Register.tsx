@@ -24,6 +24,7 @@ import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import Tooltip from "../components/Tooltip";
+import { isEmailValid } from "../utils";
 
 // 이용약관 데이터
 interface TermsOfService {
@@ -327,10 +328,10 @@ const Register: React.FC = () => {
     }
 
     // 이메일이 올바르지 않다면 종료
-    // if (!isEmailValid(email)) {
-    //   alert("유효한 이메일 주소를 입력해주세요.");
-    //   return;
-    // }
+    if (!isEmailValid(email)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
 
     // 인증번호 요청 API 호출
     try {
