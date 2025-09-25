@@ -1,12 +1,15 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import OutlinedTextField from "../components/OutlinedTextField";
 import PlainLink from "../components/PlainLinkProps";
 import SectionHeader from "../components/SectionHeader";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import axios from "axios";
+import { isEmailValid } from "../utils";
+import { useNavigate } from "react-router";
 
 const FindPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState(""); // 사용자 이메일
   const [isConfirmCodeSending, setIsConfirmCodeSending] = useState(false); // 인증번호 전송 중 여부
   const [isConfirmCodeSent, setIsConfirmCodeSent] = useState(false); // 인증번호 전송 여부
@@ -22,6 +25,19 @@ const FindPassword = () => {
     []
   );
 
+  // 인증번호 입력 타이머
+  useEffect(() => {
+    if (!isConfirmCodeSent || confirmTimeLeft <= 0 || isConfirmCodeChecked) {
+      return;
+    }
+
+    const confirmCodeTimer = setInterval(() => {
+      setConfirmTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(confirmCodeTimer); // 컴포넌트 언마운트 시 타이머 정리
+  }, [isConfirmCodeChecked, confirmTimeLeft, isConfirmCodeSent]);
+
   // 인증번호 전송 버튼 클릭
   const handleConfirmCodeSendButtonClick = useCallback(async () => {
     // 이미 인증번호를 확인했다면 종료
@@ -31,10 +47,10 @@ const FindPassword = () => {
     }
 
     // 이메일이 올바르지 않다면 종료
-    // if (!isEmailValid(email)) {
-    //   alert("유효한 이메일 주소를 입력해주세요.");
-    //   return;
-    // }
+    if (!isEmailValid(email)) {
+      alert("유효한 이메일 주소를 입력해주세요.");
+      return;
+    }
 
     // 인증번호 요청 API 호출
     try {
@@ -48,7 +64,7 @@ const FindPassword = () => {
         "/auth/sendVerifyEmail",
         {
           email,
-          purpose: "verifyEmailCode", // 이메일 인증번호 요청
+          purpose: "findPassword", // 이메일 인증번호 요청
         },
         {
           headers: {
@@ -130,6 +146,7 @@ const FindPassword = () => {
       // 요청 성공 처리
       alert("인증번호 확인이 완료되었습니다.");
       setIsConfirmCodeChecked(true); // 인증 성공
+      navigate("/change-password"); // 비밀번호 재설정
     } catch (error) {
       // 요청 실패 처리
       if (axios.isAxiosError(error) && error.response) {
@@ -141,7 +158,7 @@ const FindPassword = () => {
         alert("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.");
       }
     }
-  }, [confirmCode, email, isConfirmCodeChecked]);
+  }, [confirmCode, email, isConfirmCodeChecked, navigate]);
 
   return (
     <Container maxWidth="xs">
@@ -204,10 +221,10 @@ const FindPassword = () => {
                   sx={{
                     width: "65px",
                     color: isConfirmCodeChecked
-                      ? "success" // 인증 완료 시 초록색
+                      ? "#19df79" // 인증 완료 시 초록색
                       : confirmTimeLeft <= 0
-                      ? "error" // 시간 초과 시 빨간색
-                      : "primary", // 평상시 파란색
+                      ? "error.main" // 시간 초과 시 빨간색
+                      : "primary.main", // 평상시 파란색
                   }}
                 >
                   {getFormattedTime()}
