@@ -146,7 +146,14 @@ const FindPassword = () => {
       // 요청 성공 처리
       alert("인증번호 확인이 완료되었습니다.");
       setIsConfirmCodeChecked(true); // 인증 성공
-      navigate("/change-password"); // 비밀번호 재설정
+
+      // 이메일 정보를 state로 전달하여 비밀번호 재설정 페이지로 이동
+      navigate("/change-password", {
+        state: {
+          email: email,
+          fromFindPassword: true,
+        },
+      });
     } catch (error) {
       // 요청 실패 처리
       if (axios.isAxiosError(error) && error.response) {
