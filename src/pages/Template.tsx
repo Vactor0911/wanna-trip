@@ -21,8 +21,8 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
-import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
+import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
@@ -51,6 +51,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../components/SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { downloadExcel } from "../utils/excelExport";
+import { downloadPdf } from "../utils/pdfExport";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -527,11 +528,6 @@ const Template = (props: TemplateProps) => {
     setMoreMenuAnchor(null);
   }, []);
 
-  // PDF 다운로드 핸들러
-  const handlePdfDownload = useCallback(() => {
-    showSnackbar("PDF 다운로드 기능을 준비 중입니다.", "info");
-    handleMoreMenuClose();
-  }, [showSnackbar, handleMoreMenuClose]);
 
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
   const handleExcelDownload = useCallback(() => {
@@ -896,7 +892,16 @@ const Template = (props: TemplateProps) => {
           horizontal: "right",
         }}
       >
-        <MenuItem onClick={handlePdfDownload}>
+        <MenuItem onClick={async () => {
+          try {
+            const result = await downloadPdf(template as any);
+            showSnackbar(result.message, result.success ? "success" : "error");
+          } catch (error) {
+            console.error('PDF 다운로드 오류:', error);
+            showSnackbar("PDF 다운로드 중 오류가 발생했습니다.", "error");
+          }
+          handleMoreMenuClose();
+        }}>
           <ListItemIcon>
             <PictureAsPdfRoundedIcon fontSize="small" />
           </ListItemIcon>

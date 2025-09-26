@@ -36,37 +36,12 @@ export interface CardData {
 const stripHtml = (html: string) => {
   if (!html) return '';
   
-  // HTML 엔티티 디코딩
-  const htmlEntities: { [key: string]: string } = {
-    '&amp;': '&',
-    '&lt;': '<',
-    '&gt;': '>',
-    '&quot;': '"',
-    '&#39;': "'",
-    '&nbsp;': ' ',
-    '&copy;': '©',
-    '&reg;': '®',
-    '&trade;': '™',
-    '&hellip;': '...',
-    '&ndash;': '–',
-    '&mdash;': '—',
-    '&lsquo;': "'",
-    '&rsquo;': "'",
-    '&ldquo;': '"',
-    '&rdquo;': '"',
-    '&bull;': '•',
-    '&middot;': '·'
-  };
+  // 임시 div 요소를 사용하여 HTML 엔티티 자동 디코딩
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  let text = tempDiv.textContent || tempDiv.innerText || '';
   
-  let text = html;
-  
-  // HTML 엔티티 디코딩
-  Object.keys(htmlEntities).forEach(entity => {
-    const regex = new RegExp(entity, 'g');
-    text = text.replace(regex, htmlEntities[entity]);
-  });
-  
-  // HTML 태그 제거
+  // HTML 태그 제거 (혹시 남아있는 경우)
   text = text.replace(/<[^>]*>/g, '');
   
   // 연속된 공백을 하나로 정리
@@ -106,8 +81,8 @@ export const convertTemplateToExcelData = (template: TemplateData) => {
         // 일차는 첫 번째 카드에만 표시하고 나머지는 빈 문자열
         const dayNumber = cardIndex === 0 ? board.dayNumber : '';
         
-        // 시작 시간과 종료 시간을 "HH:mm ~" 형식으로 표시
-        const startTime = card.startTime ? card.startTime.format('HH:mm') + ' ~' : '';
+        // 시작 시간과 종료 시간을 "HH:mm" 형식으로 표시
+        const startTime = card.startTime ? card.startTime.format('HH:mm') : '';
         const endTime = card.endTime ? card.endTime.format('HH:mm') : '';
         
         excelData.push([
