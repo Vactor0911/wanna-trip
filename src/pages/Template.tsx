@@ -11,12 +11,18 @@ import {
   Typography,
   Snackbar,
   Alert,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import Tooltip from "../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
+import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
+import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
@@ -44,6 +50,7 @@ import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../components/SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
+import { downloadExcel } from "../utils/excelExport";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -126,6 +133,7 @@ const Template = (props: TemplateProps) => {
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
   const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(null); // 더보기 메뉴 앵커
 
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
   const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
@@ -509,6 +517,34 @@ const Template = (props: TemplateProps) => {
     }
   }, [boardOverlaps, showSnackbar]);
 
+  // 더보기 메뉴 열기
+  const handleMoreMenuOpen = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    setMoreMenuAnchor(event.currentTarget);
+  }, []);
+
+  // 더보기 메뉴 닫기
+  const handleMoreMenuClose = useCallback(() => {
+    setMoreMenuAnchor(null);
+  }, []);
+
+  // PDF 다운로드 핸들러
+  const handlePdfDownload = useCallback(() => {
+    showSnackbar("PDF 다운로드 기능을 준비 중입니다.", "info");
+    handleMoreMenuClose();
+  }, [showSnackbar, handleMoreMenuClose]);
+
+  // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
+  const handleExcelDownload = useCallback(() => {
+    try {
+      const result = downloadExcel(template as any);
+      showSnackbar(result.message, result.success ? "success" : "error");
+    } catch (error) {
+      console.error('Excel 다운로드 오류:', error);
+      showSnackbar("Excel 다운로드 중 오류가 발생했습니다.", "error");
+    }
+    handleMoreMenuClose();
+  }, [showSnackbar, template, handleMoreMenuClose]);
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
@@ -730,7 +766,7 @@ const Template = (props: TemplateProps) => {
 
               {/* 더보기 버튼 */}
               <Tooltip title="더보기">
-                <IconButton size="small">
+                <IconButton size="small" onClick={handleMoreMenuOpen}>
                   <MoreVertRoundedIcon />
                 </IconButton>
               </Tooltip>
@@ -845,6 +881,35 @@ const Template = (props: TemplateProps) => {
 
       {/* 카드 편집 대화상자 */}
       <CardEditDialog />
+
+      {/* 더보기 메뉴 */}
+      <Menu
+        anchorEl={moreMenuAnchor}
+        open={Boolean(moreMenuAnchor)}
+        onClose={handleMoreMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+        <MenuItem onClick={handlePdfDownload}>
+          <ListItemIcon>
+            <PictureAsPdfRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>PDF 다운로드</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleExcelDownload}>
+          <ListItemIcon>
+            <TableChartRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Excel 다운로드</ListItemText>
+        </MenuItem>
+      </Menu>
+
 
       {/* 알림 스낵바 */}
       <Snackbar
