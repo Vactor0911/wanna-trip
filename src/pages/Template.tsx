@@ -23,6 +23,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded";
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
+import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
 import Board from "../components/Board";
 import { theme } from "../utils/theme";
@@ -52,6 +53,7 @@ import SortMenu from "../components/SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { downloadExcel } from "../utils/excelExport";
 import { downloadPdf } from "../utils/pdfExport";
+import { downloadText } from "../utils/textExport";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -541,6 +543,17 @@ const Template = (props: TemplateProps) => {
     handleMoreMenuClose();
   }, [showSnackbar, template, handleMoreMenuClose]);
 
+  const handleTextDownload = useCallback(() => {
+    try {
+      const result = downloadText(template as any);
+      showSnackbar(result.message, result.success ? "success" : "error");
+    } catch (error) {
+      console.error('텍스트 다운로드 오류:', error);
+      showSnackbar("텍스트 다운로드 중 오류가 발생했습니다.", "error");
+    }
+    handleMoreMenuClose();
+  }, [showSnackbar, template, handleMoreMenuClose]);
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
@@ -912,6 +925,12 @@ const Template = (props: TemplateProps) => {
             <TableChartRoundedIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Excel 다운로드</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleTextDownload}>
+          <ListItemIcon>
+            <TextSnippetRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>텍스트 다운로드</ListItemText>
         </MenuItem>
       </Menu>
 
