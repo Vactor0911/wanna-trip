@@ -532,9 +532,9 @@ const Template = (props: TemplateProps) => {
 
 
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
-  const handleExcelDownload = useCallback(() => {
+  const handleExcelDownload = useCallback(async () => {
     try {
-      const result = downloadExcel(template as any);
+      const result = await downloadExcel(template as any);
       showSnackbar(result.message, result.success ? "success" : "error");
     } catch (error) {
       console.error('Excel 다운로드 오류:', error);

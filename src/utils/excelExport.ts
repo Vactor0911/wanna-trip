@@ -1,4 +1,4 @@
-import XLSX from 'xlsx-js-style';
+import ExcelJS from 'exceljs';
 
 // 템플릿 데이터 타입 정의
 export interface TemplateData {
@@ -50,12 +50,12 @@ const stripHtml = (html: string) => {
   return text.trim();
 };
 
-// Excel 데이터 변환 함수 (값만)
+// Excel 데이터 변환 함수 (ExcelJS 워크시트용)
 export const convertTemplateToExcelData = (template: TemplateData) => {
-  const excelData: any[] = [];
+  const rows: any[] = [];
   
   // 헤더 행 추가
-  excelData.push([
+  rows.push([
     '일차',
     '시작 시간',
     '종료 시간',
@@ -68,7 +68,7 @@ export const convertTemplateToExcelData = (template: TemplateData) => {
   template.boards.forEach((board) => {
     if (board.cards.length === 0) {
       // 카드가 없는 보드도 표시
-      excelData.push([
+      rows.push([
         board.dayNumber,
         '',
         '',
@@ -85,7 +85,7 @@ export const convertTemplateToExcelData = (template: TemplateData) => {
         const startTime = card.startTime ? card.startTime.format('HH:mm') : '';
         const endTime = card.endTime ? card.endTime.format('HH:mm') : '';
         
-        excelData.push([
+        rows.push([
           dayNumber,
           startTime,
           endTime,
@@ -97,20 +97,23 @@ export const convertTemplateToExcelData = (template: TemplateData) => {
     }
   });
 
-  return excelData;
+  return rows;
 };
 
 // Excel 파일 다운로드 함수
-export const downloadExcel = (template: TemplateData, filename?: string) => {
+export const downloadExcel = async (template: TemplateData, filename?: string) => {
   try {
     const excelData = convertTemplateToExcelData(template);
     
-    // 워크시트 생성 (xlsx-js-style 사용)
-    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    // 워크북 생성
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('여행 계획');
+    
+    // 데이터 추가
+    worksheet.addRows(excelData);
     
     // 셀 병합 설정 (일차 컬럼 병합)
-    const merges: any[] = [];
-    let currentRow = 1; // 헤더 다음 행부터 시작 (0-based)
+    let currentRow = 2; // 헤더 다음 행부터 시작 (1-based)
     
     template.boards.forEach((board) => {
       if (board.cards.length > 1) {
@@ -118,70 +121,69 @@ export const downloadExcel = (template: TemplateData, filename?: string) => {
         const startRow = currentRow;
         const endRow = currentRow + board.cards.length - 1;
         
-        merges.push({
-          s: { r: startRow, c: 0 }, // 시작 행, A열 (일차)
-          e: { r: endRow, c: 0 }    // 끝 행, A열 (일차)
-        });
+        worksheet.mergeCells(`A${startRow}:A${endRow}`);
       }
       currentRow += board.cards.length || 1; // 카드가 없어도 1행은 추가
     });
     
-    // 병합 설정 적용
-    worksheet['!merges'] = merges;
+    // 헤더 스타일 설정
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell, _colNumber) => {
+      cell.style = {
+        font: { bold: true },
+        alignment: { 
+          horizontal: 'center', 
+          vertical: 'middle',
+          wrapText: true 
+        },
+        border: {
+          top: { style: 'thin', color: { argb: 'FF000000' } },
+          bottom: { style: 'thin', color: { argb: 'FF000000' } },
+          left: { style: 'thin', color: { argb: 'FF000000' } },
+          right: { style: 'thin', color: { argb: 'FF000000' } }
+        },
+        fill: {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF3F3F3' }
+        }
+      };
+    });
     
-    // 셀 스타일 설정 (xlsx-js-style 방식)
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-    
-    for (let row = range.s.r; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-        if (!worksheet[cellAddress]) continue;
-        
-        // 헤더 행인지 확인 (첫 번째 행)
-        const isHeader = row === 0;
-        
-        // xlsx-js-style 방식으로 스타일 설정
-        worksheet[cellAddress].s = {
-          alignment: {
-            horizontal: 'center',
-            vertical: 'center',
-            wrapText: true // 텍스트 줄바꿈 허용
+    // 데이터 행 스타일 설정
+    for (let rowNumber = 2; rowNumber <= excelData.length; rowNumber++) {
+      const row = worksheet.getRow(rowNumber);
+      row.eachCell((cell, _colNumber) => {
+        cell.style = {
+          alignment: { 
+            horizontal: 'center', 
+            vertical: 'middle',
+            wrapText: true 
           },
           border: {
-            top: { style: 'thin', color: { rgb: '000000' } },
-            bottom: { style: 'thin', color: { rgb: '000000' } },
-            left: { style: 'thin', color: { rgb: '000000' } },
-            right: { style: 'thin', color: { rgb: '000000' } }
-          },
-          fill: isHeader ? {
-            fgColor: { rgb: 'F3F3F3' }
-          } : undefined
+            top: { style: 'thin', color: { argb: 'FF000000' } },
+            bottom: { style: 'thin', color: { argb: 'FF000000' } },
+            left: { style: 'thin', color: { argb: 'FF000000' } },
+            right: { style: 'thin', color: { argb: 'FF000000' } }
+          }
         };
-      }
+      });
     }
     
     // 컬럼 너비 설정 (가독성 향상)
-    const columnWidths = [
-      { wch: 12 }, // 일차 (8 → 12)
-      { wch: 18 }, // 시작 시간 (12 → 18)
-      { wch: 18 }, // 종료 시간 (12 → 18)
-      { wch: 40 }, // 카드 내용 (30 → 40)
-      { wch: 35 }, // 장소명 (25 → 35)
-      { wch: 50 }  // 장소 주소 (40 → 50)
+    worksheet.columns = [
+      { width: 12 }, // 일차
+      { width: 18 }, // 시작 시간
+      { width: 18 }, // 종료 시간
+      { width: 40 }, // 카드 내용
+      { width: 35 }, // 장소명
+      { width: 50 }  // 장소 주소
     ];
-    worksheet['!cols'] = columnWidths;
     
     // 행 높이 설정 (가독성 향상)
-    const rowHeights: any[] = [];
-    const maxRow = excelData.length - 1;
-    for (let i = 0; i <= maxRow; i++) {
-      rowHeights.push({ hpt: 25 }); // 기본 높이 25포인트 (약 18px)
+    for (let i = 1; i <= excelData.length; i++) {
+      worksheet.getRow(i).height = 25; // 기본 높이 25포인트
     }
-    worksheet['!rows'] = rowHeights;
-    
-    // 워크북 생성
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, '여행 계획');
     
     // 파일명 생성
     const defaultFilename = `${template.title || '여행계획'}_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -192,15 +194,24 @@ export const downloadExcel = (template: TemplateData, filename?: string) => {
       console.log('=== Excel 데이터 미리보기 ===');
       console.table(excelData);
       console.log('=== 워크시트 정보 ===');
-      console.log('범위:', worksheet['!ref']);
-      console.log('컬럼 너비:', worksheet['!cols']);
-      console.log('=== 스타일 확인 ===');
-      console.log('A1 스타일:', worksheet['A1']?.s);
-      console.log('A2 스타일:', worksheet['A2']?.s);
+      console.log('행 수:', worksheet.rowCount);
+      console.log('컬럼 수:', worksheet.columnCount);
     }
     
     // Excel 파일 다운로드
-    XLSX.writeFile(workbook, finalFilename);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = finalFilename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
     
     return { success: true, message: 'Excel 파일이 다운로드되었습니다.' };
   } catch (error) {
