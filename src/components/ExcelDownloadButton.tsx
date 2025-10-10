@@ -44,7 +44,7 @@ const ExcelDownloadButton: React.FC<ExcelDownloadButtonProps> = ({
       setIsDownloading(true);
       onDownloadStart?.();
       
-      const result = downloadExcel(template);
+      const result = await downloadExcel(template);
       
       onDownloadComplete?.(result.success, result.message);
     } catch (error) {
@@ -95,5 +95,9 @@ const ExcelDownloadButton: React.FC<ExcelDownloadButtonProps> = ({
 };
 
 export default ExcelDownloadButton;
+
+
+
+
 
 
