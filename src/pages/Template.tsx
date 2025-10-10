@@ -50,6 +50,7 @@ import { useMoveBoard, useMoveCard } from "../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../components/SortMenu";
+import MapIcon from '@mui/icons-material/Map';
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { downloadExcel } from "../utils/excelExport";
 import { downloadPdf } from "../utils/pdfExport";
@@ -530,6 +531,13 @@ const Template = (props: TemplateProps) => {
     setMoreMenuAnchor(null);
   }, []);
 
+  // 지도 클릭 핸들러
+  const handleMapClick = useCallback(() => {
+    // 추후 지도 기능 구현 예정
+    console.log("지도 버튼이 클릭되었습니다.");
+    showSnackbar("지도 기능은 추후 구현 예정입니다.", "info");
+  }, [showSnackbar]);
+
 
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
   const handleExcelDownload = useCallback(async () => {
@@ -689,13 +697,20 @@ const Template = (props: TemplateProps) => {
               )}
 
               {/* 권한에 따른 정렬하기 보이기 여부 */}
-              {isOwner && (
-                <SortMenu
-                  onSortStart={handleSortByStartTime}
-                  onSortEnd={handleSortByEndTime}
-                  tooltipTitle="템플릿 전체 정렬하기"
-                />
-              )}
+              <Stack direction="row" alignItems="center" gap={0.5}>
+                {isOwner && (
+                  <SortMenu
+                    onSortStart={handleSortByStartTime}
+                    onSortEnd={handleSortByEndTime}
+                    tooltipTitle="템플릿 전체 정렬하기"
+                  />
+                )}
+                <Tooltip title="지도 보기">
+                  <IconButton size="small" onClick={handleMapClick}>
+                    <MapIcon />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
 
               {/* 시간 중복 경고 아이콘 - 중복이 있을 때만 표시 */}
               {hasTemplateOverlap && (
