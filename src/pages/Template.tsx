@@ -52,6 +52,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../components/SortMenu";
 import MapIcon from '@mui/icons-material/Map';
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
+import TemplateMapDialog from "../components/TemplateMapDialog";
 import { downloadExcel } from "../utils/excelExport";
 import { downloadPdf } from "../utils/pdfExport";
 import { downloadText } from "../utils/textExport";
@@ -138,6 +139,7 @@ const Template = (props: TemplateProps) => {
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
   const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(null); // 더보기 메뉴 앵커
+  const [mapDialogOpen, setMapDialogOpen] = useState(false); // 지도 다이얼로그 열림 상태
 
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
   const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
@@ -533,10 +535,13 @@ const Template = (props: TemplateProps) => {
 
   // 지도 클릭 핸들러
   const handleMapClick = useCallback(() => {
-    // 추후 지도 기능 구현 예정
-    console.log("지도 버튼이 클릭되었습니다.");
-    showSnackbar("지도 기능은 추후 구현 예정입니다.", "info");
-  }, [showSnackbar]);
+    setMapDialogOpen(true);
+  }, []);
+
+  // 지도 다이얼로그 닫기
+  const handleMapDialogClose = useCallback(() => {
+    setMapDialogOpen(false);
+  }, []);
 
 
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
@@ -965,6 +970,12 @@ const Template = (props: TemplateProps) => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* 지도 다이얼로그 */}
+      <TemplateMapDialog
+        open={mapDialogOpen}
+        onClose={handleMapDialogClose}
+      />
     </>
   );
 };
