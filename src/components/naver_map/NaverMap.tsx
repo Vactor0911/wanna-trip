@@ -1,6 +1,6 @@
 import { Box, BoxProps, Skeleton } from "@mui/material";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DEFAULT_LAT,
   DEFAULT_LNG,
@@ -21,10 +21,24 @@ interface MapProps extends BoxProps {
   lng?: number;
   zoom?: number;
   interactive?: boolean; // 상호작용 가능 여부
-  markerPosition?: { lat: number; lng: number } | null; // 마커 위치
+  markerPosition?: { lat: number; lng: number } | null; // 마커 위치 (단일 마커)
+  markers?: Array<{ 
+    lat: number; 
+    lng: number; 
+    title?: string; 
+    color?: string;
+    label?: string; // 마커에 표시할 텍스트
+  }>; // 여러 마커 위치
+  polylines?: Array<{
+    path: Array<{ lat: number; lng: number }>;
+    color?: string;
+    weight?: number;
+    opacity?: number;
+  }>; // 연결선 데이터
   drawerOpen?: boolean; // 검색 패널 열림/닫힘 상태
   drawerWidth?: number; // 검색 패널 너비
   disabled?: boolean; // 비활성화 여부
+  onMarkerClick?: (marker: { lat: number; lng: number; title?: string }) => void; // 마커 클릭 이벤트
 }
 
 const NaverMap = (props: MapProps) => {
@@ -36,7 +50,10 @@ const NaverMap = (props: MapProps) => {
     zoom = DEFAULT_ZOOM,
     interactive = true, // 기본값은 상호작용 가능
     markerPosition = null, // 마커 위치 (없으면 null)
+    markers = [], // 여러 마커 위치
+    polylines = [], // 연결선 데이터
     drawerWidth = 350, // 기본값 350px
+    onMarkerClick,
     sx,
     onClick,
     disabled,
@@ -48,9 +65,15 @@ const NaverMap = (props: MapProps) => {
   const mapInstanceRef = useRef<any>(null); // 지도 인스턴스 참조
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null); // 마커 인스턴스 참조
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const markersRef = useRef<any[]>([]); // 여러 마커 인스턴스 참조
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const polylinesRef = useRef<any[]>([]); // 여러 polyline 인스턴스 참조
+  const [isMapInitialized, setIsMapInitialized] = useState(false); // 지도 초기화 완료 상태
   const drawerOpen = useAtomValue(drawerOpenAtom); // 검색 패널 열림 상태
 
   const VITE_NAVER_MAP_CLIENT_ID = import.meta.env.VITE_NAVER_MAP_CLIENT_ID;
+
 
   useEffect(() => {
     // 네이버 클라이언트 ID가 설정되지 않은 경우 초기화 중단
@@ -100,8 +123,12 @@ const NaverMap = (props: MapProps) => {
       // 지도 인스턴스 생성 및 저장
       const map = new window.naver.maps.Map(mapRef.current, mapOptions);
       mapInstanceRef.current = map;
+      
+      
+      // 지도 초기화 완료 상태 설정
+      setIsMapInitialized(true);
 
-      // 마커 초기화
+      // 단일 마커 초기화 (markerPosition이 있는 경우)
       if (markerPosition) {
         markerRef.current = new window.naver.maps.Marker({
           position: new window.naver.maps.LatLng(
@@ -119,6 +146,21 @@ const NaverMap = (props: MapProps) => {
         markerRef.current.setMap(null);
         markerRef.current = null;
       }
+      // 여러 마커들도 정리
+      markersRef.current.forEach(marker => {
+        if (marker) {
+          marker.setMap(null);
+        }
+      });
+      markersRef.current = [];
+
+      // polyline들도 정리
+      polylinesRef.current.forEach(polyline => {
+        if (polyline) {
+          polyline.setMap(null);
+        }
+      });
+      polylinesRef.current = [];
     };
   }, [
     VITE_NAVER_MAP_CLIENT_ID,
@@ -128,6 +170,7 @@ const NaverMap = (props: MapProps) => {
     lat,
     lng,
     markerPosition,
+    markers,
     zoom,
   ]);
 
@@ -141,6 +184,7 @@ const NaverMap = (props: MapProps) => {
 
     mapInstanceRef.current.setOptions("offset", offset);
   }, [drawerOpen, drawerWidth]);
+
 
   // 마커 위치 변경 시 마커 업데이트
   useEffect(() => {
@@ -171,7 +215,100 @@ const NaverMap = (props: MapProps) => {
       markerRef.current.setMap(null);
       markerRef.current = null;
     }
-  }, [drawerOpen, markerPosition]);
+  }, [markerPosition]);
+
+  // markers prop 변경 시 마커 업데이트
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.naver || !isMapInitialized) return;
+
+    // 기존 마커들 제거
+    markersRef.current.forEach(marker => {
+      if (marker) {
+        marker.setMap(null);
+      }
+    });
+    markersRef.current = [];
+
+    // 새로운 마커들 생성
+    if (markers.length > 0) {
+      markersRef.current = markers.map((marker) => {
+        const color = marker.color || '#1976d2'; // 기본 색상
+        const naverMarker = new window.naver.maps.Marker({
+          position: new window.naver.maps.LatLng(marker.lat, marker.lng),
+          map: mapInstanceRef.current,
+          icon: {
+            content: `
+              <div style="
+                width: 24px;
+                height: 24px;
+                background-color: ${color};
+                border: 2px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 11px;
+                font-weight: bold;
+                cursor: pointer;
+              ">
+                ${marker.label || ''}
+              </div>
+            `,
+            anchor: new window.naver.maps.Point(12, 12)
+          },
+          title: marker.title || ''
+        });
+
+        // 마커 클릭 이벤트 추가
+        if (onMarkerClick) {
+          window.naver.maps.Event.addListener(naverMarker, 'click', () => {
+            onMarkerClick({
+              lat: marker.lat,
+              lng: marker.lng,
+              title: marker.title
+            });
+          });
+        }
+
+        return naverMarker;
+      });
+    }
+  }, [markers, isMapInitialized]);
+
+  // polylines prop 변경 시 polyline 업데이트
+  useEffect(() => {
+    if (!mapInstanceRef.current || !window.naver || !isMapInitialized) return;
+
+    // 기존 polyline들 제거
+    polylinesRef.current.forEach(polyline => {
+      if (polyline) {
+        polyline.setMap(null);
+      }
+    });
+    polylinesRef.current = [];
+
+    // 새로운 polyline들 생성
+    if (polylines.length > 0) {
+      polylinesRef.current = polylines.map((polylineData) => {
+        const path = polylineData.path.map(point => 
+          new window.naver.maps.LatLng(point.lat, point.lng)
+        );
+
+        const naverPolyline = new window.naver.maps.Polyline({
+          path: path,
+          map: mapInstanceRef.current,
+          strokeColor: polylineData.color || '#1976d2',
+          strokeWeight: polylineData.weight || 3,
+          strokeOpacity: polylineData.opacity || 0.8,
+          strokeStyle: 'solid'
+        });
+
+        return naverPolyline;
+      });
+    }
+  }, [polylines, isMapInitialized]);
 
   // 클라이언트 ID가 설정되지 않은 경우 로딩 스켈레톤 표시
   if (!VITE_NAVER_MAP_CLIENT_ID) {
