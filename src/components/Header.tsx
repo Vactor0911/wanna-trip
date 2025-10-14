@@ -36,7 +36,6 @@ import Logo from "/icons/logo.svg";
 const Links = [
   { text: "템플릿", to: "/template" },
   { text: "게시판", to: "/community" },
-  { text: "지도", to: "/map" },
   { text: "소식", to: "/news" },
 ];
 
