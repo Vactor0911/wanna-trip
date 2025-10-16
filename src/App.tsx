@@ -13,6 +13,8 @@ import {
   Template,
   Community,
   Myinformation,
+  News,
+  NewsPost,
 } from "./pages";
 import CommunityPost from "./pages/CommunityPost";
 import Header from "./components/Header";
@@ -40,11 +42,13 @@ function App() {
               <Route path="/change-password" element={<ChangePassword />} />
               <Route path="/community" element={<Community />} />
               <Route path="/community/edit" element={<CommunityPostEdit />} />
+              <Route path="/news" element={<News />} />
               <Route
                 path="/community/:postUuid/edit"
                 element={<CommunityPostEdit />}
               />
               <Route path="/community/:postUuid" element={<CommunityPost />} />
+              <Route path="/news/:newsId" element={<NewsPost />} />
             </Routes>
           </TokenRefresher>
         </BrowserRouter>
