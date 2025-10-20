@@ -29,17 +29,13 @@ import dayjs from "dayjs";
 import { useAddCard } from "../hooks/template";
 import SortMenu from "./SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
+import { useSnackbar } from "notistack";
 
 interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
-  showSnackbar: (
-    message: string,
-    severity?: "success" | "error" | "warning" | "info"
-  ) => void;
-  // showSnackbar 함수 타입 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
 }
 
@@ -49,7 +45,6 @@ const Board = (props: BoardProps) => {
     boardData,
     fetchTemplateData,
     isOwner,
-    showSnackbar,
     id, // ID 속성 추가 (선택적 속성으로 설정)
     ...others
   } = props;
@@ -59,6 +54,7 @@ const Board = (props: BoardProps) => {
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
 
   const addCard = useAddCard();
+  const { enqueueSnackbar } = useSnackbar();
 
   // 시간 중복 체크 결과
   const { hasOverlap, overlappingCardIds } = checkTimeOverlap(
@@ -233,13 +229,17 @@ const Board = (props: BoardProps) => {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
 
-        showSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", "success");
+        enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
+          variant: "success",
+        });
       }
     } catch (error) {
       console.error("카드 정렬 오류:", error);
-      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
+      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
+        variant: "error",
+      });
     }
-  }, [boardData.id, fetchTemplateData, showSnackbar]);
+  }, [boardData.id, fetchTemplateData, enqueueSnackbar]);
 
   // 보드 내 카드 종료 시간순 정렬 함수
   const handleSortByEndTime = useCallback(async () => {
@@ -258,13 +258,17 @@ const Board = (props: BoardProps) => {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
 
-        showSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", "success");
+        enqueueSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", {
+          variant: "success",
+        });
       }
     } catch (error) {
       console.error("카드 정렬 오류:", error);
-      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
+      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
+        variant: "error",
+      });
     }
-  }, [boardData.id, fetchTemplateData, showSnackbar]);
+  }, [boardData.id, fetchTemplateData, enqueueSnackbar]);
 
   // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
   const scrollToFirstOverlappingCard = useCallback(() => {
@@ -282,7 +286,9 @@ const Board = (props: BoardProps) => {
         cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
 
         // 사용자에게 피드백 제공 (옵션)
-        showSnackbar("시간이 중복된 카드로 이동했습니다.", "info");
+        enqueueSnackbar("시간이 중복된 카드로 이동했습니다.", {
+          variant: "info",
+        });
 
         // 시각적 효과로 카드 강조 (선택 사항)
         cardElement.classList.add("highlight-card");
@@ -291,7 +297,7 @@ const Board = (props: BoardProps) => {
         }, 2000);
       }
     }
-  }, [overlappingCardIds, showSnackbar]);
+  }, [overlappingCardIds, enqueueSnackbar]);
 
   return (
     <Stack height="100%" id={id} {...others}>
@@ -427,7 +433,10 @@ const Board = (props: BoardProps) => {
                           location={card.location}
                           onClick={() => handleCardClick(index)}
                           isOwner={isOwner}
-                          isTimeOverlapping={card.id !== undefined && overlappingCardIds.includes(card.id)}
+                          isTimeOverlapping={
+                            card.id !== undefined &&
+                            overlappingCardIds.includes(card.id)
+                          }
                         />
                       </Box>
                     )}
