@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
 import { theme } from "./utils/theme";
-import { CssBaseline } from "@mui/material";
+import { CssBaseline, IconButton } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
   UserTemplates,
@@ -20,7 +20,8 @@ import CommunityPost from "./pages/CommunityPost";
 import Header from "./components/Header";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CommunityPostEdit from "./pages/CommunityPostEdit";
-import { SnackbarProvider } from "notistack";
+import { closeSnackbar, SnackbarProvider } from "notistack";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,18 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter basename="/wanna-trip">
           <TokenRefresher>
-            <SnackbarProvider maxSnack={3}>
+            <SnackbarProvider
+              maxSnack={3}
+              action={(snackbarId) => (
+                <IconButton
+                  color="inherit"
+                  sx={{ p: 0.5 }}
+                  onClick={() => closeSnackbar(snackbarId)}
+                >
+                  <CloseRoundedIcon />
+                </IconButton>
+              )}
+            >
               <Header />
               <Routes>
                 <Route path="/" element={<Main />} />
