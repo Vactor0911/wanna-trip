@@ -1,5 +1,4 @@
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -8,7 +7,6 @@ import {
   Divider,
   InputBase,
   Paper,
-  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -24,6 +22,7 @@ import TemplateSelectDialog from "../components/TemplateSelectDialog";
 import Template from "./Template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { useSnackbar } from "notistack";
 
 const MAX_TAGS = 5; // 최대 태그 개수
 
@@ -31,6 +30,7 @@ const CommunityPostEdit = () => {
   const theme = useTheme(); // MUI 테마
   const navigate = useNavigate(); // 네비게이션 훅
   const postId = useParams().postUuid; // URL 파라미터에서 게시글 ID 가져오기
+  const { enqueueSnackbar } = useSnackbar();
 
   const [title, setTitle] = useState(""); // 게시글 제목
   const [titleErrorText, setTitleErrorText] = useState(""); // 제목 입력 오류 메시지]
@@ -45,7 +45,6 @@ const CommunityPostEdit = () => {
   const [isTemplateSelectDialogOpen, setIsTemplateSelectDialogOpen] =
     useState(false); // 템플릿 선택 대화상자 열림 상태
   const [templateUuid, setTemplateUuid] = useState<string | null>(null); // 선택된 템플릿
-  const [errorMessage, setErrorMessage] = useState<string>(""); // 오류 메시지
 
   const fetchPostData = useCallback(async () => {
     if (!postId) {
@@ -70,13 +69,17 @@ const CommunityPostEdit = () => {
         setTags(postData.tags || []);
         setTemplateUuid(postData.templateUuid || null);
       } else {
-        setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+        enqueueSnackbar("게시글 정보를 가져오지 못했습니다.", {
+          variant: "error",
+        });
       }
     } catch (error) {
       console.error("게시글 정보 가져오기 실패:", error);
-      setErrorMessage("게시글 정보를 가져오지 못했습니다.");
+      enqueueSnackbar("게시글 정보를 가져오지 못했습니다.", {
+        variant: "error",
+      });
     }
-  }, [postId]);
+  }, [enqueueSnackbar, postId]);
 
   useEffect(() => {
     // 컴포넌트 마운트 시 태그 입력란 너비 초기화
@@ -235,11 +238,6 @@ const CommunityPostEdit = () => {
     setTemplateUuid(null);
   }, []);
 
-  // 오류 메시지 초기화
-  const handleClearErrorMessage = useCallback(() => {
-    setErrorMessage("");
-  }, []);
-
   // 취소 버튼 클릭
   const handleCancelButtonClick = useCallback(() => {
     // 게시글 ID가 존재하지 않으면 커뮤니티 페이지로 이동
@@ -306,7 +304,9 @@ const CommunityPostEdit = () => {
           if (updatedPostId) {
             navigate(`/community/${updatedPostId}`);
           } else {
-            setErrorMessage("게시글을 수정하지 못했습니다.");
+            enqueueSnackbar("게시글을 수정하지 못했습니다.", {
+              variant: "error",
+            });
           }
         }
       } else {
@@ -323,15 +323,17 @@ const CommunityPostEdit = () => {
           if (postId) {
             navigate(`/community/${postId}`);
           } else {
-            setErrorMessage("게시글을 등록하지 못했습니다.");
+            enqueueSnackbar("게시글을 등록하지 못했습니다.", {
+              variant: "error",
+            });
           }
         }
       }
     } catch (error) {
       console.error("게시글 등록 실패:", error);
-      setErrorMessage("게시글을 등록하지 못했습니다.");
+      enqueueSnackbar("게시글을 등록하지 못했습니다.", { variant: "error" });
     }
-  }, [content, navigate, postId, tags, templateUuid, title]);
+  }, [content, enqueueSnackbar, navigate, postId, tags, templateUuid, title]);
 
   return (
     <>
@@ -586,22 +588,6 @@ const CommunityPostEdit = () => {
         onClose={handleTemplateSelectDialogClose}
         onSelect={setTemplateUuid}
       />
-
-      {/* 오류 스낵바 */}
-      <Snackbar
-        open={!!errorMessage}
-        autoHideDuration={6000}
-        onClose={handleClearErrorMessage}
-      >
-        <Alert
-          onClose={handleClearErrorMessage}
-          severity="error"
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {errorMessage}
-        </Alert>
-      </Snackbar>
     </>
   );
 };

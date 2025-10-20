@@ -9,8 +9,6 @@ import {
   Stack,
   TextField,
   Typography,
-  Snackbar,
-  Alert,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -50,12 +48,13 @@ import { useMoveBoard, useMoveCard } from "../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../components/SortMenu";
-import MapIcon from '@mui/icons-material/Map';
+import MapIcon from "@mui/icons-material/Map";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import TemplateMapDialog from "../components/TemplateMapDialog";
 import { downloadExcel } from "../utils/excelExport";
 import { downloadPdf } from "../utils/pdfExport";
 import { downloadText } from "../utils/textExport";
+import { useSnackbar } from "notistack";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -129,6 +128,7 @@ const Template = (props: TemplateProps) => {
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
   const moveBoard = useMoveBoard(); // 보드 이동 훅
+  const { enqueueSnackbar } = useSnackbar();
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
@@ -138,38 +138,13 @@ const Template = (props: TemplateProps) => {
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
   const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
-  const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(null); // 더보기 메뉴 앵커
+  const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(
+    null
+  ); // 더보기 메뉴 앵커
   const [mapDialogOpen, setMapDialogOpen] = useState(false); // 지도 다이얼로그 열림 상태
 
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
   const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
-
-  // 템플릿 컴포넌트 내에 Snackbar 상태 추가
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "info" as "success" | "error" | "warning" | "info",
-  });
-
-  // Snackbar 닫기 함수
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
-
-  // 스낵바 메시지 표시 함수 (하위 컴포넌트에서 호출 가능)
-  const showSnackbar = useCallback(
-    (
-      message: string,
-      severity: "success" | "error" | "warning" | "info" = "success"
-    ) => {
-      setSnackbar({
-        open: true,
-        message,
-        severity,
-      });
-    },
-    []
-  );
 
   // URL 파라미터에서 uuid 가져오기
   if (!uuid) {
@@ -447,21 +422,17 @@ const Template = (props: TemplateProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
-        setSnackbar({
-          open: true,
-          message: "카드가 시작 시간 순으로 정렬되었습니다.",
-          severity: "success",
+        enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
+          variant: "success",
         });
       }
     } catch (error) {
       console.error("카드 정렬 오류:", error);
-      setSnackbar({
-        open: true,
-        message: "카드 정렬 중 오류가 발생했습니다.",
-        severity: "error",
+      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
+        variant: "error",
       });
     }
-  }, [template.uuid, fetchTemplateData]);
+  }, [template.uuid, fetchTemplateData, enqueueSnackbar]);
 
   // 템플릿 내 모든 카드 정렬 함수 (종료 시간 순)
   const handleSortByEndTime = useCallback(async () => {
@@ -479,21 +450,17 @@ const Template = (props: TemplateProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
-        setSnackbar({
-          open: true,
-          message: "카드가 종료 시간 순으로 정렬되었습니다.",
-          severity: "success",
+        enqueueSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", {
+          variant: "success",
         });
       }
     } catch (error) {
       console.error("카드 정렬 오류:", error);
-      setSnackbar({
-        open: true,
-        message: "카드 정렬 중 오류가 발생했습니다.",
-        severity: "error",
+      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
+        variant: "error",
       });
     }
-  }, [template.uuid, fetchTemplateData]);
+  }, [template.uuid, fetchTemplateData, enqueueSnackbar]);
 
   // 시간 중복이 있는 첫 번째 보드로 스크롤하는 함수
   const scrollToFirstOverlappingBoard = useCallback(() => {
@@ -512,7 +479,9 @@ const Template = (props: TemplateProps) => {
         boardElement.scrollIntoView({ behavior: "smooth", block: "center" });
 
         // 사용자에게 피드백 제공
-        showSnackbar("시간이 중복된 보드로 이동했습니다.", "info");
+        enqueueSnackbar("시간이 중복된 보드로 이동했습니다.", {
+          variant: "info",
+        });
 
         // 시각적 효과로 보드 강조 (선택 사항)
         boardElement.classList.add("highlight-board");
@@ -521,12 +490,15 @@ const Template = (props: TemplateProps) => {
         }, 2000);
       }
     }
-  }, [boardOverlaps, showSnackbar]);
+  }, [boardOverlaps, enqueueSnackbar]);
 
   // 더보기 메뉴 열기
-  const handleMoreMenuOpen = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    setMoreMenuAnchor(event.currentTarget);
-  }, []);
+  const handleMoreMenuOpen = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      setMoreMenuAnchor(event.currentTarget);
+    },
+    []
+  );
 
   // 더보기 메뉴 닫기
   const handleMoreMenuClose = useCallback(() => {
@@ -543,29 +515,38 @@ const Template = (props: TemplateProps) => {
     setMapDialogOpen(false);
   }, []);
 
-
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
   const handleExcelDownload = useCallback(async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await downloadExcel(template as any);
-      showSnackbar(result.message, result.success ? "success" : "error");
+      enqueueSnackbar(result.message, {
+        variant: result.success ? "success" : "error",
+      });
     } catch (error) {
-      console.error('Excel 다운로드 오류:', error);
-      showSnackbar("Excel 다운로드 중 오류가 발생했습니다.", "error");
+      console.error("Excel 다운로드 오류:", error);
+      enqueueSnackbar("Excel 다운로드 중 오류가 발생했습니다.", {
+        variant: "error",
+      });
     }
     handleMoreMenuClose();
-  }, [showSnackbar, template, handleMoreMenuClose]);
+  }, [enqueueSnackbar, template, handleMoreMenuClose]);
 
   const handleTextDownload = useCallback(() => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = downloadText(template as any);
-      showSnackbar(result.message, result.success ? "success" : "error");
+      enqueueSnackbar(result.message, {
+        variant: result.success ? "success" : "error",
+      });
     } catch (error) {
-      console.error('텍스트 다운로드 오류:', error);
-      showSnackbar("텍스트 다운로드 중 오류가 발생했습니다.", "error");
+      console.error("텍스트 다운로드 오류:", error);
+      enqueueSnackbar("텍스트 다운로드 중 오류가 발생했습니다.", {
+        variant: "error",
+      });
     }
     handleMoreMenuClose();
-  }, [showSnackbar, template, handleMoreMenuClose]);
+  }, [enqueueSnackbar, template, handleMoreMenuClose]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -847,7 +828,6 @@ const Template = (props: TemplateProps) => {
                           boardData={board} // 보드 데이터 직접 전달
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isOwner} // 소유자 여부 전달
-                          showSnackbar={showSnackbar} // 스낵바 표시 함수 전달
                           id={`board-${board.id}`} // ID 속성 추가
                         />
                       )}
@@ -925,16 +905,24 @@ const Template = (props: TemplateProps) => {
           horizontal: "right",
         }}
       >
-        <MenuItem onClick={async () => {
-          try {
-            const result = await downloadPdf(template as any);
-            showSnackbar(result.message, result.success ? "success" : "error");
-          } catch (error) {
-            console.error('PDF 다운로드 오류:', error);
-            showSnackbar("PDF 다운로드 중 오류가 발생했습니다.", "error");
-          }
-          handleMoreMenuClose();
-        }}>
+        <MenuItem
+          onClick={async () => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const result = await downloadPdf(template as any);
+              enqueueSnackbar(result.message, {
+                variant: result.success ? "success" : "error",
+              });
+            } catch (error) {
+              console.error("PDF 다운로드 오류:", error);
+
+              enqueueSnackbar("PDF 다운로드 중 오류가 발생했습니다.", {
+                variant: "error",
+              });
+            }
+            handleMoreMenuClose();
+          }}
+        >
           <ListItemIcon>
             <PictureAsPdfRoundedIcon fontSize="small" />
           </ListItemIcon>
@@ -954,28 +942,8 @@ const Template = (props: TemplateProps) => {
         </MenuItem>
       </Menu>
 
-
-      {/* 알림 스낵바 */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-
       {/* 지도 다이얼로그 */}
-      <TemplateMapDialog
-        open={mapDialogOpen}
-        onClose={handleMapDialogClose}
-      />
+      <TemplateMapDialog open={mapDialogOpen} onClose={handleMapDialogClose} />
     </>
   );
 };

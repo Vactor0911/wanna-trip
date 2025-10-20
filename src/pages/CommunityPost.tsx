@@ -1,5 +1,4 @@
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -16,7 +15,6 @@ import {
   Menu,
   MenuItem,
   Paper,
-  Snackbar,
   Stack,
   Typography,
   useMediaQuery,
@@ -55,6 +53,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { useSnackbar } from "notistack";
 
 // 댓글 인터페이스
 interface Comment {
@@ -71,16 +70,10 @@ interface Comment {
   isAuthor?: boolean;
 }
 
-interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: "success" | "error" | "warning" | "info";
-  action?: React.ReactNode;
-}
-
 const CommunityPost = () => {
   const { postUuid } = useParams(); // 게시글 UUID
   const navigate = useNavigate(); // 네비게이션 훅
+  const { enqueueSnackbar } = useSnackbar();
 
   const [isLoading, setIsLoading] = useState(false); // 게시글 로딩 여부
   const [error, setError] = useState(""); // 에러 메시지
@@ -120,13 +113,6 @@ const CommunityPost = () => {
     useState(false);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
   const [isDeletingComment, setIsDeletingComment] = useState(false);
-
-  // 스낵바 상태 추가
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
 
   const [selectedComment, setSelectedComment] = useState<{
     comment: Comment;
@@ -421,16 +407,12 @@ const CommunityPost = () => {
         }
       } catch (err) {
         console.error("댓글 수정 실패:", err);
-        setSnackbar({
-          open: true,
-          message: "댓글 수정에 실패했습니다.",
-          severity: "error",
-        });
+        enqueueSnackbar("댓글 수정에 실패했습니다.", { variant: "error" });
       } finally {
         setIsCommentSubmitting(false);
       }
     },
-    [isCommentSubmitting]
+    [enqueueSnackbar, isCommentSubmitting]
   );
 
   // 댓글 삭제 다이얼로그 열기
@@ -529,15 +511,8 @@ const CommunityPost = () => {
   const handleLikeButtonClick = useCallback(async () => {
     // 로그인 체크
     if (!loginState.isLoggedIn) {
-      setSnackbar({
-        open: true,
-        message: "좋아요 기능은 로그인 후 이용할 수 있습니다.",
-        severity: "info",
-        action: (
-          <Button color="primary" size="small" onClick={handleNavigateToLogin}>
-            로그인하기
-          </Button>
-        ),
+      enqueueSnackbar("좋아요 기능은 로그인 후 이용할 수 있습니다.", {
+        variant: "info",
       });
       return;
     }
@@ -571,26 +546,15 @@ const CommunityPost = () => {
     } catch (err) {
       console.error("좋아요 처리 실패:", err);
     }
-  }, [handleNavigateToLogin, loginState.isLoggedIn, postUuid]);
+  }, [enqueueSnackbar, loginState.isLoggedIn, postUuid]);
 
   // 댓글 좋아요 함수
   const handleCommentLike = useCallback(
     async (commentUuid: string) => {
       // 로그인 체크
       if (!loginState.isLoggedIn) {
-        setSnackbar({
-          open: true,
-          message: "좋아요 기능은 로그인 후 이용할 수 있습니다.",
-          severity: "info",
-          action: (
-            <Button
-              color="primary"
-              size="small"
-              onClick={handleNavigateToLogin}
-            >
-              로그인하기
-            </Button>
-          ),
+        enqueueSnackbar("좋아요 기능은 로그인 후 이용할 수 있습니다.", {
+          variant: "info",
         });
         return;
       }
@@ -628,7 +592,7 @@ const CommunityPost = () => {
         console.error("댓글 좋아요 실패:", err);
       }
     },
-    [handleNavigateToLogin, loginState.isLoggedIn]
+    [enqueueSnackbar, loginState.isLoggedIn]
   );
 
   // 답글 쓰기 버튼 클릭
@@ -636,19 +600,8 @@ const CommunityPost = () => {
     (parentId: string) => {
       // 로그인 체크
       if (!loginState.isLoggedIn) {
-        setSnackbar({
-          open: true,
-          message: "답글 작성은 로그인 후 이용할 수 있습니다.",
-          severity: "info",
-          action: (
-            <Button
-              color="primary"
-              size="small"
-              onClick={handleNavigateToLogin}
-            >
-              로그인하기
-            </Button>
-          ),
+        enqueueSnackbar("답글 작성은 로그인 후 이용할 수 있습니다.", {
+          variant: "info",
         });
         return;
       }
@@ -656,7 +609,7 @@ const CommunityPost = () => {
       // 로그인된 경우에만 실행
       setReplyParentId(parentId);
     },
-    [loginState.isLoggedIn, handleNavigateToLogin]
+    [loginState.isLoggedIn, enqueueSnackbar]
   );
 
   // 답글 취소 버튼 클릭
@@ -693,11 +646,6 @@ const CommunityPost = () => {
   // 게시글 삭제 다이얼로그 닫기
   const handleCloseDeleteDialog = useCallback(() => {
     setIsDeleteDialogOpen(false);
-  }, []);
-
-  // 스낵바 닫기
-  const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
   }, []);
 
   // 수정 버튼 클릭
@@ -1387,22 +1335,6 @@ const CommunityPost = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
-            action={snackbar.action}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
       </Container>
 
       {/* 댓글 더보기 메뉴 */}

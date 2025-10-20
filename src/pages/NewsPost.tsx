@@ -1,19 +1,13 @@
 import {
-  Alert,
   Box,
   Button,
   Container,
   Divider,
-  Snackbar,
   Stack,
   Typography,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router";
-import {
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import parse from "html-react-parser";
 import { CircularProgress } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
@@ -29,13 +23,6 @@ interface NewsPost {
   category: string;
 }
 
-interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: "success" | "error" | "warning" | "info";
-  action?: React.ReactNode;
-}
-
 const NewsPost = () => {
   const { newsId } = useParams(); // 공지사항 ID
   const navigate = useNavigate(); // 네비게이션 훅
@@ -43,14 +30,6 @@ const NewsPost = () => {
   const [isLoading, setIsLoading] = useState(false); // 공지사항 로딩 여부
   const [error, setError] = useState(""); // 에러 메시지
   const [newsPost, setNewsPost] = useState<NewsPost | null>(null); // 공지사항 데이터
-
-  // 스낵바 상태
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
-
 
   // 공지사항 데이터 가져오기
   const fetchNewsPostData = useCallback(async () => {
@@ -62,7 +41,7 @@ const NewsPost = () => {
 
       // 실제 API 호출 (현재는 목업 데이터 사용)
       // const response = await axiosInstance.get(`/news/${newsId}`);
-      
+
       // 목업 데이터 (실제로는 DB에서 가져올 데이터)
       const mockNewsPost: NewsPost = {
         id: parseInt(newsId),
@@ -117,7 +96,7 @@ const NewsPost = () => {
     try {
       const date = new Date(dateString);
       return formatDistanceToNow(date, { addSuffix: true, locale: ko });
-    } catch (e) {
+    } catch {
       return dateString;
     }
   }, []);
@@ -131,7 +110,7 @@ const NewsPost = () => {
         month: "long",
         day: "numeric",
       });
-    } catch (e) {
+    } catch {
       return dateString;
     }
   }, []);
@@ -140,11 +119,6 @@ const NewsPost = () => {
   const handleReturnButtonClick = useCallback(() => {
     navigate("/news");
   }, [navigate]);
-
-  // 스낵바 닫기
-  const handleCloseSnackbar = useCallback(() => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  }, []);
 
   // 로딩 중 표시
   if (isLoading) {
@@ -197,12 +171,7 @@ const NewsPost = () => {
   return (
     <>
       <Container maxWidth="lg">
-        <Stack
-          minHeight="calc(100vh - 82px)"
-          gap={4}
-          py={5}
-          pb={15}
-        >
+        <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
           {/* 공지사항 제목 */}
           <Stack direction="row" alignItems="center" gap={1}>
             <Typography variant="h4" fontWeight={700} color="#191f28">
@@ -211,31 +180,33 @@ const NewsPost = () => {
             {(() => {
               const today = new Date();
               const postDate = new Date(newsPost.createdAt);
-              const isToday = 
+              const isToday =
                 today.getFullYear() === postDate.getFullYear() &&
                 today.getMonth() === postDate.getMonth() &&
                 today.getDate() === postDate.getDate();
-              
-              return isToday && (
-                <Box
-                  sx={{
-                    backgroundColor: "#ff4757",
-                    color: "white",
-                    fontSize: "11px",
-                    fontWeight: 600,
-                    height: "20px",
-                    px: 1,
-                    py: 0,
-                    borderRadius: "10px", // 둥근 직사각형
-                    whiteSpace: "nowrap",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minWidth: "32px",
-                  }}
-                >
-                  NEW
-                </Box>
+
+              return (
+                isToday && (
+                  <Box
+                    sx={{
+                      backgroundColor: "#ff4757",
+                      color: "white",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      height: "20px",
+                      px: 1,
+                      py: 0,
+                      borderRadius: "10px", // 둥근 직사각형
+                      whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: "32px",
+                    }}
+                  >
+                    NEW
+                  </Box>
+                )
               );
             })()}
           </Stack>
@@ -250,7 +221,8 @@ const NewsPost = () => {
 
               {/* 작성일 */}
               <Typography variant="subtitle2" color="text.secondary">
-                {formatDate(newsPost.createdAt)} ({formatRelativeTime(newsPost.createdAt)})
+                {formatDate(newsPost.createdAt)} (
+                {formatRelativeTime(newsPost.createdAt)})
               </Typography>
             </Stack>
           </Stack>
@@ -321,22 +293,6 @@ const NewsPost = () => {
             </Button>
           </Stack>
         </Stack>
-
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        >
-          <Alert
-            onClose={handleCloseSnackbar}
-            severity={snackbar.severity}
-            sx={{ width: "100%" }}
-            action={snackbar.action}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
       </Container>
     </>
   );
