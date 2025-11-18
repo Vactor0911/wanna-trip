@@ -19,7 +19,6 @@ import { checkTimeOverlap, MAX_BOARDS } from "../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
-  CardInterface,
   currentEditCardAtom,
   templateAtom,
 } from "../state/template";
@@ -72,9 +71,9 @@ const Board = (props: BoardProps) => {
       const card = boardData.cards[cardIndex];
       if (card) {
         setCurrentEditCard({
-          cardId: card.id,
-          boardId: boardData.id,
-          orderIndex: card.orderIndex || cardIndex,
+          cardUuid: card.uuid,
+          boardUuid: boardData.uuid,
+          orderIndex: card.orderIndex!,
         });
         setCardEditDialogOpen(true);
       }
@@ -82,7 +81,7 @@ const Board = (props: BoardProps) => {
     [
       isOwner,
       boardData.cards,
-      boardData.id,
+      boardData.uuid,
       setCurrentEditCard,
       setCardEditDialogOpen,
     ]
@@ -90,34 +89,41 @@ const Board = (props: BoardProps) => {
 
   // 카드 생성 버튼 클릭 핸들러
   const handleAddCardButtonClick = useCallback(async () => {
-    // 보드 Id가 없으면 중단
-    if (!boardData.id) {
+    // 보드 Uuid가 없으면 중단
+    if (!boardData.uuid) {
       return;
     }
 
-    // 생성할 새 카드
-    const newCard: CardInterface = {
-      content: "",
-      startTime: dayjs(),
-      endTime: dayjs().add(1, "hour"),
-      isLocked: false,
-    };
+    // 보드 내 마지막 카드의 종료 시간 추출
+    const lastCardEndTime = boardData.cards.length
+      ? dayjs(boardData.cards[boardData.cards.length - 1].endTime)
+      : dayjs().hour(9).minute(0).second(0);
 
     // 카드 추가 훅 호출
     try {
-      const newCardId = await addCard(newCard, boardData.id);
+      const newCardUuid = await addCard(
+        boardData.uuid,
+        lastCardEndTime,
+        boardData.cards.length + 1
+      );
+      fetchTemplateData();
 
       // 카드 편집 대화상자 열기
       setCurrentEditCard({
-        cardId: newCardId,
-        boardId: boardData.id,
+        cardUuid: newCardUuid,
+        boardUuid: boardData.uuid,
         orderIndex: boardData.cards.length,
       });
-      setCardEditDialogOpen(true);
     } catch (error) {
       console.error("카드 추가 중 오류 발생:", error);
     }
-  }, [boardData, setCurrentEditCard, setCardEditDialogOpen, addCard]);
+  }, [
+    boardData.uuid,
+    boardData.cards,
+    addCard,
+    fetchTemplateData,
+    setCurrentEditCard,
+  ]);
 
   // 보드 추가 버튼 클릭 - 현재 보드 바로 뒤에 새 보드 추가
   const handleAddBoardButtonClick = useCallback(async () => {
@@ -132,8 +138,11 @@ const Board = (props: BoardProps) => {
 
       // 백엔드 API 호출하여 현재 보드 뒤에 새 보드 생성
       const response = await axiosInstance.post(
-        `/board/after/${boardData.id}`,
-        {}, // 빈 객체 전송
+        `/board`,
+        {
+          templateUuid: template.uuid,
+          dayNumber: template.boards.length + 1,
+        }, // 빈 객체 전송
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -144,7 +153,7 @@ const Board = (props: BoardProps) => {
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
+  }, [fetchTemplateData, template.boards.length, template.uuid]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {
@@ -159,7 +168,7 @@ const Board = (props: BoardProps) => {
 
       // 백엔드 API 호출하여 현재 보드 복제 (newTitle 필드 제거)
       const response = await axiosInstance.post(
-        `/board/duplicate/${boardData.id}`,
+        `/board/copy/${boardData.uuid}`,
         {}, // 빈 객체 전송 (title 필드 제거)
         { headers: { "X-CSRF-Token": csrfToken } }
       );
@@ -171,7 +180,7 @@ const Board = (props: BoardProps) => {
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
+  }, [boardData.uuid, fetchTemplateData, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {
@@ -183,11 +192,10 @@ const Board = (props: BoardProps) => {
       if (template.boards.length <= 1) {
         // 카드가 있다면 보드 카드 모두 삭제 API 호출
         if (template.boards[0].cards.length > 0) {
-          const response = await axiosInstance.delete(
-            `/board/${boardData.id}/cards`,
-            {
-              headers: { "X-CSRF-Token": csrfToken },
-            }
+          const response = await axiosInstance.put(
+            `/board/clear/${boardData.uuid}`,
+            {},
+            { headers: { "X-CSRF-Token": csrfToken } }
           );
 
           if (response.data.success) {
@@ -199,7 +207,7 @@ const Board = (props: BoardProps) => {
       }
 
       // 보드 개수가 2개 이상일 경우 보드 자체를 삭제
-      const response = await axiosInstance.delete(`/board/${boardData.id}`, {
+      const response = await axiosInstance.delete(`/board/${boardData.uuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -219,9 +227,9 @@ const Board = (props: BoardProps) => {
       const csrfToken = await getCsrfToken();
 
       // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/board/${boardData.id}/sort`,
-        { sortBy: "start_time" },
+      const response = await axiosInstance.put(
+        `/board/sort/${boardData.uuid}`,
+        {},
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -239,36 +247,7 @@ const Board = (props: BoardProps) => {
         variant: "error",
       });
     }
-  }, [boardData.id, fetchTemplateData, enqueueSnackbar]);
-
-  // 보드 내 카드 종료 시간순 정렬 함수
-  const handleSortByEndTime = useCallback(async () => {
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
-
-      // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/board/${boardData.id}/sort`,
-        { sortBy: "end_time" },
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
-
-      if (response.data.success) {
-        // 정렬 후 템플릿 데이터 다시 가져오기
-        await fetchTemplateData();
-
-        enqueueSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", {
-          variant: "success",
-        });
-      }
-    } catch (error) {
-      console.error("카드 정렬 오류:", error);
-      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
-        variant: "error",
-      });
-    }
-  }, [boardData.id, fetchTemplateData, enqueueSnackbar]);
+  }, [boardData.uuid, fetchTemplateData, enqueueSnackbar]);
 
   // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
   const scrollToFirstOverlappingCard = useCallback(() => {
@@ -323,7 +302,6 @@ const Board = (props: BoardProps) => {
               {isOwner && (
                 <SortMenu
                   onSortStart={handleSortByStartTime}
-                  onSortEnd={handleSortByEndTime}
                   tooltipTitle="보드 내 정렬하기"
                 />
               )}
@@ -390,7 +368,7 @@ const Board = (props: BoardProps) => {
 
           {/* 카드 드롭 영역 */}
           <Droppable
-            droppableId={String(boardData.id)}
+            droppableId={String(boardData.uuid)}
             type="card"
             isDropDisabled={!isOwner} // 소유자가 아니면 드롭 불가능
           >
@@ -409,8 +387,8 @@ const Board = (props: BoardProps) => {
                 {/* 카드 목록 렌더링 */}
                 {(boardData?.cards || []).map((card, index) => (
                   <Draggable
-                    key={`card-${card.id}`}
-                    draggableId={`card-${card.id}`}
+                    key={`card-${card.uuid}`}
+                    draggableId={`${card.uuid}`}
                     index={index}
                     isDragDisabled={!isOwner} // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
                   >
@@ -419,23 +397,23 @@ const Board = (props: BoardProps) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        id={`card-${card.id}`} // ID 속성 추가
+                        id={`card-${card.uuid}`} // ID 속성 추가
                         sx={{
                           borderRadius: "8px",
                         }}
                       >
                         <Card
-                          key={`card-${card.id}`}
+                          key={`card-${card.uuid}`}
                           content={card.content || ""}
                           startTime={card.startTime}
                           endTime={card.endTime}
-                          isLocked={card.isLocked}
-                          location={card.location}
+                          isLocked={card.locked}
+                          location={card.location || undefined}
                           onClick={() => handleCardClick(index)}
                           isOwner={isOwner}
                           isTimeOverlapping={
-                            card.id !== undefined &&
-                            overlappingCardIds.includes(card.id)
+                            card.uuid !== undefined &&
+                            overlappingCardIds.includes(card.uuid)
                           }
                         />
                       </Box>

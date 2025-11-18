@@ -43,13 +43,13 @@ const PdfDownloadButton: React.FC<PdfDownloadButtonProps> = ({
     try {
       setIsDownloading(true);
       onDownloadStart?.();
-      
+
       const result = downloadPdf(template);
-      
-      onDownloadComplete?.(result.success, result.message);
+
+      onDownloadComplete?.((await result).success, (await result).message);
     } catch (error) {
-      console.error('PDF 다운로드 오류:', error);
-      onDownloadComplete?.(false, 'PDF 다운로드 중 오류가 발생했습니다.');
+      console.error("PDF 다운로드 오류:", error);
+      onDownloadComplete?.(false, "PDF 다운로드 중 오류가 발생했습니다.");
     } finally {
       setIsDownloading(false);
       handleClose();
@@ -95,6 +95,3 @@ const PdfDownloadButton: React.FC<PdfDownloadButtonProps> = ({
 };
 
 export default PdfDownloadButton;
-
-
-

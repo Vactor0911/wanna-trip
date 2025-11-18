@@ -42,7 +42,6 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import { useAddCard } from "../hooks/template";
 import React from "react";
 import NaverMapDialog from "./naver_map/NaverMapDialog";
 import {
@@ -53,6 +52,7 @@ import {
   naverMapInitialLocationAtom,
   selectedLocationAtom,
 } from "../state/naverMapDialog";
+import { useCopyCard } from "../hooks/template";
 
 interface MapSectionProps {
   selectedLocation: LocationInterface | null; // 위치 정보가 없을 수도 있으므로 null 허용
@@ -152,10 +152,16 @@ const MapSection = React.memo(
   }
 );
 
-const CardEditDialog = () => {
+interface CardEditDialogProps {
+  fetchTemplateData: () => Promise<void>; // 함수 타입 추가
+}
+
+const CardEditDialog = (props: CardEditDialogProps) => {
+  const { fetchTemplateData } = props;
+
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
-  const addCard = useAddCard(); // 카드 추가 훅
+  const copyCard = useCopyCard(); // 카드 복제 훅
 
   const [cardEditDialogOpen, setCardEditDialogOpen] = useAtom(
     cardEditDialogOpenAtom
@@ -183,7 +189,7 @@ const CardEditDialog = () => {
 
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
-    (board) => board.id === currentEditCard?.boardId
+    (board) => board.uuid === currentEditCard?.boardUuid
   );
 
   // 보드 카드 업데이트 함수
@@ -214,7 +220,7 @@ const CardEditDialog = () => {
   useEffect(() => {
     if (cardEditDialogOpen) {
       // 새 카드인 경우 기본 값으로 시작
-      if (!currentEditCard?.cardId) {
+      if (!currentEditCard?.cardUuid) {
         setContent("");
         setIsCardLocked(false); // 기본값 - 잠금 해제
         setStartTime(dayjs("2001-01-01T01:00"));
@@ -225,19 +231,19 @@ const CardEditDialog = () => {
       else {
         // 현재 보드 찾기
         const currentBoard = template.boards.find(
-          (board) => board.id === currentEditCard?.boardId
+          (board) => board.uuid === currentEditCard?.boardUuid
         );
 
         // 현재 카드 찾기
         const currentCard = currentBoard?.cards.find(
-          (card) => card.id === currentEditCard?.cardId
+          (card) => card.uuid === currentEditCard?.cardUuid
         );
 
         if (currentCard) {
           setContent(currentCard.content || "");
           setStartTime(currentCard.startTime || dayjs("2001-01-01T01:00"));
           setEndTime(currentCard.endTime || dayjs("2001-01-01T02:00"));
-          setIsCardLocked(currentCard.isLocked || false); // 카드의 잠금 상태 설정
+          setIsCardLocked(currentCard.locked || false); // 카드의 잠금 상태 설정
 
           // 카드에 위치 정보가 있으면 설정
           if (currentCard.location) {
@@ -257,7 +263,7 @@ const CardEditDialog = () => {
             const fetchLocationInfo = async () => {
               try {
                 const response = await axiosInstance.get(
-                  `/card/location/${currentEditCard.cardId}`
+                  `/card/location/${currentEditCard.cardUuid}`
                 );
                 if (
                   response.data &&
@@ -336,14 +342,15 @@ const CardEditDialog = () => {
       const csrfToken = await getCsrfToken();
 
       // 새 카드 생성 또는 기존 카드 업데이트
-      if (currentEditCard && currentEditCard.boardId) {
+      if (currentEditCard && currentEditCard.boardUuid) {
         // 내용 수정할 때는 orderIndex를 전송하지 않도록 수정
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cardData: any = {
           content, // 카드 내용
-          startTime: startTime.format("YYYY-MM-DD HH:mm:ss"), // 시작 시간
-          endTime: endTime.format("YYYY-MM-DD HH:mm:ss"), // 종료 시간
+          startTime: startTime.format("HH:mm:ss"), // 시작 시간
+          endTime: endTime.format("HH:mm:ss"), // 종료 시간
           locked: isCardLocked, // 잠금 상태
+          orderIndex: currentEditCard.orderIndex || 1,
           // 위치 정보가 있는 경우에만 포함
           ...(selectedLocation && {
             location: {
@@ -358,17 +365,17 @@ const CardEditDialog = () => {
         };
 
         // 새 카드 생성 시에만 orderIndex 포함 (드래그 앤 드롭으로 위치 변경하는 경우는 별도 처리)
-        const isNewCard = !currentEditCard.cardId;
+        const isNewCard = !currentEditCard.cardUuid;
         if (isNewCard) {
-          cardData.orderIndex = currentEditCard.orderIndex || 0;
+          cardData.orderIndex = currentEditCard.orderIndex || 1;
         }
 
         let response;
 
         // 기존 카드 수정
-        if (currentEditCard.cardId) {
+        if (currentEditCard.cardUuid) {
           response = await axiosInstance.put(
-            `/card/${currentEditCard.cardId}`,
+            `/card/${currentEditCard.cardUuid}`,
             cardData,
             { headers: { "X-CSRF-Token": csrfToken } }
           );
@@ -376,7 +383,7 @@ const CardEditDialog = () => {
         // 새 카드 생성
         else {
           response = await axiosInstance.post(
-            `/card/${currentEditCard.boardId}`,
+            `/card/${currentEditCard.boardUuid}`,
             cardData,
             { headers: { "X-CSRF-Token": csrfToken } }
           );
@@ -384,24 +391,24 @@ const CardEditDialog = () => {
 
         if (response.data.success) {
           // 카드 ID 가져오기 (신규 카드면 응답에서, 기존 카드면 현재 ID 사용)
-          const cardId = isNewCard
-            ? response.data.cardId
-            : currentEditCard.cardId;
+          const cardUuid = isNewCard
+            ? response.data.cardUuid
+            : currentEditCard.cardUuid;
 
           // 카드 객체 생성 (새 카드든 수정된 카드든)
           const updatedCard = {
-            id: cardId,
+            uuid: cardUuid,
             content,
             startTime,
             endTime,
-            isLocked: isCardLocked,
-            orderIndex: currentEditCard.orderIndex || 0,
+            locked: isCardLocked,
+            orderIndex: currentEditCard.orderIndex || 1,
             ...(selectedLocation ? { location: selectedLocation } : {}),
           };
 
           // 카드 상태 업데이트 - 모든 경우에 항상 업데이트
           updateBoardCard({
-            boardId: currentEditCard.boardId,
+            boardUuid: currentEditCard.boardUuid,
             card: updatedCard,
             isNew: isNewCard,
           });
@@ -455,7 +462,7 @@ const CardEditDialog = () => {
   // 카드 복제 버튼 클릭
   const handleDuplicateCardButtonClick = useCallback(async () => {
     // 현재 편집 중인 카드가 없거나 보드 정보가 없으면 오류 출력
-    if (!currentEditCard?.cardId || !currentEditCard?.boardId) {
+    if (!currentEditCard?.cardUuid || !currentEditCard?.boardUuid) {
       setErrorMessage("복제할 카드가 없거나 보드 정보가 없습니다.");
       return;
     }
@@ -463,45 +470,29 @@ const CardEditDialog = () => {
     setIsSaving(true); // 저장 중 상태로 변경
     setErrorMessage(""); // 오류 메시지 초기화
 
-    // 복제 카드 데이터
-    const newCard = {
-      content,
-      startTime,
-      endTime,
-      isLocked: false, // 복제 시 잠금 해제
-      ...(selectedLocation ? { location: selectedLocation } : {}), // null인 경우 속성 자체를 제외
-    };
-
-    // 카드 추가 훅 호출
+    // 카드 복제 훅 호출
     try {
-      await addCard(
-        newCard,
-        currentEditCard.boardId,
-        currentEditCard.orderIndex
-      );
+      await copyCard(currentEditCard.cardUuid);
     } catch (error) {
       console.error("카드 추가 중 오류 발생:", error);
     } finally {
       setIsSaving(false); // 저장 중 상태 해제
       handleMoreMenuClose(); // 메뉴 닫기
       setCardEditDialogOpen(false); // 대화상자 닫기
+      fetchTemplateData(); // 템플릿 데이터 새로고침
     }
   }, [
-    addCard,
-    content,
-    currentEditCard.boardId,
-    currentEditCard?.cardId,
-    currentEditCard.orderIndex,
-    endTime,
+    copyCard,
+    currentEditCard?.boardUuid,
+    currentEditCard.cardUuid,
+    fetchTemplateData,
     handleMoreMenuClose,
-    selectedLocation,
     setCardEditDialogOpen,
-    startTime,
   ]);
 
   // 카드 삭제 핸들러
   const handleCardDelete = useCallback(async () => {
-    if (!currentEditCard?.cardId || !currentEditCard?.boardId) {
+    if (!currentEditCard?.cardUuid || !currentEditCard?.boardUuid) {
       setErrorMessage("삭제할 카드가 없거나 보드 정보가 없습니다.");
       return;
     }
@@ -515,15 +506,15 @@ const CardEditDialog = () => {
 
       // 카드 삭제 API 호출
       const response = await axiosInstance.delete(
-        `/card/${currentEditCard.cardId}`,
+        `/card/${currentEditCard.cardUuid}`,
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
         // 보드에서 카드 제거
         deleteBoardCard({
-          boardId: currentEditCard.boardId,
-          cardId: currentEditCard.cardId,
+          boardUuid: currentEditCard.boardUuid,
+          cardUuid: currentEditCard.cardUuid,
         });
 
         // 삭제 후 대화상자 닫기
@@ -538,8 +529,8 @@ const CardEditDialog = () => {
       setIsSaving(false);
     }
   }, [
-    currentEditCard.boardId,
-    currentEditCard.cardId,
+    currentEditCard.boardUuid,
+    currentEditCard.cardUuid,
     deleteBoardCard,
     setCardEditDialogOpen,
   ]);
@@ -823,7 +814,7 @@ const CardEditDialog = () => {
           {/* 카드 복제 */}
           <MenuItem
             onClick={handleDuplicateCardButtonClick}
-            disabled={!currentEditCard?.cardId}
+            disabled={!currentEditCard?.cardUuid}
           >
             <ListItemIcon>
               <ContentCopyRoundedIcon />
@@ -834,7 +825,7 @@ const CardEditDialog = () => {
           {/* 카드 삭제 */}
           <MenuItem
             onClick={handleDeleteMenuClick}
-            disabled={!currentEditCard?.cardId}
+            disabled={!currentEditCard?.cardUuid}
           >
             <ListItemIcon>
               <DeleteOutlineRoundedIcon

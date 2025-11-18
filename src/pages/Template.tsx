@@ -64,38 +64,39 @@ const modes = [
 
 // 백엔드 템플릿 인터페이스
 interface BackendTemplate {
-  userUuid?: string; // 템플릿 소유자 UUID
-  template_id: number;
-  template_uuid: string;
+  uuid: string;
   title: string;
-  boards: BackendBoard[];
+  createdAt: string;
+  updatedAt: string;
+  boards: BackendBoard[] | null;
 }
 
 // 백엔드 보드 인터페이스
 interface BackendBoard {
-  board_id: number;
-  board_uuid: string;
-  day_number: number;
-  title: string;
-  cards: BackendCard[];
+  uuid: string;
+  dayNumber: number;
+  cards: BackendCard[] | null;
 }
 
 // 백엔드 카드 인터페이스
 interface BackendCard {
-  card_id: number; // 카드 ID
-  content: string; // 카드 내용
-  start_time: string; // 카드 시작 시간
-  end_time: string; // 카드 종료 시간
-  order_index: number; // 카드 순서 인덱스
-  locked: boolean; // 카드 잠금 상태 (0, 1으로 표현 됨)
-  location: {
-    title: string; // 장소명
-    address: string; // 장소 주소
-    latitude: string; // 위도
-    longitude: string; // 경도
-    category: string; // 장소 카테고리
-    thumbnail_url: string; // 썸네일 URL
-  };
+  uuid: string;
+  content: string;
+  startTime: string;
+  endTime: string;
+  orderIndex: number;
+  locked: boolean;
+  location: BackendLocation | null;
+}
+
+// 백엔드 위치 정보 인터페이스
+interface BackendLocation {
+  title: string;
+  address: string;
+  latitude: string;
+  longitude: string;
+  category: string;
+  thumbnailUrl: string;
 }
 
 interface TemplateProps {
@@ -165,7 +166,7 @@ const Template = (props: TemplateProps) => {
       const csrfToken = await getCsrfToken();
 
       // 템플릿 데이터 가져오기
-      const response = await axiosInstance.get(`/template/uuid/${uuid}`, {
+      const response = await axiosInstance.get(`/template/${uuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -188,24 +189,24 @@ const Template = (props: TemplateProps) => {
 
         // 보드와 카드 정보를 포함한 템플릿 데이터로 변환
         const transformedTemplate = {
-          uuid: backendTemplate.template_uuid,
+          uuid: backendTemplate.uuid,
           title: backendTemplate.title,
-          boards: (backendTemplate.boards || []).map((board) => ({
-            id: board.board_id,
-            dayNumber: board.day_number,
-            title: board.title || `Day ${board.day_number}`,
+          boards: (backendTemplate.boards || []).map((board, index) => ({
+            uuid: board.uuid,
+            dayNumber: board.dayNumber,
+            title: `Day ${index + 1}`,
             cards: (board.cards || []).map((card) => ({
-              id: card.card_id,
+              uuid: card.uuid,
               content: card.content || "",
               // 시간만 있는 경우 임시 기본 날짜를 추가하여 파싱
-              startTime: card.start_time
-                ? dayjs(`2001-01-01T${card.start_time}`)
+              startTime: card.startTime
+                ? dayjs(`2001-01-01T${card.startTime}`)
                 : dayjs(),
-              endTime: card.end_time
-                ? dayjs(`2001-01-01T${card.end_time}`)
+              endTime: card.endTime
+                ? dayjs(`2001-01-01T${card.endTime}`)
                 : dayjs(),
-              orderIndex: card.order_index,
-              isLocked: card.locked, // 기본값 - 잠금 해제 상태
+              orderIndex: card.orderIndex,
+              locked: card.locked, // 기본값 - 잠금 해제 상태
               location: card.location
                 ? {
                     title: card.location.title,
@@ -213,7 +214,7 @@ const Template = (props: TemplateProps) => {
                     latitude: parseFloat(card.location.latitude),
                     longitude: parseFloat(card.location.longitude),
                     category: card.location.category,
-                    thumbnailUrl: card.location.thumbnail_url,
+                    thumbnailUrl: card.location.thumbnailUrl,
                   }
                 : undefined,
             })),
@@ -261,8 +262,11 @@ const Template = (props: TemplateProps) => {
 
       // 백엔드 API 호출하여 맨 뒤에 새 보드 생성
       const response = await axiosInstance.post(
-        `/board/${template.uuid}`,
-        {},
+        `/board`,
+        {
+          templateUuid: template.uuid,
+          dayNumber: template.boards.length + 1,
+        },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -300,7 +304,7 @@ const Template = (props: TemplateProps) => {
         const csrfToken = await getCsrfToken();
 
         await axiosInstance.put(
-          `/template/uuid/${template.uuid}`,
+          `/template/${template.uuid}`,
           { title: newTemplate.title },
           { headers: { "X-CSRF-Token": csrfToken } }
         );
@@ -341,10 +345,10 @@ const Template = (props: TemplateProps) => {
         newTemplate = produce(prevTemplate, (draft) => {
           // 원본, 대상 보드 찾기
           const sourceBoard = draft.boards.find(
-            (b) => b.id === Number(source.droppableId)
+            (b) => b.uuid === source.droppableId
           );
           const destinationBoard = draft.boards.find(
-            (b) => b.id === Number(destination.droppableId)
+            (b) => b.uuid === destination.droppableId
           );
 
           // 보드가 존재하지 않으면 중단
@@ -365,14 +369,9 @@ const Template = (props: TemplateProps) => {
 
         // 카드 이동 API 호출
         moveCard.mutate({
-          source: {
-            boardId: Number(source.droppableId),
-            orderIndex: source.index,
-          },
-          destination: {
-            boardId: Number(destination.droppableId),
-            orderIndex: destination.index,
-          },
+          cardUuid: result.draggableId,
+          boardUuid: destination.droppableId,
+          orderIndex: destination.index + 1,
           prevTemplate: prevTemplate,
         });
       } else {
@@ -393,8 +392,8 @@ const Template = (props: TemplateProps) => {
         // 보드 이동 API 호출
         moveBoard.mutate({
           templateUuid: template.uuid || "",
-          sourceDay: source.index + 1, // dayNumber는 1부터 시작하므로 +1
-          destinationDay: destination.index + 1, // dayNumber는 1부터 시작하므로 +1
+          boardUuid: result.draggableId,
+          dayNumber: destination.index + 1,
           prevTemplate: prevTemplate,
         });
       }
@@ -407,15 +406,15 @@ const Template = (props: TemplateProps) => {
   );
 
   // 템플릿 내 모든 카드 정렬 함수 (시작 시간 순)
-  const handleSortByStartTime = useCallback(async () => {
+  const handleSortButtonClick = useCallback(async () => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
       // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/template/uuid/${template.uuid}/sort`,
-        { sortBy: "start_time" },
+      const response = await axiosInstance.put(
+        `/template/sort/${template.uuid}`,
+        {},
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
@@ -423,34 +422,6 @@ const Template = (props: TemplateProps) => {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
         enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
-          variant: "success",
-        });
-      }
-    } catch (error) {
-      console.error("카드 정렬 오류:", error);
-      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
-        variant: "error",
-      });
-    }
-  }, [template.uuid, fetchTemplateData, enqueueSnackbar]);
-
-  // 템플릿 내 모든 카드 정렬 함수 (종료 시간 순)
-  const handleSortByEndTime = useCallback(async () => {
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
-
-      // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/template/uuid/${template.uuid}/sort`,
-        { sortBy: "end_time" },
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
-
-      if (response.data.success) {
-        // 정렬 후 템플릿 데이터 다시 가져오기
-        await fetchTemplateData();
-        enqueueSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", {
           variant: "success",
         });
       }
@@ -472,7 +443,7 @@ const Template = (props: TemplateProps) => {
     if (firstOverlappingBoard) {
       // 해당 보드 요소 찾기
       const boardElement = document.getElementById(
-        `board-${firstOverlappingBoard.boardId}`
+        `board-${firstOverlappingBoard.boardUuid}`
       );
       if (boardElement) {
         // 부드러운 스크롤로 해당 보드로 이동
@@ -686,8 +657,7 @@ const Template = (props: TemplateProps) => {
               <Stack direction="row" alignItems="center" gap={0.5}>
                 {isOwner && (
                   <SortMenu
-                    onSortStart={handleSortByStartTime}
-                    onSortEnd={handleSortByEndTime}
+                    onSortStart={handleSortButtonClick}
                     tooltipTitle="템플릿 전체 정렬하기"
                   />
                 )}
@@ -813,8 +783,8 @@ const Template = (props: TemplateProps) => {
                 >
                   {template.boards.map((board, index) => (
                     <Draggable
-                      key={`board-${board.id || index}`}
-                      draggableId={`board-${board.id || index}`}
+                      key={`board-${board.uuid || index}`}
+                      draggableId={`${board.uuid || index}`}
                       index={index}
                       isDragDisabled={!isOwner} // 소유자가 아니면 드래그 불가능
                     >
@@ -823,12 +793,12 @@ const Template = (props: TemplateProps) => {
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          key={`board-${board.id || index}`}
-                          day={board.dayNumber || index + 1}
+                          key={`board-${board.uuid || index}`}
+                          day={index + 1}
                           boardData={board} // 보드 데이터 직접 전달
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isOwner} // 소유자 여부 전달
-                          id={`board-${board.id}`} // ID 속성 추가
+                          id={`board-${board.uuid}`} // ID 속성 추가
                         />
                       )}
                     </Draggable>
@@ -889,7 +859,7 @@ const Template = (props: TemplateProps) => {
       </Stack>
 
       {/* 카드 편집 대화상자 */}
-      <CardEditDialog />
+      <CardEditDialog fetchTemplateData={fetchTemplateData} />
 
       {/* 더보기 메뉴 */}
       <Menu
