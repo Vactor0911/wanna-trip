@@ -105,7 +105,6 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
           {myTemplates.map((template) => (
             <SquareTemplateCard
               key={`template-${template.template_id}`}
-              id={template.template_id}
               title={template.title}
               color={getRandomColor(template.template_id)}
               onClick={() => handleTemplateClick(template.template_uuid)}

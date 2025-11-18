@@ -25,8 +25,7 @@ import { getRandomColor } from "../utils";
 
 // 템플릿 타입 정의
 interface Template {
-  template_id: number;
-  template_uuid: string;
+  uuid: string;
   title: string;
   created_at: string;
   updated_at: string;
@@ -47,7 +46,9 @@ const UserTemplates = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteTemplateId, setDeleteTemplateId] = useState<number | null>(null);
+  const [deleteTemplateUuid, setDeleteTemplateUuid] = useState<string | null>(
+    null
+  );
 
   const [nameError, setNameError] = useState("");
 
@@ -196,27 +197,27 @@ const UserTemplates = () => {
   );
 
   // 삭제 버튼 클릭 시 확인 대화상자 표시
-  const handleDeleteButtonClick = useCallback((templateId: number) => {
-    setDeleteTemplateId(templateId);
+  const handleDeleteButtonClick = useCallback((templateUuid: string) => {
+    setDeleteTemplateUuid(templateUuid);
     setIsDeleteDialogOpen(true);
   }, []);
 
   // 삭제 대화상자 닫기
   const handleCloseDeleteDialog = useCallback(() => {
     setIsDeleteDialogOpen(false);
-    setDeleteTemplateId(null);
+    setDeleteTemplateUuid(null);
   }, []);
 
   // 템플릿 삭제
   const handleDeleteTemplate = useCallback(async () => {
-    if (deleteTemplateId === null) return;
+    if (deleteTemplateUuid === null) return;
 
     try {
       const csrfToken = await getCsrfToken();
 
       // 템플릿 삭제 API 호출
       const response = await axiosInstance.delete(
-        `/template/${deleteTemplateId}`,
+        `/template/${deleteTemplateUuid}`,
         {
           headers: { "X-CSRF-Token": csrfToken },
         }
@@ -234,9 +235,9 @@ const UserTemplates = () => {
     } finally {
       // 대화상자 닫기
       setIsDeleteDialogOpen(false);
-      setDeleteTemplateId(null);
+      setDeleteTemplateUuid(null);
     }
-  }, [deleteTemplateId, fetchTemplates]);
+  }, [deleteTemplateUuid, fetchTemplates]);
 
   return (
     <Container maxWidth="xl">
@@ -313,14 +314,13 @@ const UserTemplates = () => {
               <SquareTemplateCard type="new" onClick={handleOpenDialog} />
 
               {/* 내 템플릿 목록들 (API에서 가져온 실제 데이터) */}
-              {myTemplates.map((template) => (
+              {myTemplates.map((template, index) => (
                 <SquareTemplateCard
-                  key={`template-${template.template_id}`}
-                  id={template.template_id}
+                  key={`template-${index}`}
                   title={template.title}
-                  color={getRandomColor(template.template_id)}
-                  onClick={() => handleTemplateClick(template.template_uuid)}
-                  onDelete={() => handleDeleteButtonClick(template.template_id)}
+                  color={getRandomColor(template.uuid)}
+                  onClick={() => handleTemplateClick(template.uuid)}
+                  onDelete={() => handleDeleteButtonClick(template.uuid)}
                 />
               ))}
             </Box>

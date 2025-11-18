@@ -1,13 +1,13 @@
 import { useAtom, useSetAtom } from "jotai";
 import {
-  CardInterface,
+  LocationInterface,
   templateAtom,
   TemplateInterface,
 } from "../state/template";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 /**
  * 카드 추가 및 복제 훅
@@ -17,43 +17,29 @@ import dayjs from "dayjs";
  * @returns 보드Id의 index 위치에 새로운 카드를 추가
  */
 export const useAddCard = () => {
-  const [template, setTemplate] = useAtom(templateAtom);
-
   const addCard = useCallback(
-    async (newCard: CardInterface, boardId: number, index?: number) => {
+    async (
+      boardUuid: string,
+      startTime: Dayjs,
+      orderIndex?: number,
+      location?: LocationInterface
+    ) => {
       // 보드가 존재하지 않으면 종료
-      if (!boardId) return;
+      if (!boardUuid) return;
 
       // 카드 데이터 처리
       const cardData = {
-        content: newCard.content,
-        startTime: newCard.startTime.format("YYYY-MM-DD HH:mm:ss"),
-        endTime: newCard.endTime.format("YYYY-MM-DD HH:mm:ss"),
-        isLocked: newCard.isLocked,
-        // 위치 정보가 있는 경우에만 포함
-        ...(newCard.location && {
-          location: {
-            title: newCard.location.title,
-            address: newCard.location.address || "",
-            latitude: newCard.location.latitude,
-            longitude: newCard.location.longitude,
-            category: newCard.location.category || "",
-            thumbnail_url: newCard.location.thumbnailUrl || "",
-          },
-        }),
+        boardUuid,
+        startTime: startTime.format("HH:mm:ss"),
+        orderIndex,
+        ...location,
       };
-
-      // 백엔드 API 엔드포인트 설정
-      const endPoint =
-        index !== undefined
-          ? `/card/add/${boardId}/${index}`
-          : `/card/add/${boardId}`;
 
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
       // 카드 추가 API 요청
-      const response = await axiosInstance.post(endPoint, cardData, {
+      const response = await axiosInstance.post(`/card`, cardData, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -63,43 +49,49 @@ export const useAddCard = () => {
       }
 
       // 카드 추가 성공
-      const newCardId = response.data.cardId;
-
-      // 템플릿 업데이트
-      const newTemplate = {
-        ...template,
-        boards: template.boards.map((board) => {
-          if (board.id === boardId) {
-            const updatedCards = [...board.cards];
-            if (index !== undefined) {
-              updatedCards.splice(index, 0, {
-                ...newCard,
-                id: newCardId,
-              });
-            } else {
-              updatedCards.push({
-                ...newCard,
-                id: newCardId,
-              });
-            }
-            return { ...board, cards: updatedCards };
-          }
-          return board;
-        }),
-      };
-      setTemplate(newTemplate);
-
-      return newCardId; // 새 카드 ID 반환
+      const newCardUuid = response.data.cardUuid;
+      return newCardUuid; // 새 카드 UUID 반환
     },
-    [setTemplate, template]
+    []
   );
 
   return addCard;
 };
 
+/**
+ * 카드 복제 훅
+ * @param cardUuid 복제할 카드 UUID
+ */
+export const useCopyCard = () => {
+  const copyCard = useCallback(async (cardUuid: string) => {
+    // 카드 UUID가 없으면 종료
+    if (!cardUuid) {
+      return;
+    }
+
+    // CSRF 토큰 가져오기
+    const csrfToken = await getCsrfToken();
+
+    // 카드 복제 API 요청
+    const response = await axiosInstance.post(
+      `/card/copy/${cardUuid}`,
+      {},
+      { headers: { "X-CSRF-Token": csrfToken } }
+    );
+
+    // 오류 처리
+    if (!response.data.success) {
+      throw new Error("카드 복제에 실패했습니다.");
+    }
+  }, []);
+
+  return copyCard;
+};
+
 interface MoveCardParams {
-  source: { boardId: number; orderIndex: number };
-  destination: { boardId: number; orderIndex: number };
+  cardUuid: string;
+  boardUuid: string;
+  orderIndex: number;
   prevTemplate: TemplateInterface;
 }
 
@@ -112,12 +104,7 @@ export const useMoveCard = () => {
   const queryClient = useQueryClient();
 
   const moveCard = useMutation({
-    mutationFn: async ({ source, destination }: MoveCardParams) => {
-      // 보드가 존재하지 않으면 종료
-      if (!source.boardId || !destination.boardId) {
-        return null;
-      }
-
+    mutationFn: async ({ cardUuid, boardUuid, orderIndex }: MoveCardParams) => {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
@@ -125,10 +112,9 @@ export const useMoveCard = () => {
       const response = await axiosInstance.post(
         "/card/move",
         {
-          sourceBoardId: source.boardId,
-          sourceOrderIndex: source.orderIndex,
-          destinationBoardId: destination.boardId,
-          destinationOrderIndex: destination.orderIndex,
+          cardUuid,
+          boardUuid,
+          orderIndex,
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
@@ -138,16 +124,13 @@ export const useMoveCard = () => {
     },
     onSuccess: (data, variables) => {
       // 서버 응답에 newCardId가 있고, 다른 보드로 이동한 경우에만 처리
-      if (
-        data?.newCardId &&
-        variables.source.boardId !== variables.destination.boardId
-      ) {
+      if (data?.newCardId && template) {
         // 템플릿 상태 복사 (레퍼런스가 아닌 완전한 복사본)
         const currentTemplate = JSON.parse(JSON.stringify(template));
 
         // 모든 보드의 모든 카드에 대해 시간 객체를 dayjs로 변환
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        currentTemplate.boards.forEach((board: { cards: any[]; }) => {
+        currentTemplate.boards.forEach((board: { cards: any[] }) => {
           board.cards = board.cards.map((card) => ({
             ...card,
             startTime: dayjs(card.startTime),
@@ -157,19 +140,16 @@ export const useMoveCard = () => {
 
         // 이제 대상 보드에서 카드 ID 업데이트
         const destinationBoardIndex = currentTemplate.boards.findIndex(
-          (board: { id: number; }) => board.id === variables.destination.boardId
+          (board: { uuid: string }) => board.uuid === variables.boardUuid
         );
 
         if (destinationBoardIndex !== -1) {
           const destinationBoard =
             currentTemplate.boards[destinationBoardIndex];
 
-          if (
-            destinationBoard.cards.length > variables.destination.orderIndex
-          ) {
+          if (destinationBoard.cards.length > variables.orderIndex) {
             // ID만 업데이트 (시간은 이미 위에서 변환됨)
-            destinationBoard.cards[variables.destination.orderIndex].id =
-              data.newCardId;
+            destinationBoard.cards[variables.orderIndex].id = data.newCardId;
           }
         }
 
@@ -194,8 +174,8 @@ export const useMoveCard = () => {
 
 interface MoveBoardParams {
   templateUuid: string;
-  sourceDay: number;
-  destinationDay: number;
+  boardUuid: string;
+  dayNumber: number;
   prevTemplate: TemplateInterface;
 }
 
@@ -210,8 +190,8 @@ export const useMoveBoard = () => {
   const moveBoard = useMutation({
     mutationFn: async ({
       templateUuid,
-      sourceDay,
-      destinationDay,
+      boardUuid,
+      dayNumber,
     }: MoveBoardParams) => {
       // 템플릿 UUID가 없으면 종료
       if (!templateUuid) {
@@ -219,7 +199,7 @@ export const useMoveBoard = () => {
       }
 
       // 보드가 존재하지 않으면 종료
-      if (!sourceDay || !destinationDay) {
+      if (!boardUuid || !dayNumber) {
         return;
       }
 
@@ -231,8 +211,8 @@ export const useMoveBoard = () => {
         "/board/move",
         {
           templateUuid,
-          sourceDay,
-          destinationDay,
+          boardUuid,
+          dayNumber,
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );

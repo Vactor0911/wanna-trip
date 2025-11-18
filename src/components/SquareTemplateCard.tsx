@@ -12,7 +12,6 @@ interface TemplateCardProps {
   children?: React.ReactNode;
   sx?: SxProps;
   type?: "new" | "existing";
-  id?: string | number;
   cardSize?: number;
 }
 
@@ -26,7 +25,6 @@ const SquareTemplateCard = ({
   children,
   sx = {},
   type = "existing",
-  id,
   cardSize = DEFAULT_CARD_SIZE,
 }: TemplateCardProps) => {
   // 삭제 버튼 클릭 시 이벤트 전파 방지 (카드 클릭 이벤트 실행 방지)
@@ -37,7 +35,6 @@ const SquareTemplateCard = ({
 
   return (
     <Box
-      key={`template-${id}`}
       sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
     >
       {/* 박스 스타일 */}
