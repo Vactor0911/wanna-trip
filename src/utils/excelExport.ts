@@ -189,11 +189,7 @@ export const downloadExcel = async (
 
     // 개발 모드에서 워크시트 내용 콘솔에 출력
     if (process.env.NODE_ENV === "development") {
-      console.log("=== Excel 데이터 미리보기 ===");
       console.table(excelData);
-      console.log("=== 워크시트 정보 ===");
-      console.log("행 수:", worksheet.rowCount);
-      console.log("컬럼 수:", worksheet.columnCount);
     }
 
     // Excel 파일 다운로드
