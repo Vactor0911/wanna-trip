@@ -95,8 +95,6 @@ const UserTemplates = () => {
       const response = await axiosInstance.get("/template/popular", {});
 
       if (response.data.success) {
-        console.log("인기 템플릿 데이터:", response.data);
-
         // API 응답 데이터를 PopularTemplateData 형식으로 변환
         const formattedTemplates = response.data.popularTemplates.map(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,7 +109,7 @@ const UserTemplates = () => {
                 : getRandomColor(Math.floor(Math.random() * 100)), // ID가 없으면 랜덤 색상
               title: template.title,
               username: template.ownerName,
-              shared_count: template.shared_count,
+              shared_count: template.sharedCount,
             };
           }
         );
