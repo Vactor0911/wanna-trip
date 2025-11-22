@@ -55,6 +55,7 @@ import { downloadPdf } from "../../utils/pdfExport";
 import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
 import Board from "../../components/template/Board";
+import TemplateShareDialog from "./TemplateShareDialog";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -912,7 +913,7 @@ const Template = (props: TemplateProps) => {
         </MenuItem>
       </Menu>
 
-      {/* 지도 다이얼로그 */}
+      {/* 지도 대화상자 */}
       {template && (
         <TemplateMapDialog
           open={mapDialogOpen}
@@ -920,6 +921,9 @@ const Template = (props: TemplateProps) => {
           template={template}
         />
       )}
+
+      {/* 공유하기 대화상자 */}
+      <TemplateShareDialog />
     </>
   );
 };
