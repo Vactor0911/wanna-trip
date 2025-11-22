@@ -41,7 +41,6 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import ShareIcon from "@mui/icons-material/Share";
-import Template from "./Template";
 import { CircularProgress } from "@mui/material"; // 로딩 표시용
 import axiosInstance, {
   getCsrfToken,
@@ -54,6 +53,7 @@ import { ko } from "date-fns/locale";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { useSnackbar } from "notistack";
+import TemplateViewer from "../components/TemplateViewer";
 
 // 댓글 인터페이스
 interface Comment {
@@ -1227,7 +1227,7 @@ const CommunityPost = () => {
                     </Box>
                   ) : (
                     // 로그인된 경우 템플릿 표시
-                    <Template
+                    <TemplateViewer
                       uuid={templateUuid}
                       height="70vh"
                       paddgingX="24px"

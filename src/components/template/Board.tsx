@@ -6,27 +6,27 @@ import {
   Stack,
   StackProps,
   Typography,
+  useTheme,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import Tooltip from "./Tooltip";
+import Tooltip from "../Tooltip";
 import Card from "./Card";
-import { theme } from "../utils/theme";
 import { useAtom } from "jotai";
 import { useCallback } from "react";
-import { checkTimeOverlap, MAX_BOARDS } from "../utils/template";
+import { checkTimeOverlap, MAX_BOARDS } from "../../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
   currentEditCardAtom,
   templateAtom,
-} from "../state/template";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+} from "../../state/template";
+import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
-import { useAddCard } from "../hooks/template";
-import SortMenu from "./SortMenu";
+import { useAddCard } from "../../hooks/template";
+import SortMenu from "../SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { useSnackbar } from "notistack";
 
@@ -47,6 +47,9 @@ const Board = (props: BoardProps) => {
     id, // ID 속성 추가 (선택적 속성으로 설정)
     ...others
   } = props;
+
+  const theme = useTheme();
+
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);

@@ -14,7 +14,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import Tooltip from "../components/Tooltip";
+import Tooltip from "../../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -23,38 +23,38 @@ import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
-import Board from "../components/Board";
-import { theme } from "../utils/theme";
+import { theme } from "../../utils/theme";
 import { useAtom } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../utils/template";
+import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
 import { useNavigate, useParams } from "react-router";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
-import CardEditDialog from "../components/CardEditDialog";
+import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
+import CardEditDialog from "../../components/CardEditDialog";
 import dayjs from "dayjs";
 import {
   reorderBoardCardsAtom,
   templateAtom,
   templateModeAtom,
   TemplateModes,
-} from "../state/template";
+} from "../../state/template";
 import {
   DragDropContext,
   Draggable,
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { useMoveBoard, useMoveCard } from "../hooks/template";
+import { useMoveBoard, useMoveCard } from "../../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
-import SortMenu from "../components/SortMenu";
+import SortMenu from "../../components/SortMenu";
 import MapIcon from "@mui/icons-material/Map";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
-import TemplateMapDialog from "../components/TemplateMapDialog";
-import { downloadExcel } from "../utils/excelExport";
-import { downloadPdf } from "../utils/pdfExport";
-import { downloadText } from "../utils/textExport";
+import TemplateMapDialog from "./TemplateMapDialog";
+import { downloadExcel } from "../../utils/excelExport";
+import { downloadPdf } from "../../utils/pdfExport";
+import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
+import Board from "../../components/template/Board";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -913,7 +913,13 @@ const Template = (props: TemplateProps) => {
       </Menu>
 
       {/* 지도 다이얼로그 */}
-      <TemplateMapDialog open={mapDialogOpen} onClose={handleMapDialogClose} />
+      {template && (
+        <TemplateMapDialog
+          open={mapDialogOpen}
+          onClose={handleMapDialogClose}
+          template={template}
+        />
+      )}
     </>
   );
 };
