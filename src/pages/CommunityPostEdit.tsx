@@ -19,10 +19,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { grey, red } from "@mui/material/colors";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import TemplateSelectDialog from "../components/TemplateSelectDialog";
-import Template from "./Template";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useSnackbar } from "notistack";
+import TemplateViewer from "../components/TemplateViewer";
 
 const MAX_TAGS = 5; // 최대 태그 개수
 
@@ -494,7 +494,11 @@ const CommunityPostEdit = () => {
           >
             {templateUuid ? (
               <>
-                <Template uuid={templateUuid} height="80vh" paddgingX="24px" />
+                <TemplateViewer
+                  uuid={templateUuid}
+                  height="80vh"
+                  paddgingX="24px"
+                />
 
                 <Stack
                   direction="row"
