@@ -148,6 +148,9 @@ const Template = (props: TemplateProps) => {
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
   const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
 
+  // 공유하기 다이얼로그 상태
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
   // URL 파라미터에서 uuid 가져오기
   if (!uuid) {
     uuid = params.uuid;
@@ -520,6 +523,21 @@ const Template = (props: TemplateProps) => {
     handleMoreMenuClose();
   }, [enqueueSnackbar, template, handleMoreMenuClose]);
 
+  // 공유하기 버튼 클릭
+  const handleShareButtonClick = useCallback(() => {
+    // 소유자가 아니면 링크 복사
+    if (!isOwner) {
+      navigator.clipboard.writeText(window.location.href);
+      enqueueSnackbar("템플릿 주소가 클립보드에 복사되었습니다.", {
+        variant: "success",
+      });
+      return;
+    }
+
+    // 소유자면 공유하기 대화상자 열기
+    setShareDialogOpen(true);
+  }, [enqueueSnackbar, isOwner]);
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
@@ -740,7 +758,7 @@ const Template = (props: TemplateProps) => {
 
               {/* 공유하기 버튼 */}
               <Tooltip title="공유하기">
-                <IconButton size="small">
+                <IconButton size="small" onClick={handleShareButtonClick}>
                   <ShareRoundedIcon />
                 </IconButton>
               </Tooltip>
@@ -923,7 +941,10 @@ const Template = (props: TemplateProps) => {
       )}
 
       {/* 공유하기 대화상자 */}
-      <TemplateShareDialog />
+      <TemplateShareDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+      />
     </>
   );
 };
