@@ -21,6 +21,7 @@ export interface PopularTemplateData {
   title: string; // 제목
   username: string; // 작성자
   shared_count: number; // 공유 수
+  thumbnailUrl?: string; // 썸네일 URL 추가
 }
 
 interface PopularTemplatesProps extends BoxProps {
@@ -160,8 +161,16 @@ const PopularTemplates = ({
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",
-              bgcolor: tpl.image ? undefined : tpl.bgColor || "#e0f7fa",
-              backgroundImage: tpl.image ? `url(${tpl.image})` : undefined,
+              background: tpl.thumbnailUrl
+                ? undefined
+                : tpl.image
+                ? undefined
+                : tpl.bgColor || "#e0f7fa",
+              backgroundImage: tpl.thumbnailUrl
+                ? `url(${tpl.thumbnailUrl})`
+                : tpl.image
+                ? `url(${tpl.image})`
+                : undefined,
               backgroundSize: "cover",
               backgroundPosition: "center",
               minHeight: "250px", // 최소 높이 설정
