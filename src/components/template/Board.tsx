@@ -144,7 +144,7 @@ const Board = (props: BoardProps) => {
         `/board`,
         {
           templateUuid: template.uuid,
-          dayNumber: template.boards.length + 1,
+          dayNumber: day + 1,
         }, // 빈 객체 전송
         { headers: { "X-CSRF-Token": csrfToken } }
       );
@@ -156,7 +156,7 @@ const Board = (props: BoardProps) => {
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [fetchTemplateData, template.boards.length, template.uuid]);
+  }, [day, fetchTemplateData, template.boards.length, template.uuid]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {
