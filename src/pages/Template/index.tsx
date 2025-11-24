@@ -13,6 +13,9 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Chip,
+  Avatar,
+  AvatarGroup,
 } from "@mui/material";
 import Tooltip from "../../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -56,6 +59,9 @@ import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
 import Board from "../../components/template/Board";
 import TemplateShareDialog from "./TemplateShareDialog";
+import { useTemplateSocket } from "../../hooks/socket";
+import { getUserProfileImageUrl } from "../../utils";
+import { ActiveUser } from "../../state";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -115,7 +121,6 @@ interface TemplateProps {
 }
 
 const Template = (props: TemplateProps) => {
-  let { uuid } = props; // props에서 uuid 가져오기
   const {
     height = "calc(100vh - 82px)",
     paddgingX = {
@@ -125,7 +130,14 @@ const Template = (props: TemplateProps) => {
     },
   } = props;
 
-  const params = useParams(); // URL 파라미터
+  const { templateUuid } = useParams();
+
+  // 소켓 관련 훅
+  const { isConnected, activeUsers } = useTemplateSocket({
+    templateUuid: templateUuid!,
+    enabled: !!templateUuid,
+  });
+
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
@@ -152,15 +164,10 @@ const Template = (props: TemplateProps) => {
   // 공유하기 다이얼로그 상태
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  // URL 파라미터에서 uuid 가져오기
-  if (!uuid) {
-    uuid = params.uuid;
-  }
-
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
     // uuid가 없으면 종료
-    if (!uuid) {
+    if (!templateUuid) {
       return;
     }
 
@@ -171,7 +178,7 @@ const Template = (props: TemplateProps) => {
       const csrfToken = await getCsrfToken();
 
       // 템플릿 데이터 가져오기
-      const response = await axiosInstance.get(`/template/${uuid}`, {
+      const response = await axiosInstance.get(`/template/${templateUuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -243,7 +250,7 @@ const Template = (props: TemplateProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [reorderBoardCards, setMode, setTemplate, uuid]);
+  }, [reorderBoardCards, setMode, setTemplate, templateUuid]);
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
@@ -722,6 +729,29 @@ const Template = (props: TemplateProps) => {
                   </IconButton>
                 </Tooltip>
               )}
+
+              {/* 연결 상태 표시 */}
+              <Chip
+                label={isConnected ? "실시간 연결됨" : "연결 끊김"}
+                color={isConnected ? "success" : "error"}
+                size="small"
+              />
+
+              {/* 활성 사용자 아바타 */}
+              {activeUsers.length > 0 && (
+                <AvatarGroup max={4}>
+                  {activeUsers.map((user: ActiveUser) => (
+                    <Avatar
+                      src={getUserProfileImageUrl(user.profileImage)}
+                      alt={user.userName}
+                    />
+                  ))}
+                </AvatarGroup>
+              )}
+
+              <Typography variant="body2" color="text.secondary">
+                {activeUsers.length}명 작업 중
+              </Typography>
             </Stack>
 
             {/* 우측 컨테이너 */}
