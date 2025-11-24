@@ -14,7 +14,7 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import Tooltip from "../components/Tooltip";
+import Tooltip from "../../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -23,38 +23,39 @@ import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
-import Board from "../components/Board";
-import { theme } from "../utils/theme";
+import { theme } from "../../utils/theme";
 import { useAtom } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../utils/template";
+import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
 import { useNavigate, useParams } from "react-router";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
-import CardEditDialog from "../components/CardEditDialog";
+import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
+import CardEditDialog from "../../components/CardEditDialog";
 import dayjs from "dayjs";
 import {
   reorderBoardCardsAtom,
   templateAtom,
   templateModeAtom,
   TemplateModes,
-} from "../state/template";
+} from "../../state/template";
 import {
   DragDropContext,
   Draggable,
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { useMoveBoard, useMoveCard } from "../hooks/template";
+import { useMoveBoard, useMoveCard } from "../../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
-import SortMenu from "../components/SortMenu";
+import SortMenu from "../../components/SortMenu";
 import MapIcon from "@mui/icons-material/Map";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
-import TemplateMapDialog from "../components/TemplateMapDialog";
-import { downloadExcel } from "../utils/excelExport";
-import { downloadPdf } from "../utils/pdfExport";
-import { downloadText } from "../utils/textExport";
+import TemplateMapDialog from "./TemplateMapDialog";
+import { downloadExcel } from "../../utils/excelExport";
+import { downloadPdf } from "../../utils/pdfExport";
+import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
+import Board from "../../components/template/Board";
+import TemplateShareDialog from "./TemplateShareDialog";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -146,6 +147,9 @@ const Template = (props: TemplateProps) => {
 
   const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
   const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
+
+  // 공유하기 다이얼로그 상태
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   // URL 파라미터에서 uuid 가져오기
   if (!uuid) {
@@ -519,6 +523,21 @@ const Template = (props: TemplateProps) => {
     handleMoreMenuClose();
   }, [enqueueSnackbar, template, handleMoreMenuClose]);
 
+  // 공유하기 버튼 클릭
+  const handleShareButtonClick = useCallback(() => {
+    // 소유자가 아니면 링크 복사
+    if (!isOwner) {
+      navigator.clipboard.writeText(window.location.href);
+      enqueueSnackbar("템플릿 주소가 클립보드에 복사되었습니다.", {
+        variant: "success",
+      });
+      return;
+    }
+
+    // 소유자면 공유하기 대화상자 열기
+    setShareDialogOpen(true);
+  }, [enqueueSnackbar, isOwner]);
+
   // 로딩 상태 표시
   if (isLoading) {
     return (
@@ -739,7 +758,7 @@ const Template = (props: TemplateProps) => {
 
               {/* 공유하기 버튼 */}
               <Tooltip title="공유하기">
-                <IconButton size="small">
+                <IconButton size="small" onClick={handleShareButtonClick}>
                   <ShareRoundedIcon />
                 </IconButton>
               </Tooltip>
@@ -912,8 +931,20 @@ const Template = (props: TemplateProps) => {
         </MenuItem>
       </Menu>
 
-      {/* 지도 다이얼로그 */}
-      <TemplateMapDialog open={mapDialogOpen} onClose={handleMapDialogClose} />
+      {/* 지도 대화상자 */}
+      {template && (
+        <TemplateMapDialog
+          open={mapDialogOpen}
+          onClose={handleMapDialogClose}
+          template={template}
+        />
+      )}
+
+      {/* 공유하기 대화상자 */}
+      <TemplateShareDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+      />
     </>
   );
 };

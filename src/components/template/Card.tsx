@@ -1,5 +1,11 @@
-import { Box, Paper, PaperProps, Stack, Typography } from "@mui/material";
-import { theme } from "../utils/theme";
+import {
+  Box,
+  Paper,
+  PaperProps,
+  Stack,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import dayjs, { Dayjs } from "dayjs";
 import parse from "html-react-parser";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
@@ -37,6 +43,8 @@ const Card = (props: CardProps) => {
     isTimeOverlapping = false, // 기본값은 false
     ...others
   } = props;
+
+  const theme = useTheme();
 
   // 소유자 여부에 따른 클릭 핸들러
   const handleClick = (e: React.MouseEvent) => {
