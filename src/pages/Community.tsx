@@ -28,6 +28,7 @@ import { useBreakpoint } from "../hooks";
 import axios from "axios";
 import { useAtomValue } from "jotai";
 import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
+import { enqueueSnackbar } from "notistack";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -389,8 +390,16 @@ const Community = () => {
 
   // 글쓰기 버튼 클릭
   const handleCreatePostButtonClick = useCallback(() => {
+    // 로그인 체크
+    if (!loginState.isLoggedIn) {
+      enqueueSnackbar("게시글 작성은 로그인 후 이용할 수 있습니다.", {
+        variant: "info",
+      });
+      return;
+    }
+    
     navigate("/community/edit");
-  }, [navigate]);
+  }, [loginState.isLoggedIn, navigate]);
 
   // 게시글 클릭 핸들러 확장
   const handlePostClick = useCallback(
