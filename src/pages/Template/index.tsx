@@ -565,7 +565,7 @@ const Template = (props: TemplateProps) => {
         <Typography color="error">{error}</Typography>
         <Button
           variant="contained"
-          onClick={() => navigate("/community")}
+          onClick={() => navigate("/template")}
           sx={{ mt: 2 }}
         >
           뒤로 가기
