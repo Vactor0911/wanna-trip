@@ -7,6 +7,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 interface TemplateCardProps {
   title?: string;
   color?: string;
+  thumbnailUrl?: string;
   onClick?: () => void;
   onDelete?: () => void;
   children?: React.ReactNode;
@@ -20,6 +21,7 @@ const DEFAULT_CARD_SIZE = 200;
 const SquareTemplateCard = ({
   title,
   color = theme.palette.info.main,
+  thumbnailUrl,
   onClick,
   onDelete,
   children,
@@ -45,7 +47,10 @@ const SquareTemplateCard = ({
           width: cardSize,
           height: cardSize,
           borderRadius: 4,
-          bgcolor: color,
+          background: color,
+          backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : undefined, // 썸네일 이미지 추가
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

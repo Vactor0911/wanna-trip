@@ -29,6 +29,7 @@ interface Template {
   title: string;
   created_at: string;
   updated_at: string;
+  thumbnailUrl: string;
 }
 
 const CARD_GAP = 24; // 카드 간격(px)
@@ -110,6 +111,7 @@ const UserTemplates = () => {
               title: template.title,
               username: template.ownerName,
               shared_count: template.sharedCount,
+              thumbnailUrl: template.thumbnailUrl,
             };
           }
         );
@@ -319,6 +321,7 @@ const UserTemplates = () => {
                   key={`template-${index}`}
                   title={template.title}
                   color={getRandomColor(template.uuid)}
+                  thumbnailUrl={template.thumbnailUrl}
                   onClick={() => handleTemplateClick(template.uuid)}
                   onDelete={() => handleDeleteButtonClick(template.uuid)}
                 />
