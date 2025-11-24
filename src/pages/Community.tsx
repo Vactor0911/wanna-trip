@@ -350,14 +350,25 @@ const Community = () => {
   // 토큰 초기화 완료 시점에만 인기 / 일반 게시글 호출
   useEffect(() => {
     if (isAuthInitialized) {
+      // 인기 게시글 호출
       setTimeout(() => {
         fetchPopularPosts();
-      }, 500); // 500ms 딜레이 후 인기 게시글 불러오기
-    }
-  }, [isAuthInitialized, fetchPopularPosts]);
+      }, 500);
 
+      // 일반 게시글 초기 호출 (검색어가 없을 때만 직접 호출)
+      if (!keyword) {
+        setTimeout(() => {
+          fetchPosts("");
+        }, 500);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthInitialized]); // 의존성 배열에서 keyword 제거 (초기 1회만 실행)
+
+  // 검색어 변경 시에만 디바운스 적용
   useEffect(() => {
-    if (isAuthInitialized) {
+    // 초기화 완료되고 키워드가 있을 때만 실행
+    if (isAuthInitialized && keyword) {
       fetchDebouncedPosts(keyword);
     }
   }, [isAuthInitialized, keyword, fetchDebouncedPosts]);
@@ -397,7 +408,7 @@ const Community = () => {
       });
       return;
     }
-    
+
     navigate("/community/edit");
   }, [loginState.isLoggedIn, navigate]);
 
@@ -425,6 +436,16 @@ const Community = () => {
     },
     [fetchDebouncedPosts]
   );
+
+  // 게시글 내용에서 첫 번째 이미지 URL 추출
+  const extractFirstImageUrl = (htmlContent?: string): string | null => {
+    if (!htmlContent) return null;
+
+    const imgRegex = /<img[^>]+src="([^">]+)"/;
+    const match = htmlContent.match(imgRegex);
+
+    return match ? match[1] : null;
+  };
 
   return (
     <Container maxWidth="xl">
@@ -469,7 +490,6 @@ const Community = () => {
                     {/* 썸네일 이미지 */}
                     <Skeleton
                       variant="rectangular"
-                      width="100%"
                       height="55%"
                       animation="wave"
                     />
@@ -595,7 +615,14 @@ const Community = () => {
                       {/* 썸네일 이미지 */}
                       <Box
                         height="55%"
-                        sx={{ bgcolor: getRandomColor(post.title.length) }}
+                        sx={{
+                          bgcolor: getRandomColor(post.title.length),
+                          backgroundImage: extractFirstImageUrl(post.content)
+                            ? `url(${extractFirstImageUrl(post.content)})`
+                            : undefined,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
                       />
 
                       {/* 게시글 정보 */}
@@ -846,6 +873,11 @@ const Community = () => {
                     borderRadius={2}
                     sx={{
                       background: getRandomColor(post.title.length),
+                      backgroundImage: extractFirstImageUrl(post.content)
+                        ? `url(${extractFirstImageUrl(post.content)})`
+                        : "url(https://via.placeholder.com/200x150)", // 테스트용 더미 이미지
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                     }}
                   />
 
