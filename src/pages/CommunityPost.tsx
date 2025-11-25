@@ -10,15 +10,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   Menu,
   MenuItem,
   Paper,
   Stack,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
@@ -52,6 +49,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useSnackbar } from "notistack";
 import TemplateViewer from "../components/TemplateViewer";
 
@@ -88,6 +86,7 @@ const CommunityPost = () => {
   const [likes, setLikes] = useState(0); // 좋아요 수
   const [isLiked, setIsLiked] = useState(false); // 좋아요 상태
   const [shares, setShares] = useState(0); // 공유수
+  const [views, setViews] = useState(0); // 조회수
 
   const [comments, setComments] = useState<Comment[]>([]); // 댓글 목록
   const [isCommentLoading, setIsCommentLoading] = useState(false); // 댓글 로딩 상태
@@ -122,13 +121,21 @@ const CommunityPost = () => {
     null
   ); // 현재 편집 중인 댓글 UUID
 
-  const theme = useTheme(); // MUI 테마 사용
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // 모바일 여부 확인
-
   // 로그인 페이지로 이동
   const handleNavigateToLogin = useCallback(() => {
     navigate("/login");
   }, [navigate]);
+
+  // 공유하기 (URL 복사)
+  const handleShare = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      enqueueSnackbar("게시글 링크가 복사되었습니다.", { variant: "success" });
+    } catch (err) {
+      console.error("클립보드 복사 실패:", err);
+      enqueueSnackbar("링크 복사에 실패했습니다.", { variant: "error" });
+    }
+  }, [enqueueSnackbar]);
 
   // 현재 사용자 정보 가져오기
   const fetchCurrentUserInfo = useCallback(async () => {
@@ -203,12 +210,11 @@ const CommunityPost = () => {
         setContent(postData.content);
         setTags(postData.tags || []); // 태그 정보 설정
         setShares(postData.shares || 0);
+        setViews(postData.views || 0); // 조회수 설정
 
         // 좋아요 정보 설정
         setLikes(postData.likes || 0);
         setIsLiked(postData.liked || false);
-
-        // 뷰 카운트는 백엔드에서 자동으로 증가
       } else {
         setError("게시글을 불러오는데 실패했습니다.");
       }
@@ -776,34 +782,82 @@ const CommunityPost = () => {
           pb={15}
           pl={templateUuid ? 5 : 0}
         >
-          {/* 게시글 제목 */}
-          <Typography variant="h4">{title}</Typography>
-
-          {/* 작성 정보 */}
-          <Stack direction="row" alignItems="center" gap={2}>
-            {/* 작성자 프로필 이미지 */}
-            <Avatar
-              src={authorProfileImage || undefined}
-              sx={{
-                width: 48,
-                height: 48,
+          {/* 게시글 헤더 */}
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 4,
+              p: 3,
+              background: (theme) => theme.palette.mode === "dark"
+                ? "linear-gradient(135deg, rgba(25,118,210,0.1) 0%, rgba(33,150,243,0.05) 100%)"
+                : "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.03) 100%)",
+              border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+            }}
+          >
+            {/* 게시글 제목 */}
+            <Typography 
+              variant="h4" 
+              fontWeight="bold"
+              sx={{ 
+                mb: 3,
+                background: (theme) => theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)"
+                  : "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
               }}
-            />
+            >
+              {title}
+            </Typography>
 
-            <Stack>
-              {/* 작성자 이름 */}
-              <Typography variant="subtitle1" fontWeight="bold">
-                {authorName}
-              </Typography>
+            {/* 작성 정보 */}
+            <Stack 
+              direction="row" 
+              alignItems="center" 
+              gap={2}
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                bgcolor: "background.paper",
+                border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.15)" : "rgba(25,118,210,0.08)"}`,
+              }}
+            >
+              {/* 작성자 프로필 이미지 */}
+              <Avatar
+                src={authorProfileImage || undefined}
+                sx={{
+                  width: 52,
+                  height: 52,
+                  border: "3px solid",
+                  borderColor: "primary.main",
+                  boxShadow: "0 4px 12px rgba(25,118,210,0.2)",
+                }}
+              />
 
-              {/* 작성일 */}
-              <Typography variant="subtitle2">{createdAt}</Typography>
-            </Stack>
+              <Stack flex={1}>
+                {/* 작성자 이름 */}
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {authorName}
+                </Typography>
 
-            {/* 더보기 메뉴 */}
-            <Box ml="auto">
-              {/* 더보기 메뉴 버튼 */}
-              <IconButton onClick={handleMoreButtonClick} ref={moreButtonRef}>
+                {/* 작성일 */}
+                <Typography variant="body2" color="text.secondary">
+                  {createdAt}
+                </Typography>
+              </Stack>
+
+              {/* 더보기 메뉴 */}
+              <IconButton 
+                onClick={handleMoreButtonClick} 
+                ref={moreButtonRef}
+                sx={{
+                  bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(144,202,249,0.1)" : "rgba(25,118,210,0.08)",
+                  "&:hover": {
+                    bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.15)",
+                  },
+                }}
+              >
                 <MoreVertRoundedIcon />
               </IconButton>
 
@@ -820,6 +874,15 @@ const CommunityPost = () => {
                 }}
                 open={isMoreMenuOpen}
                 onClose={handleMoreMenuClose}
+                slotProps={{
+                  paper: {
+                    sx: {
+                      borderRadius: 2,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                      minWidth: 160,
+                    },
+                  },
+                }}
               >
                 {/* 수정하기 버튼 - 작성자일 때만 표시 */}
                 {isAuthor && (
@@ -830,22 +893,27 @@ const CommunityPost = () => {
                     }}
                     sx={{
                       gap: 4,
+                      py: 1.5,
                     }}
                   >
-                    <Typography variant="subtitle1">수정하기</Typography>
-                    <EditRoundedIcon fontSize="small" />
+                    <Typography variant="subtitle2">수정하기</Typography>
+                    <EditRoundedIcon fontSize="small" sx={{ ml: "auto" }} />
                   </MenuItem>
                 )}
 
                 {/* 공유하기 버튼 - 항상 표시 */}
                 <MenuItem
-                  onClick={handleMoreMenuClose}
+                  onClick={() => {
+                    handleMoreMenuClose();
+                    handleShare();
+                  }}
                   sx={{
                     gap: 4,
+                    py: 1.5,
                   }}
                 >
-                  <Typography variant="subtitle1">공유하기</Typography>
-                  <ShareRoundedIcon fontSize="small" />
+                  <Typography variant="subtitle2">공유하기</Typography>
+                  <ShareRoundedIcon fontSize="small" sx={{ ml: "auto" }} />
                 </MenuItem>
 
                 {/* 삭제하기 버튼 - 작성자일 때만 표시 */}
@@ -854,20 +922,18 @@ const CommunityPost = () => {
                     onClick={handleOpenDeleteDialog}
                     sx={{
                       gap: 4,
+                      py: 1.5,
                     }}
                   >
-                    <Typography variant="subtitle1" color="error">
+                    <Typography variant="subtitle2" color="error">
                       삭제하기
                     </Typography>
-                    <DeleteOutlineRoundedIcon fontSize="small" color="error" />
+                    <DeleteOutlineRoundedIcon fontSize="small" color="error" sx={{ ml: "auto" }} />
                   </MenuItem>
                 )}
               </Menu>
-            </Box>
-          </Stack>
-
-          {/* 구분선 */}
-          <Divider />
+            </Stack>
+          </Paper>
 
           {/* 게시글 내용 */}
           <Stack
@@ -965,6 +1031,17 @@ const CommunityPost = () => {
                 {/* 댓글 수 */}
                 <Typography variant="subtitle1">{comments.length}</Typography>
               </Stack>
+
+              {/* 조회수 */}
+              <Stack direction="row" alignItems="center">
+                {/* 조회 아이콘 */}
+                <IconButton size="small" disabled>
+                  <VisibilityOutlinedIcon />
+                </IconButton>
+
+                {/* 조회 수 */}
+                <Typography variant="subtitle1">{views}</Typography>
+              </Stack>
             </Stack>
 
             {/* 오른쪽 버튼 컨테이너 */}
@@ -972,199 +1049,285 @@ const CommunityPost = () => {
           </Stack>
 
           {/* 댓글 섹션 */}
-          <Stack gap={3}>
-            <Typography variant="h6">댓글 {comments.length}개</Typography>
-            <Divider />
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 4,
+              p: 3,
+              background: (theme) => theme.palette.mode === "dark" 
+                ? "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.04) 100%)"
+                : "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.03) 100%)",
+              border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.1)"}`,
+            }}
+          >
+            <Stack gap={3}>
+              {/* 댓글 헤더 */}
+              <Stack direction="row" alignItems="center" gap={1.5}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 2,
+                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                  }}
+                >
+                  <ChatBubbleOutlineRoundedIcon sx={{ color: "white", fontSize: 20 }} />
+                </Box>
+                <Typography variant="h6" fontWeight="bold">
+                  댓글 {comments.length}개
+                </Typography>
+              </Stack>
 
-            {/* 댓글 로딩 중 표시 */}
-            {isCommentLoading && (
-              <Box display="flex" justifyContent="center" py={3}>
-                <CircularProgress size={30} />
-              </Box>
-            )}
+              {/* 댓글 로딩 중 표시 */}
+              {isCommentLoading && (
+                <Box display="flex" justifyContent="center" py={4}>
+                  <CircularProgress size={32} sx={{ color: "#1976d2" }} />
+                </Box>
+              )}
 
-            {/* 댓글 목록 */}
-            {!isCommentLoading &&
-              getSortedComments().map((comment, index, array) => (
-                <Fragment key={comment.uuid}>
-                  {/* 댓글 컨테이너 */}
-                  <Stack
-                    ml={{
-                      xs: comment.parentUuid ? "20px" : "0",
-                      sm: comment.parentUuid ? "50px" : "0",
-                    }}
-                    gap={3}
-                  >
-                    {/* 댓글 내용 */}
-                    <Stack direction="row" gap={1}>
-                      {/* 댓글 작성자 프로필 이미지 */}
-                      <Avatar src={comment.authorProfile} />
-
-                      <Stack width="100%">
-                        {/* 댓글 작성자 이름 */}
-                        <Typography variant="subtitle1" fontWeight="bold">
-                          {comment.authorName}
-                        </Typography>
-
-                        {/* 댓글 내용 */}
-                        {editingCommentUuid === comment.uuid ? (
-                          <ClickAwayListener
-                            onClickAway={handleEditCommentClose}
-                          >
-                            <CommentInput
-                              key={`reply-edit-input-${comment.uuid}`}
-                              onCommentSubmit={(content) =>
-                                handleCommentEdit(content, comment.uuid)
-                              }
-                              onCommentCancel={handleEditCommentClose}
-                              disabled={isCommentSubmitting}
-                              defaultValue={comment.content}
-                            />
-                          </ClickAwayListener>
-                        ) : (
-                          <Typography variant="subtitle1">
-                            {comment.content}
-                          </Typography>
-                        )}
-
-                        <Stack
-                          direction="row"
-                          alignItems="center"
-                          gap={1}
-                          flexWrap="wrap"
-                        >
-                          {/* 댓글 작성일 */}
-                          <Typography
-                            variant="subtitle2"
-                            color="text.secondary"
-                          >
-                            {formatRelativeTime(comment.createdAt)}
-                          </Typography>
-
-                          {/* 답글 쓰기 버튼 */}
-                          <Button
-                            onClick={() => handleReplyButtonClick(comment.uuid)}
-                            sx={{
-                              display: isMobile ? "none" : "inline-flex",
-                              padding: 0,
-                            }}
-                          >
-                            <Typography variant="subtitle2" color="primary">
-                              답글쓰기
-                            </Typography>
-                          </Button>
-
-                          {/* 좋아요 버튼 */}
-                          <Stack direction="row" alignItems="center">
-                            {/* 좋아요 버튼 */}
-                            <IconButton
-                              size="small"
-                              sx={{
-                                padding: 0.5,
-                              }}
-                              onClick={() => handleCommentLike(comment.uuid)}
-                            >
-                              {comment.liked ? (
-                                <FavoriteRoundedIcon
-                                  color="error"
-                                  sx={{ fontSize: 18 }}
-                                />
-                              ) : (
-                                <FavoriteBorderRoundedIcon
-                                  sx={{ fontSize: 18 }}
-                                />
-                              )}
-                            </IconButton>
-
-                            {/* 좋아요 수 */}
-                            <Typography variant="subtitle2" sx={{ ml: 0.5 }}>
-                              {comment.likes}
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                      </Stack>
-
-                      {/* 더보기 메뉴 */}
-                      <IconButton
-                        onClick={(event) =>
-                          handleCommentMoreButtonClick(event, comment)
-                        }
+              {/* 댓글 목록 */}
+              {!isCommentLoading && comments.length > 0 && (
+                <Stack gap={2}>
+                  {getSortedComments().map((comment) => (
+                    <Fragment key={comment.uuid}>
+                      {/* 댓글 카드 */}
+                      <Paper
+                        elevation={0}
                         sx={{
-                          alignSelf: "flex-start",
+                          ml: {
+                            xs: comment.parentUuid ? 2 : 0,
+                            sm: comment.parentUuid ? 5 : 0,
+                          },
+                          p: 2,
+                          borderRadius: 3,
+                          bgcolor: "background.paper",
+                          border: (theme) => comment.parentUuid 
+                            ? `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.15)" : "rgba(25,118,210,0.08)"}`
+                            : `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+                          transition: "all 0.2s ease",
+                          "&:hover": {
+                            boxShadow: "0 4px 16px rgba(25,118,210,0.1)",
+                          },
                         }}
                       >
-                        <MoreHorizRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </Stack>
-
-                    {/* 답글 입력란 */}
-                    {replyParentId === comment.uuid && (
-                      <Stack gap={2}>
-                        <Box ml={comment.parentUuid ? "0" : "50px"}>
-                          <CommentInput
-                            key={`reply-input-${comment.uuid}`}
-                            onCommentSubmit={(content) =>
-                              handleCommentSubmit(
-                                content,
-                                comment.parentUuid || comment.uuid
-                              )
-                            }
-                            onCommentCancel={handleReplyCancelButtonClick}
-                            disabled={isCommentSubmitting}
+                        <Stack direction="row" gap={1.5}>
+                          {/* 댓글 작성자 프로필 이미지 */}
+                          <Avatar 
+                            src={comment.authorProfile}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              border: "2px solid",
+                              borderColor: "primary.main",
+                            }}
                           />
-                        </Box>
-                      </Stack>
-                    )}
-                  </Stack>
 
-                  {/* 구분선 */}
-                  {index < array.length - 1 && (
-                    <Divider
-                      sx={{
-                        ml:
-                          !!comment.parentUuid && !!array[index + 1].parentUuid
-                            ? "50px"
-                            : "0",
-                      }}
-                    />
-                  )}
-                </Fragment>
-              ))}
+                          <Stack flex={1} minWidth={0}>
+                            {/* 작성자 정보 */}
+                            <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+                              <Typography variant="subtitle2" fontWeight="bold">
+                                {comment.authorName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {formatRelativeTime(comment.createdAt)}
+                              </Typography>
+                            </Stack>
 
-            {/* 댓글이 없는 경우 메시지 */}
-            {!isCommentLoading && comments.length === 0 && (
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                textAlign="center"
-                py={4}
+                            {/* 댓글 내용 */}
+                            {editingCommentUuid === comment.uuid ? (
+                              <ClickAwayListener onClickAway={handleEditCommentClose}>
+                                <Box>
+                                  <CommentInput
+                                    key={`reply-edit-input-${comment.uuid}`}
+                                    onCommentSubmit={(content) =>
+                                      handleCommentEdit(content, comment.uuid)
+                                    }
+                                    onCommentCancel={handleEditCommentClose}
+                                    disabled={isCommentSubmitting}
+                                    defaultValue={comment.content}
+                                  />
+                                </Box>
+                              </ClickAwayListener>
+                            ) : (
+                              <Typography 
+                                variant="body2" 
+                                sx={{ 
+                                  mb: 1.5,
+                                  lineHeight: 1.6,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {comment.content}
+                              </Typography>
+                            )}
+
+                            {/* 액션 버튼 */}
+                            <Stack direction="row" alignItems="center" gap={0.5} flexWrap="wrap">
+                              {/* 답글 쓰기 버튼 */}
+                              <Button
+                                size="small"
+                                onClick={() => handleReplyButtonClick(comment.uuid)}
+                                sx={{
+                                  minWidth: "auto",
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: 2,
+                                  fontSize: "0.75rem",
+                                  color: "primary.main",
+                                  "&:hover": {
+                                    bgcolor: "rgba(25,118,210,0.08)",
+                                  },
+                                }}
+                              >
+                                답글
+                              </Button>
+
+                              {/* 좋아요 버튼 */}
+                              <Button
+                                size="small"
+                                onClick={() => handleCommentLike(comment.uuid)}
+                                startIcon={
+                                  comment.liked ? (
+                                    <FavoriteRoundedIcon sx={{ fontSize: 16 }} />
+                                  ) : (
+                                    <FavoriteBorderRoundedIcon sx={{ fontSize: 16 }} />
+                                  )
+                                }
+                                sx={{
+                                  minWidth: "auto",
+                                  px: 1.5,
+                                  py: 0.5,
+                                  borderRadius: 2,
+                                  fontSize: "0.75rem",
+                                  color: comment.liked ? "error.main" : "text.secondary",
+                                  "&:hover": {
+                                    bgcolor: comment.liked 
+                                      ? "rgba(239,68,68,0.08)" 
+                                      : "rgba(0,0,0,0.04)",
+                                  },
+                                }}
+                              >
+                                {comment.likes}
+                              </Button>
+                            </Stack>
+                          </Stack>
+
+                          {/* 더보기 메뉴 */}
+                          <IconButton
+                            size="small"
+                            onClick={(event) => handleCommentMoreButtonClick(event, comment)}
+                            sx={{
+                              alignSelf: "flex-start",
+                              color: "text.secondary",
+                              "&:hover": {
+                                bgcolor: "rgba(25,118,210,0.08)",
+                              },
+                            }}
+                          >
+                            <MoreHorizRoundedIcon fontSize="small" />
+                          </IconButton>
+                        </Stack>
+
+                        {/* 답글 입력란 */}
+                        {replyParentId === comment.uuid && (
+                          <Box mt={2} ml={comment.parentUuid ? 0 : 6}>
+                            <CommentInput
+                              key={`reply-input-${comment.uuid}`}
+                              onCommentSubmit={(content) =>
+                                handleCommentSubmit(
+                                  content,
+                                  comment.parentUuid || comment.uuid
+                                )
+                              }
+                              onCommentCancel={handleReplyCancelButtonClick}
+                              disabled={isCommentSubmitting}
+                            />
+                          </Box>
+                        )}
+                      </Paper>
+                    </Fragment>
+                  ))}
+                </Stack>
+              )}
+
+              {/* 댓글이 없는 경우 메시지 */}
+              {!isCommentLoading && comments.length === 0 && (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    py: 6,
+                    px: 4,
+                    borderRadius: 3,
+                    bgcolor: "background.paper",
+                    textAlign: "center",
+                    border: (theme) => `1px dashed ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.3)" : "rgba(25,118,210,0.2)"}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: "50%",
+                      bgcolor: "rgba(25,118,210,0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      mx: "auto",
+                      mb: 2,
+                    }}
+                  >
+                    <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 28, color: "#1976d2" }} />
+                  </Box>
+                  <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                    첫 번째 댓글을 작성해보세요!
+                  </Typography>
+                </Paper>
+              )}
+
+              {/* 댓글 입력란 */}
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  borderRadius: 3,
+                  bgcolor: "background.paper",
+                  border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.15)"}`,
+                }}
               >
-                첫 번째 댓글을 작성해보세요!
-              </Typography>
-            )}
-
-            <Divider />
-
-            {/* 댓글 입력란 */}
-            {loginState.isLoggedIn ? (
-              <CommentInput
-                onCommentSubmit={handleCommentSubmit} // 수정
-                disabled={isCommentSubmitting}
-              />
-            ) : (
-              <Box py={3} textAlign="center">
-                <Typography variant="body1" color="text.secondary" mb={2}>
-                  댓글을 작성하려면 로그인이 필요합니다.
-                </Typography>
-                <Button variant="contained" onClick={handleNavigateToLogin}>
-                  로그인하기
-                </Button>
-              </Box>
-            )}
-          </Stack>
-
-          {/* 버튼 컨테이너 */}
-          {ButtonContainer}
+                {loginState.isLoggedIn ? (
+                  <CommentInput
+                    onCommentSubmit={handleCommentSubmit}
+                    disabled={isCommentSubmitting}
+                  />
+                ) : (
+                  <Stack alignItems="center" py={2} gap={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      댓글을 작성하려면 로그인이 필요합니다.
+                    </Typography>
+                    <Button 
+                      variant="contained" 
+                      onClick={handleNavigateToLogin}
+                      sx={{
+                        borderRadius: 2,
+                        px: 4,
+                        background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                        boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                        "&:hover": {
+                          background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                        },
+                      }}
+                    >
+                      로그인하기
+                    </Button>
+                  </Stack>
+                )}
+              </Paper>
+            </Stack>
+          </Paper>
 
           {/* 스크롤 상단 이동 버튼 */}
           <ScrollToTopButton />
