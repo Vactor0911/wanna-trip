@@ -42,7 +42,7 @@ const Links = [
 const MenuLinks = [
   { text: "내 정보", to: "/myinformation" },
   { text: "내 템플릿", to: "/template" },
-  { text: "좋아요 한 게시글", to: "/" },
+  { text: "좋아요 한 게시글", to: "/liked-posts" },
   { text: "로그아웃", to: "/" },
 ];
 
