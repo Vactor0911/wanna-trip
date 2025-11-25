@@ -16,6 +16,7 @@ import {
   Chip,
   Avatar,
   AvatarGroup,
+  useTheme,
 } from "@mui/material";
 import Tooltip from "../../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -26,7 +27,6 @@ import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
-import { theme } from "../../utils/theme";
 import { useAtom, useAtomValue } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
@@ -122,6 +122,7 @@ interface TemplateProps {
 }
 
 const Template = (props: TemplateProps) => {
+  const theme = useTheme();
   const {
     height = "calc(100vh - 82px)",
     paddgingX = {
