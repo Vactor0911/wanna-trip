@@ -19,7 +19,7 @@ export const useTemplateSocket = ({
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
   const { updateTemplate } = useTemplate();
-  const { addBoard } = useBoard();
+  const { addBoard, deleteBoard } = useBoard();
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
@@ -112,8 +112,16 @@ export const useTemplateSocket = ({
         addBoard(data.boardUuid, data.dayNumber);
       }
     });
+
+    // 보드 삭제
+    socket.on("board:delete", (data: { boardUuid: string }) => {
+      {
+        deleteBoard(data.boardUuid);
+      }
+    });
   }, [
     addBoard,
+    deleteBoard,
     enabled,
     enqueueSnackbar,
     setActiveUsers,
@@ -142,6 +150,11 @@ export const useTemplateSocket = ({
     socketRef.current?.emit("board:add", { boardUuid, dayNumber });
   }, []);
 
+  // 보드 삭제
+  const emitBoardDelete = useCallback((boardUuid: string) => {
+    socketRef.current?.emit("board:delete", { boardUuid });
+  }, []);
+
   // 컴포넌트 언마운트 시 소켓 연결 해제
   useEffect(() => {
     if (enabled && templateUuid) {
@@ -166,6 +179,7 @@ export const useTemplateSocket = ({
 
     // 보드 이벤트
     emitBoardAdd,
+    emitBoardDelete,
 
     // 연결 제어
     connect,

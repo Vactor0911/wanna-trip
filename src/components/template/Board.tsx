@@ -37,6 +37,7 @@ interface BoardProps extends StackProps {
   isOwner: boolean; // 소유자 여부 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
   emitBoardAdd: (boardUuid: string, dayNumber: number) => void; // 보드 추가 이벤트 전송 함수
+  emitBoardDelete: (boardUuid: string) => void; // 보드 삭제 이벤트 전송 함수
 }
 
 const Board = (props: BoardProps) => {
@@ -46,12 +47,13 @@ const Board = (props: BoardProps) => {
     fetchTemplateData,
     isOwner,
     id, // ID 속성 추가 (선택적 속성으로 설정)
-    emitBoardAdd, // 보드 추가 이벤트 전송 함수
+    emitBoardAdd,
+    emitBoardDelete,
     ...others
   } = props;
 
   const theme = useTheme();
-  const { addBoard } = useBoard();
+  const { addBoard, deleteBoard } = useBoard();
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
@@ -197,38 +199,41 @@ const Board = (props: BoardProps) => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 보드 개수가 최소 개수보다 적으면
       if (template.boards.length <= 1) {
         // 카드가 있다면 보드 카드 모두 삭제 API 호출
         if (template.boards[0].cards.length > 0) {
           const response = await axiosInstance.put(
-            `/board/clear/${boardData.uuid}`,
+            `/board/clear/${boardUuid}`,
             {},
             { headers: { "X-CSRF-Token": csrfToken } }
           );
 
           if (response.data.success) {
             // 템플릿 데이터 새로 불러오기
-            await fetchTemplateData();
+            deleteBoard(boardUuid);
+            emitBoardDelete(boardUuid);
           }
         }
         return;
       }
 
       // 보드 개수가 2개 이상일 경우 보드 자체를 삭제
-      const response = await axiosInstance.delete(`/board/${boardData.uuid}`, {
+      const response = await axiosInstance.delete(`/board/${boardUuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
       if (response.data.success) {
         // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
+        deleteBoard(boardUuid);
+        emitBoardDelete(boardUuid);
       }
     } catch (error) {
       console.error("보드 삭제 오류:", error);
     }
-  }, [template, boardData, fetchTemplateData]);
+  }, [boardData.uuid, template.boards, deleteBoard, emitBoardDelete]);
 
   // 보드 내 카드 시작 시간순 정렬 함수
   const handleSortByStartTime = useCallback(async () => {

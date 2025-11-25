@@ -86,7 +86,21 @@ export const useBoard = () => {
     [setBoardsMap, setBoardOrder]
   );
 
-  return { addBoard };
+  // 보드 삭제
+  const deleteBoard = useCallback(
+    (boardUuid: string) => {
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(boardUuid);
+        return newMap;
+      });
+
+      setBoardOrder((prev) => prev.filter((uuid) => uuid !== boardUuid));
+    },
+    [setBoardsMap, setBoardOrder]
+  );
+
+  return { addBoard, deleteBoard };
 };
 
 /**

@@ -134,11 +134,16 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const { isConnected, activeUsers, emitTemplateUpdate, emitBoardAdd } =
-    useTemplateSocket({
-      templateUuid: templateUuid!,
-      enabled: !!templateUuid,
-    });
+  const {
+    isConnected,
+    activeUsers,
+    emitTemplateUpdate,
+    emitBoardAdd,
+    emitBoardDelete,
+  } = useTemplateSocket({
+    templateUuid: templateUuid!,
+    enabled: !!templateUuid,
+  });
 
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
@@ -870,7 +875,8 @@ const Template = (props: TemplateProps) => {
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
-                          emitBoardAdd={emitBoardAdd} // 보드 추가 이벤트 전송 함수 전달
+                          emitBoardAdd={emitBoardAdd}
+                          emitBoardDelete={emitBoardDelete}
                         />
                       )}
                     </Draggable>
