@@ -32,6 +32,7 @@ import { resetStates } from "../utils";
 import { wannaTripLoginStateAtom } from "../state";
 import { useAtom } from "jotai";
 import Logo from "/icons/logo.svg";
+import { useSnackbar } from "notistack";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -42,7 +43,7 @@ const Links = [
 const MenuLinks = [
   { text: "내 정보", to: "/myinformation" },
   { text: "내 템플릿", to: "/template" },
-  { text: "좋아요 한 게시글", to: "/" },
+  { text: "좋아요 한 게시글", to: "/liked-posts" },
   { text: "로그아웃", to: "/" },
 ];
 
@@ -85,6 +86,7 @@ const hiddenPages = [
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
+  const { enqueueSnackbar } = useSnackbar();
   const profileAnchorElement = useRef<HTMLButtonElement | null>(null); // 프로필 메뉴 앵커 요소
   const navMenuButtonAnchorElement = useRef<HTMLButtonElement | null>(null); // 네비게이션 메뉴 버튼 앵커 요소
 
@@ -187,7 +189,7 @@ const Header = () => {
   // 로그아웃 기능 구현 시작
   const handleLogoutClick = useCallback(async () => {
     if (!isLoggedIn) {
-      alert("로그인이 필요합니다.");
+      enqueueSnackbar("로그인이 필요합니다.", { variant: "warning" });
       return;
     }
 
@@ -209,21 +211,27 @@ const Header = () => {
         // Jotai 상태
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
+        
+        // 프로필 정보 초기화
+        setProfileImage(null);
+        setUserName("사용자");
 
-        // 템플릿 상세 페이지라면 템플릿 페이지로 이동
+        // 템플릿 상세 페이지 또는 내 정보 페이지라면 적절한 페이지로 이동
         if (location.pathname.startsWith("/template/")) {
           navigate("/template");
+        } else if (location.pathname === "/myinformation") {
+          navigate("/");
         }
 
-        alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
+        enqueueSnackbar("로그아웃이 성공적으로 완료되었습니다.", { variant: "success" }); // 성공 메시지
       } else {
-        alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
+        enqueueSnackbar("로그아웃 처리에 실패했습니다.", { variant: "error" }); // 실패 메시지
       }
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);
-      alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
+      enqueueSnackbar("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" }); // 에러 메시지
     }
-  }, [isLoggedIn, location.pathname, navigate, setWannaTripLoginState]);
+  }, [isLoggedIn, location.pathname, navigate, setWannaTripLoginState, enqueueSnackbar]);
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
@@ -338,8 +346,36 @@ const Header = () => {
                   size="small"
                   ref={profileAnchorElement}
                   onClick={handleProfileButtonClick}
+                  sx={{ p: 0.5 }}
                 >
-                  <PermIdentityOutlinedIcon />
+                  {isLoggedIn && profileImage ? (
+                    <Avatar
+                      key={`header-profile-${imageVersion}`}
+                      src={profileImage}
+                      sx={{
+                        width: { xs: 28, sm: 32 },
+                        height: { xs: 28, sm: 32 },
+                      }}
+                    />
+                  ) : isLoggedIn ? (
+                    <Avatar
+                      sx={{
+                        width: { xs: 28, sm: 32 },
+                        height: { xs: 28, sm: 32 },
+                        bgcolor: theme.palette.primary.main,
+                      }}
+                    >
+                      <FaceRoundedIcon
+                        sx={{
+                          width: "90%",
+                          height: "90%",
+                          color: grey[100],
+                        }}
+                      />
+                    </Avatar>
+                  ) : (
+                    <PermIdentityOutlinedIcon />
+                  )}
                 </IconButton>
 
                 {/* 네비게이션 메뉴 버튼 */}

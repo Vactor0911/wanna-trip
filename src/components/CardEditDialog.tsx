@@ -42,6 +42,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import React from "react";
 import NaverMapDialog from "./naver_map/NaverMapDialog";
 import {
@@ -267,57 +268,36 @@ const CardEditDialog = (props: CardEditDialogProps) => {
           setEndTime(currentCard.endTime || dayjs("2001-01-01T02:00"));
           setIsCardLocked(currentCard.locked || false); // 카드의 잠금 상태 설정
 
-          // 카드에 위치 정보가 있으면 설정
-          if (currentCard.location) {
+          // 카드에 위치 정보가 있으면 설정, 없으면 null로 초기화
+          if (currentCard.location && currentCard.location.title) {
             // 필요한 필드를 추출하여 새 객체 생성
             const extractedLocation = {
               title: currentCard.location.title,
               address: currentCard.location.address || "", // 주소가 없을 경우 빈 문자열 기본값
-              latitude: currentCard.location.latitude ?? 37.5665, // 위도가 없을 경우 서울시청 좌표
-              longitude: currentCard.location.longitude ?? 126.978, // 경도가 없을 경우 서울시청 좌표
+              latitude: currentCard.location.latitude, // undefined일 수 있음
+              longitude: currentCard.location.longitude, // undefined일 수 있음
               category: currentCard.location.category,
               thumbnailUrl: currentCard.location.thumbnailUrl,
             };
 
             setSelectedLocation(extractedLocation);
           } else {
-            // 서버에서 위치 정보 조회
-            const fetchLocationInfo = async () => {
-              try {
-                const response = await axiosInstance.get(
-                  `/card/location/${currentEditCard.cardUuid}`
-                );
-                if (
-                  response.data &&
-                  response.data.success &&
-                  response.data.location
-                ) {
-                  // 서버 응답에서 위치 정보 변환
-                  const locationData = {
-                    title: response.data.location.title,
-                    address: response.data.location.address,
-                    latitude: parseFloat(response.data.location.latitude),
-                    longitude: parseFloat(response.data.location.longitude),
-                    category: response.data.location.category,
-                    thumbnailUrl: response.data.location.thumbnail_url,
-                  };
-
-                  // 위치 정보 설정
-                  setSelectedLocation(locationData);
-                }
-              } catch (error) {
-                console.error("위치 정보 로드 실패:", error);
-                setSelectedLocation(null);
-              }
-            };
-            fetchLocationInfo();
+            // 위치 정보가 없는 카드는 null로 설정
+            setSelectedLocation(null);
           }
+        } else {
+          // 카드를 찾지 못한 경우 초기화
+          setSelectedLocation(null);
         }
       }
+    } else {
+      // 대화상자가 닫힐 때 위치 정보 초기화
+      setSelectedLocation(null);
     }
   }, [
     cardEditDialogOpen,
-    currentEditCard,
+    currentEditCard?.cardUuid,
+    currentEditCard?.boardUuid,
     setSelectedLocation,
     template.boards,
   ]);
@@ -326,7 +306,8 @@ const CardEditDialog = (props: CardEditDialogProps) => {
   const handleCardEditDialogClose = useCallback(() => {
     setCardEditDialogOpen(false);
     setErrorMessage("");
-  }, [setCardEditDialogOpen]);
+    setSelectedLocation(null); // 위치 정보 초기화
+  }, [setCardEditDialogOpen, setSelectedLocation]);
 
   // 카드 잠금 토글
   const handleCardLockToggle = useCallback(() => {
@@ -673,6 +654,19 @@ const CardEditDialog = (props: CardEditDialogProps) => {
                 <Stack direction="row" alignItems="center" gap={1}>
                   <PlaceOutlinedIcon />
                   <Typography variant="h6">장소</Typography>
+
+                  {/* 장소 초기화 버튼 - 위치 정보가 있고 잠금 해제 상태일 때만 표시 */}
+                  {selectedLocation && !isCardLocked && (
+                    <Tooltip title="장소 정보 초기화" placement="top">
+                      <IconButton
+                        size="small"
+                        onClick={() => setSelectedLocation(null)}
+                        sx={{ ml: "auto" }}
+                      >
+                        <RestartAltRoundedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
                 </Stack>
 
                 {/* 지도 뷰어 - 정적 모드로 변경하고 클릭 이벤트 추가 */}
@@ -840,6 +834,27 @@ const CardEditDialog = (props: CardEditDialogProps) => {
         onClose={handleMoreMenuClose}
       >
         <MenuList disablePadding>
+          {/* 카드 잠금/해제 - 소유자일 때만 표시 */}
+          {isOwner && (
+            <MenuItem
+              onClick={() => {
+                handleCardLockToggle();
+                handleMoreMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                {isCardLocked ? (
+                  <LockOpenRoundedIcon />
+                ) : (
+                  <LockOutlineRoundedIcon />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {isCardLocked ? "잠금 해제" : "잠그기"}
+              </ListItemText>
+            </MenuItem>
+          )}
+
           {/* 카드 복제 */}
           <MenuItem
             onClick={handleDuplicateCardButtonClick}

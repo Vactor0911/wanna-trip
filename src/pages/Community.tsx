@@ -41,6 +41,7 @@ interface PostInterface {
   likes: number; // 좋아요 수
   shares: number; // 공유 수
   comments: number; // 댓글 수
+  thumbnail?: string; // 썸네일 URL (내용 이미지 또는 템플릿 썸네일)
 }
 
 // 좋아요 상태 저장/조회 헬퍼 함수
@@ -178,6 +179,7 @@ const Community = () => {
                 likes: post.likes,
                 shares: post.shares,
                 comments: post.comments,
+                thumbnail: post.thumbnail, // 서버에서 전달받은 썸네일
               };
             }
           );
@@ -297,6 +299,7 @@ const Community = () => {
               likes: post.likes,
               shares: post.shares,
               comments: post.comments,
+              thumbnail: post.thumbnail, // 서버에서 전달받은 썸네일
             };
           }
         );
@@ -437,7 +440,7 @@ const Community = () => {
     [fetchDebouncedPosts]
   );
 
-  // 게시글 내용에서 첫 번째 이미지 URL 추출
+  // 게시글 내용에서 첫 번째 이미지 URL 추출 (서버에서 썸네일이 없을 때 폴백용)
   const extractFirstImageUrl = (htmlContent?: string): string | null => {
     if (!htmlContent) return null;
 
@@ -445,6 +448,16 @@ const Community = () => {
     const match = htmlContent.match(imgRegex);
 
     return match ? match[1] : null;
+  };
+
+  // 게시글 썸네일 URL 가져오기 (서버 썸네일 > 내용 이미지)
+  const getThumbnailUrl = (post: PostInterface): string | null => {
+    // 서버에서 전달받은 썸네일이 있으면 우선 사용
+    if (post.thumbnail) {
+      return post.thumbnail;
+    }
+    // 없으면 내용에서 추출
+    return extractFirstImageUrl(post.content);
   };
 
   return (
@@ -617,8 +630,8 @@ const Community = () => {
                         height="55%"
                         sx={{
                           bgcolor: getRandomColor(post.title.length),
-                          backgroundImage: extractFirstImageUrl(post.content)
-                            ? `url(${extractFirstImageUrl(post.content)})`
+                          backgroundImage: getThumbnailUrl(post)
+                            ? `url(${getThumbnailUrl(post)})`
                             : undefined,
                           backgroundSize: "cover",
                           backgroundPosition: "center",
@@ -873,9 +886,9 @@ const Community = () => {
                     borderRadius={2}
                     sx={{
                       background: getRandomColor(post.title.length),
-                      backgroundImage: extractFirstImageUrl(post.content)
-                        ? `url(${extractFirstImageUrl(post.content)})`
-                        : "url(https://via.placeholder.com/200x150)", // 테스트용 더미 이미지
+                      backgroundImage: getThumbnailUrl(post)
+                        ? `url(${getThumbnailUrl(post)})`
+                        : undefined,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }}
