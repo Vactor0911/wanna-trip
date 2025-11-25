@@ -5,11 +5,15 @@ import {
     Typography,
     Skeleton,
     Alert,
-    Divider,
     Chip,
+    Paper,
+    useTheme,
+    alpha,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 
 // 공지사항 데이터 타입 정의
 interface NewsItem {
@@ -20,6 +24,7 @@ interface NewsItem {
 
 const News = () => {
     const navigate = useNavigate();
+    const theme = useTheme();
     const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -35,7 +40,7 @@ const News = () => {
                 today.getMonth() === targetDate.getMonth() &&
                 today.getDate() === targetDate.getDate()
             );
-        } catch (error) {
+        } catch {
             return false;
         }
     }, []);
@@ -54,7 +59,7 @@ const News = () => {
                 {
                     id: 1,
                     title: "SRT 여객 운송약관 개정 안내 (~2025.12)",
-                    createdAt: "2025-10-16",
+                    createdAt: "2025-11-25",
                 },
                 {
                     id: 2,
@@ -120,130 +125,160 @@ const News = () => {
     }, [navigate]);
 
     return (
-        <Container maxWidth="xl">
-            <Stack minHeight="calc(100vh - 82px)" my={4} gap={8}>
-                <Stack gap={2}>
-                    {/* 페이지 제목 */}
-                    <Typography
-                        variant="h3"
-                        sx={{
-                            fontSize: "32px",
-                            fontWeight: 800,
-                            color: "#191f28",
-                            marginBottom: "8px",
-                        }}
-                    >
-                        공지사항
+        <Container maxWidth="md">
+            <Stack minHeight="calc(100vh - 82px)" py={5} gap={4}>
+                {/* 헤더 섹션 */}
+                <Stack gap={1}>
+                    <Stack direction="row" alignItems="center" gap={1.5}>
+                        <CampaignRoundedIcon 
+                            sx={{ 
+                                fontSize: 36, 
+                                color: theme.palette.primary.main 
+                            }} 
+                        />
+                        <Typography
+                            variant="h4"
+                            fontWeight={700}
+                            color="text.primary"
+                        >
+                            공지사항
+                        </Typography>
+                    </Stack>
+                    <Typography variant="body1" color="text.secondary">
+                        여행갈래의 새로운 소식을 확인하세요
                     </Typography>
+                </Stack>
 
-                    {/* 공지사항 목록 */}
-                    <Stack gap={0}>
-                        {isLoading ? (
-                             // 로딩 상태
-                             Array.from({ length: 8 }).map((_, index) => (
-                                 <Box key={`news-skeleton-${index}`} sx={{ py: 2 }}>
-                                     <Stack gap={1}>
-                                         <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                             <Skeleton variant="text" width="70%" height="24px" />
-                                             <Skeleton variant="rounded" width="40px" height="20px" />
-                                         </Stack>
-                                         <Skeleton variant="text" width="80px" height="16px" />
-                                     </Stack>
-                                     {index < 7 && (
-                                         <Divider sx={{ mt: 2, borderColor: "#f2f3f5" }} />
-                                     )}
-                                 </Box>
-                             ))
-                        ) : error ? (
-                            // 에러 상태
+                {/* 공지사항 목록 */}
+                <Paper
+                    elevation={0}
+                    sx={{
+                        borderRadius: 3,
+                        border: `1px solid ${theme.palette.divider}`,
+                        overflow: "hidden",
+                    }}
+                >
+                    {isLoading ? (
+                        // 로딩 상태
+                        <Stack>
+                            {Array.from({ length: 6 }).map((_, index) => (
+                                <Box
+                                    key={`news-skeleton-${index}`}
+                                    sx={{
+                                        p: 2.5,
+                                        borderBottom: index < 5 ? `1px solid ${theme.palette.divider}` : "none",
+                                    }}
+                                >
+                                    <Stack direction="row" alignItems="center" justifyContent="space-between">
+                                        <Stack gap={1} flex={1}>
+                                            <Skeleton variant="text" width="70%" height={24} />
+                                            <Skeleton variant="text" width={100} height={18} />
+                                        </Stack>
+                                        <Skeleton variant="circular" width={24} height={24} />
+                                    </Stack>
+                                </Box>
+                            ))}
+                        </Stack>
+                    ) : error ? (
+                        // 에러 상태
+                        <Box p={3}>
                             <Alert severity="error" sx={{ borderRadius: 2 }}>
                                 {error}
                             </Alert>
-                        ) : (
-                             // 공지사항 목록
-                             newsItems.map((news, index) => (
-                                 <Box key={news.id}>
-                                     <Box
-                                         sx={{
-                                             py: 3,
-                                             cursor: "pointer",
-                                             "&:hover": {
-                                                 backgroundColor: "#f8f9fa",
-                                             },
-                                         }}
-                                         onClick={() => handleNewsClick(news.id)}
-                                     >
-                                         <Stack gap={1}>
-                                             {/* 제목과 NEW 배지 */}
-                                             <Stack direction="row" alignItems="center" gap={1}>
-                                                 <Typography
-                                                     variant="body1"
-                                                     sx={{
-                                                         fontSize: "16px",
-                                                         fontWeight: 600,
-                                                         color: "#191f28",
-                                                         lineHeight: 1.5,
-                                                     }}
-                                                 >
-                                                     {news.title}
-                                                 </Typography>
-                                                 {isToday(news.createdAt) && (
-                                                     <Chip
-                                                         label="NEW"
-                                                         size="small"
-                                                         sx={{
-                                                             backgroundColor: "#ff4757",
-                                                             color: "white",
-                                                             fontSize: "11px",
-                                                             fontWeight: 600,
-                                                             height: "20px",
-                                                             "& .MuiChip-label": {
-                                                                 px: 1,
-                                                             },
-                                                         }}
-                                                     />
-                                                 )}
-                                             </Stack>
-                                             
-                                             {/* 날짜 */}
-                                             <Typography
-                                                 variant="body2"
-                                                 sx={{
-                                                     fontSize: "14px",
-                                                     fontWeight: 400,
-                                                     color: "#8b95a1",
-                                                 }}
-                                             >
-                                                 {new Date(news.createdAt).toLocaleDateString("ko-KR", {
-                                                     year: "numeric",
-                                                     month: "long",
-                                                     day: "numeric",
-                                                 })}
-                                             </Typography>
-                                         </Stack>
-                                     </Box>
-                                     {index < newsItems.length - 1 && (
-                                         <Divider sx={{ borderColor: "#f2f3f5" }} />
-                                     )}
-                                 </Box>
-                             ))
-                        )}
-                    </Stack>
-
-                    {/* 빈 상태 */}
-                    {!isLoading && !error && newsItems.length === 0 && (
-                        <Stack
-                            alignItems="center"
-                            justifyContent="center"
-                            gap={3}
-                            py={8}
-                        >
-                            <Typography variant="h6" color="text.secondary">
+                        </Box>
+                    ) : newsItems.length === 0 ? (
+                        // 빈 상태
+                        <Stack alignItems="center" justifyContent="center" gap={2} py={8}>
+                            <CampaignRoundedIcon sx={{ fontSize: 48, color: "text.disabled" }} />
+                            <Typography variant="body1" color="text.secondary">
                                 공지사항이 없습니다
                             </Typography>
                         </Stack>
+                    ) : (
+                        // 공지사항 목록
+                        <Stack>
+                            {newsItems.map((news, index) => (
+                                <Box
+                                    key={news.id}
+                                    onClick={() => handleNewsClick(news.id)}
+                                    sx={{
+                                        p: 2.5,
+                                        cursor: "pointer",
+                                        borderBottom: index < newsItems.length - 1 
+                                            ? `1px solid ${theme.palette.divider}` 
+                                            : "none",
+                                        transition: "background-color 0.2s ease",
+                                        "&:hover": {
+                                            backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                                        },
+                                    }}
+                                >
+                                    <Stack 
+                                        direction="row" 
+                                        alignItems="center" 
+                                        justifyContent="space-between"
+                                        gap={2}
+                                    >
+                                        <Stack gap={0.5} flex={1} minWidth={0}>
+                                            {/* 제목과 NEW 배지 */}
+                                            <Stack direction="row" alignItems="center" gap={1}>
+                                                <Typography
+                                                    variant="body1"
+                                                    fontWeight={500}
+                                                    color="text.primary"
+                                                    sx={{
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    {news.title}
+                                                </Typography>
+                                                {isToday(news.createdAt) && (
+                                                    <Chip
+                                                        label="NEW"
+                                                        size="small"
+                                                        sx={{
+                                                            backgroundColor: theme.palette.error.main,
+                                                            color: "white",
+                                                            fontSize: 11,
+                                                            fontWeight: 700,
+                                                            height: 20,
+                                                            minWidth: 40,
+                                                            "& .MuiChip-label": {
+                                                                px: 0.8,
+                                                            },
+                                                        }}
+                                                    />
+                                                )}
+                                            </Stack>
+                                            
+                                            {/* 날짜 */}
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                            >
+                                                {new Date(news.createdAt).toLocaleDateString("ko-KR", {
+                                                    year: "numeric",
+                                                    month: "long",
+                                                    day: "numeric",
+                                                })}
+                                            </Typography>
+                                        </Stack>
+
+                                        {/* 화살표 아이콘 */}
+                                        <ChevronRightRoundedIcon 
+                                            sx={{ 
+                                                color: "text.disabled",
+                                                flexShrink: 0,
+                                            }} 
+                                        />
+                                    </Stack>
+                                </Box>
+                            ))}
+                        </Stack>
                     )}
-                </Stack>
+                </Paper>
             </Stack>
         </Container>
     );
