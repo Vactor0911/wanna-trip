@@ -33,6 +33,9 @@ interface TravelPlanChatbotProps {
   onComplete: (templateUuid: string) => void;
 }
 
+// 상수 정의
+const MAX_CONVERSATIONS = 15;
+
 const TravelPlanChatbot = ({
   open,
   templateName,
@@ -45,7 +48,10 @@ const TravelPlanChatbot = ({
   const [canGenerate, setCanGenerate] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [conversationCount, setConversationCount] = useState(0);
+  const [isNearLimit, setIsNearLimit] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 메시지 스크롤
   const scrollToBottom = () => {
@@ -64,6 +70,8 @@ const TravelPlanChatbot = ({
       setCanGenerate(false);
       setIsGenerating(false);
       setError(null);
+      setConversationCount(0);
+      setIsNearLimit(false);
     }
   }, [open]);
 
@@ -98,7 +106,6 @@ const TravelPlanChatbot = ({
     try {
       const csrfToken = await getCsrfToken();
 
-      // TODO: 실제 API 호출로 교체
       const response = await axiosInstance.post(
         "/chat/travel/chat",
         {
@@ -126,12 +133,23 @@ const TravelPlanChatbot = ({
         if (response.data.canGenerate) {
           setCanGenerate(true);
         }
+
+        // 대화 횟수 업데이트
+        if (response.data.conversationCount) {
+          setConversationCount(response.data.conversationCount);
+        }
+        if (response.data.isNearLimit) {
+          setIsNearLimit(true);
+        }
+      } else if (response.data.limitReached) {
+        // 대화 횟수 제한 도달
+        setError(response.data.message);
+        setCanGenerate(true); // 생성 버튼 활성화
       }
     } catch (error) {
       console.error("메시지 전송 오류:", error);
       setError("서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
       
-      // 임시 응답 (개발 중)
       const tempMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
@@ -141,6 +159,8 @@ const TravelPlanChatbot = ({
       setMessages((prev) => [...prev, tempMessage]);
     } finally {
       setIsLoading(false);
+      // 입력 필드에 포커스
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [inputMessage, isLoading, messages, templateName]);
 
@@ -198,6 +218,15 @@ const TravelPlanChatbot = ({
           <Box sx={{ mb: 2, p: 1, bgcolor: "error.light", borderRadius: 1 }}>
             <Typography color="error.contrastText" variant="body2">
               {error}
+            </Typography>
+          </Box>
+        )}
+
+        {/* 대화 횟수 제한 경고 */}
+        {isNearLimit && !error && (
+          <Box sx={{ mb: 2, p: 1, bgcolor: "warning.light", borderRadius: 1 }}>
+            <Typography color="warning.contrastText" variant="body2">
+              ⚠️ 대화 횟수가 {conversationCount}/{MAX_CONVERSATIONS}회입니다. 곧 제한에 도달합니다. 정보가 충분하다면 '여행 계획 생성' 버튼을 눌러주세요.
             </Typography>
           </Box>
         )}
@@ -278,6 +307,8 @@ const TravelPlanChatbot = ({
             placeholder="메시지를 입력하세요..."
             disabled={isLoading || isGenerating}
             variant="outlined"
+            inputRef={inputRef}
+            autoFocus
           />
           <IconButton
             color="primary"
