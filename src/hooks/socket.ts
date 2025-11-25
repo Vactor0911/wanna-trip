@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { ActiveUser, activeUsersAtom } from "../state";
 import { getAccessToken } from "../utils/accessToken";
+import { useTemplate } from "./template";
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_HOST;
 
@@ -17,6 +18,7 @@ export const useTemplateSocket = ({
   enabled = true,
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
+  const { updateTemplate } = useTemplate();
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
@@ -91,7 +93,16 @@ export const useTemplateSocket = ({
     socket.on("users:list", (data: { users: ActiveUser[] }) => {
       setActiveUsers(data.users);
     });
-  }, [enabled, enqueueSnackbar, setActiveUsers, templateUuid]);
+
+    // 템플릿 이벤트 //
+
+    // 템플릿 업데이트
+    socket.on("template:update", (data: { title: string }) => {
+      {
+        updateTemplate(data.title);
+      }
+    });
+  }, [enabled, enqueueSnackbar, setActiveUsers, templateUuid, updateTemplate]);
 
   // Socket 연결 해제
   const disconnect = useCallback(() => {
@@ -100,6 +111,12 @@ export const useTemplateSocket = ({
       socketRef.current.disconnect();
       socketRef.current = null;
     }
+  }, []);
+
+  // 이벤트 발신 함수 //
+
+  const emitTemplateUpdate = useCallback((title: string) => {
+    socketRef.current?.emit("template:update", { title });
   }, []);
 
   // 컴포넌트 언마운트 시 소켓 연결 해제
@@ -111,7 +128,8 @@ export const useTemplateSocket = ({
     return () => {
       disconnect();
     };
-  }, [enabled, templateUuid, connect, disconnect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, templateUuid]);
 
   return {
     // 연결 상태
@@ -119,6 +137,9 @@ export const useTemplateSocket = ({
 
     // 활성 사용자
     activeUsers,
+
+    // 템플릿 이벤트
+    emitTemplateUpdate,
 
     // 연결 제어
     connect,

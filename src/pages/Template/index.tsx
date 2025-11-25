@@ -27,7 +27,7 @@ import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
 import { theme } from "../../utils/theme";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
 import { useNavigate, useParams } from "react-router";
@@ -37,6 +37,7 @@ import dayjs from "dayjs";
 import {
   reorderBoardCardsAtom,
   templateAtom,
+  templateInfoAtom,
   templateModeAtom,
   TemplateModes,
 } from "../../state/template";
@@ -133,7 +134,7 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const { isConnected, activeUsers } = useTemplateSocket({
+  const { isConnected, activeUsers, emitTemplateUpdate } = useTemplateSocket({
     templateUuid: templateUuid!,
     enabled: !!templateUuid,
   });
@@ -146,7 +147,8 @@ const Template = (props: TemplateProps) => {
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
-  const [templateTitle, setTemplateTitle] = useState(template.title); // 템플릿 이름 상태
+  const templateInfo = useAtomValue(templateInfoAtom); // 템플릿 정보 상태
+  const [templateTitle, setTemplateTitle] = useState(templateInfo.title); // 템플릿 이름 상태
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
@@ -164,6 +166,11 @@ const Template = (props: TemplateProps) => {
 
   // 공유하기 다이얼로그 상태
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  // 템플릿 제목 변경 시 동기화
+  useEffect(() => {
+    setTemplateTitle(templateInfo.title);
+  }, [templateInfo.title]);
 
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
@@ -325,6 +332,9 @@ const Template = (props: TemplateProps) => {
           { title: newTemplate.title },
           { headers: { "X-CSRF-Token": csrfToken } }
         );
+
+        // 템플릿 수정 알림 브로드캐스트
+        emitTemplateUpdate(newTemplate.title);
       } else {
         console.error("템플릿 UUID가 유효하지 않습니다.");
       }
@@ -333,7 +343,7 @@ const Template = (props: TemplateProps) => {
     } finally {
       setIsTemplateTitleEditing(false);
     }
-  }, [setTemplate, template, templateTitle]);
+  }, [emitTemplateUpdate, setTemplate, template, templateTitle]);
 
   // 드래그 & 드롭 핸들러
   const onDragEnd = useCallback(

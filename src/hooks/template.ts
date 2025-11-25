@@ -2,12 +2,33 @@ import { useAtom, useSetAtom } from "jotai";
 import {
   LocationInterface,
   templateAtom,
+  templateInfoAtom,
   TemplateInterface,
 } from "../state/template";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
+
+/**
+ * 템플릿 관련 훅
+ */
+export const useTemplate = () => {
+  const setTemplateInfo = useSetAtom(templateInfoAtom);
+
+  // 템플릿 수정 - 함수형 업데이트로 의존성 제거
+  const updateTemplate = useCallback(
+    (title: string) => {
+      setTemplateInfo((prev) => ({
+        ...prev,
+        title,
+      }));
+    },
+    [setTemplateInfo]
+  );
+
+  return { updateTemplate };
+};
 
 /**
  * 카드 추가 및 복제 훅
