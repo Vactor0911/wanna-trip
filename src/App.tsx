@@ -15,6 +15,7 @@ import {
   Myinformation,
   News,
   NewsPost,
+  LikedPosts,
 } from "./pages";
 import CommunityPost from "./pages/CommunityPost";
 import Header from "./components/Header";
@@ -52,6 +53,7 @@ function App() {
                 <Route path="/template" element={<UserTemplates />} />
                 <Route path="/template/:templateUuid" element={<Template />} />
                 <Route path="/myinformation" element={<Myinformation />} />
+                <Route path="/liked-posts" element={<LikedPosts />} />
                 <Route path="/find-password" element={<FindPassword />} />
                 <Route path="/change-password" element={<ChangePassword />} />
                 <Route path="/community" element={<Community />} />
