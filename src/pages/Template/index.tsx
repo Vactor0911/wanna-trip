@@ -220,29 +220,43 @@ const Template = (props: TemplateProps) => {
             uuid: board.uuid,
             dayNumber: board.dayNumber,
             title: `Day ${index + 1}`,
-            cards: (board.cards || []).map((card) => ({
-              uuid: card.uuid,
-              content: card.content || "",
-              // 시간만 있는 경우 임시 기본 날짜를 추가하여 파싱
-              startTime: card.startTime
-                ? dayjs(`2001-01-01T${card.startTime}`)
-                : dayjs(),
-              endTime: card.endTime
-                ? dayjs(`2001-01-01T${card.endTime}`)
-                : dayjs(),
-              orderIndex: card.orderIndex,
-              locked: card.locked, // 기본값 - 잠금 해제 상태
-              location: card.location
-                ? {
-                    title: card.location.title,
-                    address: card.location.address,
-                    latitude: parseFloat(card.location.latitude),
-                    longitude: parseFloat(card.location.longitude),
-                    category: card.location.category,
-                    thumbnailUrl: card.location.thumbnailUrl,
-                  }
-                : undefined,
-            })),
+            cards: (board.cards || []).map((card) => {
+              // 좌표 파싱 및 유효성 검증
+              const parsedLat = parseFloat(card.location?.latitude || "");
+              const parsedLng = parseFloat(card.location?.longitude || "");
+              
+              // 유효한 좌표인지 확인 (NaN, 0, 한국 영역 외 제외)
+              const isValidCoordinate = 
+                !isNaN(parsedLat) && !isNaN(parsedLng) &&
+                !(parsedLat === 0 && parsedLng === 0) &&
+                parsedLat >= 33 && parsedLat <= 43 &&
+                parsedLng >= 124 && parsedLng <= 132;
+
+              return {
+                uuid: card.uuid,
+                content: card.content || "",
+                // 시간만 있는 경우 임시 기본 날짜를 추가하여 파싱
+                startTime: card.startTime
+                  ? dayjs(`2001-01-01T${card.startTime}`)
+                  : dayjs(),
+                endTime: card.endTime
+                  ? dayjs(`2001-01-01T${card.endTime}`)
+                  : dayjs(),
+                orderIndex: card.orderIndex,
+                locked: card.locked, // 기본값 - 잠금 해제 상태
+                location: card.location
+                  ? {
+                      title: card.location.title,
+                      address: card.location.address,
+                      // 유효한 좌표만 설정, 그렇지 않으면 undefined
+                      latitude: isValidCoordinate ? parsedLat : undefined,
+                      longitude: isValidCoordinate ? parsedLng : undefined,
+                      category: card.location.category,
+                      thumbnailUrl: card.location.thumbnailUrl,
+                    }
+                  : undefined,
+              };
+            }),
           })),
         };
 
