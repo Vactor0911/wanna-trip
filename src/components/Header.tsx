@@ -209,10 +209,16 @@ const Header = () => {
         // Jotai 상태
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
+        
+        // 프로필 정보 초기화
+        setProfileImage(null);
+        setUserName("사용자");
 
-        // 템플릿 상세 페이지라면 템플릿 페이지로 이동
+        // 템플릿 상세 페이지 또는 내 정보 페이지라면 적절한 페이지로 이동
         if (location.pathname.startsWith("/template/")) {
           navigate("/template");
+        } else if (location.pathname === "/myinformation") {
+          navigate("/");
         }
 
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
@@ -338,8 +344,36 @@ const Header = () => {
                   size="small"
                   ref={profileAnchorElement}
                   onClick={handleProfileButtonClick}
+                  sx={{ p: 0.5 }}
                 >
-                  <PermIdentityOutlinedIcon />
+                  {isLoggedIn && profileImage ? (
+                    <Avatar
+                      key={`header-profile-${imageVersion}`}
+                      src={profileImage}
+                      sx={{
+                        width: { xs: 28, sm: 32 },
+                        height: { xs: 28, sm: 32 },
+                      }}
+                    />
+                  ) : isLoggedIn ? (
+                    <Avatar
+                      sx={{
+                        width: { xs: 28, sm: 32 },
+                        height: { xs: 28, sm: 32 },
+                        bgcolor: theme.palette.primary.main,
+                      }}
+                    >
+                      <FaceRoundedIcon
+                        sx={{
+                          width: "90%",
+                          height: "90%",
+                          color: grey[100],
+                        }}
+                      />
+                    </Avatar>
+                  ) : (
+                    <PermIdentityOutlinedIcon />
+                  )}
                 </IconButton>
 
                 {/* 네비게이션 메뉴 버튼 */}
