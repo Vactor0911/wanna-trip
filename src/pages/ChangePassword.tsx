@@ -18,10 +18,12 @@ import { useLocation, useNavigate } from "react-router";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import axios from "axios";
 import { isPasswordCombinationValid, isPasswordLengthValid } from "../utils";
+import { useSnackbar } from "notistack";
 
 const ChangePassword = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [email, setEmail] = useState(""); // 사용자 이메일
   const [password, setPassword] = useState(""); // 사용자 비밀번호
@@ -40,7 +42,7 @@ const ChangePassword = () => {
       setEmail(stateEmail);
     } else {
       // 직접 접근하거나 잘못된 경로로 온 경우 로그인 페이지로 리다이렉트
-      alert("잘못된 접근입니다. 비밀번호 찾기를 통해 다시 시도해주세요.");
+      enqueueSnackbar("잘못된 접근입니다. 비밀번호 찾기를 통해 다시 시도해주세요.", { variant: "error" });
       navigate("/find-password");
     }
   }, [location.state, navigate]);
@@ -75,22 +77,22 @@ const ChangePassword = () => {
   const handleSubmit = useCallback(async () => {
     // 입력 검증
     if (!password || !passwordConfirm) {
-      alert("모든 필드를 입력해주세요.");
+      enqueueSnackbar("모든 필드를 입력해주세요.", { variant: "warning" });
       return;
     }
 
     if (password !== passwordConfirm) {
-      alert("비밀번호가 일치하지 않습니다.");
+      enqueueSnackbar("비밀번호가 일치하지 않습니다.", { variant: "warning" });
       return;
     }
 
     if (isPasswordLengthValid(password) === false) {
-      alert("비밀번호는 8자리 이상이어야 합니다.");
+      enqueueSnackbar("비밀번호는 8자리 이상이어야 합니다.", { variant: "warning" });
       return;
     }
 
     if (isPasswordCombinationValid(password) === false) {
-      alert("비밀번호는 영문, 숫자, 특수문자(!@#$%^&*?)를 포함해야 합니다.");
+      enqueueSnackbar("비밀번호는 영문, 숫자, 특수문자(!@#$%^&*?)를 포함해야 합니다.", { variant: "warning" });
       return;
     }
 
@@ -114,24 +116,26 @@ const ChangePassword = () => {
         }
       );
 
-      alert(
-        "비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다."
+      enqueueSnackbar(
+        "비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.",
+        { variant: "success" }
       );
       navigate("/login");
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        alert(
-          "비밀번호 변경 실패\n" +
-            (error.response.data?.message || "알 수 없는 오류")
+        enqueueSnackbar(
+          "비밀번호 변경 실패: " +
+            (error.response.data?.message || "알 수 없는 오류"),
+          { variant: "error" }
         );
       } else {
         console.error("요청 오류:", (error as Error).message);
-        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
+        enqueueSnackbar("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" });
       }
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, password, passwordConfirm, navigate]);
+  }, [email, password, passwordConfirm, navigate, enqueueSnackbar]);
 
   return (
     <Container maxWidth="xs">
