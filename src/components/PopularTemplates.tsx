@@ -7,11 +7,15 @@ import {
   Avatar,
   BoxProps,
   Stack,
+  useTheme,
 } from "@mui/material";
-import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import { grey } from "@mui/material/colors";
+import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import ShareIcon from "@mui/icons-material/Share";
 import { useNavigate } from "react-router-dom";
+import { SERVER_HOST } from "../utils/axiosInstance";
 
 // 인기 템플릿 데이터 타입 정의
 export interface PopularTemplateData {
@@ -20,6 +24,7 @@ export interface PopularTemplateData {
   bgColor?: string; // 배경색 (image 없을 때 사용)
   title: string; // 제목
   username: string; // 작성자
+  userProfileImage?: string; // 작성자 프로필 이미지 URL
   shared_count: number; // 공유 수
   thumbnailUrl?: string; // 썸네일 URL 추가
 }
@@ -46,6 +51,7 @@ const PopularTemplates = ({
   onCardClick,
   ...boxProps
 }: PopularTemplatesProps) => {
+  const theme = useTheme();
   // 슬라이드 인덱스 관리
   const [index, setIndex] = useState(0);
   // 부모 영역의 width 측정
@@ -131,21 +137,21 @@ const PopularTemplates = ({
     >
       {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
       {showArrows && (
-        <IconButton
-          onClick={handlePrev}
+        <Paper
+          elevation={2}
           sx={{
             position: "absolute",
-            left: 0,
+            left: 16,
             top: "50%",
-            transform: "translateX(-45%) translateY(-50%)",
+            transform: "translate(-50%, -50%)",
             zIndex: 2,
-            background: "rgba(255,255,255)",
-            boxShadow: 1,
-            "&:hover": { background: "rgba(255,255,255)" },
+            borderRadius: "50px",
           }}
         >
-          <ArrowBackIosNewRoundedIcon />
-        </IconButton>
+          <IconButton onClick={handlePrev} size="small">
+            <ChevronLeftRoundedIcon color="primary" fontSize="large" />
+          </IconButton>
+        </Paper>
       )}
 
       {/* 카드 리스트 */}
@@ -186,7 +192,7 @@ const PopularTemplates = ({
                 position: "absolute",
                 bottom: 0,
                 width: "100%",
-                bgcolor: "rgba(255,255,255)",
+                bgcolor: theme.palette.background.paper,
                 p: 2,
                 display: "flex",
                 flexDirection: "column",
@@ -194,15 +200,34 @@ const PopularTemplates = ({
             >
               {/* 상단: 아바타, 제목/작성자 */}
               <Box display="flex" alignItems="center" gap={1.5}>
-                <Avatar sx={{ width: 32, height: 32, fontSize: 20 }}>
-                  {tpl.username[0]}
-                </Avatar>
+                {tpl.userProfileImage ? (
+                  <Avatar
+                    src={`${SERVER_HOST}${tpl.userProfileImage}`}
+                    sx={{ width: 32, height: 32 }}
+                  />
+                ) : (
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: theme.palette.primary.main,
+                    }}
+                  >
+                    <FaceRoundedIcon
+                      sx={{
+                        width: "90%",
+                        height: "90%",
+                        color: grey[100],
+                      }}
+                    />
+                  </Avatar>
+                )}
                 <Box>
                   <Typography
                     variant="subtitle1"
                     fontWeight={700}
                     sx={{
-                      color: "#222",
+                      color: theme.palette.text.primary,
                       lineHeight: 1.2,
                       maxWidth: 220,
                       whiteSpace: "nowrap",
@@ -255,21 +280,21 @@ const PopularTemplates = ({
 
       {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
       {showArrows && (
-        <IconButton
-          onClick={handleNext}
+        <Paper
+          elevation={2}
           sx={{
             position: "absolute",
-            right: 0,
+            right: 16,
             top: "50%",
-            transform: "translateX(45%) translateY(-50%)",
+            transform: "translate(50%, -50%)",
             zIndex: 2,
-            background: "rgba(255,255,255)",
-            boxShadow: 1,
-            "&:hover": { background: "rgba(255,255,255)" },
+            borderRadius: "50px",
           }}
         >
-          <ArrowForwardIosRoundedIcon />
-        </IconButton>
+          <IconButton onClick={handleNext} size="small">
+            <ChevronRightRoundedIcon color="primary" fontSize="large" />
+          </IconButton>
+        </Paper>
       )}
     </Box>
   );
