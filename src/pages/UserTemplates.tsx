@@ -7,6 +7,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
   Stack,
   TextField,
   Typography,
@@ -14,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import SquareTemplateCard from "../components/SquareTemplateCard";
+import TravelPlanChatbot from "../components/TravelPlanChatbot";
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import PopularTemplates, {
@@ -22,6 +26,12 @@ import PopularTemplates, {
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import { getRandomColor } from "../utils";
+
+// 템플릿 생성 방식
+enum TemplateCreationType {
+  EMPTY = "empty",
+  AI_GENERATED = "ai",
+}
 
 // 템플릿 타입 정의
 interface Template {
@@ -45,7 +55,11 @@ const UserTemplates = () => {
 
   // 다이얼로그 관련 상태
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [creationType, setCreationType] = useState<TemplateCreationType>(
+    TemplateCreationType.EMPTY
+  );
   const [newTemplateName, setNewTemplateName] = useState("");
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteTemplateUuid, setDeleteTemplateUuid] = useState<string | null>(
     null
@@ -138,6 +152,7 @@ const UserTemplates = () => {
   const handleOpenDialog = useCallback(() => {
     setNewTemplateName("");
     setNameError("");
+    setCreationType(TemplateCreationType.EMPTY);
     setIsDialogOpen(true);
   }, []);
 
@@ -154,6 +169,14 @@ const UserTemplates = () => {
       return;
     }
 
+    // AI 생성 선택 시 챗봇 다이얼로그로 전환
+    if (creationType === TemplateCreationType.AI_GENERATED) {
+      handleCloseDialog();
+      setIsChatbotOpen(true);
+      return;
+    }
+
+    // 빈 템플릿 생성
     try {
       setIsLoading(true);
       const csrfToken = await getCsrfToken();
@@ -180,7 +203,7 @@ const UserTemplates = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchTemplates, handleCloseDialog, newTemplateName]);
+  }, [creationType, fetchTemplates, handleCloseDialog, newTemplateName]);
 
   // 템플릿 클릭 시 해당 UUID로 이동
   const handleTemplateClick = useCallback(
@@ -208,6 +231,23 @@ const UserTemplates = () => {
   const handleCloseDeleteDialog = useCallback(() => {
     setIsDeleteDialogOpen(false);
     setDeleteTemplateUuid(null);
+  }, []);
+
+  // AI 챗봇 완료 핸들러
+  const handleChatbotComplete = useCallback(
+    (templateUuid: string) => {
+      setIsChatbotOpen(false);
+      setNewTemplateName("");
+      // 생성된 템플릿 페이지로 이동
+      navigate(`/template/${templateUuid}`);
+    },
+    [navigate]
+  );
+
+  // 챗봇 닫기 핸들러
+  const handleCloseChatbot = useCallback(() => {
+    setIsChatbotOpen(false);
+    setNewTemplateName("");
   }, []);
 
   // 템플릿 삭제
@@ -331,13 +371,53 @@ const UserTemplates = () => {
         </Stack>
 
         {/* 템플릿 이름 입력 다이얼로그 */}
-        <Dialog open={isDialogOpen} onClose={handleCloseDialog}>
+        <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
           <DialogTitle>새 템플릿 만들기</DialogTitle>
           <DialogContent>
+            {/* 생성 방식 선택 */}
+            <Typography variant="subtitle1" sx={{ mt: 1, mb: 2 }}>
+              생성 방식을 선택하세요
+            </Typography>
+            <RadioGroup
+              value={creationType}
+              onChange={(e) => setCreationType(e.target.value as TemplateCreationType)}
+            >
+              <FormControlLabel
+                value={TemplateCreationType.EMPTY}
+                control={<Radio />}
+                label={
+                  <Box>
+                    <Typography variant="body1" fontWeight={500}>
+                      빈 템플릿 생성
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      직접 일정을 작성하고 싶을 때
+                    </Typography>
+                  </Box>
+                }
+                sx={{ mb: 2 }}
+              />
+              <FormControlLabel
+                value={TemplateCreationType.AI_GENERATED}
+                control={<Radio />}
+                label={
+                  <Box>
+                    <Typography variant="body1" fontWeight={500}>
+                      AI로 생성
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      AI와 대화하며 맞춤형 여행 계획 만들기
+                    </Typography>
+                  </Box>
+                }
+              />
+            </RadioGroup>
+
+            {/* 템플릿 이름 입력 */}
             <TextField
               autoFocus
               margin="dense"
-              title="템플릿 이름"
+              label="템플릿 이름"
               type="text"
               fullWidth
               variant="outlined"
@@ -348,7 +428,7 @@ const UserTemplates = () => {
               }}
               error={!!nameError}
               helperText={nameError}
-              sx={{ mt: 2 }}
+              sx={{ mt: 3 }}
             />
           </DialogContent>
           <DialogActions>
@@ -360,7 +440,7 @@ const UserTemplates = () => {
               color="primary"
               variant="contained"
             >
-              생성
+              {creationType === TemplateCreationType.AI_GENERATED ? "다음" : "생성"}
             </Button>
           </DialogActions>
         </Dialog>
@@ -387,6 +467,14 @@ const UserTemplates = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* AI 챗봇 다이얼로그 */}
+        <TravelPlanChatbot
+          open={isChatbotOpen}
+          templateName={newTemplateName}
+          onClose={handleCloseChatbot}
+          onComplete={handleChatbotComplete}
+        />
       </Stack>
     </Container>
   );
