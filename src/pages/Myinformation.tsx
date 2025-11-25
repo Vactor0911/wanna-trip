@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -29,7 +30,6 @@ import axiosInstance, {
 import { useAtom } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import { resetStates } from "../utils";
-import { theme } from "../utils/theme";
 import imageCompression from "browser-image-compression";
 import { useSnackbar } from "notistack";
 
@@ -42,6 +42,7 @@ interface UserInfo {
 }
 
 const Myinformation = () => {
+  const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
 
   // 사용자 정보 상태

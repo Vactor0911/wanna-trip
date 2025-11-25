@@ -66,6 +66,7 @@ const termsOfServices: TermsOfService[] = [
 
 // 회원가입 컴포넌트 정의
 const Register: React.FC = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [email, setEmail] = useState(""); // 사용자 이메일
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [passwordConfirm, setPasswordConfirm] = useState(""); // 사용자 비밀번호 재확인
