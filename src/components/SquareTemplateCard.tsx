@@ -1,12 +1,14 @@
-import { Paper, Typography, Box, IconButton, useTheme } from "@mui/material";
+import { Paper, Typography, Box, IconButton, useTheme, Menu, MenuItem } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SxProps } from "@mui/system";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import { useState } from "react";
 
 interface TemplateCardProps {
   title?: string;
   color?: string;
   thumbnailUrl?: string;
+  date?: string; // 날짜 추가
   onClick?: () => void;
   onDelete?: () => void;
   children?: React.ReactNode;
@@ -21,6 +23,7 @@ const SquareTemplateCard = ({
   title,
   color,
   thumbnailUrl,
+  date,
   onClick,
   onDelete,
   children,
@@ -30,110 +33,163 @@ const SquareTemplateCard = ({
 }: TemplateCardProps) => {
   const theme = useTheme();
   const bgColor = color || theme.palette.info.main;
-
-  // 삭제 버튼 클릭 시 이벤트 전파 방지 (카드 클릭 이벤트 실행 방지)
-  const handleDeleteClick = (e: React.MouseEvent) => {
+  
+  // 더보기 메뉴 상태
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+  
+  // 더보기 버튼 클릭
+  const handleMoreClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    setAnchorEl(e.currentTarget);
+  };
+  
+  // 메뉴 닫기
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+  
+  // 메뉴에서 삭제 클릭
+  const handleMenuDelete = () => {
+    handleMenuClose();
     if (onDelete) onDelete();
   };
 
   return (
     <Box
-      sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      sx={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "flex-start",
+        p: 1,
+        borderRadius: 3,
+        bgcolor: theme.palette.mode === "dark" 
+          ? "rgba(255, 255, 255, 0.05)" 
+          : "rgba(0, 0, 0, 0.02)",
+        transition: "background-color 0.2s",
+        ":hover": {
+          bgcolor: theme.palette.mode === "dark" 
+            ? "rgba(255, 255, 255, 0.08)" 
+            : "rgba(0, 0, 0, 0.04)",
+        },
+        ...sx,
+      }}
     >
       {/* 박스 스타일 */}
       <Paper
-        elevation={2}
+        elevation={type === "new" ? 0 : 2}
         onClick={onClick}
         sx={{
           width: cardSize,
-          height: cardSize,
-          borderRadius: 4,
-          background: bgColor,
-          backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : undefined, // 썸네일 이미지 추가
+          height: type === "new" ? cardSize + 60 : cardSize, // 새 템플릿은 하단 텍스트 영역만큼 더 높게
+          borderRadius: 3,
+          background: type === "new" ? theme.palette.background.paper : bgColor,
+          backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: 2,
+          gap: 1,
+          boxShadow: type === "new" ? 0 : 2,
+          border: type === "new" ? `2px dashed ${theme.palette.divider}` : "none",
           cursor: onClick ? "pointer" : "default",
-          transition: "box-shadow 0.2s",
-          ":hover": onClick ? { boxShadow: 6 } : {},
+          transition: "box-shadow 0.2s, border-color 0.2s",
+          ":hover": onClick ? { 
+            boxShadow: type === "new" ? 0 : 6,
+            borderColor: type === "new" ? theme.palette.primary.main : undefined,
+          } : {},
           position: "relative",
-          ...sx,
         }}
       >
-        {/* 삭제 버튼 - 새 템플릿이 아닐 때만 표시 */}
-        {type !== "new" && onDelete && (
-          <IconButton
-            size="small"
-            onClick={handleDeleteClick}
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              opacity: 0, // 기본적으로 투명하게 시작
-              transition: "opacity 0.2s ease", // 부드러운 페이드 효과
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              "&:hover": {
-                bgcolor: "rgba(255, 255, 255, 0.9)",
-              },
-              zIndex: 1,
-              // 부모 요소(:hover)에 의해 제어되는 스타일
-              ".MuiPaper-root:hover &": {
-                opacity: 1, // 부모에 마우스 오버 시 보이게 함
-              },
-            }}
-          >
-            <CloseRoundedIcon fontSize="small" />
-          </IconButton>
-        )}
-
-        {/* 새 템플릿 아이콘 */}
+        {/* 새 템플릿 콘텐츠 */}
         {type === "new" ? (
-          <AddRoundedIcon color="black" sx={{ fontSize: "40px" }} />
+          <>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                bgcolor: theme.palette.primary.main,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AddRoundedIcon sx={{ fontSize: 28, color: "white" }} />
+            </Box>
+            <Typography variant="body1" fontWeight={600} sx={{ mt: 1 }}>
+              새 템플릿
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              새로운 여행 계획하기
+            </Typography>
+          </>
         ) : (
           children
         )}
       </Paper>
-      {/* 내 템플릿 스타일 */}
-      {title && (
-        <Typography
-          variant="body2"
-          fontWeight={300}
-          align="left"
-          sx={{
-            width: cardSize,
-            textOverflow: "ellipsis",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            mt: 1,
-            pl: 0.5,
-          }}
-          noWrap
-        >
-          {title}
-        </Typography>
-      )}
-      {/* 새 템플릿 스타일 */}
-      {type === "new" && !title && (
-        <Typography
-          variant="body2"
-          fontWeight={300}
-          align="left"
-          sx={{
-            width: cardSize,
-            textOverflow: "ellipsis",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            mt: 1,
-            pl: 0.5,
-          }}
-          noWrap
-        >
-          새 템플릿
-        </Typography>
+      {/* 내 템플릿 스타일 - 제목, 날짜, 더보기 버튼 */}
+      {type !== "new" && title && (
+        <Box sx={{ width: cardSize, mt: 1.5 }}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            sx={{
+              textOverflow: "ellipsis",
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              color: theme.palette.text.primary,
+            }}
+            noWrap
+          >
+            {title}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ fontSize: 12 }}
+            >
+              {date || ""}
+            </Typography>
+            {onDelete && (
+              <>
+                <IconButton
+                  size="small"
+                  onClick={handleMoreClick}
+                  sx={{ 
+                    p: 0.25,
+                    color: theme.palette.text.secondary,
+                    ":hover": {
+                      color: theme.palette.text.primary,
+                    }
+                  }}
+                >
+                  <MoreHorizRoundedIcon fontSize="small" />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={menuOpen}
+                  onClose={handleMenuClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <MenuItem onClick={handleMenuDelete} sx={{ color: "error.main" }}>
+                    삭제
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
+          </Box>
+        </Box>
       )}
     </Box>
   );

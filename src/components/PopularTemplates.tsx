@@ -13,7 +13,7 @@ import { grey } from "@mui/material/colors";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
-import ShareIcon from "@mui/icons-material/Share";
+import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import { useNavigate } from "react-router-dom";
 import { SERVER_HOST } from "../utils/axiosInstance";
 
@@ -195,15 +195,16 @@ const PopularTemplates = ({
                 bgcolor: theme.palette.background.paper,
                 p: 2,
                 display: "flex",
-                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              {/* 상단: 아바타, 제목/작성자 */}
-              <Box display="flex" alignItems="center" gap={1.5}>
+              {/* 좌측: 아바타, 제목/작성자 */}
+              <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
                 {tpl.userProfileImage ? (
                   <Avatar
                     src={`${SERVER_HOST}${tpl.userProfileImage}`}
-                    sx={{ width: 32, height: 32 }}
+                    sx={{ width: 32, height: 32, flexShrink: 0 }}
                   />
                 ) : (
                   <Avatar
@@ -211,6 +212,7 @@ const PopularTemplates = ({
                       width: 32,
                       height: 32,
                       bgcolor: theme.palette.primary.main,
+                      flexShrink: 0,
                     }}
                   >
                     <FaceRoundedIcon
@@ -222,14 +224,13 @@ const PopularTemplates = ({
                     />
                   </Avatar>
                 )}
-                <Box>
+                <Box minWidth={0}>
                   <Typography
                     variant="subtitle1"
                     fontWeight={700}
                     sx={{
                       color: theme.palette.text.primary,
                       lineHeight: 1.2,
-                      maxWidth: 220,
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -247,32 +248,18 @@ const PopularTemplates = ({
                 </Box>
               </Box>
 
-              <Box display="flex" gap={1} mt={0.5} justifyContent="flex-end">
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={0.5}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <ShareIcon
-                    sx={{
-                      fontSize: 14,
-                      display: "flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      lineHeight: 1,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    {tpl.shared_count}
-                  </Typography>
-                </Stack>
-              </Box>
+              {/* 우측: 퍼가기 수 */}
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={0.5}
+                sx={{ color: "text.secondary", flexShrink: 0, ml: 2 }}
+              >
+                <IosShareRoundedIcon sx={{ fontSize: 18 }} />
+                <Typography variant="body2" fontWeight={500}>
+                  {tpl.shared_count}
+                </Typography>
+              </Stack>
             </Box>
           </Paper>
         ))}
