@@ -27,7 +27,7 @@ import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
 import { theme } from "../../utils/theme";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
 import { useNavigate, useParams } from "react-router";
@@ -37,6 +37,7 @@ import dayjs from "dayjs";
 import {
   reorderBoardCardsAtom,
   templateAtom,
+  templateInfoAtom,
   templateModeAtom,
   TemplateModes,
 } from "../../state/template";
@@ -133,9 +134,10 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const { isConnected, activeUsers } = useTemplateSocket({
+  const { isConnected, activeUsers, emitFetch } = useTemplateSocket({
     templateUuid: templateUuid!,
     enabled: !!templateUuid,
+    fetchTemplate: () => fetchTemplateData(),
   });
 
   const navigate = useNavigate();
@@ -146,7 +148,8 @@ const Template = (props: TemplateProps) => {
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
-  const [templateTitle, setTemplateTitle] = useState(template.title); // 템플릿 이름 상태
+  const templateInfo = useAtomValue(templateInfoAtom); // 템플릿 정보 상태
+  const [templateTitle, setTemplateTitle] = useState(templateInfo.title); // 템플릿 이름 상태
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
@@ -165,6 +168,11 @@ const Template = (props: TemplateProps) => {
   // 공유하기 다이얼로그 상태
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
+  // 템플릿 제목 변경 시 동기화
+  useEffect(() => {
+    setTemplateTitle(templateInfo.title);
+  }, [templateInfo.title]);
+
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
     // uuid가 없으면 종료
@@ -173,7 +181,7 @@ const Template = (props: TemplateProps) => {
     }
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       setError(null);
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
@@ -288,13 +296,14 @@ const Template = (props: TemplateProps) => {
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
+        // 템플릿 데이터 패치
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [template, fetchTemplateData]);
+  }, [template.boards.length, template.uuid, fetchTemplateData, emitFetch]);
 
   // 템플릿 제목 클릭
   const handleTemplateTitleClick = useCallback(() => {
@@ -325,6 +334,9 @@ const Template = (props: TemplateProps) => {
           { title: newTemplate.title },
           { headers: { "X-CSRF-Token": csrfToken } }
         );
+
+        // 템플릿 수정 알림 브로드캐스트
+        emitFetch();
       } else {
         console.error("템플릿 UUID가 유효하지 않습니다.");
       }
@@ -333,7 +345,7 @@ const Template = (props: TemplateProps) => {
     } finally {
       setIsTemplateTitleEditing(false);
     }
-  }, [setTemplate, template, templateTitle]);
+  }, [emitFetch, setTemplate, template, templateTitle]);
 
   // 드래그 & 드롭 핸들러
   const onDragEnd = useCallback(
@@ -390,6 +402,7 @@ const Template = (props: TemplateProps) => {
           boardUuid: destination.droppableId,
           orderIndex: destination.index + 1,
           prevTemplate: prevTemplate,
+          emitFetch,
         });
       } else {
         // 보드 드래그 & 드롭 처리
@@ -412,6 +425,7 @@ const Template = (props: TemplateProps) => {
           boardUuid: result.draggableId,
           dayNumber: destination.index + 1,
           prevTemplate: prevTemplate,
+          emitFetch,
         });
       }
 
@@ -419,7 +433,7 @@ const Template = (props: TemplateProps) => {
       queryClient.setQueryData(["template"], newTemplate);
       setTemplate(newTemplate);
     },
-    [moveBoard, moveCard, queryClient, setTemplate, template]
+    [emitFetch, moveBoard, moveCard, queryClient, setTemplate, template]
   );
 
   // 템플릿 내 모든 카드 정렬 함수 (시작 시간 순)
@@ -438,6 +452,7 @@ const Template = (props: TemplateProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
+        emitFetch();
         enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
           variant: "success",
         });
@@ -448,7 +463,7 @@ const Template = (props: TemplateProps) => {
         variant: "error",
       });
     }
-  }, [template.uuid, fetchTemplateData, enqueueSnackbar]);
+  }, [template.uuid, fetchTemplateData, emitFetch, enqueueSnackbar]);
 
   // 시간 중복이 있는 첫 번째 보드로 스크롤하는 함수
   const scrollToFirstOverlappingBoard = useCallback(() => {
@@ -854,6 +869,7 @@ const Template = (props: TemplateProps) => {
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
+                          emitFetch={emitFetch}
                         />
                       )}
                     </Draggable>
@@ -914,7 +930,10 @@ const Template = (props: TemplateProps) => {
       </Stack>
 
       {/* 카드 편집 대화상자 */}
-      <CardEditDialog fetchTemplateData={fetchTemplateData} />
+      <CardEditDialog
+        fetchTemplateData={fetchTemplateData}
+        emitFetch={emitFetch}
+      />
 
       {/* 더보기 메뉴 */}
       <Menu

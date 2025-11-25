@@ -10,11 +10,13 @@ const SOCKET_URL = import.meta.env.VITE_SERVER_HOST;
 interface UseTemplateSocketOptions {
   templateUuid: string;
   enabled?: boolean;
+  fetchTemplate: () => void;
 }
 
 export const useTemplateSocket = ({
   templateUuid,
   enabled = true,
+  fetchTemplate,
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
 
@@ -91,7 +93,14 @@ export const useTemplateSocket = ({
     socket.on("users:list", (data: { users: ActiveUser[] }) => {
       setActiveUsers(data.users);
     });
-  }, [enabled, enqueueSnackbar, setActiveUsers, templateUuid]);
+
+    // 템플릿 이벤트 //
+    socket.on("template:fetch", () => {
+      {
+        fetchTemplate();
+      }
+    });
+  }, [enabled, enqueueSnackbar, fetchTemplate, setActiveUsers, templateUuid]);
 
   // Socket 연결 해제
   const disconnect = useCallback(() => {
@@ -102,6 +111,11 @@ export const useTemplateSocket = ({
     }
   }, []);
 
+  // 이벤트 송신 함수
+  const emitFetch = useCallback(() => {
+    socketRef.current?.emit("template:fetch", { templateUuid });
+  }, [templateUuid]);
+
   // 컴포넌트 언마운트 시 소켓 연결 해제
   useEffect(() => {
     if (enabled && templateUuid) {
@@ -111,7 +125,8 @@ export const useTemplateSocket = ({
     return () => {
       disconnect();
     };
-  }, [enabled, templateUuid, connect, disconnect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, templateUuid]);
 
   return {
     // 연결 상태
@@ -119,6 +134,9 @@ export const useTemplateSocket = ({
 
     // 활성 사용자
     activeUsers,
+
+    // 데이터 요청
+    emitFetch,
 
     // 연결 제어
     connect,

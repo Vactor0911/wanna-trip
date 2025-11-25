@@ -36,6 +36,7 @@ interface BoardProps extends StackProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
+  emitFetch: () => void; // 템플릿 데이터 다시 불러오기 이벤트 전송 함수
 }
 
 const Board = (props: BoardProps) => {
@@ -45,6 +46,7 @@ const Board = (props: BoardProps) => {
     fetchTemplateData,
     isOwner,
     id, // ID 속성 추가 (선택적 속성으로 설정)
+    emitFetch,
     ...others
   } = props;
 
@@ -109,7 +111,8 @@ const Board = (props: BoardProps) => {
         lastCardEndTime,
         boardData.cards.length + 1
       );
-      fetchTemplateData();
+      await fetchTemplateData();
+      emitFetch();
 
       // 카드 편집 대화상자 열기
       setCurrentEditCard({
@@ -125,6 +128,7 @@ const Board = (props: BoardProps) => {
     boardData.cards,
     addCard,
     fetchTemplateData,
+    emitFetch,
     setCurrentEditCard,
   ]);
 
@@ -150,13 +154,20 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
+        // 변경된 보드 상태 반영
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [day, fetchTemplateData, template.boards.length, template.uuid]);
+  }, [
+    day,
+    emitFetch,
+    fetchTemplateData,
+    template.boards.length,
+    template.uuid,
+  ]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {
@@ -168,35 +179,38 @@ const Board = (props: BoardProps) => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 백엔드 API 호출하여 현재 보드 복제 (newTitle 필드 제거)
       const response = await axiosInstance.post(
-        `/board/copy/${boardData.uuid}`,
+        `/board/copy/${boardUuid}`,
         {}, // 빈 객체 전송 (title 필드 제거)
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
+        // 변경된 보드 상태 반영
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.uuid, fetchTemplateData, template.boards.length]);
+  }, [boardData.uuid, emitFetch, fetchTemplateData, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 보드 개수가 최소 개수보다 적으면
       if (template.boards.length <= 1) {
         // 카드가 있다면 보드 카드 모두 삭제 API 호출
         if (template.boards[0].cards.length > 0) {
           const response = await axiosInstance.put(
-            `/board/clear/${boardData.uuid}`,
+            `/board/clear/${boardUuid}`,
             {},
             { headers: { "X-CSRF-Token": csrfToken } }
           );
@@ -204,24 +218,26 @@ const Board = (props: BoardProps) => {
           if (response.data.success) {
             // 템플릿 데이터 새로 불러오기
             await fetchTemplateData();
+            emitFetch();
           }
         }
         return;
       }
 
       // 보드 개수가 2개 이상일 경우 보드 자체를 삭제
-      const response = await axiosInstance.delete(`/board/${boardData.uuid}`, {
+      const response = await axiosInstance.delete(`/board/${boardUuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
       if (response.data.success) {
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 삭제 오류:", error);
     }
-  }, [template, boardData, fetchTemplateData]);
+  }, [boardData.uuid, template.boards, fetchTemplateData, emitFetch]);
 
   // 보드 내 카드 시작 시간순 정렬 함수
   const handleSortByStartTime = useCallback(async () => {
@@ -239,6 +255,7 @@ const Board = (props: BoardProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
+        emitFetch();
 
         enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
           variant: "success",
@@ -250,7 +267,7 @@ const Board = (props: BoardProps) => {
         variant: "error",
       });
     }
-  }, [boardData.uuid, fetchTemplateData, enqueueSnackbar]);
+  }, [boardData.uuid, fetchTemplateData, emitFetch, enqueueSnackbar]);
 
   // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
   const scrollToFirstOverlappingCard = useCallback(() => {

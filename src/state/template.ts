@@ -77,7 +77,7 @@ export const boardsMapAtom = atom<Map<string, BoardInterface>>(new Map());
 
 // 기존 templateAtom 유지 (이전 코드와의 호환성을 위해)
 export const templateAtom = atom(
-  // getter - 개별 atom들을 조합해 템플릿 객체 생성
+  // getter
   (get) => {
     const templateInfo = get(templateInfoAtom);
     const boardOrder = get(boardOrderAtom);
@@ -94,9 +94,8 @@ export const templateAtom = atom(
       boards,
     };
   },
-  // setter - 템플릿 객체를 받아 개별 atom들 업데이트
+  // setter
   (_get, set, newTemplate: TemplateInterface) => {
-    // 템플릿 기본 정보 업데이트
     set(templateInfoAtom, {
       uuid: newTemplate.uuid,
       title: newTemplate.title,
@@ -105,7 +104,6 @@ export const templateAtom = atom(
     const newBoardsMap = new Map<string, BoardInterface>();
     const newBoardOrder: string[] = [];
 
-    // 각 보드 처리
     newTemplate.boards?.forEach((board) => {
       if (board.uuid) {
         newBoardsMap.set(board.uuid, board);

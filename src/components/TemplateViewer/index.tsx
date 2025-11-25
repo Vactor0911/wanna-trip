@@ -389,7 +389,6 @@ const TemplateViewer = (props: TemplateProps) => {
                 key={`board-${board.uuid || index}`}
                 day={index + 1}
                 boardData={board} // 보드 데이터 직접 전달
-                fetchTemplateData={fetchTemplateData} // 함수 전달
                 id={`board-${board.uuid}`} // ID 속성 추가
               />
             ))}

@@ -1,13 +1,151 @@
 import { useAtom, useSetAtom } from "jotai";
 import {
+  boardOrderAtom,
+  boardsMapAtom,
   LocationInterface,
   templateAtom,
+  templateInfoAtom,
   TemplateInterface,
 } from "../state/template";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
+
+/**
+ * 템플릿 관련 훅
+ */
+export const useTemplate = () => {
+  const setTemplateInfo = useSetAtom(templateInfoAtom);
+
+  // 템플릿 정보 수정
+  const updateTemplate = useCallback(
+    (title: string) => {
+      setTemplateInfo((prev) => ({
+        ...prev,
+        title,
+      }));
+    },
+    [setTemplateInfo]
+  );
+
+  return { updateTemplate };
+};
+
+export const useBoard = () => {
+  const setBoardsMap = useSetAtom(boardsMapAtom);
+  const setBoardOrder = useSetAtom(boardOrderAtom);
+
+  // 보드 추가
+  const addBoard = useCallback(
+    (boardUuid: string, dayNumber: number) => {
+      // dayNumber 재정렬
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.forEach((board, key) => {
+          if (board.dayNumber >= dayNumber) {
+            newMap.set(key, {
+              ...board,
+              dayNumber: board.dayNumber + 1,
+            });
+          }
+        });
+        return newMap;
+      });
+
+      // 보드 맵 업데이트
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+
+        newMap.set(boardUuid, {
+          uuid: boardUuid,
+          dayNumber: dayNumber || 1,
+          cards: [],
+        });
+        return newMap;
+      });
+
+      // 보드 순서 업데이트
+      setBoardOrder((prev) => {
+        if (prev.includes(boardUuid)) return prev;
+
+        // dayNumber를 기준으로 삽입 위치 찾기
+        const insertIndex = dayNumber - 1;
+        const newOrder = [...prev];
+
+        // 배열 크기를 초과하면 끝에 추가
+        if (insertIndex >= newOrder.length) {
+          return [...newOrder, boardUuid];
+        }
+
+        // 중간에 삽입
+        newOrder.splice(insertIndex, 0, boardUuid);
+        return newOrder;
+      });
+    },
+    [setBoardsMap, setBoardOrder]
+  );
+
+  // 보드 복제
+  const copyBoard = useCallback(
+    (boardUuid: string, newBoardUuid: string) => {
+      // dayNumber 재정렬 및 보드 복사
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        const boardToCopy = newMap.get(boardUuid);
+
+        if (boardToCopy) {
+          newMap.set(newBoardUuid, {
+            ...boardToCopy,
+            uuid: newBoardUuid,
+            dayNumber: boardToCopy.dayNumber + 1,
+          });
+
+          // 복사된 보드 이후의 보드들의 dayNumber 증가
+          newMap.forEach((board, key) => {
+            if (
+              key !== newBoardUuid &&
+              board.dayNumber > boardToCopy.dayNumber
+            ) {
+              newMap.set(key, {
+                ...board,
+                dayNumber: board.dayNumber + 1,
+              });
+            }
+          });
+        }
+        return newMap;
+      });
+
+      // 보드 순서 업데이트
+      setBoardOrder((prev) => {
+        const targetIndex = prev.indexOf(boardUuid);
+        if (targetIndex === -1) return [...prev, newBoardUuid];
+
+        const newOrder = [...prev];
+        newOrder.splice(targetIndex + 1, 0, newBoardUuid);
+        return newOrder;
+      });
+    },
+    [setBoardOrder, setBoardsMap]
+  );
+
+  // 보드 삭제
+  const deleteBoard = useCallback(
+    (boardUuid: string) => {
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(boardUuid);
+        return newMap;
+      });
+
+      setBoardOrder((prev) => prev.filter((uuid) => uuid !== boardUuid));
+    },
+    [setBoardsMap, setBoardOrder]
+  );
+
+  return { addBoard, copyBoard, deleteBoard };
+};
 
 /**
  * 카드 추가 및 복제 훅
@@ -93,6 +231,7 @@ interface MoveCardParams {
   boardUuid: string;
   orderIndex: number;
   prevTemplate: TemplateInterface;
+  emitFetch: () => void;
 }
 
 /**
@@ -104,7 +243,12 @@ export const useMoveCard = () => {
   const queryClient = useQueryClient();
 
   const moveCard = useMutation({
-    mutationFn: async ({ cardUuid, boardUuid, orderIndex }: MoveCardParams) => {
+    mutationFn: async ({
+      cardUuid,
+      boardUuid,
+      orderIndex,
+      emitFetch,
+    }: MoveCardParams) => {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
@@ -118,6 +262,8 @@ export const useMoveCard = () => {
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
+
+      emitFetch();
 
       // 서버 응답 반환 (새 카드 ID 포함)
       return response.data;
@@ -177,6 +323,7 @@ interface MoveBoardParams {
   boardUuid: string;
   dayNumber: number;
   prevTemplate: TemplateInterface;
+  emitFetch: () => void;
 }
 
 /**
@@ -192,6 +339,7 @@ export const useMoveBoard = () => {
       templateUuid,
       boardUuid,
       dayNumber,
+      emitFetch,
     }: MoveBoardParams) => {
       // 템플릿 UUID가 없으면 종료
       if (!templateUuid) {
@@ -216,6 +364,8 @@ export const useMoveBoard = () => {
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
+
+      emitFetch();
     },
     onError: (_error, context) => {
       if (context?.prevTemplate) {
