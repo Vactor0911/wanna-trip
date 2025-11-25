@@ -75,7 +75,24 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
     return DAY_COLORS[(dayNumber - 1) % DAY_COLORS.length];
   }, []);
 
-  // 모든 위치 정보 수집
+  // 유효한 좌표인지 검증 (한국 영역: 위도 33~43, 경도 124~132)
+  const isValidCoordinate = useCallback((lat?: number, lng?: number): boolean => {
+    if (lat === undefined || lng === undefined || lat === null || lng === null) {
+      return false;
+    }
+    // NaN 체크
+    if (isNaN(lat) || isNaN(lng)) {
+      return false;
+    }
+    // 0, 0 좌표는 유효하지 않음 (바다 한가운데)
+    if (lat === 0 && lng === 0) {
+      return false;
+    }
+    // 한국 영역 체크
+    return lat >= 33 && lat <= 43 && lng >= 124 && lng <= 132;
+  }, []);
+
+  // 모든 위치 정보 수집 (유효한 좌표만)
   const allLocations = useMemo(() => {
     const locations: Array<{
       lat: number;
@@ -90,17 +107,16 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
 
     template.boards.forEach((board) => {
       board.cards.forEach((card) => {
+        // 유효한 좌표인지 검증
         if (
-          card.location?.latitude !== undefined &&
-          card.location?.longitude !== undefined &&
           card.location?.title !== undefined &&
-          card.location?.address !== undefined
+          isValidCoordinate(card.location?.latitude, card.location?.longitude)
         ) {
           locations.push({
-            lat: card.location.latitude,
-            lng: card.location.longitude,
+            lat: card.location.latitude!,
+            lng: card.location.longitude!,
             title: card.location.title,
-            address: card.location.address,
+            address: card.location.address || "",
             dayNumber: board.dayNumber ?? 1,
             startTime: card.startTime.format("HH:mm"),
             endTime: card.endTime.format("HH:mm"),
@@ -111,7 +127,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
     });
 
     return locations;
-  }, [template.boards]);
+  }, [template.boards, isValidCoordinate]);
 
   // 선택된 일차의 위치들
   const selectedDayLocations = useMemo(() => {
