@@ -1,5 +1,4 @@
-import { Divider, Stack, Typography, TypographyProps } from "@mui/material";
-import { theme } from "../utils/theme";
+import { Divider, Stack, Typography, TypographyProps, useTheme } from "@mui/material";
 
 interface SectionHeaderProps {
   title: string;
@@ -8,6 +7,7 @@ interface SectionHeaderProps {
 
 const SectionHeader = (props: SectionHeaderProps) => {
   const { title, variant = "h6" } = props;
+  const theme = useTheme();
 
   return (
     <Stack>

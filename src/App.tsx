@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@emotion/react";
-import { theme } from "./utils/theme";
+import { createLightTheme, createDarkTheme } from "./utils/theme";
 import { CssBaseline, IconButton } from "@mui/material";
 import TokenRefresher from "./components/TokenRefresher";
 import {
@@ -23,10 +23,21 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import CommunityPostEdit from "./pages/CommunityPostEdit";
 import { closeSnackbar, SnackbarProvider } from "notistack";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import { useAtomValue } from "jotai";
+import { themeModeAtom } from "./state";
+import { useMemo } from "react";
 
 const queryClient = new QueryClient();
 
 function App() {
+  const themeMode = useAtomValue(themeModeAtom);
+
+  // 테마 모드에 따라 테마 객체 생성
+  const theme = useMemo(
+    () => (themeMode === "dark" ? createDarkTheme() : createLightTheme()),
+    [themeMode]
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

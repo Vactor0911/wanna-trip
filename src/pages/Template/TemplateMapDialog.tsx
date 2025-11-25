@@ -472,7 +472,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
                     },
                     borderBottom:
                       index < scheduleByDay[1].length - 1
-                        ? "1px solid #e0e0e0"
+                        ? `1px solid ${theme.palette.divider}`
                         : "none",
                   }}
                   onClick={(event) => handleLocationClick(location, event)}
@@ -586,7 +586,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
                         },
                         borderBottom:
                           index < locations.length - 1
-                            ? "1px solid #e0e0e0"
+                            ? `1px solid ${theme.palette.divider}`
                             : "none",
                       }}
                       onClick={(event) => handleLocationClick(location, event)}
@@ -682,7 +682,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
             minWidth: { xs: "100%", md: "400px" },
             height: "100%",
             overflow: "auto",
-            backgroundColor: "#fafafa",
+            backgroundColor: theme.palette.background.default,
             borderRight: {
               xs: "none",
               md: `1px solid ${theme.palette.divider}`,
@@ -698,7 +698,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
               position: "sticky",
               top: 0,
               zIndex: 10,
-              backgroundColor: "#fafafa",
+              backgroundColor: theme.palette.background.default,
               p: 2,
               pb: 1,
               boxShadow: isScrolled ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
@@ -851,7 +851,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
             right: 0,
             height: showMobilePanel ? getMobilePanelHeight() : "0",
             maxHeight: isSmallMobile ? "50vh" : "55vh",
-            backgroundColor: "#fafafa",
+            backgroundColor: theme.palette.background.default,
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
             boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
@@ -871,7 +871,7 @@ const TemplateMapDialog = (props: TemplateMapDialogProps) => {
                 sx={{
                   p: 2,
                   pb: 1,
-                  borderBottom: "1px solid #e0e0e0",
+                  borderBottom: `1px solid ${theme.palette.divider}`,
                   flexShrink: 0,
                 }}
               >

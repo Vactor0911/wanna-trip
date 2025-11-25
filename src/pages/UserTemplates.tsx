@@ -124,6 +124,7 @@ const UserTemplates = () => {
                 : getRandomColor(Math.floor(Math.random() * 100)), // ID가 없으면 랜덤 색상
               title: template.title,
               username: template.ownerName,
+              userProfileImage: template.ownerProfileImage,
               shared_count: template.sharedCount,
               thumbnailUrl: template.thumbnailUrl,
             };

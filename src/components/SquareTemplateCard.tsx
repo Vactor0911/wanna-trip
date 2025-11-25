@@ -1,7 +1,6 @@
-import { Paper, Typography, Box, IconButton } from "@mui/material";
+import { Paper, Typography, Box, IconButton, useTheme } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SxProps } from "@mui/system";
-import { theme } from "../utils/theme";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 
 interface TemplateCardProps {
@@ -20,7 +19,7 @@ const DEFAULT_CARD_SIZE = 200;
 
 const SquareTemplateCard = ({
   title,
-  color = theme.palette.info.main,
+  color,
   thumbnailUrl,
   onClick,
   onDelete,
@@ -29,6 +28,9 @@ const SquareTemplateCard = ({
   type = "existing",
   cardSize = DEFAULT_CARD_SIZE,
 }: TemplateCardProps) => {
+  const theme = useTheme();
+  const bgColor = color || theme.palette.info.main;
+
   // 삭제 버튼 클릭 시 이벤트 전파 방지 (카드 클릭 이벤트 실행 방지)
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -47,7 +49,7 @@ const SquareTemplateCard = ({
           width: cardSize,
           height: cardSize,
           borderRadius: 4,
-          background: color,
+          background: bgColor,
           backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : undefined, // 썸네일 이미지 추가
           backgroundSize: "cover",
           backgroundPosition: "center",

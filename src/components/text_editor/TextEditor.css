@@ -38,4 +38,6 @@
   font-family: "Lato";
   line-height: 1.6;
   word-break: break-word;
+  color: black !important;
+  background-color: white !important;
 }

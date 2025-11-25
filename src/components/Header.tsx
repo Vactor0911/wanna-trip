@@ -13,12 +13,13 @@ import {
   Stack,
   Toolbar,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
-import { theme } from "../utils/theme";
 import { useCallback, useEffect, useRef, useState } from "react";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import { grey } from "@mui/material/colors";
@@ -29,7 +30,7 @@ import axiosInstance, {
   SERVER_HOST,
 } from "../utils/axiosInstance";
 import { resetStates } from "../utils";
-import { wannaTripLoginStateAtom } from "../state";
+import { themeModeAtom, wannaTripLoginStateAtom } from "../state";
 import { useAtom } from "jotai";
 import Logo from "/icons/logo.svg";
 import { useSnackbar } from "notistack";
@@ -51,10 +52,14 @@ interface StyledLinkProps {
   to: string;
   children: React.ReactNode;
   onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  themeMode?: "light" | "dark";
 }
 
 const StyledLink = (props: StyledLinkProps) => {
-  const { to, children, onClick, ...others } = props;
+  const { to, children, onClick, themeMode = "light", ...others } = props;
+  const textColor = themeMode === "dark" ? "#e0e0e0" : "#404040";
+  const activeColor = "#3288ff";
+  
   return (
     <NavLink
       to={to}
@@ -63,9 +68,9 @@ const StyledLink = (props: StyledLinkProps) => {
       }
       css={{
         textDecoration: "none",
-        color: theme.palette.black.main,
+        color: textColor,
         transition: "color 0.3s",
-        "&.active": { color: theme.palette.primary.main },
+        "&.active": { color: activeColor },
       }}
       onClick={onClick}
       {...others}
@@ -86,6 +91,7 @@ const hiddenPages = [
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
+  const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
   const profileAnchorElement = useRef<HTMLButtonElement | null>(null); // 프로필 메뉴 앵커 요소
   const navMenuButtonAnchorElement = useRef<HTMLButtonElement | null>(null); // 네비게이션 메뉴 버튼 앵커 요소
@@ -95,6 +101,17 @@ const Header = () => {
 
   const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom); // 로그인 상태
   const { isLoggedIn } = loginState; // 로그인 상태에서 isLoggedIn 추출
+
+  // 다크모드 상태
+  const [themeMode, setThemeMode] = useAtom(themeModeAtom);
+  const isDarkMode = themeMode === "dark";
+
+  // 다크모드 토글 핸들러
+  const handleThemeModeToggle = useCallback(() => {
+    const newMode = isDarkMode ? "light" : "dark";
+    setThemeMode(newMode);
+    localStorage.setItem("themeMode", newMode);
+  }, [isDarkMode, setThemeMode]);
 
   // 프로필 이미지 관련련
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -263,7 +280,7 @@ const Header = () => {
               }}
             >
               {/* 로고 */}
-              <StyledLink to="/">
+              <StyledLink to="/" themeMode={themeMode}>
                 <Stack direction="row" alignItems="center" gap={2}>
                   {/* 로고 아이콘 */}
                   <Box
@@ -297,7 +314,7 @@ const Header = () => {
                 }}
               >
                 {Links.map((link, index) => (
-                  <StyledLink key={`nav-link-${index}`} to={link.to}>
+                  <StyledLink key={`nav-link-${index}`} to={link.to} themeMode={themeMode}>
                     <Typography variant="h5" fontWeight={500}>
                       {link.text}
                     </Typography>
@@ -329,8 +346,13 @@ const Header = () => {
                 }}
               >
                 {/* 라이트/다크 모드 버튼 */}
-                <IconButton color="inherit" size="small">
-                  <DarkModeOutlinedIcon />
+                <IconButton 
+                  color="inherit" 
+                  size="small"
+                  onClick={handleThemeModeToggle}
+                  title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
+                >
+                  {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
                 </IconButton>
 
                 {/* 알림 버튼 */}
@@ -407,7 +429,7 @@ const Header = () => {
               top: "100%",
               left: 0,
               width: "100vw",
-              background: "white",
+              background: theme.palette.background.paper,
             }}
           >
             <Stack p={1} paddingX={4} gap={0.5}>
@@ -508,12 +530,12 @@ const Header = () => {
                     borderRadius: "50px",
                     pl: 2,
                     "&:hover": {
-                      "--variant-containedBg": "white",
+                      "--variant-containedBg": theme.palette.background.paper,
                       "--variant-textBg": theme.palette.primary.main,
                       "--variant-outlinedBg": theme.palette.primary.main,
                     },
                     "&:hover > .MuiTypography-root": {
-                      color: "white",
+                      color: theme.palette.primary.contrastText,
                     },
                   }}
                   onClick={() => {
@@ -527,7 +549,7 @@ const Header = () => {
                 >
                   <Typography
                     variant="subtitle1"
-                    color="black"
+                    color="text.primary"
                     fontWeight={500}
                   >
                     {link.text}

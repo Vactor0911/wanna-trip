@@ -9,6 +9,7 @@ import {
   InputAdornment,
   Stack,
   Typography,
+  useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -23,7 +24,6 @@ import { wannaTripLoginStateAtom, kakaoLoginStateAtom } from "../state";
 import { jwtDecode } from "jwt-decode";
 
 import { getCsrfToken } from "../utils/axiosInstance";
-import { theme } from "../utils/theme";
 import OutlinedTextField from "../components/OutlinedTextField";
 import PlainLink from "../components/PlainLinkProps";
 import SectionHeader from "../components/SectionHeader";
@@ -42,6 +42,7 @@ const Login = () => {
   const redirectTo = searchParams.get("redirectTo") ?? undefined;
 
   const navigate = useNavigate();
+  const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoginLoading, setIsLoginLoading] = useState(false); // 로그인 로딩 상태

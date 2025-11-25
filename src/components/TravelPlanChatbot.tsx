@@ -12,6 +12,7 @@ import {
   Stack,
   TextField,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 import SendIcon from "@mui/icons-material/Send";
@@ -19,7 +20,6 @@ import SmartToyIcon from "@mui/icons-material/SmartToy";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import axiosInstance, { getCsrfToken, SERVER_HOST } from "../utils/axiosInstance";
 import { grey } from "@mui/material/colors";
-import { theme } from "../utils/theme";
 import { useSnackbar } from "notistack";
 
 // 메시지 타입 정의
@@ -46,6 +46,7 @@ const TravelPlanChatbot = ({
   onClose,
   onComplete,
 }: TravelPlanChatbotProps) => {
+  const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
