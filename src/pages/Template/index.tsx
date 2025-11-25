@@ -188,7 +188,7 @@ const Template = (props: TemplateProps) => {
     }
 
     try {
-      setIsLoading(true);
+      // setIsLoading(true);
       setError(null);
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();

@@ -12,7 +12,6 @@ import { BoardInterface } from "../../state/template";
 interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
-  fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
 }
 
