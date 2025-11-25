@@ -26,6 +26,7 @@ interface Template {
   created_at: string;
   updated_at: string;
   sharedCount: number;
+  thumbnailUrl?: string; // 썸네일 URL
 }
 
 const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
@@ -107,6 +108,7 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
               key={`template-${template.uuid}`}
               title={template.title}
               color={getRandomColor(template.uuid)}
+              thumbnailUrl={template.thumbnailUrl}
               onClick={() => handleTemplateClick(template.uuid)}
               cardSize={isMobile ? 110 : 150}
             />
