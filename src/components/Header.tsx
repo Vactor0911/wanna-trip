@@ -210,6 +210,11 @@ const Header = () => {
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
 
+        // 템플릿 상세 페이지라면 템플릿 페이지로 이동
+        if (location.pathname.startsWith("/template/")) {
+          navigate("/template");
+        }
+
         alert("로그아웃이 성공적으로 완료되었습니다."); // 성공 메시지
       } else {
         alert("로그아웃 처리에 실패했습니다."); // 실패 메시지
@@ -218,7 +223,7 @@ const Header = () => {
       console.error("로그아웃 중 오류 발생:", error);
       alert("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요."); // 에러 메시지
     }
-  }, [isLoggedIn, setWannaTripLoginState]);
+  }, [isLoggedIn, location.pathname, navigate, setWannaTripLoginState]);
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김

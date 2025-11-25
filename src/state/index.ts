@@ -32,3 +32,11 @@ export const kakaoLoginStateAtom = atom(""); // 카카오 로그인 code 상태
 
 // 인증 초기화 완료 상태를 추적하는 atom
 export const isAuthInitializedAtom = atom(false); // 초기화 완료 상태
+
+// 활성 사용자 목록
+export interface ActiveUser {
+  userUuid: string;
+  userName: string;
+  profileImage: string;
+}
+export const activeUsersAtom = atom<ActiveUser[]>([]);

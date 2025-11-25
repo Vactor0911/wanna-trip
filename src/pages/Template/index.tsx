@@ -13,6 +13,9 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText,
+  Chip,
+  Avatar,
+  AvatarGroup,
 } from "@mui/material";
 import Tooltip from "../../components/Tooltip";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -56,6 +59,9 @@ import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
 import Board from "../../components/template/Board";
 import TemplateShareDialog from "./TemplateShareDialog";
+import { useTemplateSocket } from "../../hooks/socket";
+import { getUserProfileImageUrl } from "../../utils";
+import { ActiveUser } from "../../state";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -115,7 +121,6 @@ interface TemplateProps {
 }
 
 const Template = (props: TemplateProps) => {
-  let { uuid } = props; // props에서 uuid 가져오기
   const {
     height = "calc(100vh - 82px)",
     paddgingX = {
@@ -125,7 +130,14 @@ const Template = (props: TemplateProps) => {
     },
   } = props;
 
-  const params = useParams(); // URL 파라미터
+  const { templateUuid } = useParams();
+
+  // 소켓 관련 훅
+  const { isConnected, activeUsers } = useTemplateSocket({
+    templateUuid: templateUuid!,
+    enabled: !!templateUuid,
+  });
+
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
@@ -139,7 +151,9 @@ const Template = (props: TemplateProps) => {
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
-  const [isOwner, setIsOwner] = useState(true); // 소유자 여부 상태 추가
+  const [isOwner, setIsOwner] = useState(false); // 소유자 여부
+  const [hasPermission, setHasPermission] = useState(true); // 편집 권한 여부
+  const isEditMode = hasPermission && mode === TemplateModes.EDIT; // 편집 모드 여부
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(
     null
   ); // 더보기 메뉴 앵커
@@ -151,15 +165,10 @@ const Template = (props: TemplateProps) => {
   // 공유하기 다이얼로그 상태
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
-  // URL 파라미터에서 uuid 가져오기
-  if (!uuid) {
-    uuid = params.uuid;
-  }
-
   // 템플릿 데이터를 불러온 후 소유자 확인하여 모드 설정
   const fetchTemplateData = useCallback(async () => {
     // uuid가 없으면 종료
-    if (!uuid) {
+    if (!templateUuid) {
       return;
     }
 
@@ -170,7 +179,7 @@ const Template = (props: TemplateProps) => {
       const csrfToken = await getCsrfToken();
 
       // 템플릿 데이터 가져오기
-      const response = await axiosInstance.get(`/template/${uuid}`, {
+      const response = await axiosInstance.get(`/template/${templateUuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -178,16 +187,20 @@ const Template = (props: TemplateProps) => {
         const backendTemplate = response.data.template as BackendTemplate;
 
         // 백엔드에서 제공한 소유자 여부 정보 직접 사용
-        const isCurrentUserOwner = response.data.isOwner;
+        const isCurrentUserHasPermission = response.data.hasPermission;
 
-        // 소유자 여부 상태 업데이트
-        setIsOwner(isCurrentUserOwner);
+        // 권한 상태 업데이트
+        setIsOwner(response.data.isOwner);
+        setHasPermission(isCurrentUserHasPermission);
 
         // 소유자 정보를 localStorage에 저장 (다른 컴포넌트에서 사용)
-        localStorage.setItem("template_isOwner", String(isCurrentUserOwner));
+        localStorage.setItem(
+          "template_isOwner",
+          String(isCurrentUserHasPermission)
+        );
 
         // 소유자가 아니면 강제로 열람 모드로 설정
-        if (!isCurrentUserOwner) {
+        if (!isCurrentUserHasPermission) {
           setMode(TemplateModes.VIEW);
         }
 
@@ -239,7 +252,7 @@ const Template = (props: TemplateProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [reorderBoardCards, setMode, setTemplate, uuid]);
+  }, [reorderBoardCards, setMode, setTemplate, templateUuid]);
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
@@ -554,7 +567,7 @@ const Template = (props: TemplateProps) => {
         <Typography color="error">{error}</Typography>
         <Button
           variant="contained"
-          onClick={() => navigate("/community")}
+          onClick={() => navigate("/template")}
           sx={{ mt: 2 }}
         >
           뒤로 가기
@@ -624,7 +637,7 @@ const Template = (props: TemplateProps) => {
                   sx={{ flexGrow: 1, minWidth: 0 }}
                 >
                   {/* 소유자에 따라 Button 또는 Typography 표시 */}
-                  {isOwner ? (
+                  {isEditMode ? (
                     // 소유자인 경우 - 클릭 가능한 버튼
                     <Button
                       onClick={handleTemplateTitleClick}
@@ -674,7 +687,7 @@ const Template = (props: TemplateProps) => {
 
               {/* 권한에 따른 정렬하기 보이기 여부 */}
               <Stack direction="row" alignItems="center" gap={0.5}>
-                {isOwner && (
+                {isEditMode && (
                   <SortMenu
                     onSortStart={handleSortButtonClick}
                     tooltipTitle="템플릿 전체 정렬하기"
@@ -718,27 +731,50 @@ const Template = (props: TemplateProps) => {
                   </IconButton>
                 </Tooltip>
               )}
+
+              {/* 연결 상태 표시 */}
+              <Chip
+                label={isConnected ? "실시간 연결됨" : "연결 끊김"}
+                color={isConnected ? "success" : "error"}
+                size="small"
+              />
+
+              {/* 활성 사용자 아바타 */}
+              {activeUsers.length > 0 && (
+                <AvatarGroup max={4}>
+                  {activeUsers.map((user: ActiveUser) => (
+                    <Avatar
+                      src={getUserProfileImageUrl(user.profileImage)}
+                      alt={user.userName}
+                    />
+                  ))}
+                </AvatarGroup>
+              )}
+
+              <Typography variant="body2" color="text.secondary">
+                {activeUsers.length}명 작업 중
+              </Typography>
             </Stack>
 
             {/* 우측 컨테이너 */}
             <Stack direction="row" alignContent="inherit" gap={0.5}>
-              {/* 모드 선택 버튼 - 소유자만 볼 수 있음 */}
-              {isOwner && (
+              {/* 모드 선택 버튼 - 편집 권한이 있어야 볼 수 있음 */}
+              {hasPermission && (
                 <Tooltip
-                  title={mode === modes[0].name ? "열람 모드" : "편집 모드"}
+                  title={mode === modes[0].name ? "편집 모드" : "열람 모드"}
                 >
                   <IconButton size="small" onClick={handleModeChange}>
                     {mode === modes[0].name ? (
-                      <ImportContactsRoundedIcon />
-                    ) : (
                       <EditRoundedIcon />
+                    ) : (
+                      <ImportContactsRoundedIcon />
                     )}
                   </IconButton>
                 </Tooltip>
               )}
 
-              {/* 소유자가 아니면 안내 표시 - 모바일에서는 숨김 */}
-              {!isOwner && (
+              {/* 편집 권한이 없으면 안내 표시 - 모바일에서는 숨김 */}
+              {!hasPermission && (
                 <Typography
                   variant="caption"
                   color="text.secondary"
@@ -774,7 +810,7 @@ const Template = (props: TemplateProps) => {
         </Container>
 
         {/* 드래그 & 드롭 wrapper */}
-        <DragDropContext onDragEnd={isOwner ? onDragEnd : () => {}}>
+        <DragDropContext onDragEnd={isEditMode ? onDragEnd : () => {}}>
           {/* 보드 컨테이너 */}
           <Stack
             direction="row"
@@ -790,7 +826,7 @@ const Template = (props: TemplateProps) => {
               droppableId="board"
               direction="horizontal"
               type="board"
-              isDropDisabled={!isOwner} // 소유자가 아니면 드롭 불가능
+              isDropDisabled={!isEditMode} // 소유자가 아니면 드롭 불가능
             >
               {(provided) => (
                 <Stack
@@ -805,7 +841,7 @@ const Template = (props: TemplateProps) => {
                       key={`board-${board.uuid || index}`}
                       draggableId={`${board.uuid || index}`}
                       index={index}
-                      isDragDisabled={!isOwner} // 소유자가 아니면 드래그 불가능
+                      isDragDisabled={!isEditMode} // 소유자가 아니면 드래그 불가능
                     >
                       {(provided) => (
                         <Board
@@ -816,7 +852,7 @@ const Template = (props: TemplateProps) => {
                           day={index + 1}
                           boardData={board} // 보드 데이터 직접 전달
                           fetchTemplateData={fetchTemplateData} // 함수 전달
-                          isOwner={isOwner} // 소유자 여부 전달
+                          isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
                         />
                       )}
@@ -827,8 +863,8 @@ const Template = (props: TemplateProps) => {
               )}
             </Droppable>
 
-            {/* 보드 추가 버튼 - 소유자만 볼 수 있음 */}
-            {isOwner && template.boards.length < MAX_BOARDS && (
+            {/* 보드 추가 버튼 - 편집 권한이 있어야 볼 수 있음 */}
+            {isEditMode && template.boards.length < MAX_BOARDS && (
               <Box>
                 <Tooltip title="보드 추가하기" placement="top">
                   <Button
