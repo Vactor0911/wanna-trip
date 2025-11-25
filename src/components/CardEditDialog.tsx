@@ -262,7 +262,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
           (card) => card.uuid === currentEditCard?.cardUuid
         );
 
-        if (currentCard && !cardEditDialogOpen) {
+        if (currentCard) {
           setContent(currentCard.content || "");
           setStartTime(currentCard.startTime || dayjs("2001-01-01T01:00"));
           setEndTime(currentCard.endTime || dayjs("2001-01-01T02:00"));
