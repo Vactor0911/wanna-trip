@@ -131,7 +131,7 @@ const Card = (props: CardProps) => {
                     position: "absolute",
                     bottom: "3px",
                     maxWidth: "90%",
-                    background: "#D9D9D9",
+                    background: theme.palette.background.paper,
                     borderRadius: 2,
                     padding: "3px 12px 3px 12px",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
@@ -140,7 +140,7 @@ const Card = (props: CardProps) => {
                   <Typography
                     variant="subtitle2"
                     fontWeight="bold"
-                    sx={{ color: "black" }}
+                    sx={{ color: theme.palette.text.primary }}
                   >
                     {location.title}
                   </Typography>
@@ -161,6 +161,7 @@ const Card = (props: CardProps) => {
         <Stack
           gap={0.5}
           sx={{
+            color: "black",
             "& p, & ol, & ul": {
               margin: 0,
               padding: 0,

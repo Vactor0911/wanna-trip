@@ -18,7 +18,7 @@ import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import { useCallback, useEffect, useState } from "react";
-import { theme } from "../../utils/theme";
+import { useTheme } from "@mui/material/styles";
 import { useAtom } from "jotai";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
@@ -84,6 +84,7 @@ interface TemplateProps {
 }
 
 const TemplateViewer = (props: TemplateProps) => {
+  const theme = useTheme();
   let { uuid } = props; // props에서 uuid 가져오기
   const {
     height = "calc(100vh - 82px)",
