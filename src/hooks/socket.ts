@@ -19,7 +19,7 @@ export const useTemplateSocket = ({
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
   const { updateTemplate } = useTemplate();
-  const { addBoard, deleteBoard } = useBoard();
+  const { addBoard, copyBoard, deleteBoard } = useBoard();
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
@@ -113,6 +113,16 @@ export const useTemplateSocket = ({
       }
     });
 
+    // 보드 복제
+    socket.on(
+      "board:copy",
+      (data: { boardUuid: string; newBoardUuid: string }) => {
+        {
+          copyBoard(data.boardUuid, data.newBoardUuid); // 복제된 보드는 일차 0으로 추가, 이후 필요시 수정 가능
+        }
+      }
+    );
+
     // 보드 삭제
     socket.on("board:delete", (data: { boardUuid: string }) => {
       {
@@ -121,6 +131,7 @@ export const useTemplateSocket = ({
     });
   }, [
     addBoard,
+    copyBoard,
     deleteBoard,
     enabled,
     enqueueSnackbar,
@@ -149,6 +160,14 @@ export const useTemplateSocket = ({
   const emitBoardAdd = useCallback((boardUuid: string, dayNumber: number) => {
     socketRef.current?.emit("board:add", { boardUuid, dayNumber });
   }, []);
+
+  // 보드 복제
+  const emitBoardCopy = useCallback(
+    (boardUuid: string, newBoardUuid: string) => {
+      socketRef.current?.emit("board:copy", { boardUuid, newBoardUuid });
+    },
+    []
+  );
 
   // 보드 삭제
   const emitBoardDelete = useCallback((boardUuid: string) => {
@@ -179,6 +198,7 @@ export const useTemplateSocket = ({
 
     // 보드 이벤트
     emitBoardAdd,
+    emitBoardCopy,
     emitBoardDelete,
 
     // 연결 제어

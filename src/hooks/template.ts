@@ -86,6 +86,50 @@ export const useBoard = () => {
     [setBoardsMap, setBoardOrder]
   );
 
+  // 보드 복제
+  const copyBoard = useCallback(
+    (boardUuid: string, newBoardUuid: string) => {
+      // dayNumber 재정렬 및 보드 복사
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        const boardToCopy = newMap.get(boardUuid);
+
+        if (boardToCopy) {
+          newMap.set(newBoardUuid, {
+            ...boardToCopy,
+            uuid: newBoardUuid,
+            dayNumber: boardToCopy.dayNumber + 1,
+          });
+
+          // 복사된 보드 이후의 보드들의 dayNumber 증가
+          newMap.forEach((board, key) => {
+            if (
+              key !== newBoardUuid &&
+              board.dayNumber > boardToCopy.dayNumber
+            ) {
+              newMap.set(key, {
+                ...board,
+                dayNumber: board.dayNumber + 1,
+              });
+            }
+          });
+        }
+        return newMap;
+      });
+
+      // 보드 순서 업데이트
+      setBoardOrder((prev) => {
+        const targetIndex = prev.indexOf(boardUuid);
+        if (targetIndex === -1) return [...prev, newBoardUuid];
+
+        const newOrder = [...prev];
+        newOrder.splice(targetIndex + 1, 0, newBoardUuid);
+        return newOrder;
+      });
+    },
+    [setBoardOrder, setBoardsMap]
+  );
+
   // 보드 삭제
   const deleteBoard = useCallback(
     (boardUuid: string) => {
@@ -100,7 +144,7 @@ export const useBoard = () => {
     [setBoardsMap, setBoardOrder]
   );
 
-  return { addBoard, deleteBoard };
+  return { addBoard, copyBoard, deleteBoard };
 };
 
 /**

@@ -37,6 +37,7 @@ interface BoardProps extends StackProps {
   isOwner: boolean; // 소유자 여부 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
   emitBoardAdd: (boardUuid: string, dayNumber: number) => void; // 보드 추가 이벤트 전송 함수
+  emitBoardCopy: (boardUuid: string, newBoardUuid: string) => void; // 보드 복제 이벤트 전송 함수
   emitBoardDelete: (boardUuid: string) => void; // 보드 삭제 이벤트 전송 함수
 }
 
@@ -48,12 +49,13 @@ const Board = (props: BoardProps) => {
     isOwner,
     id, // ID 속성 추가 (선택적 속성으로 설정)
     emitBoardAdd,
+    emitBoardCopy,
     emitBoardDelete,
     ...others
   } = props;
 
   const theme = useTheme();
-  const { addBoard, deleteBoard } = useBoard();
+  const { addBoard, copyBoard, deleteBoard } = useBoard();
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
@@ -177,22 +179,26 @@ const Board = (props: BoardProps) => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 백엔드 API 호출하여 현재 보드 복제 (newTitle 필드 제거)
       const response = await axiosInstance.post(
-        `/board/copy/${boardData.uuid}`,
+        `/board/copy/${boardUuid}`,
         {}, // 빈 객체 전송 (title 필드 제거)
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
+        const newBoardUuid = response.data.boardUuid;
+
+        // 변경된 보드 상태 반영
+        copyBoard(boardUuid, newBoardUuid);
+        emitBoardCopy(boardUuid, newBoardUuid);
       }
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.uuid, fetchTemplateData, template.boards.length]);
+  }, [boardData.uuid, copyBoard, emitBoardCopy, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {

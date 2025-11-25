@@ -139,6 +139,7 @@ const Template = (props: TemplateProps) => {
     activeUsers,
     emitTemplateUpdate,
     emitBoardAdd,
+    emitBoardCopy,
     emitBoardDelete,
   } = useTemplateSocket({
     templateUuid: templateUuid!,
@@ -876,6 +877,7 @@ const Template = (props: TemplateProps) => {
                           isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
                           emitBoardAdd={emitBoardAdd}
+                          emitBoardCopy={emitBoardCopy}
                           emitBoardDelete={emitBoardDelete}
                         />
                       )}
