@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   Button,
   CircularProgress,
@@ -15,8 +16,10 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
-import PersonIcon from "@mui/icons-material/Person";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
+import axiosInstance, { getCsrfToken, SERVER_HOST } from "../utils/axiosInstance";
+import { grey } from "@mui/material/colors";
+import { theme } from "../utils/theme";
 
 // 메시지 타입 정의
 interface ChatMessage {
@@ -50,6 +53,7 @@ const TravelPlanChatbot = ({
   const [error, setError] = useState<string | null>(null);
   const [conversationCount, setConversationCount] = useState(0);
   const [isNearLimit, setIsNearLimit] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -62,6 +66,23 @@ const TravelPlanChatbot = ({
     scrollToBottom();
   }, [messages]);
 
+  // 프로필 이미지 가져오기
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const csrfToken = await getCsrfToken();
+      const response = await axiosInstance.get("/auth/me", {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success && response.data.data.profileImage) {
+        const imageUrl = `${SERVER_HOST}${response.data.data.profileImage}?t=${new Date().getTime()}`;
+        setProfileImage(imageUrl);
+      }
+    } catch (err) {
+      console.error("프로필 정보 로드 실패:", err);
+    }
+  }, []);
+
   // 다이얼로그 열릴 때 초기화
   useEffect(() => {
     if (open) {
@@ -72,8 +93,9 @@ const TravelPlanChatbot = ({
       setError(null);
       setConversationCount(0);
       setIsNearLimit(false);
+      fetchUserProfile(); // 프로필 이미지 가져오기
     }
-  }, [open]);
+  }, [open, fetchUserProfile]);
 
   // 초기 메시지 설정
   useEffect(() => {
@@ -267,7 +289,25 @@ const TravelPlanChatbot = ({
                       <SmartToyIcon fontSize="small" sx={{ mt: 0.5 }} />
                     )}
                     {message.role === "user" && (
-                      <PersonIcon fontSize="small" sx={{ mt: 0.5 }} />
+                      <Avatar
+                        src={profileImage || undefined}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          mt: 0.5,
+                          bgcolor: theme.palette.primary.light,
+                        }}
+                      >
+                        {!profileImage && (
+                          <FaceRoundedIcon
+                            sx={{
+                              width: "90%",
+                              height: "90%",
+                              color: grey[100],
+                            }}
+                          />
+                        )}
+                      </Avatar>
                     )}
                     <Typography
                       variant="body1"
