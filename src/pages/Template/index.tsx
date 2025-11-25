@@ -151,6 +151,7 @@ const Template = (props: TemplateProps) => {
   const [error, setError] = useState<string | null>(null); // 에러 상태
   const [isTemplateTitleEditing, setIsTemplateTitleEditing] = useState(false); // 템플릿 제목 편집 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
+  const [isOwner, setIsOwner] = useState(false); // 소유자 여부
   const [hasPermission, setHasPermission] = useState(true); // 편집 권한 여부
   const isEditMode = hasPermission && mode === TemplateModes.EDIT; // 편집 모드 여부
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(
@@ -188,7 +189,8 @@ const Template = (props: TemplateProps) => {
         // 백엔드에서 제공한 소유자 여부 정보 직접 사용
         const isCurrentUserHasPermission = response.data.hasPermission;
 
-        // 소유자 여부 상태 업데이트
+        // 권한 상태 업데이트
+        setIsOwner(response.data.isOwner);
         setHasPermission(isCurrentUserHasPermission);
 
         // 소유자 정보를 localStorage에 저장 (다른 컴포넌트에서 사용)
@@ -537,7 +539,7 @@ const Template = (props: TemplateProps) => {
   // 공유하기 버튼 클릭
   const handleShareButtonClick = useCallback(() => {
     // 소유자가 아니면 링크 복사
-    if (!isEditMode) {
+    if (!isOwner) {
       navigator.clipboard.writeText(window.location.href);
       enqueueSnackbar("템플릿 주소가 클립보드에 복사되었습니다.", {
         variant: "success",
@@ -547,7 +549,7 @@ const Template = (props: TemplateProps) => {
 
     // 소유자면 공유하기 대화상자 열기
     setShareDialogOpen(true);
-  }, [enqueueSnackbar, isEditMode]);
+  }, [enqueueSnackbar, isOwner]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -756,7 +758,7 @@ const Template = (props: TemplateProps) => {
 
             {/* 우측 컨테이너 */}
             <Stack direction="row" alignContent="inherit" gap={0.5}>
-              {/* 모드 선택 버튼 - 소유자만 볼 수 있음 */}
+              {/* 모드 선택 버튼 - 편집 권한이 있어야 볼 수 있음 */}
               {hasPermission && (
                 <Tooltip
                   title={mode === modes[0].name ? "편집 모드" : "열람 모드"}
@@ -771,7 +773,7 @@ const Template = (props: TemplateProps) => {
                 </Tooltip>
               )}
 
-              {/* 소유자가 아니면 안내 표시 - 모바일에서는 숨김 */}
+              {/* 편집 권한이 없으면 안내 표시 - 모바일에서는 숨김 */}
               {!hasPermission && (
                 <Typography
                   variant="caption"
@@ -861,7 +863,7 @@ const Template = (props: TemplateProps) => {
               )}
             </Droppable>
 
-            {/* 보드 추가 버튼 - 소유자만 볼 수 있음 */}
+            {/* 보드 추가 버튼 - 편집 권한이 있어야 볼 수 있음 */}
             {isEditMode && template.boards.length < MAX_BOARDS && (
               <Box>
                 <Tooltip title="보드 추가하기" placement="top">
