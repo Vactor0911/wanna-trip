@@ -9,6 +9,7 @@ import Community from "./Community";
 import Myinformation from "./Myinformation";
 import News from "./News";
 import NewsPost from "./NewsPost";
+import LikedPosts from "./LikedPosts";
 
 export {
   Main,
@@ -22,4 +23,5 @@ export {
   Myinformation,
   News,
   NewsPost,
+  LikedPosts,
 };
