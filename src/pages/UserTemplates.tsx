@@ -1,24 +1,31 @@
 import {
   Box,
   Button,
+  Chip,
   CircularProgress,
   Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   FormControlLabel,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
+  SelectChangeEvent,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
+import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import { useNavigate } from "react-router-dom";
 
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import TravelPlanChatbot from "../components/TravelPlanChatbot";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
 import PopularTemplates, {
   PopularTemplateData,
@@ -33,12 +40,15 @@ enum TemplateCreationType {
   AI_GENERATED = "ai",
 }
 
+// 정렬 방식
+type SortType = "latest" | "oldest" | "name";
+
 // 템플릿 타입 정의
 interface Template {
   uuid: string;
   title: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   thumbnailUrl: string;
 }
 
@@ -52,6 +62,9 @@ const UserTemplates = () => {
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 정렬 상태
+  const [sortType, setSortType] = useState<SortType>("latest");
 
   // 다이얼로그 관련 상태
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -251,6 +264,32 @@ const UserTemplates = () => {
     setNewTemplateName("");
   }, []);
 
+  // 정렬 변경 핸들러
+  const handleSortChange = useCallback((event: SelectChangeEvent) => {
+    setSortType(event.target.value as SortType);
+  }, []);
+
+  // 정렬된 템플릿 목록
+  const sortedTemplates = useMemo(() => {
+    const sorted = [...myTemplates];
+    switch (sortType) {
+      case "latest":
+        return sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      case "oldest":
+        return sorted.sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
+      case "name":
+        return sorted.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return sorted;
+    }
+  }, [myTemplates, sortType]);
+
+  // 날짜 포맷 함수
+  const formatDate = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+  }, []);
+
   // 템플릿 삭제
   const handleDeleteTemplate = useCallback(async () => {
     if (deleteTemplateUuid === null) return;
@@ -287,7 +326,21 @@ const UserTemplates = () => {
       <Stack mt={4} gap={8}>
         {/* 인기 템플릿 */}
         <Stack gap={4}>
-          <Typography variant="h5">인기 템플릿</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <WhatshotIcon sx={{ color: "#ff6b6b", fontSize: 28 }} />
+            <Typography variant="h5" fontWeight={600}>인기 템플릿</Typography>
+            <Chip 
+              label="HOT" 
+              size="small" 
+              sx={{ 
+                bgcolor: "#ff6b6b", 
+                color: "white", 
+                fontWeight: 600,
+                fontSize: 11,
+                height: 22,
+              }} 
+            />
+          </Box>
           {isPopularLoading ? (
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress />
@@ -308,7 +361,35 @@ const UserTemplates = () => {
 
         {/* 내 템플릿 */}
         <Stack gap={4}>
-          <Typography variant="h5">내 템플릿</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+              <FolderSpecialIcon sx={{ color: "primary.main", fontSize: 28 }} />
+              <Typography variant="h5" fontWeight={600}>내 템플릿</Typography>
+              {loginState.isLoggedIn && !isLoading && !error && (
+                <Typography variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                  총 {myTemplates.length}개
+                </Typography>
+              )}
+            </Box>
+            
+            {loginState.isLoggedIn && !isLoading && !error && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="body2" color="text.secondary">정렬:</Typography>
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <Select
+                    value={sortType}
+                    onChange={handleSortChange}
+                    variant="outlined"
+                    sx={{ fontSize: 14 }}
+                  >
+                    <MenuItem value="latest">최신순</MenuItem>
+                    <MenuItem value="oldest">오래된순</MenuItem>
+                    <MenuItem value="name">이름순</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            )}
+          </Box>
 
           {!loginState.isLoggedIn ? (
             // 로그인되지 않은 경우 메시지 표시
@@ -349,6 +430,7 @@ const UserTemplates = () => {
               sx={{
                 display: "flex",
                 flexWrap: "wrap",
+                justifyContent: { xs: "center", sm: "flex-start" },
                 gap: `${CARD_GAP}px`,
                 mb: 6,
               }}
@@ -357,12 +439,13 @@ const UserTemplates = () => {
               <SquareTemplateCard type="new" onClick={handleOpenDialog} />
 
               {/* 내 템플릿 목록들 (API에서 가져온 실제 데이터) */}
-              {myTemplates.map((template, index) => (
+              {sortedTemplates.map((template, index) => (
                 <SquareTemplateCard
                   key={`template-${index}`}
                   title={template.title}
                   color={getRandomColor(template.uuid)}
                   thumbnailUrl={template.thumbnailUrl}
+                  date={formatDate(template.updatedAt)}
                   onClick={() => handleTemplateClick(template.uuid)}
                   onDelete={() => handleDeleteButtonClick(template.uuid)}
                 />
