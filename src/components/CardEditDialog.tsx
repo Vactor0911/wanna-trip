@@ -154,10 +154,11 @@ const MapSection = React.memo(
 
 interface CardEditDialogProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
+  emitFetch: () => void; // 소켓을 통한 템플릿 패치 요청 함수 타입 추가
 }
 
 const CardEditDialog = (props: CardEditDialogProps) => {
-  const { fetchTemplateData } = props;
+  const { fetchTemplateData, emitFetch } = props;
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -412,6 +413,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
             card: updatedCard,
             isNew: isNewCard,
           });
+          emitFetch(); // 소켓을 통한 템플릿 패치 요청
 
           // 성공 후 대화상자 닫기
           setCardEditDialogOpen(false);
@@ -430,6 +432,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
   }, [
     content,
     currentEditCard,
+    emitFetch,
     endTime,
     isCardLocked,
     selectedLocation,
@@ -441,7 +444,8 @@ const CardEditDialog = (props: CardEditDialogProps) => {
   // 저장 버튼 클릭
   const handleSaveButtonClick = useCallback(() => {
     saveCardToServer();
-  }, [saveCardToServer]);
+    emitFetch();
+  }, [saveCardToServer, emitFetch]);
 
   // 더보기 메뉴 열기
   const handleMoreMenuOpen = useCallback(() => {
@@ -469,22 +473,24 @@ const CardEditDialog = (props: CardEditDialogProps) => {
 
     setIsSaving(true); // 저장 중 상태로 변경
     setErrorMessage(""); // 오류 메시지 초기화
-
     // 카드 복제 훅 호출
     try {
       await copyCard(currentEditCard.cardUuid);
+
+      await fetchTemplateData(); // 템플릿 데이터 새로고침
+      emitFetch(); // 소켓을 통한 템플릿 패치 요청
     } catch (error) {
       console.error("카드 추가 중 오류 발생:", error);
     } finally {
       setIsSaving(false); // 저장 중 상태 해제
       handleMoreMenuClose(); // 메뉴 닫기
       setCardEditDialogOpen(false); // 대화상자 닫기
-      fetchTemplateData(); // 템플릿 데이터 새로고침
     }
   }, [
     copyCard,
     currentEditCard?.boardUuid,
     currentEditCard.cardUuid,
+    emitFetch,
     fetchTemplateData,
     handleMoreMenuClose,
     setCardEditDialogOpen,
@@ -516,6 +522,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
           boardUuid: currentEditCard.boardUuid,
           cardUuid: currentEditCard.cardUuid,
         });
+        emitFetch();
 
         // 삭제 후 대화상자 닫기
         setCardEditDialogOpen(false);
@@ -532,6 +539,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
     currentEditCard.boardUuid,
     currentEditCard.cardUuid,
     deleteBoardCard,
+    emitFetch,
     setCardEditDialogOpen,
   ]);
 

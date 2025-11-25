@@ -25,7 +25,7 @@ import {
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
-import { useAddCard, useBoard } from "../../hooks/template";
+import { useAddCard } from "../../hooks/template";
 import SortMenu from "../SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { useSnackbar } from "notistack";
@@ -36,9 +36,7 @@ interface BoardProps extends StackProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
-  emitBoardAdd: (boardUuid: string, dayNumber: number) => void; // 보드 추가 이벤트 전송 함수
-  emitBoardCopy: (boardUuid: string, newBoardUuid: string) => void; // 보드 복제 이벤트 전송 함수
-  emitBoardDelete: (boardUuid: string) => void; // 보드 삭제 이벤트 전송 함수
+  emitFetch: () => void; // 템플릿 데이터 다시 불러오기 이벤트 전송 함수
 }
 
 const Board = (props: BoardProps) => {
@@ -48,14 +46,11 @@ const Board = (props: BoardProps) => {
     fetchTemplateData,
     isOwner,
     id, // ID 속성 추가 (선택적 속성으로 설정)
-    emitBoardAdd,
-    emitBoardCopy,
-    emitBoardDelete,
+    emitFetch,
     ...others
   } = props;
 
   const theme = useTheme();
-  const { addBoard, copyBoard, deleteBoard } = useBoard();
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
@@ -116,7 +111,8 @@ const Board = (props: BoardProps) => {
         lastCardEndTime,
         boardData.cards.length + 1
       );
-      fetchTemplateData();
+      await fetchTemplateData();
+      emitFetch();
 
       // 카드 편집 대화상자 열기
       setCurrentEditCard({
@@ -132,6 +128,7 @@ const Board = (props: BoardProps) => {
     boardData.cards,
     addCard,
     fetchTemplateData,
+    emitFetch,
     setCurrentEditCard,
   ]);
 
@@ -157,17 +154,20 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        const boardUuid = response.data.boardUuid;
-        const dayNumber = day + 1;
-
         // 변경된 보드 상태 반영
-        addBoard(boardUuid, dayNumber);
-        emitBoardAdd(boardUuid, dayNumber);
+        await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [addBoard, day, emitBoardAdd, template.boards.length, template.uuid]);
+  }, [
+    day,
+    emitFetch,
+    fetchTemplateData,
+    template.boards.length,
+    template.uuid,
+  ]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {
@@ -189,16 +189,14 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        const newBoardUuid = response.data.boardUuid;
-
         // 변경된 보드 상태 반영
-        copyBoard(boardUuid, newBoardUuid);
-        emitBoardCopy(boardUuid, newBoardUuid);
+        await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.uuid, copyBoard, emitBoardCopy, template.boards.length]);
+  }, [boardData.uuid, emitFetch, fetchTemplateData, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {
@@ -219,8 +217,8 @@ const Board = (props: BoardProps) => {
 
           if (response.data.success) {
             // 템플릿 데이터 새로 불러오기
-            deleteBoard(boardUuid);
-            emitBoardDelete(boardUuid);
+            await fetchTemplateData();
+            emitFetch();
           }
         }
         return;
@@ -233,13 +231,13 @@ const Board = (props: BoardProps) => {
 
       if (response.data.success) {
         // 템플릿 데이터 새로 불러오기
-        deleteBoard(boardUuid);
-        emitBoardDelete(boardUuid);
+        await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 삭제 오류:", error);
     }
-  }, [boardData.uuid, template.boards, deleteBoard, emitBoardDelete]);
+  }, [boardData.uuid, template.boards, fetchTemplateData, emitFetch]);
 
   // 보드 내 카드 시작 시간순 정렬 함수
   const handleSortByStartTime = useCallback(async () => {
@@ -257,6 +255,7 @@ const Board = (props: BoardProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
+        emitFetch();
 
         enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
           variant: "success",
@@ -268,7 +267,7 @@ const Board = (props: BoardProps) => {
         variant: "error",
       });
     }
-  }, [boardData.uuid, fetchTemplateData, enqueueSnackbar]);
+  }, [boardData.uuid, fetchTemplateData, emitFetch, enqueueSnackbar]);
 
   // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
   const scrollToFirstOverlappingCard = useCallback(() => {

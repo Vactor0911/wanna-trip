@@ -47,7 +47,7 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { useBoard, useMoveBoard, useMoveCard } from "../../hooks/template";
+import { useMoveBoard, useMoveCard } from "../../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../../components/SortMenu";
@@ -134,16 +134,10 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const {
-    isConnected,
-    activeUsers,
-    emitTemplateUpdate,
-    emitBoardAdd,
-    emitBoardCopy,
-    emitBoardDelete,
-  } = useTemplateSocket({
+  const { isConnected, activeUsers, emitFetch } = useTemplateSocket({
     templateUuid: templateUuid!,
     enabled: !!templateUuid,
+    fetchTemplate: () => fetchTemplateData(),
   });
 
   const navigate = useNavigate();
@@ -151,7 +145,6 @@ const Template = (props: TemplateProps) => {
   const moveCard = useMoveCard(); // 카드 이동 훅
   const moveBoard = useMoveBoard(); // 보드 이동 훅
   const { enqueueSnackbar } = useSnackbar();
-  const { addBoard } = useBoard();
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
@@ -303,17 +296,14 @@ const Template = (props: TemplateProps) => {
       );
 
       if (response.data.success) {
-        const boardUuid = response.data.boardUuid;
-        const dayNumber = template.boards.length + 1;
-
-        // 변경된 보드 상태 반영
-        addBoard(boardUuid, dayNumber);
-        emitBoardAdd(boardUuid, dayNumber);
+        // 템플릿 데이터 패치
+        await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [template.boards.length, template.uuid, addBoard, emitBoardAdd]);
+  }, [template.boards.length, template.uuid, fetchTemplateData, emitFetch]);
 
   // 템플릿 제목 클릭
   const handleTemplateTitleClick = useCallback(() => {
@@ -346,7 +336,7 @@ const Template = (props: TemplateProps) => {
         );
 
         // 템플릿 수정 알림 브로드캐스트
-        emitTemplateUpdate(newTemplate.title);
+        emitFetch();
       } else {
         console.error("템플릿 UUID가 유효하지 않습니다.");
       }
@@ -355,7 +345,7 @@ const Template = (props: TemplateProps) => {
     } finally {
       setIsTemplateTitleEditing(false);
     }
-  }, [emitTemplateUpdate, setTemplate, template, templateTitle]);
+  }, [emitFetch, setTemplate, template, templateTitle]);
 
   // 드래그 & 드롭 핸들러
   const onDragEnd = useCallback(
@@ -412,6 +402,7 @@ const Template = (props: TemplateProps) => {
           boardUuid: destination.droppableId,
           orderIndex: destination.index + 1,
           prevTemplate: prevTemplate,
+          emitFetch,
         });
       } else {
         // 보드 드래그 & 드롭 처리
@@ -434,6 +425,7 @@ const Template = (props: TemplateProps) => {
           boardUuid: result.draggableId,
           dayNumber: destination.index + 1,
           prevTemplate: prevTemplate,
+          emitFetch,
         });
       }
 
@@ -441,7 +433,7 @@ const Template = (props: TemplateProps) => {
       queryClient.setQueryData(["template"], newTemplate);
       setTemplate(newTemplate);
     },
-    [moveBoard, moveCard, queryClient, setTemplate, template]
+    [emitFetch, moveBoard, moveCard, queryClient, setTemplate, template]
   );
 
   // 템플릿 내 모든 카드 정렬 함수 (시작 시간 순)
@@ -460,6 +452,7 @@ const Template = (props: TemplateProps) => {
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
+        emitFetch();
         enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
           variant: "success",
         });
@@ -470,7 +463,7 @@ const Template = (props: TemplateProps) => {
         variant: "error",
       });
     }
-  }, [template.uuid, fetchTemplateData, enqueueSnackbar]);
+  }, [template.uuid, fetchTemplateData, emitFetch, enqueueSnackbar]);
 
   // 시간 중복이 있는 첫 번째 보드로 스크롤하는 함수
   const scrollToFirstOverlappingBoard = useCallback(() => {
@@ -876,9 +869,7 @@ const Template = (props: TemplateProps) => {
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
-                          emitBoardAdd={emitBoardAdd}
-                          emitBoardCopy={emitBoardCopy}
-                          emitBoardDelete={emitBoardDelete}
+                          emitFetch={emitFetch}
                         />
                       )}
                     </Draggable>
@@ -939,7 +930,10 @@ const Template = (props: TemplateProps) => {
       </Stack>
 
       {/* 카드 편집 대화상자 */}
-      <CardEditDialog fetchTemplateData={fetchTemplateData} />
+      <CardEditDialog
+        fetchTemplateData={fetchTemplateData}
+        emitFetch={emitFetch}
+      />
 
       {/* 더보기 메뉴 */}
       <Menu

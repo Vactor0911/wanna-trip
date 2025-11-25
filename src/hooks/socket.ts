@@ -4,22 +4,21 @@ import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { ActiveUser, activeUsersAtom } from "../state";
 import { getAccessToken } from "../utils/accessToken";
-import { useBoard, useTemplate } from "./template";
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_HOST;
 
 interface UseTemplateSocketOptions {
   templateUuid: string;
   enabled?: boolean;
+  fetchTemplate: () => void;
 }
 
 export const useTemplateSocket = ({
   templateUuid,
   enabled = true,
+  fetchTemplate,
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
-  const { updateTemplate } = useTemplate();
-  const { addBoard, copyBoard, deleteBoard } = useBoard();
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
@@ -96,49 +95,12 @@ export const useTemplateSocket = ({
     });
 
     // 템플릿 이벤트 //
-
-    // 템플릿 업데이트
-    socket.on("template:update", (data: { title: string }) => {
+    socket.on("template:fetch", () => {
       {
-        updateTemplate(data.title);
+        fetchTemplate();
       }
     });
-
-    // 보드 이벤트 //
-
-    // 보드 추가
-    socket.on("board:add", (data: { boardUuid: string; dayNumber: number }) => {
-      {
-        addBoard(data.boardUuid, data.dayNumber);
-      }
-    });
-
-    // 보드 복제
-    socket.on(
-      "board:copy",
-      (data: { boardUuid: string; newBoardUuid: string }) => {
-        {
-          copyBoard(data.boardUuid, data.newBoardUuid); // 복제된 보드는 일차 0으로 추가, 이후 필요시 수정 가능
-        }
-      }
-    );
-
-    // 보드 삭제
-    socket.on("board:delete", (data: { boardUuid: string }) => {
-      {
-        deleteBoard(data.boardUuid);
-      }
-    });
-  }, [
-    addBoard,
-    copyBoard,
-    deleteBoard,
-    enabled,
-    enqueueSnackbar,
-    setActiveUsers,
-    templateUuid,
-    updateTemplate,
-  ]);
+  }, [enabled, enqueueSnackbar, fetchTemplate, setActiveUsers, templateUuid]);
 
   // Socket 연결 해제
   const disconnect = useCallback(() => {
@@ -149,30 +111,10 @@ export const useTemplateSocket = ({
     }
   }, []);
 
-  // 이벤트 송신 함수 //
-
-  // 템플릿 업데이트
-  const emitTemplateUpdate = useCallback((title: string) => {
-    socketRef.current?.emit("template:update", { title });
-  }, []);
-
-  // 보드 추가
-  const emitBoardAdd = useCallback((boardUuid: string, dayNumber: number) => {
-    socketRef.current?.emit("board:add", { boardUuid, dayNumber });
-  }, []);
-
-  // 보드 복제
-  const emitBoardCopy = useCallback(
-    (boardUuid: string, newBoardUuid: string) => {
-      socketRef.current?.emit("board:copy", { boardUuid, newBoardUuid });
-    },
-    []
-  );
-
-  // 보드 삭제
-  const emitBoardDelete = useCallback((boardUuid: string) => {
-    socketRef.current?.emit("board:delete", { boardUuid });
-  }, []);
+  // 이벤트 송신 함수
+  const emitFetch = useCallback(() => {
+    socketRef.current?.emit("template:fetch", { templateUuid });
+  }, [templateUuid]);
 
   // 컴포넌트 언마운트 시 소켓 연결 해제
   useEffect(() => {
@@ -193,13 +135,8 @@ export const useTemplateSocket = ({
     // 활성 사용자
     activeUsers,
 
-    // 템플릿 이벤트
-    emitTemplateUpdate,
-
-    // 보드 이벤트
-    emitBoardAdd,
-    emitBoardCopy,
-    emitBoardDelete,
+    // 데이터 요청
+    emitFetch,
 
     // 연결 제어
     connect,

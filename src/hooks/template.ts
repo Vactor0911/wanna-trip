@@ -231,6 +231,7 @@ interface MoveCardParams {
   boardUuid: string;
   orderIndex: number;
   prevTemplate: TemplateInterface;
+  emitFetch: () => void;
 }
 
 /**
@@ -242,7 +243,12 @@ export const useMoveCard = () => {
   const queryClient = useQueryClient();
 
   const moveCard = useMutation({
-    mutationFn: async ({ cardUuid, boardUuid, orderIndex }: MoveCardParams) => {
+    mutationFn: async ({
+      cardUuid,
+      boardUuid,
+      orderIndex,
+      emitFetch,
+    }: MoveCardParams) => {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
@@ -256,6 +262,8 @@ export const useMoveCard = () => {
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
+
+      emitFetch();
 
       // 서버 응답 반환 (새 카드 ID 포함)
       return response.data;
@@ -315,6 +323,7 @@ interface MoveBoardParams {
   boardUuid: string;
   dayNumber: number;
   prevTemplate: TemplateInterface;
+  emitFetch: () => void;
 }
 
 /**
@@ -330,6 +339,7 @@ export const useMoveBoard = () => {
       templateUuid,
       boardUuid,
       dayNumber,
+      emitFetch,
     }: MoveBoardParams) => {
       // 템플릿 UUID가 없으면 종료
       if (!templateUuid) {
@@ -354,6 +364,8 @@ export const useMoveBoard = () => {
         },
         { headers: { "X-CSRF-Token": csrfToken } }
       );
+
+      emitFetch();
     },
     onError: (_error, context) => {
       if (context?.prevTemplate) {
