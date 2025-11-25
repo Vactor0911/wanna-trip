@@ -25,7 +25,7 @@ import {
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
-import { useAddCard } from "../../hooks/template";
+import { useAddCard, useBoard } from "../../hooks/template";
 import SortMenu from "../SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { useSnackbar } from "notistack";
@@ -36,6 +36,7 @@ interface BoardProps extends StackProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
+  emitBoardAdd: (boardUuid: string, dayNumber: number) => void; // 보드 추가 이벤트 전송 함수
 }
 
 const Board = (props: BoardProps) => {
@@ -45,10 +46,12 @@ const Board = (props: BoardProps) => {
     fetchTemplateData,
     isOwner,
     id, // ID 속성 추가 (선택적 속성으로 설정)
+    emitBoardAdd, // 보드 추가 이벤트 전송 함수
     ...others
   } = props;
 
   const theme = useTheme();
+  const { addBoard } = useBoard();
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
 
@@ -150,13 +153,17 @@ const Board = (props: BoardProps) => {
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
+        const boardUuid = response.data.boardUuid;
+        const dayNumber = day + 1;
+
+        // 변경된 보드 상태 반영
+        addBoard(boardUuid, dayNumber);
+        emitBoardAdd(boardUuid, dayNumber);
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [day, fetchTemplateData, template.boards.length, template.uuid]);
+  }, [addBoard, day, emitBoardAdd, template.boards.length, template.uuid]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {

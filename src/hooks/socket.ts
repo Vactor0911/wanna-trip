@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { ActiveUser, activeUsersAtom } from "../state";
 import { getAccessToken } from "../utils/accessToken";
-import { useTemplate } from "./template";
+import { useBoard, useTemplate } from "./template";
 
 const SOCKET_URL = import.meta.env.VITE_SERVER_HOST;
 
@@ -19,6 +19,7 @@ export const useTemplateSocket = ({
 }: UseTemplateSocketOptions) => {
   const { enqueueSnackbar } = useSnackbar();
   const { updateTemplate } = useTemplate();
+  const { addBoard } = useBoard();
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
@@ -102,7 +103,23 @@ export const useTemplateSocket = ({
         updateTemplate(data.title);
       }
     });
-  }, [enabled, enqueueSnackbar, setActiveUsers, templateUuid, updateTemplate]);
+
+    // 보드 이벤트 //
+
+    // 보드 추가
+    socket.on("board:add", (data: { boardUuid: string; dayNumber: number }) => {
+      {
+        addBoard(data.boardUuid, data.dayNumber);
+      }
+    });
+  }, [
+    addBoard,
+    enabled,
+    enqueueSnackbar,
+    setActiveUsers,
+    templateUuid,
+    updateTemplate,
+  ]);
 
   // Socket 연결 해제
   const disconnect = useCallback(() => {
@@ -113,10 +130,16 @@ export const useTemplateSocket = ({
     }
   }, []);
 
-  // 이벤트 발신 함수 //
+  // 이벤트 송신 함수 //
 
+  // 템플릿 업데이트
   const emitTemplateUpdate = useCallback((title: string) => {
     socketRef.current?.emit("template:update", { title });
+  }, []);
+
+  // 보드 추가
+  const emitBoardAdd = useCallback((boardUuid: string, dayNumber: number) => {
+    socketRef.current?.emit("board:add", { boardUuid, dayNumber });
   }, []);
 
   // 컴포넌트 언마운트 시 소켓 연결 해제
@@ -140,6 +163,9 @@ export const useTemplateSocket = ({
 
     // 템플릿 이벤트
     emitTemplateUpdate,
+
+    // 보드 이벤트
+    emitBoardAdd,
 
     // 연결 제어
     connect,

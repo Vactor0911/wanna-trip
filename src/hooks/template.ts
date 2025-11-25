@@ -1,5 +1,7 @@
 import { useAtom, useSetAtom } from "jotai";
 import {
+  boardOrderAtom,
+  boardsMapAtom,
   LocationInterface,
   templateAtom,
   templateInfoAtom,
@@ -16,7 +18,7 @@ import dayjs, { Dayjs } from "dayjs";
 export const useTemplate = () => {
   const setTemplateInfo = useSetAtom(templateInfoAtom);
 
-  // 템플릿 수정 - 함수형 업데이트로 의존성 제거
+  // 템플릿 정보 수정
   const updateTemplate = useCallback(
     (title: string) => {
       setTemplateInfo((prev) => ({
@@ -28,6 +30,63 @@ export const useTemplate = () => {
   );
 
   return { updateTemplate };
+};
+
+export const useBoard = () => {
+  const setBoardsMap = useSetAtom(boardsMapAtom);
+  const setBoardOrder = useSetAtom(boardOrderAtom);
+
+  // 보드 추가
+  const addBoard = useCallback(
+    (boardUuid: string, dayNumber: number) => {
+      // dayNumber 재정렬
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.forEach((board, key) => {
+          if (board.dayNumber >= dayNumber) {
+            newMap.set(key, {
+              ...board,
+              dayNumber: board.dayNumber + 1,
+            });
+          }
+        });
+        return newMap;
+      });
+
+      // 보드 맵 업데이트
+      setBoardsMap((prev) => {
+        const newMap = new Map(prev);
+
+        newMap.set(boardUuid, {
+          uuid: boardUuid,
+          dayNumber: dayNumber || 1,
+          cards: [],
+        });
+        return newMap;
+      });
+
+      // 보드 순서 업데이트
+      setBoardOrder((prev) => {
+        if (prev.includes(boardUuid)) return prev;
+
+        // dayNumber를 기준으로 삽입 위치 찾기
+        const insertIndex = dayNumber - 1;
+        const newOrder = [...prev];
+
+        // 배열 크기를 초과하면 끝에 추가
+        if (insertIndex >= newOrder.length) {
+          return [...newOrder, boardUuid];
+        }
+
+        // 중간에 삽입
+        newOrder.splice(insertIndex, 0, boardUuid);
+        return newOrder;
+      });
+    },
+    [setBoardsMap, setBoardOrder]
+  );
+
+  return { addBoard };
 };
 
 /**

@@ -47,7 +47,7 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { useMoveBoard, useMoveCard } from "../../hooks/template";
+import { useBoard, useMoveBoard, useMoveCard } from "../../hooks/template";
 import { produce } from "immer";
 import { useQueryClient } from "@tanstack/react-query";
 import SortMenu from "../../components/SortMenu";
@@ -134,16 +134,18 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const { isConnected, activeUsers, emitTemplateUpdate } = useTemplateSocket({
-    templateUuid: templateUuid!,
-    enabled: !!templateUuid,
-  });
+  const { isConnected, activeUsers, emitTemplateUpdate, emitBoardAdd } =
+    useTemplateSocket({
+      templateUuid: templateUuid!,
+      enabled: !!templateUuid,
+    });
 
   const navigate = useNavigate();
   const queryClient = useQueryClient(); // 쿼리 클라이언트
   const moveCard = useMoveCard(); // 카드 이동 훅
   const moveBoard = useMoveBoard(); // 보드 이동 훅
   const { enqueueSnackbar } = useSnackbar();
+  const { addBoard } = useBoard();
 
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
@@ -295,13 +297,17 @@ const Template = (props: TemplateProps) => {
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
-        await fetchTemplateData();
+        const boardUuid = response.data.boardUuid;
+        const dayNumber = template.boards.length + 1;
+
+        // 변경된 보드 상태 반영
+        addBoard(boardUuid, dayNumber);
+        emitBoardAdd(boardUuid, dayNumber);
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [template, fetchTemplateData]);
+  }, [template.boards.length, template.uuid, addBoard, emitBoardAdd]);
 
   // 템플릿 제목 클릭
   const handleTemplateTitleClick = useCallback(() => {
@@ -864,6 +870,7 @@ const Template = (props: TemplateProps) => {
                           fetchTemplateData={fetchTemplateData} // 함수 전달
                           isOwner={isEditMode} // 소유자 여부 전달
                           id={`board-${board.uuid}`} // ID 속성 추가
+                          emitBoardAdd={emitBoardAdd} // 보드 추가 이벤트 전송 함수 전달
                         />
                       )}
                     </Draggable>
