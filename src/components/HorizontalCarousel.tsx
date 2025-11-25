@@ -148,61 +148,70 @@ export default function HorizontalCarousel(props: HorizontalCarouselProps) {
     if (page >= totalPages) setPage(totalPages - 1);
   }, [totalPages, page]);
 
+  // 버튼 표시 여부 (아이템 수가 화면에 보이는 카드 수보다 많을 때만 버튼 표시)
+  const showNavigationButtons = items.length > itemCounts;
+
   // 다음 버튼 클릭
   const handleNextButtonClick = useCallback(() => {
+    if (!showNavigationButtons) return;
     setPage((prevPage) => (prevPage + 1) % totalPages);
-  }, [totalPages]);
+  }, [totalPages, showNavigationButtons]);
 
   // 이전 버튼 클릭
   const handlePrevButtonClick = useCallback(() => {
+    if (!showNavigationButtons) return;
     setPage((prevPage) => (prevPage === 0 ? totalPages - 1 : prevPage - 1));
-  }, [totalPages]);
+  }, [totalPages, showNavigationButtons]);
 
   return (
     <Box position="relative">
-      {/* 이전 버튼 */}
-      <Paper
-        elevation={2}
-        sx={{
-          position: "absolute",
-          left: 16,
-          top: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 1,
-          borderRadius: "50px",
-        }}
-      >
-        <IconButton onClick={handlePrevButtonClick} size="small">
-          <ChevronLeftRoundedIcon color="primary" fontSize="large" />
-        </IconButton>
-      </Paper>
+      {/* 이전 버튼 - 아이템이 visibleCount보다 많을 때만 표시 */}
+      {showNavigationButtons && (
+        <Paper
+          elevation={2}
+          sx={{
+            position: "absolute",
+            left: 16,
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1,
+            borderRadius: "50px",
+          }}
+        >
+          <IconButton onClick={handlePrevButtonClick} size="small">
+            <ChevronLeftRoundedIcon color="primary" fontSize="large" />
+          </IconButton>
+        </Paper>
+      )}
 
-      {/* 다음 버튼 */}
-      <Paper
-        elevation={2}
-        sx={{
-          position: "absolute",
-          right: 16,
-          top: "50%",
-          transform: "translate(50%, -50%)",
-          zIndex: 1,
-          borderRadius: "50px",
-        }}
-      >
-        <IconButton onClick={handleNextButtonClick} size="small">
-          <ChevronRightRoundedIcon color="primary" fontSize="large" />
-        </IconButton>
-      </Paper>
+      {/* 다음 버튼 - 아이템이 visibleCount보다 많을 때만 표시 */}
+      {showNavigationButtons && (
+        <Paper
+          elevation={2}
+          sx={{
+            position: "absolute",
+            right: 16,
+            top: "50%",
+            transform: "translate(50%, -50%)",
+            zIndex: 1,
+            borderRadius: "50px",
+          }}
+        >
+          <IconButton onClick={handleNextButtonClick} size="small">
+            <ChevronRightRoundedIcon color="primary" fontSize="large" />
+          </IconButton>
+        </Paper>
+      )}
 
       {/* 캐러셀 컨테이너 */}
       <Box overflow="hidden" padding={2}>
         {/* 캐러셀 트랙 */}
         <motion.div
           style={{ display: "flex", gap, x }}
-          drag="x"
+          drag={showNavigationButtons ? "x" : false}
           dragElastic={0.08}
           onDragEnd={(_, info) => {
-            if (!step) return;
+            if (!step || !showNavigationButtons) return;
             const threshold = step / 4;
             if (info.offset.x < -threshold) handleNextButtonClick();
             else if (info.offset.x > threshold) handlePrevButtonClick();
