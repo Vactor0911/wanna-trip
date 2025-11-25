@@ -16,7 +16,7 @@ import PostEditor from "../components/text_editor/PostEditor";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { grey, red } from "@mui/material/colors";
+import { grey, red, blue } from "@mui/material/colors";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import TemplateSelectDialog from "../components/TemplateSelectDialog";
 import { useNavigate, useParams } from "react-router";
@@ -339,25 +339,58 @@ const CommunityPostEdit = () => {
     <>
       <Container maxWidth="lg">
         <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
-          {/* 게시글 제목 */}
-          <Typography variant="h4">게시판 글쓰기</Typography>
-
-          {/* 구분선 */}
-          <Divider />
+          {/* 페이지 헤더 */}
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 4,
+              p: 3,
+              background: theme.palette.mode === "dark"
+                ? "linear-gradient(135deg, rgba(25,118,210,0.1) 0%, rgba(33,150,243,0.05) 100%)"
+                : "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.03) 100%)",
+              border: `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+            }}
+          >
+            <Typography
+              variant="h4"
+              fontWeight="bold"
+              sx={{
+                background: theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)"
+                  : "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              {postId ? "게시글 수정" : "게시판 글쓰기"}
+            </Typography>
+          </Paper>
 
           {/* 게시글 제목 입력란 */}
           <Paper
-            variant="outlined"
+            elevation={0}
             sx={{
-              borderRadius: 2,
-              borderColor: grey[300],
+              borderRadius: 3,
+              border: `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+              overflow: "hidden",
             }}
           >
-            <Stack padding={3} paddingX={5} gap={1}>
+            <Stack padding={3} paddingX={4} gap={2}>
               {/* 헤더 */}
-              <Typography variant="h6" color="text.secondary">
-                제목
-              </Typography>
+              <Stack direction="row" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 24,
+                    borderRadius: 1,
+                    background: "linear-gradient(180deg, #1976d2 0%, #2196f3 100%)",
+                  }}
+                />
+                <Typography variant="h6" fontWeight="bold">
+                  제목
+                </Typography>
+              </Stack>
 
               {/* 제목 입력란 */}
               <TextField
@@ -369,8 +402,15 @@ const CommunityPostEdit = () => {
                 error={!!titleErrorText}
                 helperText={titleErrorText}
                 sx={{
-                  "& input": {
-                    backgroundColor: grey[100],
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : grey[50],
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: blue[300],
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: blue[500],
+                    },
                   },
                 }}
               />
@@ -378,22 +418,46 @@ const CommunityPostEdit = () => {
           </Paper>
 
           {/* 게시글 입력란 */}
-          <Box ref={contentEditorContainerRef}>
-            <Box
-              position="relative"
-              sx={{
-                "& .ck-content": {
-                  minHeight: "300px",
-                  paddingBottom: "50px", // 버튼 영역을 위해 하단 패딩 추가
-                },
-              }}
-            >
-              {/* 텍스트 에디터 */}
-              <PostEditor
-                content={content}
-                setContent={handleContentChange}
-                error={!!contentErrorText}
-              />
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              border: `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+              overflow: "hidden",
+            }}
+          >
+            <Stack padding={3} paddingX={4} gap={2}>
+              {/* 헤더 */}
+              <Stack direction="row" alignItems="center" gap={1}>
+                <Box
+                  sx={{
+                    width: 8,
+                    height: 24,
+                    borderRadius: 1,
+                    background: "linear-gradient(180deg, #1976d2 0%, #2196f3 100%)",
+                  }}
+                />
+                <Typography variant="h6" fontWeight="bold">
+                  내용
+                </Typography>
+              </Stack>
+
+              <Box ref={contentEditorContainerRef}>
+                <Box
+                  position="relative"
+                  sx={{
+                    "& .ck-content": {
+                      minHeight: "300px",
+                      paddingBottom: "50px",
+                    },
+                  }}
+                >
+                  {/* 텍스트 에디터 */}
+                  <PostEditor
+                    content={content}
+                    setContent={handleContentChange}
+                    error={!!contentErrorText}
+                  />
 
               {/* 태그 입력란 */}
               <Stack position="absolute" bottom={0} left={0} width="100%">
@@ -476,20 +540,27 @@ const CommunityPostEdit = () => {
               </Stack>
             </Box>
 
-            {/* 에러 메시지 */}
-            <Typography variant="subtitle2" color="error" ml={2} mt={0.5}>
-              {contentErrorText}
-            </Typography>
-          </Box>
+                {/* 에러 메시지 */}
+                {contentErrorText && (
+                  <Typography variant="subtitle2" color="error" ml={2} mt={0.5}>
+                    {contentErrorText}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </Paper>
 
           {/* 템플릿 선택기 */}
           <Paper
-            variant="outlined"
+            elevation={0}
             sx={{
-              borderRadius: 2,
-              borderStyle: "dashed",
+              borderRadius: 3,
+              border: `1px dashed ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.3)" : "rgba(25,118,210,0.3)"}`,
               position: "relative",
               overflow: "hidden",
+              background: theme.palette.mode === "dark"
+                ? "rgba(25,118,210,0.05)"
+                : "rgba(25,118,210,0.02)",
             }}
           >
             {templateUuid ? (
@@ -509,37 +580,87 @@ const CommunityPostEdit = () => {
                 >
                   {/* 템플릿 선택 해제 버튼 */}
                   <Button
-                    variant="contained"
-                    color="secondary"
+                    variant="outlined"
                     onClick={handleTemplateUnselect}
+                    sx={{
+                      borderRadius: 2,
+                      borderColor: grey[400],
+                      color: "text.secondary",
+                      bgcolor: "background.paper",
+                      "&:hover": {
+                        borderColor: grey[500],
+                        bgcolor: grey[100],
+                      },
+                    }}
                   >
-                    <Typography variant="h6">선택 해제</Typography>
+                    <Typography variant="subtitle1" fontWeight="bold">선택 해제</Typography>
                   </Button>
 
                   {/* 템플릿 선택 버튼 */}
                   <Button
                     variant="contained"
                     onClick={handleTemplateSelectDialogOpen}
+                    sx={{
+                      borderRadius: 2,
+                      background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                      boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                      },
+                    }}
                   >
-                    <Typography variant="h6">템플릿 선택</Typography>
+                    <Typography variant="subtitle1" fontWeight="bold">템플릿 선택</Typography>
                   </Button>
                 </Stack>
               </>
             ) : (
-              <Stack alignItems="center" padding={5} gap={2}>
+              <Stack alignItems="center" padding={6} gap={3}>
                 {/* 템플릿 아이콘 */}
-                <CalendarMonthRoundedIcon
+                <Box
                   sx={{
-                    fontSize: "6rem",
+                    width: 100,
+                    height: 100,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: theme.palette.mode === "dark"
+                      ? "linear-gradient(135deg, rgba(144,202,249,0.2) 0%, rgba(100,181,246,0.1) 100%)"
+                      : "linear-gradient(135deg, rgba(25,118,210,0.15) 0%, rgba(33,150,243,0.08) 100%)",
                   }}
-                />
+                >
+                  <CalendarMonthRoundedIcon
+                    sx={{
+                      fontSize: "3.5rem",
+                      color: "primary.main",
+                    }}
+                  />
+                </Box>
+
+                <Stack alignItems="center" gap={1}>
+                  <Typography variant="h6" fontWeight="bold" color="text.primary">
+                    여행 일정 템플릿 첨부
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    내 템플릿을 게시글에 첨부할 수 있습니다.
+                  </Typography>
+                </Stack>
 
                 {/* 템플릿 선택 버튼 */}
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   onClick={handleTemplateSelectDialogOpen}
+                  sx={{
+                    borderRadius: 2,
+                    px: 4,
+                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                    },
+                  }}
                 >
-                  <Typography variant="h6">템플릿 선택</Typography>
+                  <Typography variant="subtitle1" fontWeight="bold">템플릿 선택</Typography>
                 </Button>
               </Stack>
             )}
@@ -554,11 +675,17 @@ const CommunityPostEdit = () => {
           >
             {/* 취소 버튼 */}
             <Button
-              variant="contained"
-              color="secondary"
+              variant="outlined"
               onClick={handleCancelButtonClick}
               sx={{
                 borderRadius: 2,
+                px: 4,
+                borderColor: grey[400],
+                color: "text.secondary",
+                "&:hover": {
+                  borderColor: grey[500],
+                  bgcolor: theme.palette.mode === "dark" ? "rgba(255,255,255,0.05)" : grey[100],
+                },
               }}
             >
               <Typography variant="subtitle1" fontWeight="bold">
@@ -573,10 +700,16 @@ const CommunityPostEdit = () => {
               onClick={handleConfirmButtonClick}
               sx={{
                 borderRadius: 2,
+                px: 4,
+                background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                },
               }}
             >
               <Typography variant="subtitle1" fontWeight="bold">
-                등록
+                {postId ? "수정" : "등록"}
               </Typography>
             </Button>
           </Stack>

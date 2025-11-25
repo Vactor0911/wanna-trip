@@ -3,6 +3,7 @@ import {
   Box,
   Button,
   ButtonBase,
+  Chip,
   CircularProgress,
   Container,
   Paper,
@@ -16,7 +17,7 @@ import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
-import { getRandomColor, stripHtml } from "../utils";
+import { getRandomColor } from "../utils";
 import { useNavigate } from "react-router";
 import axiosInstance, { SERVER_HOST } from "../utils/axiosInstance";
 import { useAtomValue } from "jotai";
@@ -157,314 +158,414 @@ const LikedPosts = () => {
   return (
     <Container maxWidth="xl">
       <Stack minHeight="calc(100vh - 82px)" my={8} gap={4}>
-        {/* 헤더 */}
-        <Typography variant="h4" fontWeight="bold">
-          좋아요 한 게시글
-        </Typography>
-
-        {/* 게시글 목록 */}
-        {posts.length === 0 && !isLoading ? (
-          <Stack
-            flex={1}
-            justifyContent="center"
-            alignItems="center"
-            gap={2}
-            py={8}
-          >
-            <FavoriteBorderRoundedIcon
-              sx={{ fontSize: 64, color: "text.secondary" }}
-            />
-            <Typography variant="h6" color="text.secondary">
-              좋아요 한 게시글이 없습니다.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              게시판에서 마음에 드는 게시글에 좋아요를 눌러보세요!
-            </Typography>
-            <ButtonBase
-              onClick={() => navigate("/community")}
-              sx={{
-                mt: 2,
-                px: 4,
-                py: 1.5,
-                borderRadius: 2,
-                bgcolor: "primary.main",
-                color: "white",
-                "&:hover": {
-                  bgcolor: "primary.dark",
-                },
-              }}
-            >
-              <Typography variant="subtitle1" fontWeight="bold">
-                게시판으로 이동
-              </Typography>
-            </ButtonBase>
-          </Stack>
-        ) : (
-          <Stack gap={2}>
-            {posts.map((post) => (
-              <Paper
-                elevation={2}
-                key={`liked-post-${post.uuid}`}
+        {/* 좋아요 한 게시글 섹션 */}
+        <Box
+          sx={{
+            position: "relative",
+            borderRadius: 4,
+            p: 3,
+            background: "linear-gradient(135deg, rgba(244,63,94,0.06) 0%, rgba(251,113,133,0.06) 50%, rgba(253,164,175,0.06) 100%)",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "4px",
+              background: "linear-gradient(90deg, #f43f5e, #fb7185, #fda4af)",
+            },
+          }}
+        >
+          <Stack gap={3}>
+            {/* 헤더 */}
+            <Stack direction="row" alignItems="center" gap={1.5}>
+              {/* 하트 아이콘 */}
+              <Box
                 sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 40,
+                  height: 40,
                   borderRadius: 2,
+                  background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                  boxShadow: "0 4px 12px rgba(244,63,94,0.4)",
                 }}
               >
-                <ButtonBase
-                  onClick={() => handlePostClick(post.uuid)}
+                <Typography sx={{ fontSize: "1.5rem" }}>❤️</Typography>
+              </Box>
+              <Stack>
+                <Typography variant="h5" fontWeight="bold">
+                  좋아요 한 게시글
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  내가 좋아요 누른 여행 이야기
+                </Typography>
+              </Stack>
+            </Stack>
+
+            {/* 게시글 목록 */}
+            {posts.length === 0 && !isLoading ? (
+              <Stack
+                justifyContent="center"
+                alignItems="center"
+                gap={2}
+                py={8}
+                sx={{
+                  bgcolor: "background.paper",
+                  borderRadius: 3,
+                }}
+              >
+                <FavoriteBorderRoundedIcon
+                  sx={{ fontSize: 64, color: "text.secondary" }}
+                />
+                <Typography variant="h6" color="text.secondary">
+                  좋아요 한 게시글이 없습니다.
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  게시판에서 마음에 드는 게시글에 좋아요를 눌러보세요!
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate("/community")}
                   sx={{
-                    width: "100%",
-                    "& .MuiTypography-root": {
-                      textAlign: "left",
+                    mt: 2,
+                    px: 4,
+                    py: 1.5,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                    boxShadow: "0 4px 12px rgba(244,63,94,0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
+                      boxShadow: "0 6px 16px rgba(244,63,94,0.4)",
                     },
                   }}
                 >
-                  <Stack
-                    width="100%"
-                    direction={{
-                      xs: "column",
-                      sm: "row",
+                  게시판으로 이동
+                </Button>
+              </Stack>
+            ) : (
+              <Stack gap={2}>
+                {posts.map((post) => (
+                  <Paper
+                    elevation={0}
+                    key={`liked-post-${post.uuid}`}
+                    sx={{
+                      borderRadius: 3,
+                      bgcolor: "background.paper",
+                      overflow: "hidden",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        transform: "translateX(8px)",
+                        boxShadow: "0 8px 24px rgba(244,63,94,0.12)",
+                      },
                     }}
-                    padding={1}
-                    gap={2}
                   >
-                    {/* 썸네일 이미지 */}
-                    <Box
-                      width={{
-                        xs: "100%",
-                        sm: 200,
-                      }}
-                      height={150}
-                      borderRadius={2}
+                    <ButtonBase
+                      onClick={() => handlePostClick(post.uuid)}
                       sx={{
-                        background: getRandomColor(post.title.length),
-                        backgroundImage: getThumbnailUrl(post)
-                          ? `url(${getThumbnailUrl(post)})`
-                          : undefined,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    />
-
-                    {/* 게시글 정보 */}
-                    <Stack
-                      width={{
-                        xs: "100%",
-                        sm: "calc(100% - 200px)",
-                      }}
-                      gap={0.5}
-                    >
-                      {/* 제목 */}
-                      <Typography variant="h5" noWrap>
-                        {post.title}
-                      </Typography>
-
-                      {/* 작성자 정보 */}
-                      <Stack direction="row" alignItems="center" gap={1}>
-                        <Avatar
-                          src={
-                            post.authorProfileImage
-                              ? `${SERVER_HOST}${post.authorProfileImage}`
-                              : undefined
-                          }
-                          sx={{ width: 24, height: 24 }}
-                        />
-                        <Typography variant="body2" color="text.secondary">
-                          {post.authorName}
-                        </Typography>
-                      </Stack>
-
-                      {/* 태그 */}
-                      {post.tags && post.tags.length > 0 && (
-                        <Typography
-                          variant="subtitle2"
-                          color="text.secondary"
-                          noWrap
-                        >
-                          #{post.tags.join(" #")}
-                        </Typography>
-                      )}
-
-                      {/* 내용 미리보기 */}
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        noWrap
-                        sx={{ flex: 1 }}
-                      >
-                        {stripHtml(post.content)}
-                      </Typography>
-
-                      {/* 게시글 정보 */}
-                      <Box mt="auto">
-                        <Stack
-                          direction="row"
-                          justifyContent="flex-end"
-                          alignItems="center"
-                          gap={1}
-                          mt={1}
-                        >
-                          {/* 좋아요 수 */}
-                          <Typography variant="subtitle2">
-                            {post.likes}
-                          </Typography>
-                          <FavoriteRoundedIcon color="error" />
-
-                          {/* 공유 수 */}
-                          <Typography variant="subtitle2">
-                            {post.shares}
-                          </Typography>
-                          <IosShareRoundedIcon
-                            sx={{
-                              transform: "translateY(-2px)",
-                            }}
-                          />
-
-                          {/* 댓글 수 */}
-                          <Typography variant="subtitle2">
-                            {post.comments}
-                          </Typography>
-                          <ChatBubbleOutlineRoundedIcon />
-                        </Stack>
-                      </Box>
-                    </Stack>
-                  </Stack>
-                </ButtonBase>
-              </Paper>
-            ))}
-
-            {/* 로딩 스켈레톤 */}
-            {isLoading &&
-              Array.from({ length: 3 }).map((_, index) => (
-                <Paper
-                  elevation={2}
-                  key={`liked-post-skeleton-${index}`}
-                  sx={{
-                    borderRadius: 2,
-                  }}
-                >
-                  <Stack
-                    width="100%"
-                    direction={{
-                      xs: "column",
-                      sm: "row",
-                    }}
-                    padding={1}
-                    gap={2}
-                  >
-                    {/* 썸네일 이미지 */}
-                    <Skeleton
-                      variant="rectangular"
-                      height={150}
-                      sx={{
-                        width: {
-                          xs: "100%",
-                          sm: 200,
+                        width: "100%",
+                        "& .MuiTypography-root": {
+                          textAlign: "left",
                         },
-                        borderRadius: 2,
-                      }}
-                      animation="wave"
-                    />
-
-                    {/* 게시글 정보 */}
-                    <Stack
-                      width={{
-                        xs: "100%",
-                        sm: "calc(100% - 200px)",
                       }}
                     >
-                      {/* 제목 */}
-                      <Skeleton
-                        variant="text"
-                        width="200px"
-                        height="3rem"
-                        animation="wave"
-                      />
-
-                      {/* 작성자 */}
-                      <Stack direction="row" alignItems="center" gap={1}>
-                        <Skeleton
-                          variant="circular"
-                          width={24}
-                          height={24}
-                          animation="wave"
+                      <Stack
+                        width="100%"
+                        direction={{
+                          xs: "column",
+                          sm: "row",
+                        }}
+                        padding={2}
+                        gap={2.5}
+                      >
+                        {/* 썸네일 이미지 */}
+                        <Box
+                          width={{
+                            xs: "100%",
+                            sm: 220,
+                          }}
+                          height={160}
+                          borderRadius={2.5}
+                          sx={{
+                            flexShrink: 0,
+                            background: getRandomColor(post.title.length),
+                            backgroundImage: getThumbnailUrl(post)
+                              ? `url(${getThumbnailUrl(post)})`
+                              : undefined,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                          }}
                         />
-                        <Skeleton
-                          variant="text"
-                          width="80px"
-                          animation="wave"
-                        />
-                      </Stack>
 
-                      {/* 태그 */}
-                      <Skeleton
-                        variant="text"
-                        width="100px"
-                        height="1.5rem"
-                        animation="wave"
-                      />
-
-                      {/* 게시글 정보 */}
-                      <Box mt="auto">
+                        {/* 게시글 정보 */}
                         <Stack
-                          direction="row"
-                          justifyContent="flex-end"
-                          alignItems="center"
-                          gap={1}
-                          mt={1}
+                          flex={1}
+                          py={0.5}
+                          minWidth={0}
                         >
-                          <Skeleton
-                            variant="text"
-                            width="30px"
-                            animation="wave"
-                          />
-                          <FavoriteRoundedIcon color="error" />
-                          <Skeleton
-                            variant="text"
-                            width="30px"
-                            animation="wave"
-                          />
-                          <IosShareRoundedIcon
-                            sx={{ transform: "translateY(-2px)" }}
-                          />
-                          <Skeleton
-                            variant="text"
-                            width="30px"
-                            animation="wave"
-                          />
-                          <ChatBubbleOutlineRoundedIcon />
+                          {/* 제목 */}
+                          <Typography
+                            variant="h6"
+                            fontWeight="bold"
+                            noWrap
+                            sx={{ mb: 0.5 }}
+                          >
+                            {post.title}
+                          </Typography>
+
+                          {/* 작성자 정보 */}
+                          <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+                            <Avatar
+                              src={
+                                post.authorProfileImage
+                                  ? `${SERVER_HOST}${post.authorProfileImage}`
+                                  : undefined
+                              }
+                              sx={{ width: 24, height: 24 }}
+                            />
+                            <Typography variant="body2" color="text.secondary">
+                              {post.authorName}
+                            </Typography>
+                          </Stack>
+
+                          {/* 태그 */}
+                          {post.tags && post.tags.length > 0 && (
+                            <Stack
+                              direction="row"
+                              gap={0.75}
+                              sx={{
+                                mt: 0.5,
+                                flexWrap: "wrap",
+                                overflow: "hidden",
+                                maxHeight: 28,
+                              }}
+                            >
+                              {post.tags.map((tag, index) => (
+                                <Chip
+                                  key={`tag-${index}`}
+                                  label={`#${tag}`}
+                                  size="small"
+                                  sx={{
+                                    height: 24,
+                                    fontSize: "0.75rem",
+                                    fontWeight: 500,
+                                    bgcolor: "rgba(244,63,94,0.1)",
+                                    color: "#f43f5e",
+                                    border: "1px solid",
+                                    borderColor: "rgba(244,63,94,0.2)",
+                                    "& .MuiChip-label": {
+                                      px: 1.25,
+                                    },
+                                  }}
+                                />
+                              ))}
+                            </Stack>
+                          )}
+
+                          {/* 하단 정보 영역 */}
+                          <Box mt="auto">
+                            <Stack
+                              direction="row"
+                              justifyContent="flex-end"
+                              alignItems="center"
+                              gap={0.5}
+                              mt={1.5}
+                            >
+                              {/* 좋아요 한 날짜 */}
+                              {post.likedAt && (
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mr: "auto" }}
+                                >
+                                  {new Date(post.likedAt).toLocaleDateString(
+                                    "ko-KR",
+                                    {
+                                      year: "numeric",
+                                      month: "long",
+                                      day: "numeric",
+                                    }
+                                  )}
+                                </Typography>
+                              )}
+
+                              {/* 좋아요 수 */}
+                              <Stack direction="row" alignItems="center" gap={0.5}>
+                                <FavoriteRoundedIcon
+                                  color="error"
+                                  sx={{ fontSize: 20 }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  {post.likes}
+                                </Typography>
+                              </Stack>
+
+                              {/* 공유 수 */}
+                              <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                                <IosShareRoundedIcon
+                                  sx={{ fontSize: 20, color: "text.secondary" }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  {post.shares}
+                                </Typography>
+                              </Stack>
+
+                              {/* 댓글 수 */}
+                              <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                                <ChatBubbleOutlineRoundedIcon
+                                  sx={{ fontSize: 20, color: "text.secondary" }}
+                                />
+                                <Typography variant="body2" color="text.secondary">
+                                  {post.comments}
+                                </Typography>
+                              </Stack>
+                            </Stack>
+                          </Box>
                         </Stack>
-                      </Box>
-                    </Stack>
+                      </Stack>
+                    </ButtonBase>
+                  </Paper>
+                ))}
+
+                {/* 로딩 스켈레톤 */}
+                {isLoading &&
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <Paper
+                      elevation={0}
+                      key={`liked-post-skeleton-${index}`}
+                      sx={{
+                        borderRadius: 3,
+                        bgcolor: "background.paper",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Stack
+                        width="100%"
+                        direction={{
+                          xs: "column",
+                          sm: "row",
+                        }}
+                        padding={2}
+                        gap={2.5}
+                      >
+                        {/* 썸네일 이미지 */}
+                        <Skeleton
+                          variant="rectangular"
+                          height={160}
+                          sx={{
+                            width: {
+                              xs: "100%",
+                              sm: 220,
+                            },
+                            borderRadius: 2.5,
+                            flexShrink: 0,
+                          }}
+                          animation="wave"
+                        />
+
+                        {/* 게시글 정보 */}
+                        <Stack flex={1} minWidth={0}>
+                          {/* 제목 */}
+                          <Skeleton
+                            variant="text"
+                            width="60%"
+                            height="2rem"
+                            animation="wave"
+                          />
+
+                          {/* 작성자 */}
+                          <Stack direction="row" alignItems="center" gap={1} mt={0.5}>
+                            <Skeleton
+                              variant="circular"
+                              width={24}
+                              height={24}
+                              animation="wave"
+                            />
+                            <Skeleton
+                              variant="text"
+                              width="80px"
+                              animation="wave"
+                            />
+                          </Stack>
+
+                          {/* 태그 */}
+                          <Stack direction="row" gap={1} mt={1}>
+                            <Skeleton
+                              variant="rounded"
+                              width={60}
+                              height={24}
+                              animation="wave"
+                            />
+                            <Skeleton
+                              variant="rounded"
+                              width={80}
+                              height={24}
+                              animation="wave"
+                            />
+                          </Stack>
+
+                          {/* 게시글 정보 */}
+                          <Box mt="auto">
+                            <Stack
+                              direction="row"
+                              justifyContent="flex-end"
+                              alignItems="center"
+                              gap={2}
+                              mt={2}
+                            >
+                              <Skeleton
+                                variant="text"
+                                width="100px"
+                                animation="wave"
+                                sx={{ mr: "auto" }}
+                              />
+                              <Skeleton variant="text" width="40px" animation="wave" />
+                              <Skeleton variant="text" width="40px" animation="wave" />
+                              <Skeleton variant="text" width="40px" animation="wave" />
+                            </Stack>
+                          </Box>
+                        </Stack>
+                      </Stack>
+                    </Paper>
+                  ))}
+
+                {/* 더보기 버튼 */}
+                {hasNextPage && !isLoading && (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleLoadMore}
+                    startIcon={<KeyboardArrowDownRoundedIcon />}
+                    sx={{
+                      alignSelf: "center",
+                      px: 5,
+                      py: 1.5,
+                      borderRadius: 3,
+                      background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                      boxShadow: "0 4px 12px rgba(244,63,94,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
+                        boxShadow: "0 6px 16px rgba(244,63,94,0.4)",
+                      },
+                    }}
+                  >
+                    더보기
+                  </Button>
+                )}
+
+                {/* 로딩 중 표시 */}
+                {isLoading && posts.length > 0 && (
+                  <Stack alignItems="center" py={2}>
+                    <CircularProgress size={32} sx={{ color: "#f43f5e" }} />
                   </Stack>
-                </Paper>
-              ))}
-
-            {/* 더보기 버튼 */}
-            {hasNextPage && !isLoading && (
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={handleLoadMore}
-                startIcon={<KeyboardArrowDownRoundedIcon />}
-                sx={{
-                  alignSelf: "center",
-                  px: 4,
-                  py: 1.5,
-                  borderRadius: 2,
-                }}
-              >
-                더보기
-              </Button>
-            )}
-
-            {/* 로딩 중 표시 */}
-            {isLoading && posts.length > 0 && (
-              <Stack alignItems="center" py={2}>
-                <CircularProgress size={32} />
+                )}
               </Stack>
             )}
           </Stack>
-        )}
+        </Box>
       </Stack>
 
       {/* 최상단 이동 버튼 */}

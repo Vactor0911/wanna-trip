@@ -269,7 +269,8 @@ const Header = () => {
       >
         <Box
           sx={{
-            borderBottom: `2px solid ${theme.palette.divider}`,
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            boxShadow: `0 2px 8px -2px ${theme.palette.mode === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.08)"}`,
           }}
         >
           <Container maxWidth="xl">
@@ -315,7 +316,7 @@ const Header = () => {
               >
                 {Links.map((link, index) => (
                   <StyledLink key={`nav-link-${index}`} to={link.to} themeMode={themeMode}>
-                    <Typography variant="h5" fontWeight={500}>
+                    <Typography variant="h5" fontWeight={700}>
                       {link.text}
                     </Typography>
                   </StyledLink>

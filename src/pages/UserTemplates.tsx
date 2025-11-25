@@ -10,6 +10,7 @@ import {
   DialogTitle,
   FormControl,
   FormControlLabel,
+  keyframes,
   MenuItem,
   Radio,
   RadioGroup,
@@ -26,6 +27,16 @@ import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { useNavigate } from "react-router-dom";
+
+// 펄스 애니메이션 정의
+const pulse = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+`;
 
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import TravelPlanChatbot from "../components/TravelPlanChatbot";
@@ -333,7 +344,7 @@ const UserTemplates = () => {
         <Stack gap={4}>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.1)} 0%, ${alpha("#ff8e53", 0.05)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.15)} 0%, ${alpha("#ff8e53", 0.08)} 50%, ${alpha("#ffc107", 0.05)} 100%)`,
               borderRadius: 4,
               p: 3,
               position: "relative",
@@ -347,8 +358,19 @@ const UserTemplates = () => {
                 right: -10,
                 top: -10,
                 fontSize: 120,
-                color: alpha("#ff6b6b", 0.08),
+                color: alpha("#ff6b6b", 0.1),
                 transform: "rotate(15deg)",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                right: 80,
+                bottom: -20,
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: `linear-gradient(135deg, ${alpha("#ff8e53", 0.15)} 0%, ${alpha("#ffc107", 0.1)} 100%)`,
               }}
             />
             
@@ -358,44 +380,72 @@ const UserTemplates = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2.5,
-                  bgcolor: "#ff6b6b",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 3,
+                  background: "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
                   boxShadow: `0 4px 14px ${alpha("#ff6b6b", 0.4)}`,
                 }}
               >
-                <WhatshotIcon sx={{ color: "white", fontSize: 26 }} />
+                <WhatshotIcon 
+                  sx={{ 
+                    color: "white", 
+                    fontSize: 28,
+                    animation: `${pulse} 1.5s ease-in-out infinite`,
+                  }} 
+                />
               </Box>
               <Box>
                 <Stack direction="row" alignItems="center" gap={1}>
-                  <Typography variant="h5" fontWeight={700}>인기 템플릿</Typography>
+                  <Typography variant="h5" fontWeight={700}>🔥 인기 템플릿</Typography>
                   <Chip 
                     label="HOT" 
                     size="small" 
                     sx={{ 
-                      bgcolor: "#ff6b6b", 
+                      background: "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
                       color: "white", 
                       fontWeight: 700,
                       fontSize: 11,
-                      height: 22,
+                      height: 24,
+                      "& .MuiChip-label": {
+                        px: 1.5,
+                      },
                     }} 
                   />
                 </Stack>
                 <Typography variant="body2" color="text.secondary" mt={0.3}>
-                  다른 사용자들이 많이 퍼간 템플릿
+                  다른 사용자들이 많이 퍼간 인기 템플릿을 확인해보세요
                 </Typography>
               </Box>
             </Stack>
           </Box>
           {isPopularLoading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress />
+            <Box 
+              display="flex" 
+              justifyContent="center" 
+              alignItems="center"
+              py={6}
+              sx={{
+                borderRadius: 4,
+                background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.03)} 0%, ${alpha("#ff8e53", 0.01)} 100%)`,
+              }}
+            >
+              <CircularProgress sx={{ color: "#ff6b6b" }} />
             </Box>
           ) : popularError ? (
-            <Typography color="error" py={2}>
-              {popularError}
-            </Typography>
+            <Box
+              sx={{
+                py: 4,
+                px: 3,
+                borderRadius: 4,
+                background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                textAlign: "center",
+              }}
+            >
+              <Typography color="error" fontWeight={500}>
+                {popularError}
+              </Typography>
+            </Box>
           ) : (
             <PopularTemplates
               maxCards={3}
@@ -410,7 +460,7 @@ const UserTemplates = () => {
         <Stack gap={4}>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)} 0%, ${alpha(theme.palette.primary.light, 0.04)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.15)} 0%, ${alpha("#2196f3", 0.08)} 50%, ${alpha("#42a5f5", 0.05)} 100%)`,
               borderRadius: 4,
               p: 3,
               position: "relative",
@@ -424,8 +474,19 @@ const UserTemplates = () => {
                 right: -10,
                 top: -10,
                 fontSize: 120,
-                color: alpha(theme.palette.primary.main, 0.06),
+                color: alpha("#1976d2", 0.1),
                 transform: "rotate(15deg)",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                right: 80,
+                bottom: -20,
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: `linear-gradient(135deg, ${alpha("#2196f3", 0.15)} 0%, ${alpha("#42a5f5", 0.1)} 100%)`,
               }}
             />
             
@@ -443,46 +504,61 @@ const UserTemplates = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 44,
-                    height: 44,
-                    borderRadius: 2.5,
-                    bgcolor: theme.palette.primary.main,
-                    boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    boxShadow: `0 4px 14px ${alpha("#1976d2", 0.4)}`,
                   }}
                 >
-                  <FolderSpecialIcon sx={{ color: "white", fontSize: 26 }} />
+                  <FolderSpecialIcon sx={{ color: "white", fontSize: 28 }} />
                 </Box>
                 <Box>
                   <Stack direction="row" alignItems="center" gap={1}>
-                    <Typography variant="h5" fontWeight={700}>내 템플릿</Typography>
+                    <Typography variant="h5" fontWeight={700}>📁 내 템플릿</Typography>
                     {loginState.isLoggedIn && !isLoading && !error && (
                       <Chip
                         label={`${myTemplates.length}개`}
                         size="small"
                         sx={{
-                          bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          color: theme.palette.primary.main,
-                          fontWeight: 600,
+                          background: `linear-gradient(135deg, ${alpha("#1976d2", 0.2)} 0%, ${alpha("#2196f3", 0.15)} 100%)`,
+                          color: "#1976d2",
+                          fontWeight: 700,
                           fontSize: 12,
+                          height: 24,
+                          border: `1px solid ${alpha("#1976d2", 0.3)}`,
                         }}
                       />
                     )}
                   </Stack>
                   <Typography variant="body2" color="text.secondary" mt={0.3}>
-                    나만의 여행 계획을 만들어보세요
+                    나만의 여행 계획을 만들고 관리해보세요
                   </Typography>
                 </Box>
               </Stack>
               
               {loginState.isLoggedIn && !isLoading && !error && (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary">정렬:</Typography>
-                  <FormControl size="small" sx={{ minWidth: 100 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <Typography variant="body2" color="text.secondary" fontWeight={500}>정렬</Typography>
+                  <FormControl size="small" sx={{ minWidth: 110 }}>
                     <Select
                       value={sortType}
                       onChange={handleSortChange}
                       variant="outlined"
-                      sx={{ fontSize: 14, bgcolor: theme.palette.background.paper }}
+                      sx={{ 
+                        fontSize: 14, 
+                        bgcolor: theme.palette.background.paper,
+                        borderRadius: 2,
+                        "& .MuiOutlinedInput-notchedOutline": {
+                          borderColor: alpha("#1976d2", 0.3),
+                        },
+                        "&:hover .MuiOutlinedInput-notchedOutline": {
+                          borderColor: alpha("#1976d2", 0.5),
+                        },
+                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                          borderColor: "#1976d2",
+                        },
+                      }}
                     >
                       <MenuItem value="latest">최신순</MenuItem>
                       <MenuItem value="oldest">오래된순</MenuItem>
@@ -502,50 +578,112 @@ const UserTemplates = () => {
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                py: 6,
+                py: 8,
                 px: 3,
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha(theme.palette.grey[500], 0.05)} 0%, ${alpha(theme.palette.grey[400], 0.02)} 100%)`,
-                border: `1px dashed ${alpha(theme.palette.grey[500], 0.3)}`,
+                background: `linear-gradient(135deg, ${alpha("#1976d2", 0.05)} 0%, ${alpha("#2196f3", 0.02)} 100%)`,
+                border: `2px dashed ${alpha("#1976d2", 0.25)}`,
                 textAlign: "center",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <FolderSpecialIcon 
-                sx={{ 
-                  fontSize: 64, 
-                  color: alpha(theme.palette.text.secondary, 0.3),
-                  mb: 2,
-                }} 
+              {/* 배경 장식 */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: -30,
+                  right: -30,
+                  width: 120,
+                  height: 120,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+                }}
               />
-              <Typography variant="h6" color="text.secondary" mb={1}>
-                템플릿을 만들고 관리하려면 로그인이 필요합니다.
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -20,
+                  left: -20,
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${alpha("#2196f3", 0.08)} 0%, ${alpha("#42a5f5", 0.05)} 100%)`,
+                }}
+              />
+              
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${alpha("#1976d2", 0.15)} 0%, ${alpha("#2196f3", 0.1)} 100%)`,
+                  mb: 2,
+                }}
+              >
+                <FolderSpecialIcon 
+                  sx={{ 
+                    fontSize: 40, 
+                    color: alpha("#1976d2", 0.6),
+                  }} 
+                />
+              </Box>
+              <Typography variant="h6" color="text.secondary" mb={1} fontWeight={600}>
+                템플릿을 만들고 관리하려면 로그인이 필요합니다
               </Typography>
               <Typography variant="body2" color="text.disabled" mb={3}>
                 로그인하고 나만의 여행 계획을 시작해보세요!
               </Typography>
               <Button
                 variant="contained"
-                color="primary"
                 size="large"
                 onClick={() => navigate("/login")}
                 sx={{
-                  px: 4,
-                  py: 1.2,
-                  borderRadius: 2,
-                  boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
+                  px: 5,
+                  py: 1.5,
+                  borderRadius: 3,
+                  background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                  boxShadow: `0 4px 14px ${alpha("#1976d2", 0.4)}`,
+                  fontWeight: 600,
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                    boxShadow: `0 6px 20px ${alpha("#1976d2", 0.5)}`,
+                  },
                 }}
               >
                 로그인하러 가기
               </Button>
             </Box>
           ) : isLoading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress />
+            <Box 
+              display="flex" 
+              justifyContent="center" 
+              alignItems="center"
+              py={6}
+              sx={{
+                borderRadius: 4,
+                background: `linear-gradient(135deg, ${alpha("#1976d2", 0.03)} 0%, ${alpha("#2196f3", 0.01)} 100%)`,
+              }}
+            >
+              <CircularProgress sx={{ color: "#1976d2" }} />
             </Box>
           ) : error ? (
-            <Typography color="error" py={2}>
-              {error}
-            </Typography>
+            <Box
+              sx={{
+                py: 4,
+                px: 3,
+                borderRadius: 4,
+                background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                textAlign: "center",
+              }}
+            >
+              <Typography color="error" fontWeight={500}>
+                {error}
+              </Typography>
+            </Box>
           ) : (
             <Box
               sx={{
@@ -576,11 +714,30 @@ const UserTemplates = () => {
         </Stack>
 
         {/* 템플릿 이름 입력 다이얼로그 */}
-        <Dialog open={isDialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-          <DialogTitle>새 템플릿 만들기</DialogTitle>
-          <DialogContent>
+        <Dialog 
+          open={isDialogOpen} 
+          onClose={handleCloseDialog} 
+          maxWidth="sm" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              overflow: "hidden",
+            }
+          }}
+        >
+          <DialogTitle 
+            sx={{ 
+              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+              fontWeight: 700,
+              pb: 2,
+            }}
+          >
+            ✨ 새 템플릿 만들기
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
             {/* 생성 방식 선택 */}
-            <Typography variant="subtitle1" sx={{ mt: 1, mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ mt: 1, mb: 2, fontWeight: 600 }}>
               생성 방식을 선택하세요
             </Typography>
             <RadioGroup
@@ -589,32 +746,48 @@ const UserTemplates = () => {
             >
               <FormControlLabel
                 value={TemplateCreationType.EMPTY}
-                control={<Radio />}
+                control={<Radio sx={{ color: "#1976d2", "&.Mui-checked": { color: "#1976d2" } }} />}
                 label={
                   <Box>
-                    <Typography variant="body1" fontWeight={500}>
-                      빈 템플릿 생성
+                    <Typography variant="body1" fontWeight={600}>
+                      📝 빈 템플릿 생성
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       직접 일정을 작성하고 싶을 때
                     </Typography>
                   </Box>
                 }
-                sx={{ mb: 2 }}
+                sx={{ 
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 2,
+                  transition: "background-color 0.2s",
+                  "&:hover": {
+                    bgcolor: alpha("#1976d2", 0.05),
+                  },
+                }}
               />
               <FormControlLabel
                 value={TemplateCreationType.AI_GENERATED}
-                control={<Radio />}
+                control={<Radio sx={{ color: "#1976d2", "&.Mui-checked": { color: "#1976d2" } }} />}
                 label={
                   <Box>
-                    <Typography variant="body1" fontWeight={500}>
-                      AI로 생성
+                    <Typography variant="body1" fontWeight={600}>
+                      🤖 AI로 생성
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       AI와 대화하며 맞춤형 여행 계획 만들기
                     </Typography>
                   </Box>
                 }
+                sx={{ 
+                  p: 1.5,
+                  borderRadius: 2,
+                  transition: "background-color 0.2s",
+                  "&:hover": {
+                    bgcolor: alpha("#1976d2", 0.05),
+                  },
+                }}
               />
             </RadioGroup>
 
@@ -633,17 +806,42 @@ const UserTemplates = () => {
               }}
               error={!!nameError}
               helperText={nameError}
-              sx={{ mt: 3 }}
+              sx={{ 
+                mt: 3,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
             />
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDialog} color="inherit">
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button 
+              onClick={handleCloseDialog} 
+              color="inherit"
+              sx={{ 
+                borderRadius: 2,
+                px: 3,
+              }}
+            >
               취소
             </Button>
             <Button
               onClick={handleCreateTemplate}
-              color="primary"
               variant="contained"
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                },
+              }}
             >
               {creationType === TemplateCreationType.AI_GENERATED ? "다음" : "생성"}
             </Button>
@@ -651,22 +849,49 @@ const UserTemplates = () => {
         </Dialog>
 
         {/* 템플릿 삭제 확인 대화상자 */}
-        <Dialog open={isDeleteDialogOpen} onClose={handleCloseDeleteDialog}>
-          <DialogTitle>템플릿 삭제</DialogTitle>
-          <DialogContent>
-            <Typography>정말로 이 템플릿을 삭제하시겠습니까?</Typography>
+        <Dialog 
+          open={isDeleteDialogOpen} 
+          onClose={handleCloseDeleteDialog}
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              overflow: "hidden",
+            }
+          }}
+        >
+          <DialogTitle 
+            sx={{ 
+              background: `linear-gradient(135deg, ${alpha("#ef4444", 0.1)} 0%, ${alpha("#f87171", 0.05)} 100%)`,
+              fontWeight: 700,
+            }}
+          >
+            ⚠️ 템플릿 삭제
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography fontWeight={500}>정말로 이 템플릿을 삭제하시겠습니까?</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               삭제한 템플릿은 복구할 수 없습니다.
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseDeleteDialog} color="inherit">
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button 
+              onClick={handleCloseDeleteDialog} 
+              color="inherit"
+              sx={{ borderRadius: 2, px: 3 }}
+            >
               취소
             </Button>
             <Button
               onClick={handleDeleteTemplate}
-              color="error"
               variant="contained"
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                background: "linear-gradient(135deg, #ef4444 0%, #f87171 100%)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
+                },
+              }}
             >
               삭제
             </Button>

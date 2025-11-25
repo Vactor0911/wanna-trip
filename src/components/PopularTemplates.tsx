@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import {
   Box,
   IconButton,
@@ -16,6 +16,8 @@ import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import { useNavigate } from "react-router-dom";
 import { SERVER_HOST } from "../utils/axiosInstance";
+import { motion, useMotionValue, animate } from "framer-motion";
+import { useBreakpoint } from "../hooks";
 
 // 인기 템플릿 데이터 타입 정의
 export interface PopularTemplateData {
@@ -38,6 +40,7 @@ interface PopularTemplatesProps extends BoxProps {
 
 // 가로:세로 비율 (11:6)
 const CARD_ASPECT_RATIO = 11 / 6;
+const GAP = 24; // 카드 사이 간격(px)
 
 /**
  * 인기 템플릿/커뮤니티 배너 컴포넌트
@@ -52,91 +55,137 @@ const PopularTemplates = ({
   ...boxProps
 }: PopularTemplatesProps) => {
   const theme = useTheme();
-  // 슬라이드 인덱스 관리
-  const [index, setIndex] = useState(0);
-  // 부모 영역의 width 측정
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  // 페이지 이동을 위한 navigate
   const navigate = useNavigate();
+  const breakpoint = useBreakpoint();
+  
+  // 캐러셀 상태
+  const [itemCounts, setItemCounts] = useState(3); // 화면 크기에 따라 보이는 카드 수
+  const x = useMotionValue(0); // 트랙 X 위치
+  const firstItemRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState(0); // 카드 1장 폭 + gap
+  const [page, setPage] = useState(0); // 페이지 인덱스
+  const [totalPages, setTotalPages] = useState(0); // 총 페이지 수
 
-  // 화면 너비에 따른 보여줄 카드 개수 계산
-  const getVisibleCount = () => {
-    if (!containerWidth) return 1;
-
-    // 화면 너비에 따른 카드 개수 결정
-    if (containerWidth >= 1200) return Math.min(maxCards, data.length);
-    if (containerWidth >= 768) return Math.min(2, data.length);
-    return 1;
-  };
-
-  const visibleCount = getVisibleCount();
-
-  // 버튼 노출 조건
-  const showArrows = data.length > visibleCount;
-
-  // 슬라이드 데이터 계산 (순환)
-  const getVisibleData = () => {
-    if (!showArrows) return data.slice(0, visibleCount);
-    const result = [];
-    for (let i = 0; i < visibleCount; i++) {
-      result.push(data[(index + i) % data.length]);
-    }
-    return result;
-  };
-
-  // 이전/다음 버튼 핸들러
-  const handlePrev = () => {
-    setIndex((prev) => (prev === 0 ? data.length - 1 : prev - 1));
-  };
-  const handleNext = () => {
-    setIndex((prev) => (prev + 1) % data.length);
-  };
-
-  // 부모 영역의 width를 측정해서 상태로 저장
+  // 페이지 수 계산
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
+    setTotalPages(Math.max(1, Math.ceil(data.length / itemCounts)));
+  }, [itemCounts, data.length]);
+
+  // 화면 크기에 따라 보이는 카드 수 조정
+  useLayoutEffect(() => {
+    const visibleCount = {
+      xs: 1,
+      sm: 2,
+      md: maxCards,
+      lg: maxCards,
+      xl: maxCards,
+    };
+
+    switch (breakpoint) {
+      case "xs":
+        setItemCounts(Math.min(visibleCount.xs, data.length));
+        break;
+      case "sm":
+        setItemCounts(Math.min(visibleCount.sm, data.length));
+        break;
+      case "md":
+        setItemCounts(Math.min(visibleCount.md, data.length));
+        break;
+      case "lg":
+        setItemCounts(Math.min(visibleCount.lg, data.length));
+        break;
+      case "xl":
+        setItemCounts(Math.min(visibleCount.xl, data.length));
+        break;
+      default:
+        setItemCounts(Math.min(visibleCount.md, data.length));
+        break;
+    }
+  }, [maxCards, breakpoint, data.length]);
+
+  // 카드 폭 측정
+  useLayoutEffect(() => {
+    if (!firstItemRef.current) return;
+
+    const measure = () => {
+      if (firstItemRef.current) {
+        setStep(firstItemRef.current.offsetWidth + GAP);
       }
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    // 초기 측정
+    measure();
+
+    // ResizeObserver 등록
+    const ro = new ResizeObserver(() => {
+      if (firstItemRef.current) {
+        const newStep = firstItemRef.current.offsetWidth + GAP;
+        setStep(newStep);
+      }
+    });
+
+    if (firstItemRef.current) {
+      ro.observe(firstItemRef.current);
+    }
+
+    return () => ro.disconnect();
   }, []);
 
-  // 카드의 width, height 계산 (영역에 비례)
-  const gap = 15; // 카드 사이 간격(px)
-  const totalGap = gap * (visibleCount - 1);
-  const cardWidth =
-    visibleCount > 0 && containerWidth > 0
-      ? (containerWidth - totalGap) / visibleCount
-      : 320;
-  const cardHeight = cardWidth / CARD_ASPECT_RATIO;
+  // 페이지 이동 애니메이션
+  useEffect(() => {
+    if (!step) return;
+    const contentW = step * data.length; // 전체 컨텐츠 폭
+    const viewportW = step * itemCounts; // 현재 보이는 영역 폭
+    const maxDrag = viewportW - contentW; // 최대 드래그 가능 위치
+
+    const rawX = -page * itemCounts * step;
+    const targetX = Math.max(maxDrag, Math.min(0, rawX));
+
+    animate(x, targetX, { type: "spring", stiffness: 300, damping: 40 });
+  }, [page, step, data.length, itemCounts, x]);
+
+  // 페이지가 총 페이지 수를 초과하지 않도록 조정
+  useLayoutEffect(() => {
+    if (page >= totalPages) setPage(Math.max(0, totalPages - 1));
+  }, [totalPages, page]);
+
+  // 버튼 표시 여부 (아이템 수가 화면에 보이는 카드 수보다 많을 때만 버튼 표시)
+  const showNavigationButtons = data.length > itemCounts;
+
+  // 다음 버튼 클릭
+  const handleNextButtonClick = useCallback(() => {
+    if (!showNavigationButtons) return;
+    setPage((prevPage) => (prevPage + 1) % totalPages);
+  }, [totalPages, showNavigationButtons]);
+
+  // 이전 버튼 클릭
+  const handlePrevButtonClick = useCallback(() => {
+    if (!showNavigationButtons) return;
+    setPage((prevPage) => (prevPage === 0 ? totalPages - 1 : prevPage - 1));
+  }, [totalPages, showNavigationButtons]);
 
   // 카드 클릭 핸들러
-  const handleCardClick = (templateId: string) => {
+  const handleCardClick = useCallback((templateId: string) => {
     if (onCardClick) {
       onCardClick(templateId);
     } else {
       navigate(`/template/${templateId}`);
     }
+  }, [onCardClick, navigate]);
+
+  // 카드 높이 계산
+  const getCardHeight = () => {
+    if (!firstItemRef.current) return 250;
+    return firstItemRef.current.offsetWidth / CARD_ASPECT_RATIO;
   };
 
   return (
     <Box
-      ref={containerRef}
-      width="100%"
-      sx={{
-        position: "relative",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+      position="relative"
       {...boxProps}
     >
-      {/* 이전 버튼 - 카드 영역 안쪽에 고정 */}
-      {showArrows && (
+      {/* 이전 버튼 - 아이템이 visibleCount보다 많을 때만 표시 */}
+      {showNavigationButtons && (
         <Paper
           elevation={2}
           sx={{
@@ -148,125 +197,14 @@ const PopularTemplates = ({
             borderRadius: "50px",
           }}
         >
-          <IconButton onClick={handlePrev} size="small">
+          <IconButton onClick={handlePrevButtonClick} size="small">
             <ChevronLeftRoundedIcon color="primary" fontSize="large" />
           </IconButton>
         </Paper>
       )}
 
-      {/* 카드 리스트 */}
-      <Box display="flex" gap={`${gap}px`} width="100%">
-        {getVisibleData().map((tpl) => (
-          <Paper
-            key={tpl.id}
-            onClick={() => handleCardClick(tpl.id)}
-            sx={{
-              width: cardWidth,
-              height: cardHeight,
-              borderRadius: 4,
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              background: tpl.thumbnailUrl
-                ? undefined
-                : tpl.image
-                ? undefined
-                : tpl.bgColor || "#e0f7fa",
-              backgroundImage: tpl.thumbnailUrl
-                ? `url(${tpl.thumbnailUrl})`
-                : tpl.image
-                ? `url(${tpl.image})`
-                : undefined,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              minHeight: "250px", // 최소 높이 설정
-              position: "relative",
-              boxShadow: 2,
-              transition: "width 0.2s, height 0.2s",
-              cursor: "pointer",
-            }}
-          >
-            {/* 카드 하단 정보 */}
-            <Box
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                width: "100%",
-                bgcolor: theme.palette.background.paper,
-                p: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-              }}
-            >
-              {/* 좌측: 아바타, 제목/작성자 */}
-              <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
-                {tpl.userProfileImage ? (
-                  <Avatar
-                    src={`${SERVER_HOST}${tpl.userProfileImage}`}
-                    sx={{ width: 32, height: 32, flexShrink: 0 }}
-                  />
-                ) : (
-                  <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      bgcolor: theme.palette.primary.main,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <FaceRoundedIcon
-                      sx={{
-                        width: "90%",
-                        height: "90%",
-                        color: grey[100],
-                      }}
-                    />
-                  </Avatar>
-                )}
-                <Box minWidth={0}>
-                  <Typography
-                    variant="subtitle1"
-                    fontWeight={700}
-                    sx={{
-                      color: theme.palette.text.primary,
-                      lineHeight: 1.2,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {tpl.title}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: 15, fontWeight: 400 }}
-                  >
-                    {tpl.username}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* 우측: 퍼가기 수 */}
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={0.5}
-                sx={{ color: "text.secondary", flexShrink: 0, ml: 2 }}
-              >
-                <IosShareRoundedIcon sx={{ fontSize: 18 }} />
-                <Typography variant="body2" fontWeight={500}>
-                  {tpl.shared_count}
-                </Typography>
-              </Stack>
-            </Box>
-          </Paper>
-        ))}
-      </Box>
-
-      {/* 다음 버튼 - 카드 영역 안쪽에 고정 */}
-      {showArrows && (
+      {/* 다음 버튼 - 아이템이 visibleCount보다 많을 때만 표시 */}
+      {showNavigationButtons && (
         <Paper
           elevation={2}
           sx={{
@@ -278,11 +216,145 @@ const PopularTemplates = ({
             borderRadius: "50px",
           }}
         >
-          <IconButton onClick={handleNext} size="small">
+          <IconButton onClick={handleNextButtonClick} size="small">
             <ChevronRightRoundedIcon color="primary" fontSize="large" />
           </IconButton>
         </Paper>
       )}
+
+      {/* 캐러셀 컨테이너 */}
+      <Box overflow="hidden" padding={2}>
+        {/* 캐러셀 트랙 */}
+        <motion.div
+          style={{ display: "flex", gap: GAP, x }}
+          drag={showNavigationButtons ? "x" : false}
+          dragElastic={0.08}
+          onDragEnd={(_, info) => {
+            if (!step || !showNavigationButtons) return;
+            const threshold = step / 4;
+            if (info.offset.x < -threshold) handleNextButtonClick();
+            else if (info.offset.x > threshold) handlePrevButtonClick();
+          }}
+        >
+          {data.map((tpl, i) => (
+            <Box
+              key={tpl.id}
+              ref={i === 0 ? firstItemRef : undefined}
+              component={motion.div}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              sx={{
+                flex: "0 0 auto",
+                width: `calc((100% - ${(itemCounts - 1) * GAP}px) / ${itemCounts})`,
+                cursor: "pointer",
+              }}
+              onClick={() => handleCardClick(tpl.id)}
+            >
+              <Paper
+                elevation={2}
+                sx={{
+                  width: "100%",
+                  height: getCardHeight(),
+                  minHeight: 250,
+                  borderRadius: 4,
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  background: tpl.thumbnailUrl
+                    ? undefined
+                    : tpl.image
+                    ? undefined
+                    : tpl.bgColor || "#e0f7fa",
+                  backgroundImage: tpl.thumbnailUrl
+                    ? `url(${tpl.thumbnailUrl})`
+                    : tpl.image
+                    ? `url(${tpl.image})`
+                    : undefined,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  position: "relative",
+                }}
+              >
+                {/* 카드 하단 정보 */}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 0,
+                    width: "100%",
+                    bgcolor: theme.palette.background.paper,
+                    p: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  {/* 좌측: 아바타, 제목/작성자 */}
+                  <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
+                    {tpl.userProfileImage ? (
+                      <Avatar
+                        src={`${SERVER_HOST}${tpl.userProfileImage}`}
+                        sx={{ width: 32, height: 32, flexShrink: 0 }}
+                      />
+                    ) : (
+                      <Avatar
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          bgcolor: theme.palette.primary.main,
+                          flexShrink: 0,
+                        }}
+                      >
+                        <FaceRoundedIcon
+                          sx={{
+                            width: "90%",
+                            height: "90%",
+                            color: grey[100],
+                          }}
+                        />
+                      </Avatar>
+                    )}
+                    <Box minWidth={0}>
+                      <Typography
+                        variant="subtitle1"
+                        fontWeight={700}
+                        sx={{
+                          color: theme.palette.text.primary,
+                          lineHeight: 1.2,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {tpl.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: 15, fontWeight: 400 }}
+                      >
+                        {tpl.username}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* 우측: 퍼가기 수 */}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.5}
+                    sx={{ color: "text.secondary", flexShrink: 0, ml: 2 }}
+                  >
+                    <IosShareRoundedIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="body2" fontWeight={500}>
+                      {tpl.shared_count}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Paper>
+            </Box>
+          ))}
+        </motion.div>
+      </Box>
     </Box>
   );
 };
