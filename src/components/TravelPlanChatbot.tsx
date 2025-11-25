@@ -20,6 +20,7 @@ import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import axiosInstance, { getCsrfToken, SERVER_HOST } from "../utils/axiosInstance";
 import { grey } from "@mui/material/colors";
 import { theme } from "../utils/theme";
+import { useSnackbar } from "notistack";
 
 // 메시지 타입 정의
 interface ChatMessage {
@@ -45,6 +46,7 @@ const TravelPlanChatbot = ({
   onClose,
   onComplete,
 }: TravelPlanChatbotProps) => {
+  const { enqueueSnackbar } = useSnackbar();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -219,11 +221,11 @@ const TravelPlanChatbot = ({
     } catch (error) {
       console.error("여행 계획 생성 오류:", error);
       setError("여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
-      alert("여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
+      enqueueSnackbar("여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
     } finally {
       setIsGenerating(false);
     }
-  }, [messages, onComplete, templateName]);
+  }, [enqueueSnackbar, messages, onComplete, templateName]);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
