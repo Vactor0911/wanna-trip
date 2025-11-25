@@ -155,10 +155,17 @@ const MapSection = React.memo(
 interface CardEditDialogProps {
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   emitFetch: () => void; // 소켓을 통한 템플릿 패치 요청 함수 타입 추가
+  emitCardEditingStart: (cardUuid: string) => void;
+  emitCardEditingEnd: (cardUuid: string) => void;
 }
 
 const CardEditDialog = (props: CardEditDialogProps) => {
-  const { fetchTemplateData, emitFetch } = props;
+  const {
+    fetchTemplateData,
+    emitFetch,
+    emitCardEditingStart,
+    emitCardEditingEnd,
+  } = props;
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -196,6 +203,20 @@ const CardEditDialog = (props: CardEditDialogProps) => {
   // 보드 카드 업데이트 함수
   const [, updateBoardCard] = useAtom(updateBoardCardAtom); // 보드 카드 업데이트 함수
   const [, deleteBoardCard] = useAtom(deleteBoardCardAtom); // 보드 카드 삭제 함수 추가
+
+  // 카드 편집 이벤트 송신
+  useEffect(() => {
+    if (cardEditDialogOpen) {
+      emitCardEditingStart(currentEditCard.cardUuid!);
+    } else {
+      emitCardEditingEnd(currentEditCard.cardUuid!);
+    }
+  }, [
+    cardEditDialogOpen,
+    currentEditCard?.cardUuid,
+    emitCardEditingStart,
+    emitCardEditingEnd,
+  ]);
 
   // isOwner 상태 설정
   useEffect(() => {
@@ -240,7 +261,7 @@ const CardEditDialog = (props: CardEditDialogProps) => {
           (card) => card.uuid === currentEditCard?.cardUuid
         );
 
-        if (currentCard) {
+        if (currentCard && !cardEditDialogOpen) {
           setContent(currentCard.content || "");
           setStartTime(currentCard.startTime || dayjs("2001-01-01T01:00"));
           setEndTime(currentCard.endTime || dayjs("2001-01-01T02:00"));

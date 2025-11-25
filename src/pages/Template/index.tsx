@@ -134,7 +134,13 @@ const Template = (props: TemplateProps) => {
   const { templateUuid } = useParams();
 
   // 소켓 관련 훅
-  const { isConnected, activeUsers, emitFetch } = useTemplateSocket({
+  const {
+    isConnected,
+    activeUsers,
+    emitFetch,
+    emitCardEditingStart,
+    emitCardEditingEnd,
+  } = useTemplateSocket({
     templateUuid: templateUuid!,
     enabled: !!templateUuid,
     fetchTemplate: () => fetchTemplateData(),
@@ -933,6 +939,8 @@ const Template = (props: TemplateProps) => {
       <CardEditDialog
         fetchTemplateData={fetchTemplateData}
         emitFetch={emitFetch}
+        emitCardEditingStart={emitCardEditingStart}
+        emitCardEditingEnd={emitCardEditingEnd}
       />
 
       {/* 더보기 메뉴 */}

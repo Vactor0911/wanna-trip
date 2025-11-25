@@ -235,3 +235,8 @@ export const reorderBoardCardsAtom = atom(null, (get, set) => {
   // 템플릿 상태 업데이트
   set(templateAtom, newTemplate as TemplateInterface);
 });
+
+// 편집 중인 카드 목록
+export const editingCardsAtom = atom<
+  Map<string, { userUuid: string; userName: string }>
+>(new Map());

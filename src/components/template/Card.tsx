@@ -25,6 +25,7 @@ interface CardProps extends PaperProps {
   startTime?: Dayjs;
   endTime?: Dayjs;
   isLocked?: boolean; // 카드 잠금 여부
+  isNowEditing: boolean;
   onClick?: () => void;
   location?: LocationInfo; // 위치 정보 추가
   isOwner?: boolean; // 소유자 여부 추가
@@ -37,9 +38,10 @@ const Card = (props: CardProps) => {
     startTime,
     endTime,
     isLocked,
+    isNowEditing,
     onClick,
     location,
-    isOwner = true, // 기본값은 true로 설정
+    isOwner: hasPermission = true, // 기본값은 true로 설정
     isTimeOverlapping = false, // 기본값은 false
     ...others
   } = props;
@@ -48,8 +50,8 @@ const Card = (props: CardProps) => {
 
   // 소유자 여부에 따른 클릭 핸들러
   const handleClick = (e: React.MouseEvent) => {
-    // 소유자가 아니면 클릭 이벤트 무시
-    if (!isOwner) {
+    // 편집 권한이 없거나 편집 중이면 클릭 이벤트 무시
+    if (!hasPermission || isNowEditing) {
       e.preventDefault();
       return;
     }
@@ -82,18 +84,23 @@ const Card = (props: CardProps) => {
       sx={{
         width: "100%",
         px: 1,
-        cursor: isOwner ? "pointer" : "default", // 소유자가 아니면 커서 스타일 변경
-        // 소유자가 아닐 경우 다른 테두리 색상 사용
-        border: isTimeOverlapping
-          ? `2px solid ${theme.palette.error.main}`
-          : `2px solid transparent`,
-        // 호버 시 - 소유자인 경우에만 파란색 테두리로 변경
+        cursor: hasPermission ? "pointer" : "default",
+        border: "2px solid transparent",
+        borderColor: isNowEditing
+          ? "#ba68c8"
+          : isTimeOverlapping
+          ? theme.palette.error.main
+          : "transparent",
+        filter: isNowEditing ? "brightness(0.85)" : "none",
+        transition: "border-color 0.3s, filter 0.3s",
         "&:hover": {
-          border: isOwner
-            ? `2px solid ${theme.palette.primary.main}`
+          borderColor: isNowEditing
+            ? "#ba68c8"
+            : hasPermission
+            ? theme.palette.primary.main
             : isTimeOverlapping
-            ? `2px solid ${theme.palette.error.main}`
-            : `2px solid transparent`,
+            ? theme.palette.error.main
+            : "transparent",
         },
       }}
       {...others}

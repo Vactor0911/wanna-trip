@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Chip,
   IconButton,
   Paper,
   Stack,
@@ -13,13 +14,14 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import Tooltip from "../Tooltip";
 import Card from "./Card";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback } from "react";
 import { checkTimeOverlap, MAX_BOARDS } from "../../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
   currentEditCardAtom,
+  editingCardsAtom,
   templateAtom,
 } from "../../state/template";
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
@@ -53,6 +55,7 @@ const Board = (props: BoardProps) => {
   const theme = useTheme();
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
+  const editingCards = useAtomValue(editingCardsAtom);
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
@@ -410,7 +413,9 @@ const Board = (props: BoardProps) => {
                     key={`card-${card.uuid}`}
                     draggableId={`${card.uuid}`}
                     index={index}
-                    isDragDisabled={!isOwner} // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
+                    isDragDisabled={
+                      !isOwner || !!editingCards.get(card.uuid)?.userUuid
+                    } // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
                   >
                     {(provided) => (
                       <Box
@@ -428,6 +433,7 @@ const Board = (props: BoardProps) => {
                           startTime={card.startTime}
                           endTime={card.endTime}
                           isLocked={card.locked}
+                          isNowEditing={!!editingCards.get(card.uuid)}
                           location={card.location || undefined}
                           onClick={() => handleCardClick(index)}
                           isOwner={isOwner}

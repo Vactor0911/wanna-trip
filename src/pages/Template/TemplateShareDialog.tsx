@@ -80,7 +80,6 @@ const TemplateShareDialog = (props: DialogProps) => {
                 (collaborator) => collaborator.user_uuid === user.user_uuid
               );
             });
-            console.log(filteredUsers);
 
             setSearchedUsers(filteredUsers);
           }
