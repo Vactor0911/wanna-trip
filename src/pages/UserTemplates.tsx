@@ -56,7 +56,7 @@ enum TemplateCreationType {
 }
 
 // 정렬 방식
-type SortType = "latest" | "oldest" | "name";
+type SortType = "latest" | "name";
 
 // 템플릿 타입 정의
 interface Template {
@@ -291,8 +291,6 @@ const UserTemplates = () => {
     switch (sortType) {
       case "latest":
         return sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      case "oldest":
-        return sorted.sort((a, b) => new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime());
       case "name":
         return sorted.sort((a, b) => a.title.localeCompare(b.title));
       default:
@@ -561,8 +559,7 @@ const UserTemplates = () => {
                       }}
                     >
                       <MenuItem value="latest">최신순</MenuItem>
-                      <MenuItem value="oldest">오래된순</MenuItem>
-                      <MenuItem value="name">이름순</MenuItem>
+                      <MenuItem value="name">제목순</MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
