@@ -1,7 +1,6 @@
 import {
   AppBar,
   Avatar,
-  Badge,
   Box,
   Button,
   ClickAwayListener,
@@ -18,7 +17,6 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import PermIdentityOutlinedIcon from "@mui/icons-material/PermIdentityOutlined";
 import { useCallback, useEffect, useRef, useState } from "react";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
@@ -34,6 +32,7 @@ import { themeModeAtom, wannaTripLoginStateAtom } from "../state";
 import { useAtom } from "jotai";
 import Logo from "/icons/logo.svg";
 import { useSnackbar } from "notistack";
+import NotificationPanel from "./NotificationPanel";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -356,12 +355,8 @@ const Header = () => {
                   {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
                 </IconButton>
 
-                {/* 알림 버튼 */}
-                <IconButton color="inherit" size="small">
-                  <Badge badgeContent={0} color="primary" overlap="circular">
-                    <NotificationsNoneOutlinedIcon />
-                  </Badge>
-                </IconButton>
+                {/* 알림 패널 */}
+                <NotificationPanel />
 
                 {/* 프로필 버튼 */}
                 <IconButton
