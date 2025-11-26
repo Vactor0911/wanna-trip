@@ -1,7 +1,9 @@
-import { Paper, Typography, Box, IconButton, useTheme, Menu, MenuItem } from "@mui/material";
+import { Paper, Typography, Box, IconButton, useTheme, Menu, MenuItem, Divider } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SxProps } from "@mui/system";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { useState } from "react";
 
 interface TemplateCardProps {
@@ -11,6 +13,7 @@ interface TemplateCardProps {
   date?: string; // 날짜 추가
   onClick?: () => void;
   onDelete?: () => void;
+  onCopy?: () => void; // 복사 콜백 추가
   children?: React.ReactNode;
   sx?: SxProps;
   type?: "new" | "existing";
@@ -26,6 +29,7 @@ const SquareTemplateCard = ({
   date,
   onClick,
   onDelete,
+  onCopy,
   children,
   sx = {},
   type = "existing",
@@ -53,6 +57,12 @@ const SquareTemplateCard = ({
   const handleMenuDelete = () => {
     handleMenuClose();
     if (onDelete) onDelete();
+  };
+
+  // 메뉴에서 복사 클릭
+  const handleMenuCopy = () => {
+    handleMenuClose();
+    if (onCopy) onCopy();
   };
 
   return (
@@ -154,7 +164,7 @@ const SquareTemplateCard = ({
             >
               {date || ""}
             </Typography>
-            {onDelete && (
+            {(onDelete || onCopy) && (
               <>
                 <IconButton
                   size="small"
@@ -182,9 +192,19 @@ const SquareTemplateCard = ({
                     horizontal: "right",
                   }}
                 >
-                  <MenuItem onClick={handleMenuDelete} sx={{ color: "error.main" }}>
-                    삭제
-                  </MenuItem>
+                  {onCopy && (
+                    <MenuItem onClick={handleMenuCopy}>
+                      <ContentCopyRoundedIcon fontSize="small" sx={{ mr: 1 }} />
+                      복사
+                    </MenuItem>
+                  )}
+                  {onCopy && onDelete && <Divider />}
+                  {onDelete && (
+                    <MenuItem onClick={handleMenuDelete} sx={{ color: "error.main" }}>
+                      <DeleteRoundedIcon fontSize="small" sx={{ mr: 1 }} />
+                      삭제
+                    </MenuItem>
+                  )}
                 </Menu>
               </>
             )}

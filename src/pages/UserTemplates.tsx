@@ -46,8 +46,9 @@ import PopularTemplates, {
   PopularTemplateData,
 } from "../components/PopularTemplates";
 import { useAtomValue } from "jotai";
-import { wannaTripLoginStateAtom } from "../state";
+import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { getRandomColor } from "../utils";
+import { useCopyTemplateToMine } from "../hooks/template";
 
 // 템플릿 생성 방식
 enum TemplateCreationType {
@@ -74,6 +75,7 @@ const UserTemplates = () => {
   const theme = useTheme();
   // 로그인 상태 확인
   const loginState = useAtomValue(wannaTripLoginStateAtom);
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom);
 
   const [myTemplates, setMyTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +104,14 @@ const UserTemplates = () => {
   >([]);
   const [isPopularLoading, setIsPopularLoading] = useState(true);
   const [popularError, setPopularError] = useState<string | null>(null);
+
+  // 복사 다이얼로그 상태
+  const [isCopyDialogOpen, setIsCopyDialogOpen] = useState(false);
+  const [copyTemplateUuid, setCopyTemplateUuid] = useState<string | null>(null);
+  const [copyTemplateTitle, setCopyTemplateTitle] = useState("");
+
+  // 템플릿 복사 hook
+  const copyTemplateMutation = useCopyTemplateToMine();
 
   // 기존 템플릿 데이터 가져오기
   const fetchTemplates = useCallback(async () => {
@@ -135,8 +145,8 @@ const UserTemplates = () => {
       setIsPopularLoading(true);
       setPopularError(null);
 
-      // 인기 템플릿 목록 가져오기
-      const response = await axiosInstance.get("/template/popular", {});
+      // 인기 공개 템플릿 목록 가져오기 (퍼가기 횟수 기준)
+      const response = await axiosInstance.get("/template/popular/public?limit=5", {});
 
       if (response.data.success) {
         // API 응답 데이터를 PopularTemplateData 형식으로 변환
@@ -174,9 +184,15 @@ const UserTemplates = () => {
 
   // 컴포넌트 마운트 시 사용자의 템플릿 목록 가져오기
   useEffect(() => {
-    fetchTemplates();
-    fetchPopularTemplates(); // 인기 템플릿도 함께 가져오기
-  }, [fetchPopularTemplates, fetchTemplates]);
+    // 인증 초기화가 완료되고 로그인된 경우에만 내 템플릿 가져오기
+    if (isAuthInitialized && loginState.isLoggedIn) {
+      fetchTemplates();
+    }
+    // 인기 템플릿은 인증 초기화 완료 후 가져오기
+    if (isAuthInitialized) {
+      fetchPopularTemplates();
+    }
+  }, [fetchPopularTemplates, fetchTemplates, isAuthInitialized, loginState.isLoggedIn]);
 
   // 다이얼로그 열기
   const handleOpenDialog = useCallback(() => {
@@ -334,6 +350,39 @@ const UserTemplates = () => {
       setDeleteTemplateUuid(null);
     }
   }, [deleteTemplateUuid, fetchTemplates]);
+
+  // 복사 버튼 클릭 시 다이얼로그 열기
+  const handleCopyButtonClick = useCallback((templateUuid: string, title: string) => {
+    setCopyTemplateUuid(templateUuid);
+    setCopyTemplateTitle(title);
+    setIsCopyDialogOpen(true);
+  }, []);
+
+  // 복사 다이얼로그 닫기
+  const handleCloseCopyDialog = useCallback(() => {
+    setIsCopyDialogOpen(false);
+    setCopyTemplateUuid(null);
+    setCopyTemplateTitle("");
+  }, []);
+
+  // 템플릿 복사 실행
+  const handleCopyTemplate = useCallback(async (newTitle: string) => {
+    if (!copyTemplateUuid) return;
+
+    try {
+      await copyTemplateMutation.mutateAsync({
+        sourceTemplateUuid: copyTemplateUuid,
+        title: newTitle,
+      });
+      
+      // 복사 성공 시 목록 새로고침
+      fetchTemplates();
+      handleCloseCopyDialog();
+    } catch (err) {
+      console.error("템플릿 복사 오류:", err);
+      setError("템플릿 복사 중 오류가 발생했습니다.");
+    }
+  }, [copyTemplateUuid, copyTemplateMutation, fetchTemplates, handleCloseCopyDialog]);
 
   return (
     <Container maxWidth="xl">
@@ -704,6 +753,7 @@ const UserTemplates = () => {
                   date={formatDate(template.updatedAt)}
                   onClick={() => handleTemplateClick(template.uuid)}
                   onDelete={() => handleDeleteButtonClick(template.uuid)}
+                  onCopy={() => handleCopyButtonClick(template.uuid, template.title)}
                 />
               ))}
             </Box>
@@ -902,6 +952,87 @@ const UserTemplates = () => {
           onClose={handleCloseChatbot}
           onComplete={handleChatbotComplete}
         />
+
+        {/* 템플릿 복사 다이얼로그 */}
+        <Dialog
+          open={isCopyDialogOpen}
+          onClose={handleCloseCopyDialog}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              overflow: "hidden",
+            }
+          }}
+        >
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+              fontWeight: 700,
+              pb: 2,
+            }}
+          >
+            📋 템플릿 복사
+          </DialogTitle>
+          <DialogContent sx={{ pt: 3 }}>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              "{copyTemplateTitle}" 템플릿을 복사합니다.
+              <br />
+              새 템플릿의 이름을 입력해주세요.
+            </Typography>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="새 템플릿 이름"
+              type="text"
+              fullWidth
+              variant="outlined"
+              defaultValue={`${copyTemplateTitle} (복사본)`}
+              id="copy-template-title"
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1976d2",
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "#1976d2",
+                },
+              }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button
+              onClick={handleCloseCopyDialog}
+              color="inherit"
+              sx={{ borderRadius: 2, px: 3 }}
+            >
+              취소
+            </Button>
+            <Button
+              onClick={() => {
+                const input = document.getElementById("copy-template-title") as HTMLInputElement;
+                if (input?.value.trim()) {
+                  handleCopyTemplate(input.value.trim());
+                }
+              }}
+              variant="contained"
+              disabled={copyTemplateMutation.isPending}
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                },
+              }}
+            >
+              {copyTemplateMutation.isPending ? "복사 중..." : "복사"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Stack>
     </Container>
   );
