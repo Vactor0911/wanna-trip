@@ -17,9 +17,11 @@ import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import { useCallback, useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../../state";
 import { useNavigate, useParams } from "react-router";
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import dayjs from "dayjs";
@@ -31,6 +33,7 @@ import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
 import Board from "./Board";
 import TemplateMapDialog from "../../pages/Template/TemplateMapDialog";
+import CopyToMyTemplateDialog from "../CopyToMyTemplateDialog";
 
 // 백엔드 템플릿 인터페이스
 interface BackendTemplate {
@@ -98,6 +101,7 @@ const TemplateViewer = (props: TemplateProps) => {
   const params = useParams(); // URL 파라미터
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
+  const loginState = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태
 
   const [template, setTemplate] = useState<TemplateInterface | null>(null); // 템플릿 상태
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
@@ -107,6 +111,7 @@ const TemplateViewer = (props: TemplateProps) => {
     null
   ); // 더보기 메뉴 앵커
   const [mapDialogOpen, setMapDialogOpen] = useState(false); // 지도 다이얼로그 열림 상태
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false); // 복사 다이얼로그 열림 상태
 
   // URL 파라미터에서 uuid 가져오기
   if (!uuid) {
@@ -126,8 +131,13 @@ const TemplateViewer = (props: TemplateProps) => {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
 
+      // 로그인 상태에 따라 다른 API 엔드포인트 사용
+      const apiEndpoint = loginState.isLoggedIn
+        ? `/template/${uuid}`
+        : `/template/public/${uuid}`;
+
       // 템플릿 데이터 가져오기
-      const response = await axiosInstance.get(`/template/${uuid}`, {
+      const response = await axiosInstance.get(apiEndpoint, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
@@ -187,7 +197,7 @@ const TemplateViewer = (props: TemplateProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [reorderBoardCards, setTemplate, uuid]);
+  }, [loginState.isLoggedIn, reorderBoardCards, setTemplate, uuid]);
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
@@ -216,6 +226,30 @@ const TemplateViewer = (props: TemplateProps) => {
   const handleMapDialogClose = useCallback(() => {
     setMapDialogOpen(false);
   }, []);
+
+  // 복사 다이얼로그 열기
+  const handleCopyDialogOpen = useCallback(() => {
+    // 로그인 상태 확인
+    if (!loginState.isLoggedIn) {
+      enqueueSnackbar("로그인이 필요한 기능입니다.", {
+        variant: "warning",
+      });
+      return;
+    }
+    setCopyDialogOpen(true);
+  }, [loginState.isLoggedIn, enqueueSnackbar]);
+
+  // 복사 다이얼로그 닫기
+  const handleCopyDialogClose = useCallback(() => {
+    setCopyDialogOpen(false);
+  }, []);
+
+  // 복사 성공 핸들러
+  const handleCopySuccess = useCallback(() => {
+    enqueueSnackbar("템플릿이 성공적으로 복사되었습니다.", {
+      variant: "success",
+    });
+  }, [enqueueSnackbar]);
 
   // Excel 다운로드 실행 (미리보기 없이 바로 다운로드)
   const handleExcelDownload = useCallback(async () => {
@@ -249,6 +283,22 @@ const TemplateViewer = (props: TemplateProps) => {
     }
     handleMoreMenuClose();
   }, [enqueueSnackbar, template, handleMoreMenuClose]);
+
+  // 공유하기 (URL 복사) 핸들러
+  const handleShare = useCallback(async () => {
+    try {
+      const shareUrl = `${window.location.origin}/wanna-trip/template/${uuid}`;
+      await navigator.clipboard.writeText(shareUrl);
+      enqueueSnackbar("템플릿 주소가 클립보드에 복사되었습니다.", {
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("URL 복사 오류:", error);
+      enqueueSnackbar("템플릿 주소 복사에 실패했습니다.", {
+        variant: "error",
+      });
+    }
+  }, [enqueueSnackbar, uuid]);
 
   // 로딩 상태 표시
   if (isLoading) {
@@ -356,9 +406,16 @@ const TemplateViewer = (props: TemplateProps) => {
                 열람 모드 (편집 불가)
               </Typography>
 
+              {/* 복사하기 버튼 */}
+              <Tooltip title="내 템플릿으로 복사">
+                <IconButton size="small" onClick={handleCopyDialogOpen}>
+                  <ContentCopyRoundedIcon />
+                </IconButton>
+              </Tooltip>
+
               {/* 공유하기 버튼 */}
               <Tooltip title="공유하기">
-                <IconButton size="small">
+                <IconButton size="small" onClick={handleShare}>
                   <ShareRoundedIcon />
                 </IconButton>
               </Tooltip>
@@ -391,6 +448,8 @@ const TemplateViewer = (props: TemplateProps) => {
                 day={index + 1}
                 boardData={board} // 보드 데이터 직접 전달
                 id={`board-${board.uuid}`} // ID 속성 추가
+                boardUuid={board.uuid}
+                templateUuid={uuid}
               />
             ))}
           </Stack>
@@ -411,6 +470,7 @@ const TemplateViewer = (props: TemplateProps) => {
           horizontal: "right",
         }}
       >
+
         <MenuItem
           onClick={async () => {
             try {
@@ -454,6 +514,18 @@ const TemplateViewer = (props: TemplateProps) => {
           open={mapDialogOpen}
           onClose={handleMapDialogClose}
           template={template}
+        />
+      )}
+
+      {/* 복사 다이얼로그 */}
+      {template && uuid && (
+        <CopyToMyTemplateDialog
+          open={copyDialogOpen}
+          onClose={handleCopyDialogClose}
+          onSuccess={handleCopySuccess}
+          copyType="template"
+          sourceUuid={uuid}
+          sourceTitle={template.title}
         />
       )}
     </>
