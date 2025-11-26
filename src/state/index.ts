@@ -1,5 +1,8 @@
 import { atom } from "jotai";
 
+// 알림 상태 export
+export * from "./notification";
+
 // 다크모드 상태
 export type ThemeMode = "light" | "dark";
 
