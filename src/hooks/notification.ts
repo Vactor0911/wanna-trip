@@ -1,8 +1,9 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { getAccessToken } from "../utils/accessToken";
 import {
+  isAuthInitializedAtom,
   Notification,
   notificationsAtom,
   unreadNotificationCountAtom,
@@ -20,6 +21,7 @@ export const useNotification = ({ enabled = true }: UseNotificationOptions = {})
 
   const [notifications, setNotifications] = useAtom(notificationsAtom);
   const [unreadCount, setUnreadCount] = useAtom(unreadNotificationCountAtom);
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
 
   /**
    * 알림 목록 조회
@@ -218,16 +220,20 @@ export const useNotification = ({ enabled = true }: UseNotificationOptions = {})
 
   // 컴포넌트 마운트 시 소켓 연결 및 알림 조회
   useEffect(() => {
-    if (enabled) {
-      connect();
-      fetchUnreadCount();
+    // 인증 초기화가 완료된 후에만 소켓 연결 및 알림 조회
+    if (enabled && isAuthInitialized) {
+      const token = getAccessToken();
+      if (token) {
+        connect();
+        fetchUnreadCount();
+      }
     }
 
     return () => {
       disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, isAuthInitialized]);
 
   return {
     // 상태

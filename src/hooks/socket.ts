@@ -1,8 +1,8 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-import { ActiveUser, activeUsersAtom } from "../state";
+import { ActiveUser, activeUsersAtom, isAuthInitializedAtom } from "../state";
 import { getAccessToken } from "../utils/accessToken";
 import { editingCardsAtom } from "../state/template";
 
@@ -23,6 +23,7 @@ export const useTemplateSocket = ({
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
 
   // 편집 중인 카드 목록
   const [editingCards, setEditingCards] = useAtom(editingCardsAtom);
@@ -182,15 +183,20 @@ export const useTemplateSocket = ({
 
   // 컴포넌트 언마운트 시 소켓 연결 해제
   useEffect(() => {
-    if (enabled && templateUuid) {
-      connect();
+    // 인증 초기화가 완료되고, 소켓 연결이 활성화된 경우에만 연결
+    if (enabled && templateUuid && isAuthInitialized) {
+      // 토큰이 있을 때만 연결 시도
+      const token = getAccessToken();
+      if (token) {
+        connect();
+      }
     }
 
     return () => {
       disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, templateUuid]);
+  }, [enabled, templateUuid, isAuthInitialized]);
 
   return {
     // 연결 상태
