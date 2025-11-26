@@ -8,12 +8,14 @@ import {
   BoxProps,
   Stack,
   useTheme,
+  alpha,
 } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
+import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { useNavigate } from "react-router-dom";
 import { SERVER_HOST } from "../utils/axiosInstance";
 import { motion, useMotionValue, animate } from "framer-motion";
@@ -41,6 +43,7 @@ interface PopularTemplatesProps extends BoxProps {
 // 가로:세로 비율 (11:6)
 const CARD_ASPECT_RATIO = 11 / 6;
 const GAP = 24; // 카드 사이 간격(px)
+const MAX_CARD_HEIGHT = 300; // 카드 최대 높이(px)
 
 /**
  * 인기 템플릿/커뮤니티 배너 컴포넌트
@@ -173,11 +176,85 @@ const PopularTemplates = ({
     }
   }, [onCardClick, navigate]);
 
-  // 카드 높이 계산
+  // 카드 높이 계산 (최대 높이 제한)
   const getCardHeight = () => {
     if (!firstItemRef.current) return 250;
-    return firstItemRef.current.offsetWidth / CARD_ASPECT_RATIO;
+    const calculatedHeight = firstItemRef.current.offsetWidth / CARD_ASPECT_RATIO;
+    return Math.min(calculatedHeight, MAX_CARD_HEIGHT);
   };
+
+  // 데이터가 없을 때 빈 상태 UI
+  if (data.length === 0) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          py: 6,
+          px: 3,
+          borderRadius: 4,
+          background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.05)} 0%, ${alpha("#ff8e53", 0.02)} 100%)`,
+          border: `2px dashed ${alpha("#ff6b6b", 0.25)}`,
+          textAlign: "center",
+          position: "relative",
+          overflow: "hidden",
+        }}
+        {...boxProps}
+      >
+        {/* 배경 장식 */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: -30,
+            right: -30,
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.1)} 0%, ${alpha("#ff8e53", 0.05)} 100%)`,
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: -20,
+            left: -20,
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${alpha("#ff8e53", 0.08)} 0%, ${alpha("#ffc107", 0.05)} 100%)`,
+          }}
+        />
+        
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.15)} 0%, ${alpha("#ff8e53", 0.1)} 100%)`,
+            mb: 2,
+          }}
+        >
+          <TravelExploreIcon 
+            sx={{ 
+              fontSize: 40, 
+              color: alpha("#ff6b6b", 0.6),
+            }} 
+          />
+        </Box>
+        <Typography variant="h6" color="text.secondary" mb={1} fontWeight={600}>
+          아직 인기 템플릿이 없습니다
+        </Typography>
+        <Typography variant="body2" color="text.disabled">
+          다른 사용자들이 템플릿을 공유하면 여기에 표시됩니다
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box

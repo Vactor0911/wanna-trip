@@ -28,8 +28,8 @@ import axiosInstance, {
   SERVER_HOST,
 } from "../utils/axiosInstance";
 import { resetStates } from "../utils";
-import { themeModeAtom, wannaTripLoginStateAtom } from "../state";
-import { useAtom } from "jotai";
+import { isAuthInitializedAtom, themeModeAtom, wannaTripLoginStateAtom } from "../state";
+import { useAtom, useAtomValue } from "jotai";
 import Logo from "/icons/logo.svg";
 import { useSnackbar } from "notistack";
 import NotificationPanel from "./NotificationPanel";
@@ -100,6 +100,7 @@ const Header = () => {
 
   const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom); // 로그인 상태
   const { isLoggedIn } = loginState; // 로그인 상태에서 isLoggedIn 추출
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
 
   // 다크모드 상태
   const [themeMode, setThemeMode] = useAtom(themeModeAtom);
@@ -154,10 +155,11 @@ const Header = () => {
 
   // useEffect 추가
   useEffect(() => {
-    if (isLoggedIn) {
+    // 인증 초기화가 완료된 후에만 프로필 가져오기
+    if (isLoggedIn && isAuthInitialized) {
       fetchUserProfile();
     }
-  }, [isLoggedIn, fetchUserProfile]);
+  }, [isLoggedIn, isAuthInitialized, fetchUserProfile]);
 
   // 프로필 메뉴 닫기
   const handleProfileMenuClose = useCallback(() => {

@@ -1360,42 +1360,12 @@ const CommunityPost = () => {
                     overflowX: "auto",
                   }}
                 >
-                  {/* 템플릿 화면 - 로그인 상태에 따른 조건부 렌더링 */}
-                  {!loginState.isLoggedIn ? (
-                    // 로그인되지 않은 경우 메시지 표시
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        py: 4,
-                        px: 2,
-                        borderRadius: 2,
-                        bgcolor: "rgba(48, 48, 48, 0.03)",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography variant="h6" color="text.secondary" mb={3}>
-                        템플릿을 확인하려면 로그인이 필요합니다.
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleNavigateToLogin}
-                      >
-                        로그인하러 가기
-                      </Button>
-                    </Box>
-                  ) : (
-                    // 로그인된 경우 템플릿 표시
-                    <TemplateViewer
-                      uuid={templateUuid}
-                      height="70vh"
-                      paddgingX="24px"
-                    />
-                  )}
+                  {/* 템플릿 화면 - 로그인 상태와 관계없이 공개 템플릿 표시 */}
+                  <TemplateViewer
+                    uuid={templateUuid}
+                    height="70vh"
+                    paddgingX="24px"
+                  />
                 </Box>
               </Collapse>
 

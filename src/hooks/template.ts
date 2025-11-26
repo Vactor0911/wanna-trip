@@ -381,3 +381,159 @@ export const useMoveBoard = () => {
 
   return moveBoard;
 };
+
+/**
+ * 템플릿 복사 훅 (다른 사람의 공개 템플릿을 내 템플릿으로 복사)
+ */
+export const useCopyTemplateToMine = () => {
+  const queryClient = useQueryClient();
+
+  const copyTemplate = useMutation({
+    mutationFn: async ({
+      sourceTemplateUuid,
+      title,
+    }: {
+      sourceTemplateUuid: string;
+      title?: string;
+    }) => {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 템플릿 복사 API 요청
+      const response = await axiosInstance.post(
+        `/template/copy/${sourceTemplateUuid}`,
+        { title },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (!response.data.success) {
+        throw new Error("템플릿 복사에 실패했습니다.");
+      }
+
+      return response.data.templateUuid;
+    },
+    onSuccess: () => {
+      // 내 템플릿 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+    },
+  });
+
+  return copyTemplate;
+};
+
+/**
+ * 보드 복사 훅 (다른 사람의 공개 템플릿의 보드를 내 템플릿으로 복사)
+ */
+export const useCopyBoardToTemplate = () => {
+  const queryClient = useQueryClient();
+
+  const copyBoard = useMutation({
+    mutationFn: async ({
+      sourceBoardUuid,
+      targetTemplateUuid,
+    }: {
+      sourceBoardUuid: string;
+      targetTemplateUuid: string;
+    }) => {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 보드 복사 API 요청
+      const response = await axiosInstance.post(
+        `/template/board/copy/${sourceBoardUuid}`,
+        { targetTemplateUuid },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (!response.data.success) {
+        throw new Error("보드 복사에 실패했습니다.");
+      }
+
+      return response.data.boardUuid;
+    },
+    onSuccess: () => {
+      // 템플릿 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
+
+  return copyBoard;
+};
+
+/**
+ * 카드 복사 훅 (다른 사람의 공개 템플릿의 카드를 내 보드로 복사)
+ */
+export const useCopyCardToBoard = () => {
+  const queryClient = useQueryClient();
+
+  const copyCard = useMutation({
+    mutationFn: async ({
+      sourceCardUuid,
+      targetBoardUuid,
+    }: {
+      sourceCardUuid: string;
+      targetBoardUuid: string;
+    }) => {
+      // CSRF 토큰 가져오기
+      const csrfToken = await getCsrfToken();
+
+      // 카드 복사 API 요청
+      const response = await axiosInstance.post(
+        `/template/card/copy/${sourceCardUuid}`,
+        { targetBoardUuid },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (!response.data.success) {
+        throw new Error("카드 복사에 실패했습니다.");
+      }
+
+      return response.data.cardId;
+    },
+    onSuccess: () => {
+      // 템플릿 갱신
+      queryClient.invalidateQueries({ queryKey: ["template"] });
+    },
+  });
+
+  return copyCard;
+};
+
+/**
+ * 인기 공개 템플릿 조회 훅
+ */
+export const usePopularPublicTemplates = () => {
+  const fetchPopularTemplates = useCallback(async (limit: number = 5) => {
+    const response = await axiosInstance.get(
+      `/template/popular/public?limit=${limit}`
+    );
+
+    if (!response.data.success) {
+      throw new Error("인기 템플릿 조회에 실패했습니다.");
+    }
+
+    return response.data.popularTemplates;
+  }, []);
+
+  return { fetchPopularTemplates };
+};
+
+/**
+ * 공개 템플릿 조회 훅 (비로그인 사용자용)
+ */
+export const usePublicTemplate = () => {
+  const fetchPublicTemplate = useCallback(async (templateUuid: string) => {
+    const response = await axiosInstance.get(
+      `/template/public/${templateUuid}`
+    );
+
+    if (!response.data.success) {
+      throw new Error("공개 템플릿 조회에 실패했습니다.");
+    }
+
+    return response.data.template;
+  }, []);
+
+  return { fetchPublicTemplate };
+};

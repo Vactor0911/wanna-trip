@@ -2,6 +2,10 @@ import {
   Box,
   Button,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Paper,
   Stack,
   StackProps,
@@ -11,10 +15,11 @@ import {
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import Tooltip from "../Tooltip";
 import Card from "./Card";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState, memo } from "react";
 import { checkTimeOverlap, MAX_BOARDS } from "../../utils/template";
 import {
   BoardInterface,
@@ -23,6 +28,7 @@ import {
   editingCardsAtom,
   templateAtom,
 } from "../../state/template";
+import { wannaTripLoginStateAtom } from "../../state";
 import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
@@ -30,6 +36,7 @@ import { useAddCard } from "../../hooks/template";
 import SortMenu from "../SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import { useSnackbar } from "notistack";
+import CopyToMyTemplateDialog from "../CopyToMyTemplateDialog";
 
 interface BoardProps extends StackProps {
   day: number;
@@ -55,6 +62,7 @@ const Board = (props: BoardProps) => {
 
   const [template] = useAtom(templateAtom); // 템플릿 상태
   const editingCards = useAtomValue(editingCardsAtom);
+  const loginState = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
@@ -62,9 +70,10 @@ const Board = (props: BoardProps) => {
   const addCard = useAddCard();
   const { enqueueSnackbar } = useSnackbar();
 
-  // 시간 중복 체크 결과
-  const { hasOverlap, overlappingCardIds } = checkTimeOverlap(
-    boardData.cards || []
+  // 시간 중복 체크 결과 (useMemo로 최적화)
+  const { hasOverlap, overlappingCardIds } = useMemo(
+    () => checkTimeOverlap(boardData.cards || []),
+    [boardData.cards]
   );
 
   // 카드 클릭 핸들러
@@ -138,6 +147,10 @@ const Board = (props: BoardProps) => {
   const handleAddBoardButtonClick = useCallback(async () => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
+      enqueueSnackbar(
+        `최대 ${MAX_BOARDS}일차까지 등록할 수 있습니다. 기존 일정을 정리한 후 다시 시도해주세요.`,
+        { variant: "warning" }
+      );
       return;
     }
 
@@ -166,6 +179,7 @@ const Board = (props: BoardProps) => {
   }, [
     day,
     emitFetch,
+    enqueueSnackbar,
     fetchTemplateData,
     template.boards.length,
     template.uuid,
@@ -175,6 +189,10 @@ const Board = (props: BoardProps) => {
   const handleCopyBoardButtonClick = useCallback(async () => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
+      enqueueSnackbar(
+        `최대 ${MAX_BOARDS}일차까지 등록할 수 있습니다. 기존 일정을 정리한 후 다시 시도해주세요.`,
+        { variant: "warning" }
+      );
       return;
     }
 
@@ -198,7 +216,7 @@ const Board = (props: BoardProps) => {
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.uuid, emitFetch, fetchTemplateData, template.boards.length]);
+  }, [boardData.uuid, emitFetch, enqueueSnackbar, fetchTemplateData, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {
@@ -300,6 +318,46 @@ const Board = (props: BoardProps) => {
     }
   }, [overlappingCardIds, enqueueSnackbar]);
 
+  // 열람 모드용 보드 복사 상태 및 핸들러
+  const [viewMenuAnchor, setViewMenuAnchor] = useState<null | HTMLElement>(null);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+
+  const handleViewMenuOpen = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setViewMenuAnchor(event.currentTarget);
+  }, []);
+
+  const handleViewMenuClose = useCallback(() => {
+    setViewMenuAnchor(null);
+  }, []);
+
+  const handleCopyToMyTemplate = useCallback(() => {
+    // 로그인 상태 확인
+    if (!loginState.isLoggedIn) {
+      enqueueSnackbar("로그인이 필요한 기능입니다.", {
+        variant: "warning",
+      });
+      handleViewMenuClose();
+      return;
+    }
+    handleViewMenuClose();
+    setCopyDialogOpen(true);
+  }, [handleViewMenuClose, loginState.isLoggedIn, enqueueSnackbar]);
+
+  const handleCopyDialogClose = useCallback(() => {
+    setCopyDialogOpen(false);
+  }, []);
+
+  // 복사 성공 핸들러
+  const handleCopySuccess = useCallback(() => {
+    enqueueSnackbar("보드가 성공적으로 복사되었습니다.", {
+      variant: "success",
+    });
+    // 현재 템플릿 데이터 다시 불러오기 (실시간 업데이트)
+    fetchTemplateData();
+    emitFetch();
+  }, [enqueueSnackbar, fetchTemplateData, emitFetch]);
+
   return (
     <Stack height="100%" id={id} {...others}>
       <Paper
@@ -386,6 +444,13 @@ const Board = (props: BoardProps) => {
                 </Tooltip>
               </Stack>
             )}
+
+            {/* 열람 모드일 때 더보기 메뉴 */}
+            {!isOwner && (
+              <IconButton size="small" onClick={handleViewMenuOpen}>
+                <MoreHorizRoundedIcon fontSize="small" />
+              </IconButton>
+            )}
           </Stack>
 
           {/* 카드 드롭 영역 */}
@@ -428,6 +493,9 @@ const Board = (props: BoardProps) => {
                       >
                         <Card
                           key={`card-${card.uuid}`}
+                          cardUuid={card.uuid}
+                          boardUuid={boardData.uuid}
+                          templateUuid={template.uuid}
                           content={card.content || ""}
                           startTime={card.startTime}
                           endTime={card.endTime}
@@ -440,6 +508,10 @@ const Board = (props: BoardProps) => {
                             card.uuid !== undefined &&
                             overlappingCardIds.includes(card.uuid)
                           }
+                          onCopySuccess={() => {
+                            fetchTemplateData();
+                            emitFetch();
+                          }}
                         />
                       </Box>
                     )}
@@ -462,8 +534,39 @@ const Board = (props: BoardProps) => {
           )}
         </Stack>
       </Paper>
+
+      {/* 열람 모드 더보기 메뉴 */}
+      <Menu
+        anchorEl={viewMenuAnchor}
+        open={Boolean(viewMenuAnchor)}
+        onClose={handleViewMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+        <MenuItem onClick={handleCopyToMyTemplate}>
+          <ListItemIcon>
+            <ContentCopyRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>내 템플릿으로 복사</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* 복사 다이얼로그 */}
+      <CopyToMyTemplateDialog
+        open={copyDialogOpen}
+        onClose={handleCopyDialogClose}
+        onSuccess={handleCopySuccess}
+        copyType="board"
+        sourceUuid={boardData.uuid}
+      />
     </Stack>
   );
 };
 
-export default Board;
+export default memo(Board);

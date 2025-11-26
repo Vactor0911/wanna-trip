@@ -26,7 +26,8 @@ import ImportContactsRoundedIcon from "@mui/icons-material/ImportContactsRounded
 import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
-import { useCallback, useEffect, useState } from "react";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { checkTemplateTimeOverlaps, MAX_BOARDS } from "../../utils/template";
@@ -60,9 +61,10 @@ import { downloadText } from "../../utils/textExport";
 import { useSnackbar } from "notistack";
 import Board from "../../components/template/Board";
 import TemplateShareDialog from "./TemplateShareDialog";
+import CopyToMyTemplateDialog from "../../components/CopyToMyTemplateDialog";
 import { useTemplateSocket } from "../../hooks/socket";
 import { getUserProfileImageUrl } from "../../utils";
-import { ActiveUser } from "../../state";
+import { ActiveUser, isAuthInitializedAtom, wannaTripLoginStateAtom } from "../../state";
 
 // 템플릿 모드별 아이콘
 const modes = [
@@ -156,6 +158,8 @@ const Template = (props: TemplateProps) => {
   const [mode, setMode] = useAtom(templateModeAtom); // 열람 모드 여부
   const [template, setTemplate] = useAtom(templateAtom); // 템플릿 상태
   const templateInfo = useAtomValue(templateInfoAtom); // 템플릿 정보 상태
+  const loginState = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태
+  const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
   const [templateTitle, setTemplateTitle] = useState(templateInfo.title); // 템플릿 이름 상태
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
@@ -169,11 +173,20 @@ const Template = (props: TemplateProps) => {
   ); // 더보기 메뉴 앵커
   const [mapDialogOpen, setMapDialogOpen] = useState(false); // 지도 다이얼로그 열림 상태
 
-  const { boardOverlaps } = checkTemplateTimeOverlaps(template); // 템플릿 내 보드 시간 중복 체크
-  const hasTemplateOverlap = boardOverlaps.some((board) => board.hasOverlap); // 템플릿 내 시간 중복 여부
+  // 템플릿 내 보드 시간 중복 체크 (useMemo로 최적화)
+  const { boardOverlaps, hasTemplateOverlap } = useMemo(() => {
+    const result = checkTemplateTimeOverlaps(template);
+    return {
+      boardOverlaps: result.boardOverlaps,
+      hasTemplateOverlap: result.boardOverlaps.some((board) => board.hasOverlap),
+    };
+  }, [template]);
 
   // 공유하기 다이얼로그 상태
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  
+  // 복사 다이얼로그 상태
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
 
   // 템플릿 제목 변경 시 동기화
   useEffect(() => {
@@ -214,8 +227,10 @@ const Template = (props: TemplateProps) => {
           String(isCurrentUserHasPermission)
         );
 
-        // 소유자가 아니면 강제로 열람 모드로 설정
-        if (!isCurrentUserHasPermission) {
+        // 권한이 있으면 편집 모드로, 없으면 열람 모드로 설정
+        if (isCurrentUserHasPermission) {
+          setMode(TemplateModes.EDIT);
+        } else {
           setMode(TemplateModes.VIEW);
         }
 
@@ -285,8 +300,11 @@ const Template = (props: TemplateProps) => {
 
   // UUID가 있으면 백엔드에서 템플릿 데이터 가져오기
   useEffect(() => {
-    fetchTemplateData();
-  }, [fetchTemplateData]);
+    // 인증 초기화가 완료된 후에만 템플릿 데이터 가져오기
+    if (isAuthInitialized) {
+      fetchTemplateData();
+    }
+  }, [fetchTemplateData, isAuthInitialized]);
 
   // 모드 변경
   const handleModeChange = useCallback(() => {
@@ -572,6 +590,33 @@ const Template = (props: TemplateProps) => {
     handleMoreMenuClose();
   }, [enqueueSnackbar, template, handleMoreMenuClose]);
 
+  // 복사 다이얼로그 열기
+  const handleCopyDialogOpen = useCallback(() => {
+    // 로그인 상태 확인
+    if (!loginState.isLoggedIn) {
+      enqueueSnackbar("로그인이 필요한 기능입니다.", {
+        variant: "warning",
+      });
+      return;
+    }
+    setCopyDialogOpen(true);
+  }, [loginState.isLoggedIn, enqueueSnackbar]);
+
+  // 복사 다이얼로그 닫기
+  const handleCopyDialogClose = useCallback(() => {
+    setCopyDialogOpen(false);
+  }, []);
+
+  // 복사 성공 핸들러
+  const handleCopySuccess = useCallback(() => {
+    enqueueSnackbar("템플릿이 성공적으로 복사되었습니다.", {
+      variant: "success",
+    });
+    // 현재 템플릿 데이터 다시 불러오기 (실시간 업데이트)
+    fetchTemplateData();
+    emitFetch();
+  }, [enqueueSnackbar, fetchTemplateData, emitFetch]);
+
   // 공유하기 버튼 클릭
   const handleShareButtonClick = useCallback(() => {
     // 소유자가 아니면 링크 복사
@@ -828,6 +873,15 @@ const Template = (props: TemplateProps) => {
                 </Typography>
               )}
 
+              {/* 열람 모드일 때 복사 버튼 표시 */}
+              {!isEditMode && (
+                <Tooltip title="내 템플릿으로 복사">
+                  <IconButton size="small" onClick={handleCopyDialogOpen}>
+                    <ContentCopyRoundedIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+
               {/* 공유하기 버튼 */}
               <Tooltip title="공유하기">
                 <IconButton size="small" onClick={handleShareButtonClick}>
@@ -1023,6 +1077,18 @@ const Template = (props: TemplateProps) => {
         open={shareDialogOpen}
         onClose={() => setShareDialogOpen(false)}
       />
+
+      {/* 복사 대화상자 */}
+      {templateUuid && (
+        <CopyToMyTemplateDialog
+          open={copyDialogOpen}
+          onClose={handleCopyDialogClose}
+          onSuccess={handleCopySuccess}
+          copyType="template"
+          sourceUuid={templateUuid}
+          sourceTitle={template.title}
+        />
+      )}
     </>
   );
 };
