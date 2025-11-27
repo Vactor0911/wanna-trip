@@ -238,5 +238,5 @@ export const reorderBoardCardsAtom = atom(null, (get, set) => {
 
 // 편집 중인 카드 목록
 export const editingCardsAtom = atom<
-  Map<string, { userUuid: string; userName: string }>
+  Map<string, { userUuid: string; userName: string; color: string }>
 >(new Map());
