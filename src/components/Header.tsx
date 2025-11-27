@@ -33,6 +33,7 @@ import { useAtom, useAtomValue } from "jotai";
 import Logo from "/icons/logo.svg";
 import { useSnackbar } from "notistack";
 import NotificationPanel from "./NotificationPanel";
+import Tooltip from "./Tooltip";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -348,14 +349,15 @@ const Header = () => {
                 }}
               >
                 {/* 라이트/다크 모드 버튼 */}
-                <IconButton 
-                  color="inherit" 
-                  size="small"
-                  onClick={handleThemeModeToggle}
-                  title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}
-                >
-                  {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-                </IconButton>
+                <Tooltip title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}>
+                  <IconButton 
+                    color="inherit" 
+                    size="small"
+                    onClick={handleThemeModeToggle}
+                  >
+                    {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+                  </IconButton>
+                </Tooltip>
 
                 {/* 알림 패널 */}
                 <NotificationPanel />
