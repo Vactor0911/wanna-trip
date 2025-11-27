@@ -416,15 +416,6 @@ const Community = () => {
             p: 3,
             background: "linear-gradient(135deg, rgba(255,107,107,0.08) 0%, rgba(255,142,83,0.08) 50%, rgba(255,193,7,0.08) 100%)",
             overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "4px",
-              background: "linear-gradient(90deg, #ff6b6b, #ff8e53, #ffc107)",
-            },
           }}
         >
           <Stack gap={3}>
@@ -695,15 +686,6 @@ const Community = () => {
             p: 3,
             background: "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.06) 50%, rgba(66,165,245,0.06) 100%)",
             overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "4px",
-              background: "linear-gradient(90deg, #1976d2, #2196f3, #42a5f5)",
-            },
           }}
         >
           <Stack gap={3}>
