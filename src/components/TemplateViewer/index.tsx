@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   CircularProgress,
   Container,
@@ -18,7 +19,9 @@ import TableChartRoundedIcon from "@mui/icons-material/TableChartRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import TextSnippetRoundedIcon from "@mui/icons-material/TextSnippetRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 import { useTheme } from "@mui/material/styles";
 import { useAtom, useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../../state";
@@ -106,6 +109,7 @@ const TemplateViewer = (props: TemplateProps) => {
   const [template, setTemplate] = useState<TemplateInterface | null>(null); // 템플릿 상태
   const [isLoading, setIsLoading] = useState(false); // 로딩 상태
   const [error, setError] = useState<string | null>(null); // 에러 상태
+  const [isPrivate, setIsPrivate] = useState(false); // 비공개 템플릿 여부
   const [, reorderBoardCards] = useAtom(reorderBoardCardsAtom); // 카드 순서 변경 함수
   const [moreMenuAnchor, setMoreMenuAnchor] = useState<null | HTMLElement>(
     null
@@ -185,6 +189,7 @@ const TemplateViewer = (props: TemplateProps) => {
         };
 
         setTemplate(transformedTemplate);
+        setIsPrivate(false);
 
         // 카드 순서 정렬
         reorderBoardCards();
@@ -193,7 +198,14 @@ const TemplateViewer = (props: TemplateProps) => {
       }
     } catch (err) {
       console.error("템플릿 데이터 로딩 오류:", err);
-      setError("템플릿을 불러오는 중 오류가 발생했습니다.");
+      
+      // 403 에러인 경우 비공개 템플릿으로 처리
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setIsPrivate(true);
+        setError(null); // 일반 에러 메시지 대신 비공개 메시지 표시
+      } else {
+        setError("템플릿을 불러오는 중 오류가 발생했습니다.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -305,6 +317,30 @@ const TemplateViewer = (props: TemplateProps) => {
     return (
       <Stack height={height} alignItems="center" justifyContent="center">
         <CircularProgress />
+      </Stack>
+    );
+  }
+
+  // 비공개 템플릿 상태 표시
+  if (isPrivate) {
+    return (
+      <Stack height={height} alignItems="center" justifyContent="center" gap={2}>
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            bgcolor: "rgba(158, 158, 158, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <LockOutlinedIcon sx={{ fontSize: 40, color: "text.secondary" }} />
+        </Box>
+        <Typography variant="h6" color="text.secondary" textAlign="center">
+          작성자에 의해 비공개 처리된 템플릿입니다.
+        </Typography>
       </Stack>
     );
   }
