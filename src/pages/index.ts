@@ -9,6 +9,7 @@ import Community from "./Community";
 import Myinformation from "./Myinformation";
 import News from "./News";
 import NewsPost from "./NewsPost";
+import NewsEdit from "./NewsEdit";
 import LikedPosts from "./LikedPosts";
 
 export {
@@ -23,5 +24,6 @@ export {
   Myinformation,
   News,
   NewsPost,
+  NewsEdit,
   LikedPosts,
 };
