@@ -35,9 +35,9 @@ import CommentInput from "../components/CommentInput";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import IosShareRoundedIcon from "@mui/icons-material/IosShareRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ScrollToTopButton from "../components/ScrollToTopButton";
-import ShareIcon from "@mui/icons-material/Share";
 import { CircularProgress } from "@mui/material"; // 로딩 표시용
 import axiosInstance, {
   getCsrfToken,
@@ -1010,14 +1010,14 @@ const CommunityPost = () => {
                 <Typography variant="subtitle1">{likes}</Typography>
               </Stack>
 
-              {/* 공유 */}
+              {/* 퍼가기 */}
               <Stack direction="row" alignItems="center">
-                {/* 공유 버튼 */}
-                <IconButton size="small">
-                  <ShareIcon />
+                {/* 퍼가기 아이콘 */}
+                <IconButton size="small" disabled>
+                  <IosShareRoundedIcon />
                 </IconButton>
 
-                {/* 공유 수 */}
+                {/* 퍼가기 수 */}
                 <Typography variant="subtitle1">{shares}</Typography>
               </Stack>
 
