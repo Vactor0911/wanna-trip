@@ -501,6 +501,7 @@ const Board = (props: BoardProps) => {
                           endTime={card.endTime}
                           isLocked={card.locked}
                           isNowEditing={!!editingCards.get(card.uuid)}
+                          editingUserColor={editingCards.get(card.uuid)?.color}
                           location={card.location || undefined}
                           onClick={() => handleCardClick(index)}
                           isOwner={isOwner}
