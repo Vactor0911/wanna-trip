@@ -41,6 +41,7 @@ interface CardProps extends PaperProps {
   endTime?: Dayjs;
   isLocked?: boolean; // 카드 잠금 여부
   isNowEditing: boolean;
+  editingUserColor?: string; // 편집 중인 사용자의 색상
   onClick?: () => void;
   location?: LocationInfo; // 위치 정보 추가
   isOwner?: boolean; // 소유자 여부 추가
@@ -58,6 +59,7 @@ const Card = (props: CardProps) => {
     endTime,
     isLocked,
     isNowEditing,
+    editingUserColor,
     onClick,
     location,
     isOwner: hasPermission = true, // 기본값은 true로 설정
@@ -148,7 +150,7 @@ const Card = (props: CardProps) => {
         cursor: hasPermission ? "pointer" : "default",
         border: "2px solid transparent",
         borderColor: isNowEditing
-          ? "#ba68c8"
+          ? editingUserColor || "#ba68c8"
           : isTimeOverlapping
           ? theme.palette.error.main
           : "transparent",
@@ -156,7 +158,7 @@ const Card = (props: CardProps) => {
         transition: "border-color 0.3s, filter 0.3s",
         "&:hover": {
           borderColor: isNowEditing
-            ? "#ba68c8"
+            ? editingUserColor || "#ba68c8"
             : hasPermission
             ? theme.palette.primary.main
             : isTimeOverlapping
