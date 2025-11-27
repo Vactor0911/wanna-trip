@@ -15,6 +15,7 @@ import {
   Myinformation,
   News,
   NewsPost,
+  NewsEdit,
   LikedPosts,
 } from "./pages";
 import CommunityPost from "./pages/CommunityPost";
@@ -70,6 +71,8 @@ function App() {
                 <Route path="/community" element={<Community />} />
                 <Route path="/community/edit" element={<CommunityPostEdit />} />
                 <Route path="/news" element={<News />} />
+                <Route path="/news/create" element={<NewsEdit />} />
+                <Route path="/news/edit/:newsUuid" element={<NewsEdit />} />
                 <Route
                   path="/community/:postUuid/edit"
                   element={<CommunityPostEdit />}
@@ -78,7 +81,7 @@ function App() {
                   path="/community/:postUuid"
                   element={<CommunityPost />}
                 />
-                <Route path="/news/:newsId" element={<NewsPost />} />
+                <Route path="/news/:newsUuid" element={<NewsPost />} />
               </Routes>
             </SnackbarProvider>
           </TokenRefresher>

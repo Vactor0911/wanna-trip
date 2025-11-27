@@ -145,6 +145,11 @@ const NotificationPanel: React.FC = () => {
       notification.targetUuid
     ) {
       navigate(`/template/${notification.targetUuid}`);
+    } else if (
+      notification.targetType === "news" &&
+      notification.targetUuid
+    ) {
+      navigate(`/news/${notification.targetUuid}`);
     }
   };
 

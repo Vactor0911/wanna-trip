@@ -5,6 +5,10 @@ import {
   Divider,
   Stack,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router";
 import { useCallback, useEffect, useState } from "react";
@@ -12,79 +16,73 @@ import parse from "html-react-parser";
 import { CircularProgress } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom, Permission } from "../state";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { useSnackbar } from "notistack";
 
 // 공지사항 인터페이스
 interface NewsPost {
-  id: number;
+  uuid: string;
   title: string;
   content: string;
   createdAt: string;
   isImportant: boolean;
   category: string;
+  authorName: string;
 }
 
 const NewsPost = () => {
-  const { newsId } = useParams(); // 공지사항 ID
+  const { newsUuid } = useParams(); // 공지사항 UUID
   const navigate = useNavigate(); // 네비게이션 훅
+  const { enqueueSnackbar } = useSnackbar();
+  const loginState = useAtomValue(wannaTripLoginStateAtom);
+  
+  // 관리자 권한 확인 (user가 아닌 경우)
+  const isAdmin = loginState.isLoggedIn && 
+      loginState.permission !== undefined && 
+      loginState.permission !== Permission.USER;
 
   const [isLoading, setIsLoading] = useState(false); // 공지사항 로딩 여부
   const [error, setError] = useState(""); // 에러 메시지
   const [newsPost, setNewsPost] = useState<NewsPost | null>(null); // 공지사항 데이터
 
+  // 삭제 다이얼로그 상태
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // 공지사항 데이터 가져오기
   const fetchNewsPostData = useCallback(async () => {
-    if (!newsId) return;
+    if (!newsUuid) return;
 
     try {
       setIsLoading(true);
       setError("");
 
-      // 실제 API 호출 (현재는 목업 데이터 사용)
-      // const response = await axiosInstance.get(`/news/${newsId}`);
+      // 실제 API 호출
+      const response = await axiosInstance.get(`/news/${newsUuid}`);
 
-      // 목업 데이터 (실제로는 DB에서 가져올 데이터)
-      const mockNewsPost: NewsPost = {
-        id: parseInt(newsId),
-        title: "SRT 여객 운송약관 개정 안내",
-        content: `
-          <h2>SRT 여객 운송약관 개정 안내</h2>
-          <p>안녕하세요. SRT 고객 여러분께 중요한 안내 말씀을 드립니다.</p>
-          
-          <h3>1. 개정 사항</h3>
-          <ul>
-            <li>운임 체계 개선</li>
-            <li>환불 정책 변경</li>
-            <li>이용 약관 보완</li>
-          </ul>
-          
-          <h3>2. 시행 일정</h3>
-          <p>2025년 10월 1일부터 새로운 약관이 적용됩니다.</p>
-          
-          <h3>3. 주요 변경 내용</h3>
-          <p>자세한 내용은 SRT 공식 홈페이지를 참고해 주시기 바랍니다.</p>
-          
-          <p>문의사항이 있으시면 고객센터로 연락해 주시기 바랍니다.</p>
-        `,
-        createdAt: "2025-10-16T10:00:00Z",
-        isImportant: true,
-        category: "서비스",
-      };
-
-      // 실제 API 호출 시 사용할 코드
-      // if (response.data.success) {
-      //   setNewsPost(response.data.news);
-      // } else {
-      //   setError("공지사항을 불러오는데 실패했습니다.");
-      // }
-
-      setNewsPost(mockNewsPost);
+      if (response.data.success) {
+        const news = response.data.news;
+        setNewsPost({
+          uuid: news.uuid,
+          title: news.title,
+          content: news.content,
+          createdAt: news.createdAt,
+          isImportant: news.isImportant,
+          category: news.category,
+          authorName: news.authorName,
+        });
+      } else {
+        setError("공지사항을 불러오는데 실패했습니다.");
+      }
     } catch (err) {
       console.error("공지사항 로딩 실패:", err);
       setError("공지사항을 불러오는데 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }
-  }, [newsId]);
+  }, [newsUuid]);
 
   // 컴포넌트 마운트 시 공지사항 데이터 로드
   useEffect(() => {
@@ -120,10 +118,39 @@ const NewsPost = () => {
     navigate("/news");
   }, [navigate]);
 
+  // 수정 버튼 클릭
+  const handleEditButtonClick = useCallback(() => {
+    navigate(`/news/edit/${newsUuid}`);
+  }, [navigate, newsUuid]);
+
+  // 삭제 확인 핸들러
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!newsUuid) return;
+
+    try {
+      setIsDeleting(true);
+      const csrfToken = await getCsrfToken();
+      const response = await axiosInstance.delete(`/news/${newsUuid}`, {
+        headers: { "X-CSRF-Token": csrfToken },
+      });
+
+      if (response.data.success) {
+        enqueueSnackbar("공지사항이 삭제되었습니다.", { variant: "success" });
+        navigate("/news");
+      }
+    } catch (error) {
+      console.error("공지사항 삭제 실패:", error);
+      enqueueSnackbar("공지사항 삭제에 실패했습니다.", { variant: "error" });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  }, [newsUuid, enqueueSnackbar, navigate]);
+
   // 로딩 중 표시
   if (isLoading) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <Box
           display="flex"
           justifyContent="center"
@@ -139,7 +166,7 @@ const NewsPost = () => {
   // 에러 표시
   if (error) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <Box
           display="flex"
           justifyContent="center"
@@ -155,7 +182,7 @@ const NewsPost = () => {
   // 공지사항이 없는 경우
   if (!newsPost) {
     return (
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <Box
           display="flex"
           justifyContent="center"
@@ -170,7 +197,7 @@ const NewsPost = () => {
 
   return (
     <>
-      <Container maxWidth="lg">
+      <Container maxWidth="md">
         <Stack minHeight="calc(100vh - 82px)" gap={4} py={5} pb={15}>
           {/* 공지사항 제목 */}
           <Stack direction="row" alignItems="center" gap={1}>
@@ -291,9 +318,65 @@ const NewsPost = () => {
                 목록
               </Typography>
             </Button>
+
+            {/* 관리자 전용 버튼 */}
+            {isAdmin && (
+              <>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleEditButtonClick}
+                >
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    수정
+                  </Typography>
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Typography variant="subtitle2" fontWeight="bold">
+                    삭제
+                  </Typography>
+                </Button>
+              </>
+            )}
           </Stack>
         </Stack>
       </Container>
+
+      {/* 삭제 확인 다이얼로그 */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>공지사항 삭제</DialogTitle>
+        <DialogContent>
+          <Typography>
+            "{newsPost?.title}" 공지사항을 삭제하시겠습니까?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            삭제된 공지사항은 복구할 수 없습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+            disabled={isDeleting}
+          >
+            {isDeleting ? <CircularProgress size={20} /> : "삭제"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

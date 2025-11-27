@@ -10,17 +10,33 @@ import {
     useTheme,
     alpha,
     Pagination,
+    Button,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import CampaignRoundedIcon from "@mui/icons-material/CampaignRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom, Permission } from "../state";
+import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+import { useSnackbar } from "notistack";
 
 // 공지사항 데이터 타입 정의
 interface NewsItem {
-    id: number;
+    uuid: string;
     title: string;
+    category: string;
+    isImportant: boolean;
+    authorName: string;
     createdAt: string;
 }
 
@@ -30,10 +46,24 @@ const ITEMS_PER_PAGE = 10;
 const News = () => {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { enqueueSnackbar } = useSnackbar();
+    const loginState = useAtomValue(wannaTripLoginStateAtom);
+    
+    // 관리자 권한 확인 (user가 아닌 경우)
+    const isAdmin = loginState.isLoggedIn && 
+        loginState.permission !== undefined && 
+        loginState.permission !== Permission.USER;
+
     const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+
+    // 삭제 다이얼로그 상태
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteTargetUuid, setDeleteTargetUuid] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
 
     // 공지사항 데이터 불러오기
@@ -42,128 +72,24 @@ const News = () => {
             setIsLoading(true);
             setError(null);
 
-            // 실제 API 호출 (현재는 목업 데이터 사용)
-            // const response = await axiosInstance.get("/news");
+            // 실제 API 호출
+            const response = await axiosInstance.get("/news", {
+                params: { page: currentPage, limit: ITEMS_PER_PAGE },
+            });
 
-            // 토스 스타일 목업 데이터
-            const mockNewsData: NewsItem[] = [
-                {
-                    id: 1,
-                    title: "SRT 여객 운송약관 개정 안내 (~2025.12)",
-                    createdAt: "2025-11-25",
-                },
-                {
-                    id: 2,
-                    title: "11월 신규 가입 이벤트 당첨자 발표",
-                    createdAt: "2025-11-25",
-                },
-                {
-                    id: 3,
-                    title: "8월 대출신청 이벤트 당첨자 안내",
-                    createdAt: "2025-01-15",
-                },
-                {
-                    id: 4,
-                    title: "정부서비스 일시 장애로 인한 일부 서비스 중단 안내",
-                    createdAt: "2025-01-14",
-                },
-                {
-                    id: 5,
-                    title: "위치기반서비스 이용약관 변경 안내",
-                    createdAt: "2025-01-13",
-                },
-                {
-                    id: 6,
-                    title: "여행갈래 서비스 이용약관 개정 안내",
-                    createdAt: "2025-01-12",
-                },
-                {
-                    id: 7,
-                    title: "개인정보 처리방침 변경 안내",
-                    createdAt: "2025-01-11",
-                },
-                {
-                    id: 8,
-                    title: "모바일 앱 업데이트 안내 (v2.5.0)",
-                    createdAt: "2025-01-10",
-                },
-                {
-                    id: 9,
-                    title: "서비스 정기 점검 안내 (01/09 02:00~06:00)",
-                    createdAt: "2025-01-09",
-                },
-                {
-                    id: 10,
-                    title: "제주도 여행 특가 프로모션 안내",
-                    createdAt: "2025-01-08",
-                },
-                {
-                    id: 11,
-                    title: "2025년 새해 맞이 이벤트 안내",
-                    createdAt: "2025-01-07",
-                },
-                {
-                    id: 12,
-                    title: "연말 시스템 점검 완료 공지",
-                    createdAt: "2025-01-06",
-                },
-                {
-                    id: 13,
-                    title: "여행 보험 서비스 제휴 안내",
-                    createdAt: "2025-01-05",
-                },
-                {
-                    id: 14,
-                    title: "고객센터 운영시간 변경 안내",
-                    createdAt: "2025-01-04",
-                },
-                {
-                    id: 15,
-                    title: "부산 해운대 숙소 예약 서비스 오픈",
-                    createdAt: "2025-01-03",
-                },
-                {
-                    id: 16,
-                    title: "일본 여행 비자 면제 재개 안내",
-                    createdAt: "2025-01-02",
-                },
-                {
-                    id: 17,
-                    title: "KTX 연동 서비스 일시 중단 안내",
-                    createdAt: "2025-01-01",
-                },
-                {
-                    id: 18,
-                    title: "2024년 연간 인기 여행지 TOP 10 발표",
-                    createdAt: "2024-12-31",
-                },
-                {
-                    id: 19,
-                    title: "크리스마스 시즌 특별 할인 이벤트",
-                    createdAt: "2024-12-25",
-                },
-                {
-                    id: 20,
-                    title: "동계 여행 안전 가이드라인 안내",
-                    createdAt: "2024-12-20",
-                },
-            ];
-
-            // 실제 API 호출 시 사용할 코드
-            // if (response.data.success) {
-            //   setNewsItems(response.data.news);
-            // } else {
-            //   setError("공지사항을 불러오는데 실패했습니다.");
-            // }
-
-            setNewsItems(mockNewsData);
+            if (response.data.success) {
+                setNewsItems(response.data.news);
+                setTotalCount(response.data.pagination.total);
+            } else {
+                setError("공지사항을 불러오는데 실패했습니다.");
+            }
         } catch (error) {
             console.error("공지사항 불러오기 실패:", error);
             setError("공지사항을 불러오는데 실패했습니다.");
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [currentPage]);
 
     // 컴포넌트 마운트 시 공지사항 불러오기
     useEffect(() => {
@@ -171,17 +97,11 @@ const News = () => {
     }, [fetchNews]);
 
     // 페이지네이션 계산
-    const totalPages = useMemo(() => Math.ceil(newsItems.length / ITEMS_PER_PAGE), [newsItems.length]);
-    
-    const paginatedNews = useMemo(() => {
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        return newsItems.slice(startIndex, endIndex);
-    }, [newsItems, currentPage]);
+    const totalPages = useMemo(() => Math.ceil(totalCount / ITEMS_PER_PAGE), [totalCount]);
 
     // 공지사항 클릭 핸들러
-    const handleNewsClick = useCallback((newsId: number) => {
-        navigate(`/news/${newsId}`);
+    const handleNewsClick = useCallback((newsUuid: string) => {
+        navigate(`/news/${newsUuid}`);
     }, [navigate]);
 
     // 페이지 변경 핸들러
@@ -189,6 +109,49 @@ const News = () => {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
+
+    // 삭제 버튼 클릭 핸들러
+    const handleDeleteClick = useCallback((e: React.MouseEvent, newsUuid: string) => {
+        e.stopPropagation();
+        setDeleteTargetUuid(newsUuid);
+        setDeleteDialogOpen(true);
+    }, []);
+
+    // 삭제 확인 핸들러
+    const handleDeleteConfirm = useCallback(async () => {
+        if (!deleteTargetUuid) return;
+
+        try {
+            setIsDeleting(true);
+            const csrfToken = await getCsrfToken();
+            const response = await axiosInstance.delete(`/news/${deleteTargetUuid}`, {
+                headers: { "X-CSRF-Token": csrfToken },
+            });
+
+            if (response.data.success) {
+                enqueueSnackbar("공지사항이 삭제되었습니다.", { variant: "success" });
+                fetchNews();
+            }
+        } catch (error) {
+            console.error("공지사항 삭제 실패:", error);
+            enqueueSnackbar("공지사항 삭제에 실패했습니다.", { variant: "error" });
+        } finally {
+            setIsDeleting(false);
+            setDeleteDialogOpen(false);
+            setDeleteTargetUuid(null);
+        }
+    }, [deleteTargetUuid, enqueueSnackbar, fetchNews]);
+
+    // 수정 버튼 클릭 핸들러
+    const handleEditClick = useCallback((e: React.MouseEvent, newsUuid: string) => {
+        e.stopPropagation();
+        navigate(`/news/edit/${newsUuid}`);
+    }, [navigate]);
+
+    // 작성 버튼 클릭 핸들러
+    const handleCreateClick = useCallback(() => {
+        navigate("/news/create");
+    }, [navigate]);
 
     return (
         <Container maxWidth="md">
@@ -246,7 +209,7 @@ const News = () => {
                                         공지사항
                                     </Typography>
                                     <Chip
-                                        label={`${newsItems.length}건`}
+                                        label={`${totalCount}건`}
                                         size="small"
                                         sx={{
                                             bgcolor: alpha(theme.palette.primary.main, 0.1),
@@ -312,14 +275,14 @@ const News = () => {
                     ) : (
                         // 공지사항 목록
                         <Stack>
-                            {paginatedNews.map((news, index) => (
+                            {newsItems.map((news, index) => (
                                 <Box
-                                    key={news.id}
-                                    onClick={() => handleNewsClick(news.id)}
+                                    key={news.uuid}
+                                    onClick={() => handleNewsClick(news.uuid)}
                                     sx={{
                                         p: 2.5,
                                         cursor: "pointer",
-                                        borderBottom: index < paginatedNews.length - 1 
+                                        borderBottom: index < newsItems.length - 1 
                                             ? `1px solid ${theme.palette.divider}` 
                                             : "none",
                                         transition: "background-color 0.2s ease",
@@ -335,11 +298,29 @@ const News = () => {
                                         gap={2}
                                     >
                                         <Stack gap={0.5} flex={1} minWidth={0}>
-                                            {/* 제목과 NEW 배지 */}
+                                            {/* 제목과 배지 */}
                                             <Stack direction="row" alignItems="center" gap={1}>
+                                                {/* 중요 공지 표시 */}
+                                                {news.isImportant && (
+                                                    <Chip
+                                                        label="중요"
+                                                        size="small"
+                                                        sx={{
+                                                            backgroundColor: theme.palette.warning.main,
+                                                            color: "white",
+                                                            fontSize: 11,
+                                                            fontWeight: 700,
+                                                            height: 20,
+                                                            minWidth: 40,
+                                                            "& .MuiChip-label": {
+                                                                px: 1,
+                                                            },
+                                                        }}
+                                                    />
+                                                )}
                                                 <Typography
                                                     variant="body1"
-                                                    fontWeight={500}
+                                                    fontWeight={news.isImportant ? 600 : 500}
                                                     color="text.primary"
                                                     sx={{
                                                         overflow: "hidden",
@@ -349,8 +330,13 @@ const News = () => {
                                                 >
                                                     {news.title}
                                                 </Typography>
-                                                {/* 임시: 처음 2개 항목에 NEW 표시 */}
-                                                {currentPage === 1 && index < 2 && (
+                                                {/* NEW 배지 - 3일 이내 */}
+                                                {(() => {
+                                                    const createdDate = new Date(news.createdAt);
+                                                    const now = new Date();
+                                                    const diffDays = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+                                                    return diffDays <= 3;
+                                                })() && (
                                                     <Chip
                                                         label="NEW"
                                                         size="small"
@@ -382,13 +368,42 @@ const News = () => {
                                             </Typography>
                                         </Stack>
 
-                                        {/* 화살표 아이콘 */}
-                                        <ChevronRightRoundedIcon 
-                                            sx={{ 
-                                                color: "text.disabled",
-                                                flexShrink: 0,
-                                            }} 
-                                        />
+                                        {/* 관리자용 수정/삭제 버튼 */}
+                                        {isAdmin ? (
+                                            <Stack direction="row" gap={0.5}>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => handleEditClick(e, news.uuid)}
+                                                    sx={{
+                                                        color: theme.palette.primary.main,
+                                                        "&:hover": {
+                                                            backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                                        },
+                                                    }}
+                                                >
+                                                    <EditRoundedIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={(e) => handleDeleteClick(e, news.uuid)}
+                                                    sx={{
+                                                        color: theme.palette.error.main,
+                                                        "&:hover": {
+                                                            backgroundColor: alpha(theme.palette.error.main, 0.1),
+                                                        },
+                                                    }}
+                                                >
+                                                    <DeleteRoundedIcon fontSize="small" />
+                                                </IconButton>
+                                            </Stack>
+                                        ) : (
+                                            <ChevronRightRoundedIcon 
+                                                sx={{ 
+                                                    color: "text.disabled",
+                                                    flexShrink: 0,
+                                                }} 
+                                            />
+                                        )}
                                     </Stack>
                                 </Box>
                             ))}
@@ -425,11 +440,77 @@ const News = () => {
                             }}
                         />
                         <Typography variant="body2" color="text.secondary" mt={1}>
-                            총 {newsItems.length}개의 공지사항
+                            총 {totalCount}개의 공지사항
                         </Typography>
                     </Stack>
                 )}
             </Stack>
+
+            {/* 삭제 확인 다이얼로그 */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                PaperProps={{
+                    sx: {
+                        borderRadius: 3,
+                        minWidth: 320,
+                    },
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 600 }}>
+                    공지사항 삭제
+                </DialogTitle>
+                <DialogContent>
+                    <Typography color="text.secondary">
+                        이 공지사항을 삭제하시겠습니까?
+                        <br />
+                        삭제된 공지사항은 복구할 수 없습니다.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2, gap: 1 }}>
+                    <Button
+                        onClick={() => setDeleteDialogOpen(false)}
+                        color="inherit"
+                        sx={{ borderRadius: 2 }}
+                    >
+                        취소
+                    </Button>
+                    <Button
+                        onClick={handleDeleteConfirm}
+                        color="error"
+                        variant="contained"
+                        disabled={isDeleting}
+                        sx={{ borderRadius: 2 }}
+                    >
+                        {isDeleting ? "삭제 중..." : "삭제"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* 관리자용 플로팅 작성 버튼 */}
+            {isAdmin && (
+                <Button
+                    variant="contained"
+                    startIcon={<AddRoundedIcon />}
+                    onClick={handleCreateClick}
+                    sx={{
+                        position: "fixed",
+                        right: 32,
+                        bottom: 32,
+                        borderRadius: 3,
+                        px: 3,
+                        py: 1.5,
+                        fontWeight: 600,
+                        boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                        zIndex: 1000,
+                        "&:hover": {
+                            boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.5)}`,
+                        },
+                    }}
+                >
+                    공지사항 작성
+                </Button>
+            )}
         </Container>
     );
 };
