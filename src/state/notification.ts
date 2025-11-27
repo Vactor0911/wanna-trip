@@ -12,7 +12,7 @@ export type NotificationType =
   | "system";
 
 // 대상 유형
-export type TargetType = "post" | "comment" | "template" | "user" | "system";
+export type TargetType = "post" | "comment" | "template" | "user" | "system" | "news";
 
 // 알림 인터페이스
 export interface Notification {
