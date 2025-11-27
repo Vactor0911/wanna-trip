@@ -26,6 +26,7 @@ import WhatshotIcon from "@mui/icons-material/Whatshot";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
+import GroupIcon from "@mui/icons-material/Group";
 import { useNavigate } from "react-router-dom";
 
 // 펄스 애니메이션 정의
@@ -48,7 +49,7 @@ import PopularTemplates, {
 import { useAtomValue } from "jotai";
 import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { getRandomColor } from "../utils";
-import { useCopyTemplateToMine } from "../hooks/template";
+import { useCopyTemplateToMine, useSharedTemplates } from "../hooks/template";
 
 // 템플릿 생성 방식
 enum TemplateCreationType {
@@ -112,6 +113,14 @@ const UserTemplates = () => {
 
   // 템플릿 복사 hook
   const copyTemplateMutation = useCopyTemplateToMine();
+
+  // 공유 받은 템플릿 hook
+  const { fetchSharedTemplates } = useSharedTemplates();
+
+  // 공유 받은 템플릿 상태
+  const [sharedTemplates, setSharedTemplates] = useState<Template[]>([]);
+  const [isSharedLoading, setIsSharedLoading] = useState(true);
+  const [sharedError, setSharedError] = useState<string | null>(null);
 
   // 기존 템플릿 데이터 가져오기
   const fetchTemplates = useCallback(async () => {
@@ -182,17 +191,34 @@ const UserTemplates = () => {
     }
   }, []);
 
+  // 공유 받은 템플릿 가져오기
+  const fetchSharedTemplatesList = useCallback(async () => {
+    try {
+      setIsSharedLoading(true);
+      setSharedError(null);
+
+      const templates = await fetchSharedTemplates();
+      setSharedTemplates(templates);
+    } catch (err) {
+      console.error("공유 받은 템플릿 불러오기 오류:", err);
+      setSharedError("공유 받은 템플릿을 불러오는 데 문제가 발생했습니다.");
+    } finally {
+      setIsSharedLoading(false);
+    }
+  }, [fetchSharedTemplates]);
+
   // 컴포넌트 마운트 시 사용자의 템플릿 목록 가져오기
   useEffect(() => {
-    // 인증 초기화가 완료되고 로그인된 경우에만 내 템플릿 가져오기
+    // 인증 초기화가 완료되고 로그인된 경우에만 내 템플릿과 공유 받은 템플릿 가져오기
     if (isAuthInitialized && loginState.isLoggedIn) {
       fetchTemplates();
+      fetchSharedTemplatesList();
     }
     // 인기 템플릿은 인증 초기화 완료 후 가져오기
     if (isAuthInitialized) {
       fetchPopularTemplates();
     }
-  }, [fetchPopularTemplates, fetchTemplates, isAuthInitialized, loginState.isLoggedIn]);
+  }, [fetchPopularTemplates, fetchTemplates, fetchSharedTemplatesList, isAuthInitialized, loginState.isLoggedIn]);
 
   // 다이얼로그 열기
   const handleOpenDialog = useCallback(() => {
@@ -386,7 +412,7 @@ const UserTemplates = () => {
 
   return (
     <Container maxWidth="xl">
-      <Stack mt={4} gap={8}>
+      <Stack mt={4} mb={8} gap={8}>
         {/* 인기 템플릿 */}
         <Stack gap={4}>
           <Box
@@ -759,6 +785,174 @@ const UserTemplates = () => {
             </Box>
           )}
         </Stack>
+
+        {/* 공유 받은 템플릿 */}
+        {loginState.isLoggedIn && (
+          <Stack gap={4}>
+            <Box
+              sx={{
+                background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.15)} 0%, ${alpha("#ba68c8", 0.08)} 50%, ${alpha("#ce93d8", 0.05)} 100%)`,
+                borderRadius: 4,
+                p: 3,
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* 배경 장식 */}
+              <GroupIcon
+                sx={{
+                  position: "absolute",
+                  right: -10,
+                  top: -10,
+                  fontSize: 120,
+                  color: alpha("#9c27b0", 0.1),
+                  transform: "rotate(15deg)",
+                }}
+              />
+              <Box
+                sx={{
+                  position: "absolute",
+                  right: 80,
+                  bottom: -20,
+                  width: 80,
+                  height: 80,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${alpha("#ba68c8", 0.15)} 0%, ${alpha("#ce93d8", 0.1)} 100%)`,
+                }}
+              />
+
+              <Stack direction="row" alignItems="center" gap={1.5} position="relative" zIndex={1}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)",
+                    boxShadow: `0 4px 14px ${alpha("#9c27b0", 0.4)}`,
+                  }}
+                >
+                  <GroupIcon sx={{ color: "white", fontSize: 28 }} />
+                </Box>
+                <Box>
+                  <Stack direction="row" alignItems="center" gap={1}>
+                    <Typography variant="h5" fontWeight={700}>👥 공유 받은 템플릿</Typography>
+                    {!isSharedLoading && !sharedError && (
+                      <Chip
+                        label={`${sharedTemplates.length}개`}
+                        size="small"
+                        sx={{
+                          background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.2)} 0%, ${alpha("#ba68c8", 0.15)} 100%)`,
+                          color: "#9c27b0",
+                          fontWeight: 700,
+                          fontSize: 12,
+                          height: 24,
+                          border: `1px solid ${alpha("#9c27b0", 0.3)}`,
+                        }}
+                      />
+                    )}
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary" mt={0.3}>
+                    다른 사용자가 공유한 템플릿을 함께 편집해보세요
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+
+            {isSharedLoading ? (
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                py={6}
+                sx={{
+                  borderRadius: 4,
+                  background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.03)} 0%, ${alpha("#ba68c8", 0.01)} 100%)`,
+                }}
+              >
+                <CircularProgress sx={{ color: "#9c27b0" }} />
+              </Box>
+            ) : sharedError ? (
+              <Box
+                sx={{
+                  py: 4,
+                  px: 3,
+                  borderRadius: 4,
+                  background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                  textAlign: "center",
+                }}
+              >
+                <Typography color="error" fontWeight={500}>
+                  {sharedError}
+                </Typography>
+              </Box>
+            ) : sharedTemplates.length === 0 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  py: 6,
+                  px: 3,
+                  borderRadius: 4,
+                  background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.05)} 0%, ${alpha("#ba68c8", 0.02)} 100%)`,
+                  border: `2px dashed ${alpha("#9c27b0", 0.25)}`,
+                  textAlign: "center",
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.15)} 0%, ${alpha("#ba68c8", 0.1)} 100%)`,
+                    mb: 2,
+                  }}
+                >
+                  <GroupIcon
+                    sx={{
+                      fontSize: 32,
+                      color: alpha("#9c27b0", 0.6),
+                    }}
+                  />
+                </Box>
+                <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                  아직 공유 받은 템플릿이 없습니다
+                </Typography>
+                <Typography variant="body2" color="text.disabled" mt={1}>
+                  다른 사용자가 템플릿을 공유하면 여기에 표시됩니다
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: { xs: "center", sm: "flex-start" },
+                  gap: `${CARD_GAP}px`,
+                  mb: 6,
+                }}
+              >
+                {sharedTemplates.map((template, index) => (
+                  <SquareTemplateCard
+                    key={`shared-template-${index}`}
+                    title={template.title}
+                    color={getRandomColor(template.uuid)}
+                    thumbnailUrl={template.thumbnailUrl}
+                    date={formatDate(template.updatedAt)}
+                    onClick={() => handleTemplateClick(template.uuid)}
+                  />
+                ))}
+              </Box>
+            )}
+          </Stack>
+        )}
 
         {/* 템플릿 이름 입력 다이얼로그 */}
         <Dialog 
