@@ -39,27 +39,100 @@ const termsOfServices: TermsOfService[] = [
     title: "개인정보 수집 및 이용약관 동의",
     isOptional: false,
     content: (
-      <Typography variant="subtitle1">
-        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
-        corrupti recusandae voluptate adipisci aliquam fugiat deserunt omnis
-        maxime earum neque debitis, quasi perferendis! Qui nihil distinctio
-        doloremque voluptatem corrupti est.
-      </Typography>
+      <Stack gap={2}>
+        <Typography variant="subtitle1" fontWeight="bold">
+          1. 수집하는 개인정보 항목
+        </Typography>
+        <Typography variant="body2">
+          Wanna Trip은 회원가입, 서비스 이용을 위해 다음과 같은 개인정보를 수집합니다.
+          <br />• 필수항목: 이메일 주소, 비밀번호, 닉네임
+          <br />• 선택항목: 프로필 이미지
+          <br />• 소셜 로그인 시: 소셜 계정 고유 식별자, 이름, 이메일
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          2. 개인정보의 수집 및 이용 목적
+        </Typography>
+        <Typography variant="body2">
+          • 회원 가입 및 관리: 회원제 서비스 제공, 본인 확인, 불량회원 부정이용 방지
+          <br />• 서비스 제공: 여행 계획 템플릿 생성/저장/공유, 커뮤니티 게시글 작성
+          <br />• 고객 지원: 문의사항 처리, 공지사항 전달
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          3. 개인정보의 보유 및 이용 기간
+        </Typography>
+        <Typography variant="body2">
+          회원 탈퇴 시까지 보유하며, 탈퇴 즉시 파기합니다.
+          단, 관계 법령에 따라 일정 기간 보존이 필요한 경우 해당 기간 동안 보관합니다.
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          4. 개인정보의 제3자 제공
+        </Typography>
+        <Typography variant="body2">
+          Wanna Trip은 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다.
+          다만, 이용자의 동의가 있거나 법령의 규정에 의한 경우는 예외로 합니다.
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          5. 이용자의 권리
+        </Typography>
+        <Typography variant="body2">
+          이용자는 언제든지 자신의 개인정보를 조회, 수정, 삭제할 수 있으며,
+          회원 탈퇴를 통해 개인정보 처리 정지를 요청할 수 있습니다.
+        </Typography>
+      </Stack>
     ),
   },
   {
     title: "위치 정보 이용약관 동의",
     isOptional: true,
     content: (
-      <Typography variant="subtitle1">
-        Lorem ipsum dolor, sit amet consectetur adipisicing elit. Itaque
-        corrupti recusandae voluptate adipisci aliquam fugiat deserunt omnis
-        maxime earum neque debitis, quasi perferendis! Qui nihil distinctio
-        doloremque voluptatem corrupti est. Lorem ipsum dolor sit amet
-        consectetur adipisicing elit. Qui, porro cumque necessitatibus quisquam
-        sunt dolores nemo itaque et corporis totam deserunt veniam, tenetur
-        reiciendis perferendis quia consectetur vel mollitia magnam?
-      </Typography>
+      <Stack gap={2}>
+        <Typography variant="subtitle1" fontWeight="bold">
+          1. 위치정보의 수집 목적
+        </Typography>
+        <Typography variant="body2">
+          Wanna Trip은 다음의 목적으로 위치정보를 수집 및 이용합니다.
+          <br />• 여행 계획 카드에 장소 정보 연동
+          <br />• 네이버 지도 기반 장소 검색 및 표시
+          <br />• 여행 경로 시각화 및 지도 표시
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          2. 수집하는 위치정보 항목
+        </Typography>
+        <Typography variant="body2">
+          • 사용자가 검색하거나 선택한 장소의 위치 좌표(위도, 경도)
+          <br />• 장소명, 주소, 카테고리 정보
+          <br />※ 사용자의 실시간 위치는 수집하지 않습니다.
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          3. 위치정보의 보유 및 이용 기간
+        </Typography>
+        <Typography variant="body2">
+          위치정보는 해당 여행 계획 템플릿이 삭제될 때까지 보유되며,
+          회원 탈퇴 시 모든 위치정보가 함께 삭제됩니다.
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          4. 위치정보 이용 동의 철회
+        </Typography>
+        <Typography variant="body2">
+          이용자는 언제든지 위치정보 이용 동의를 철회할 수 있습니다.
+          동의 철회 시 장소 연동 기능이 제한될 수 있습니다.
+        </Typography>
+
+        <Typography variant="subtitle1" fontWeight="bold">
+          5. 제3자 제공
+        </Typography>
+        <Typography variant="body2">
+          위치정보는 네이버 지도 API를 통해 처리되며,
+          이 외의 제3자에게 제공되지 않습니다.
+        </Typography>
+      </Stack>
     ),
   },
 ];
