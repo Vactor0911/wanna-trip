@@ -16,6 +16,7 @@ import {
   RadioGroup,
   Select,
   SelectChangeEvent,
+  Slide,
   Stack,
   TextField,
   Typography,
@@ -50,6 +51,7 @@ import { useAtomValue } from "jotai";
 import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { getRandomColor } from "../utils";
 import { useCopyTemplateToMine, useSharedTemplates } from "../hooks/template";
+import { useSnackbar } from "notistack";
 
 // 템플릿 생성 방식
 enum TemplateCreationType {
@@ -74,6 +76,7 @@ const CARD_GAP = 24; // 카드 간격(px)
 const UserTemplates = () => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
   // 로그인 상태 확인
   const loginState = useAtomValue(wannaTripLoginStateAtom);
   const isAuthInitialized = useAtomValue(isAuthInitializedAtom);
@@ -98,6 +101,11 @@ const UserTemplates = () => {
   );
 
   const [nameError, setNameError] = useState("");
+
+  // 선택 모드 관련 상태
+  const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(new Set());
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // 인기 템플릿 상태 추가
   const [popularTemplates, setPopularTemplates] = useState<
@@ -345,6 +353,67 @@ const UserTemplates = () => {
     const date = new Date(dateString);
     return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
   }, []);
+
+  // 템플릿 선택 핸들러
+  const handleSelectTemplate = useCallback((templateUuid: string, selected: boolean) => {
+    setSelectedTemplates((prev) => {
+      const newSet = new Set(prev);
+      if (selected) {
+        newSet.add(templateUuid);
+      } else {
+        newSet.delete(templateUuid);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // 전체 선택/해제 핸들러
+  const handleSelectAll = useCallback(() => {
+    if (selectedTemplates.size === myTemplates.length) {
+      // 전체 선택된 상태면 전체 해제
+      setSelectedTemplates(new Set());
+    } else {
+      // 그렇지 않으면 전체 선택
+      setSelectedTemplates(new Set(myTemplates.map((t) => t.uuid)));
+    }
+  }, [myTemplates, selectedTemplates.size]);
+
+  // 선택 취소 핸들러
+  const handleClearSelection = useCallback(() => {
+    setSelectedTemplates(new Set());
+  }, []);
+
+  // 일괄 삭제 실행
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedTemplates.size === 0) return;
+
+    try {
+      setIsBulkDeleting(true);
+      const csrfToken = await getCsrfToken();
+
+      // 일괄 삭제 API 호출
+      const response = await axiosInstance.post(
+        "/template/bulk-delete",
+        { templateUuids: Array.from(selectedTemplates) },
+        { headers: { "X-CSRF-Token": csrfToken } }
+      );
+
+      if (response.data.success) {
+        // 삭제 성공 시 목록 새로고침 및 선택 초기화
+        enqueueSnackbar(`${response.data.successCount}개의 템플릿이 삭제되었습니다.`, { variant: "success" });
+        fetchTemplates();
+        setSelectedTemplates(new Set());
+      } else {
+        setError("템플릿 삭제에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("일괄 삭제 오류:", err);
+      setError("템플릿 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsBulkDeleting(false);
+      setIsBulkDeleteDialogOpen(false);
+    }
+  }, [selectedTemplates, fetchTemplates, enqueueSnackbar]);
 
   // 템플릿 삭제
   const handleDeleteTemplate = useCallback(async () => {
@@ -780,6 +849,9 @@ const UserTemplates = () => {
                   onClick={() => handleTemplateClick(template.uuid)}
                   onDelete={() => handleDeleteButtonClick(template.uuid)}
                   onCopy={() => handleCopyButtonClick(template.uuid, template.title)}
+                  selectable
+                  selected={selectedTemplates.has(template.uuid)}
+                  onSelect={(checked) => handleSelectTemplate(template.uuid, checked)}
                 />
               ))}
             </Box>
@@ -1228,6 +1300,150 @@ const UserTemplates = () => {
           </DialogActions>
         </Dialog>
       </Stack>
+
+      {/* 일괄 삭제 확인 다이얼로그 */}
+      <Dialog
+        open={isBulkDeleteDialogOpen}
+        onClose={() => setIsBulkDeleteDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            overflow: "hidden",
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            background: `linear-gradient(135deg, ${alpha("#d32f2f", 0.1)} 0%, ${alpha("#f44336", 0.05)} 100%)`,
+            fontWeight: 700,
+            pb: 2,
+          }}
+        >
+          🗑️ 템플릿 일괄 삭제
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography variant="body1" color="text.secondary">
+            선택한 <strong style={{ color: "#d32f2f" }}>{selectedTemplates.size}개</strong>의 템플릿을 삭제하시겠습니까?
+          </Typography>
+          <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+            삭제된 템플릿은 복구할 수 없습니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, gap: 1 }}>
+          <Button
+            onClick={() => setIsBulkDeleteDialogOpen(false)}
+            color="inherit"
+            sx={{ borderRadius: 2, px: 3 }}
+          >
+            취소
+          </Button>
+          <Button
+            onClick={handleBulkDelete}
+            color="error"
+            variant="contained"
+            disabled={isBulkDeleting}
+            sx={{
+              borderRadius: 2,
+              px: 3,
+              background: "linear-gradient(135deg, #d32f2f 0%, #f44336 100%)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #c62828 0%, #d32f2f 100%)",
+              },
+            }}
+          >
+            {isBulkDeleting ? "삭제 중..." : "삭제"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* 하단 선택 바 */}
+      <Slide direction="up" in={selectedTemplates.size > 0} mountOnEnter unmountOnExit>
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            bgcolor: alpha("#1976d2", 0.95),
+            backdropFilter: "blur(8px)",
+            boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
+            py: 2,
+            px: 3,
+            zIndex: 1200,
+          }}
+        >
+          <Container maxWidth="lg">
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              flexWrap="wrap"
+              gap={2}
+            >
+              <Typography
+                variant="subtitle1"
+                sx={{ color: "white", fontWeight: 600 }}
+              >
+                {selectedTemplates.size}개 선택됨
+              </Typography>
+              <Stack direction="row" gap={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleSelectAll}
+                  sx={{
+                    color: "white",
+                    borderColor: "rgba(255,255,255,0.5)",
+                    "&:hover": {
+                      borderColor: "white",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    },
+                    borderRadius: 2,
+                    px: 2,
+                  }}
+                >
+                  전체 선택
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={handleClearSelection}
+                  sx={{
+                    color: "white",
+                    borderColor: "rgba(255,255,255,0.5)",
+                    "&:hover": {
+                      borderColor: "white",
+                      bgcolor: "rgba(255,255,255,0.1)",
+                    },
+                    borderRadius: 2,
+                    px: 2,
+                  }}
+                >
+                  선택 해제
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  color="error"
+                  onClick={() => setIsBulkDeleteDialogOpen(true)}
+                  sx={{
+                    borderRadius: 2,
+                    px: 2,
+                    bgcolor: "#d32f2f",
+                    "&:hover": {
+                      bgcolor: "#c62828",
+                    },
+                  }}
+                >
+                  삭제
+                </Button>
+              </Stack>
+            </Stack>
+          </Container>
+        </Box>
+      </Slide>
     </Container>
   );
 };
