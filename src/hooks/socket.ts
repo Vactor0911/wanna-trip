@@ -2,7 +2,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { useSnackbar } from "notistack";
 import { useCallback, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
-import { ActiveUser, activeUsersAtom, isAuthInitializedAtom } from "../state";
+import { ActiveUser, activeUsersAtom, isAuthInitializedAtom, USER_COLORS } from "../state";
 import { getAccessToken } from "../utils/accessToken";
 import { editingCardsAtom } from "../state/template";
 
@@ -23,10 +23,16 @@ export const useTemplateSocket = ({
 
   const socketRef = useRef<Socket | null>(null);
   const [activeUsers, setActiveUsers] = useAtom(activeUsersAtom);
+  const activeUsersRef = useRef<ActiveUser[]>([]); // 최신 activeUsers를 추적하기 위한 ref
   const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
 
   // 편집 중인 카드 목록
   const [editingCards, setEditingCards] = useAtom(editingCardsAtom);
+
+  // activeUsers가 변경될 때마다 ref 업데이트
+  useEffect(() => {
+    activeUsersRef.current = activeUsers;
+  }, [activeUsers]);
 
   /**
    * 소켓 연결
@@ -107,7 +113,12 @@ export const useTemplateSocket = ({
 
     // 활성 사용자 목록 업데이트
     socket.on("users:list", (data: { users: ActiveUser[] }) => {
-      setActiveUsers(data.users);
+      // 사용자별로 고유한 색상 할당 (인덱스 기반)
+      const usersWithColors = data.users.map((user, index) => ({
+        ...user,
+        color: USER_COLORS[index % USER_COLORS.length],
+      }));
+      setActiveUsers(usersWithColors);
     });
 
     // 템플릿 패치 요청 이벤트
@@ -128,9 +139,15 @@ export const useTemplateSocket = ({
       }) => {
         setEditingCards((prev) => {
           const newMap = new Map(prev);
+          // 현재 활성 사용자 목록에서 해당 사용자의 색상 찾기
+          const userColor = activeUsersRef.current.find(
+            (u) => u.userUuid === data.userUuid
+          )?.color;
+
           newMap.set(data.cardUuid, {
             userUuid: data.userUuid,
             userName: data.userName,
+            color: userColor || USER_COLORS[0], // 기본 색상
           });
           return newMap;
         });

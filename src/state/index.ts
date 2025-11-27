@@ -48,5 +48,20 @@ export interface ActiveUser {
   userUuid: string;
   userName: string;
   profileImage: string;
+  color: string; // 사용자별 고유 색상
 }
 export const activeUsersAtom = atom<ActiveUser[]>([]);
+
+// 동시 작업 사용자를 위한 색상 팔레트 (구분하기 쉬운 색상들)
+export const USER_COLORS = [
+  "#e91e63", // 핑크
+  "#9c27b0", // 보라
+  "#673ab7", // 짙은 보라
+  "#3f51b5", // 인디고
+  "#2196f3", // 파랑
+  "#00bcd4", // 시안
+  "#009688", // 틸
+  "#4caf50", // 초록
+  "#ff9800", // 주황
+  "#ff5722", // 딥 오렌지
+];

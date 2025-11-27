@@ -824,10 +824,16 @@ const Template = (props: TemplateProps) => {
               {activeUsers.length > 0 && (
                 <AvatarGroup max={4}>
                   {activeUsers.map((user: ActiveUser) => (
-                    <Avatar
-                      src={getUserProfileImageUrl(user.profileImage)}
-                      alt={user.userName}
-                    />
+                    <Tooltip key={user.userUuid} title={user.userName}>
+                      <Avatar
+                        src={getUserProfileImageUrl(user.profileImage)}
+                        alt={user.userName}
+                        sx={{
+                          border: `3px solid ${user.color} !important`,
+                          boxSizing: "border-box",
+                        }}
+                      />
+                    </Tooltip>
                   ))}
                 </AvatarGroup>
               )}
