@@ -61,7 +61,8 @@ const Login = () => {
       navigate(`/${redirectTo}`);
       return;
     }
-    navigate(-1);
+    // 기본 페이지로 이동 (외부 로그인 후 navigate(-1)은 외부 사이트로 돌아갈 수 있음)
+    navigate("/template");
   }, [navigate, redirectTo]);
 
   // 로그인 기능 추가
