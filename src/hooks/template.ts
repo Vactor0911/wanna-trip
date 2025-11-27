@@ -537,3 +537,20 @@ export const usePublicTemplate = () => {
 
   return { fetchPublicTemplate };
 };
+
+/**
+ * 공유 받은 템플릿 목록 조회 훅 (공동 작업자로 추가된 템플릿)
+ */
+export const useSharedTemplates = () => {
+  const fetchSharedTemplates = useCallback(async () => {
+    const response = await axiosInstance.get(`/template/shared`);
+
+    if (!response.data.success) {
+      throw new Error("공유 받은 템플릿 조회에 실패했습니다.");
+    }
+
+    return response.data.templates;
+  }, []);
+
+  return { fetchSharedTemplates };
+};
