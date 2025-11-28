@@ -1560,7 +1560,7 @@ const UserTemplates = () => {
             bottom: 0,
             left: 0,
             right: 0,
-            bgcolor: alpha("#1976d2", 0.95),
+            bgcolor: alpha("#2196f3", 0.75),
             backdropFilter: "blur(8px)",
             boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
             py: 2,
@@ -1625,9 +1625,9 @@ const UserTemplates = () => {
                   sx={{
                     borderRadius: 2,
                     px: 2,
-                    bgcolor: "#d32f2f",
+                    bgcolor: "#ff5555",
                     "&:hover": {
-                      bgcolor: "#c62828",
+                      bgcolor: "#ef5350",
                     },
                   }}
                 >
