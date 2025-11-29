@@ -1,5 +1,6 @@
 import {
   FormControl,
+  FormHelperText,
   InputLabel,
   OutlinedInput,
   OutlinedInputProps,
@@ -9,10 +10,11 @@ import {
 interface OutlinedTextFieldProps extends OutlinedInputProps {
   label: string;
   endAdornment?: React.ReactNode;
+  helperText?: string;
 }
 
 const OutlinedTextField = (props: OutlinedTextFieldProps) => {
-  const { label, endAdornment, ...others } = props;
+  const { label, endAdornment, helperText, error, sx, ...others } = props;
   const theme = useTheme();
 
   return (
@@ -30,12 +32,14 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
         "& legend": {
           display: "none",
         },
+        ...sx,
       }}
     >
-      <InputLabel>{label}</InputLabel>
+      <InputLabel error={error}>{label}</InputLabel>
       <OutlinedInput
         endAdornment={endAdornment}
         label={label}
+        error={error}
         {...others}
         sx={{
           fontWeight: 700,
@@ -55,6 +59,7 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
           },
         }}
       />
+      <FormHelperText error={error}>{helperText}</FormHelperText>
     </FormControl>
   );
 };

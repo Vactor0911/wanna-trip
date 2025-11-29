@@ -18,7 +18,6 @@ import {
   SelectChangeEvent,
   Slide,
   Stack,
-  TextField,
   Typography,
   alpha,
   useTheme,
@@ -29,17 +28,6 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import GroupIcon from "@mui/icons-material/Group";
 import { useNavigate } from "react-router-dom";
-
-// 펄스 애니메이션 정의
-const pulse = keyframes`
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-`;
-
 import SquareTemplateCard from "../components/SquareTemplateCard";
 import TravelPlanChatbot from "../components/TravelPlanChatbot";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -52,6 +40,21 @@ import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { getRandomColor } from "../utils";
 import { useCopyTemplateToMine, useSharedTemplates } from "../hooks/template";
 import { useSnackbar } from "notistack";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
+import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
+import OutlinedTextField from "../components/OutlinedTextField";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+
+// 펄스 애니메이션 정의
+const pulse = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+`;
 
 // 템플릿 생성 방식
 enum TemplateCreationType {
@@ -1195,8 +1198,14 @@ const UserTemplates = () => {
               pb: 2,
             }}
           >
-            ✨ 새 템플릿 만들기
+            <Stack direction="row" alignItems="center" gap={1}>
+              <AutoAwesomeRoundedIcon color="primary" />
+              <Typography variant="h6" fontWeight={700}>
+                새 템플릿 만들기
+              </Typography>
+            </Stack>
           </DialogTitle>
+
           <DialogContent sx={{ pt: 3 }}>
             {/* 생성 방식 선택 */}
             <Typography
@@ -1222,14 +1231,20 @@ const UserTemplates = () => {
                   />
                 }
                 label={
-                  <Box>
-                    <Typography variant="body1" fontWeight={600}>
-                      📝 빈 템플릿 생성
-                    </Typography>
+                  <Stack>
+                    <Stack direction="row" alignItems="center" gap={0.5}>
+                      <InsertDriveFileRoundedIcon
+                        color="primary"
+                        fontSize="small"
+                      />
+                      <Typography variant="body1" fontWeight={600}>
+                        빈 템플릿 생성
+                      </Typography>
+                    </Stack>
                     <Typography variant="body2" color="text.secondary">
                       직접 일정을 작성하고 싶을 때
                     </Typography>
-                  </Box>
+                  </Stack>
                 }
                 sx={{
                   mb: 2,
@@ -1252,14 +1267,17 @@ const UserTemplates = () => {
                   />
                 }
                 label={
-                  <Box>
-                    <Typography variant="body1" fontWeight={600}>
-                      🤖 AI로 생성
-                    </Typography>
+                  <Stack>
+                    <Stack direction="row" alignItems="center" gap={0.5}>
+                      <SmartToyRoundedIcon color="primary" fontSize="small" />
+                      <Typography variant="body1" fontWeight={600}>
+                        AI로 생성
+                      </Typography>
+                    </Stack>
                     <Typography variant="body2" color="text.secondary">
                       AI와 대화하며 맞춤형 여행 계획 만들기
                     </Typography>
-                  </Box>
+                  </Stack>
                 }
                 sx={{
                   p: 1.5,
@@ -1273,13 +1291,12 @@ const UserTemplates = () => {
             </RadioGroup>
 
             {/* 템플릿 이름 입력 */}
-            <TextField
+            <OutlinedTextField
               autoFocus
               margin="dense"
               label="템플릿 이름"
               type="text"
               fullWidth
-              variant="outlined"
               value={newTemplateName}
               onChange={(e) => {
                 setNewTemplateName(e.target.value);
@@ -1289,15 +1306,6 @@ const UserTemplates = () => {
               helperText={nameError}
               sx={{
                 mt: 3,
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
               }}
             />
           </DialogContent>
@@ -1417,35 +1425,27 @@ const UserTemplates = () => {
               )} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
               fontWeight: 700,
               pb: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
             }}
           >
-            📋 템플릿 복사
+            <ContentCopyRoundedIcon color="primary" />
+            템플릿 복사
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Typography variant="body2" color="text.secondary" mb={2}>
+            <Typography variant="body2" color="text.secondary" my={2}>
               "{copyTemplateTitle}" 템플릿을 복사합니다.
               <br />새 템플릿의 이름을 입력해주세요.
             </Typography>
-            <TextField
+            <OutlinedTextField
               autoFocus
               margin="dense"
               label="새 템플릿 이름"
               type="text"
               fullWidth
-              variant="outlined"
               defaultValue={`${copyTemplateTitle} (복사본)`}
               id="copy-template-title"
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#1976d2",
-                  },
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
-                  color: "#1976d2",
-                },
-              }}
             />
           </DialogContent>
           <DialogActions sx={{ p: 2.5, gap: 1 }}>
