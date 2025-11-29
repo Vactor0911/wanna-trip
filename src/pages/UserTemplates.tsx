@@ -1040,7 +1040,7 @@ const UserTemplates = () => {
                 <Box>
                   <Stack direction="row" alignItems="center" gap={1}>
                     <Typography variant="h5" fontWeight={700}>
-                      👥 공유 받은 템플릿
+                      공유 받은 템플릿
                     </Typography>
                     {!isSharedLoading && !sharedError && (
                       <Chip
