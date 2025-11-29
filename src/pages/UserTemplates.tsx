@@ -45,6 +45,7 @@ import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRound
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
 import OutlinedTextField from "../components/OutlinedTextField";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
 // 펄스 애니메이션 정의
 const pulse = keyframes`
@@ -1344,10 +1345,12 @@ const UserTemplates = () => {
         <Dialog
           open={isDeleteDialogOpen}
           onClose={handleCloseDeleteDialog}
-          PaperProps={{
-            sx: {
-              borderRadius: 4,
-              overflow: "hidden",
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 4,
+                overflow: "hidden",
+              },
             },
           }}
         >
@@ -1358,11 +1361,15 @@ const UserTemplates = () => {
                 0.1
               )} 0%, ${alpha("#f87171", 0.05)} 100%)`,
               fontWeight: 700,
+              display: "flex",
+              gap: 1,
+              alignItems: "center",
             }}
           >
-            ⚠️ 템플릿 삭제
+            <DeleteForeverRoundedIcon color="error" />
+            템플릿 삭제
           </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
+          <DialogContent sx={{ mt: 3 }}>
             <Typography fontWeight={500}>
               정말로 이 템플릿을 삭제하시겠습니까?
             </Typography>
