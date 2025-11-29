@@ -223,7 +223,7 @@ const NaverMapSearchDrawer = () => {
             onClick={handleDrawerOpen}
             sx={{
               borderRadius: "50px",
-              background: "white",
+              background: theme.palette.background.paper,
             }}
             startAdornment={
               <InputAdornment position="start">
@@ -355,7 +355,7 @@ const NaverMapSearchDrawer = () => {
           top: "50%",
           left: open ? DRAWER_WIDTH : 0,
           transform: "translateY(-50%)",
-          background: "white",
+          background: theme.palette.background.paper,
           boxShadow: 3,
           borderTopLeftRadius: "0",
           borderBottomLeftRadius: "0",

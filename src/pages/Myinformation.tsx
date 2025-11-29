@@ -9,12 +9,11 @@ import {
   InputAdornment,
   Avatar,
   CircularProgress,
-  Snackbar,
-  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -31,8 +30,8 @@ import axiosInstance, {
 import { useAtom } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
 import { resetStates } from "../utils";
-import { theme } from "../utils/theme";
 import imageCompression from "browser-image-compression";
+import { useSnackbar } from "notistack";
 
 // 내 정보 인터페이스
 interface UserInfo {
@@ -42,14 +41,10 @@ interface UserInfo {
   profileImage: string | null;
 }
 
-// 스낵바 상태 인터페이스
-interface SnackbarState {
-  open: boolean;
-  message: string;
-  severity: "success" | "error" | "warning" | "info";
-}
-
 const Myinformation = () => {
+  const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
+
   // 사용자 정보 상태
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,13 +72,6 @@ const Myinformation = () => {
   // 작업 상태
   const [isNicknameUpdating, setIsNicknameUpdating] = useState(false);
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
-
-  // 알림 상태
-  const [snackbar, setSnackbar] = useState<SnackbarState>({
-    open: false,
-    message: "",
-    severity: "info",
-  });
 
   // 계정 탈퇴 관련 상태
   const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom);
@@ -147,7 +135,7 @@ const Myinformation = () => {
     const options = {
       maxSizeMB: 1, // 최대 1MB
       maxWidthOrHeight: 1024, // 최대 해상도 1024px
-      initialQuality: 0.8,     // 초기 품질 80%
+      initialQuality: 0.8, // 초기 품질 80%
       useWebWorker: true,
     };
 
@@ -173,12 +161,10 @@ const Myinformation = () => {
         "image/webp",
       ];
       if (!allowedTypes.includes(file.type)) {
-        setSnackbar({
-          open: true,
-          message:
-            "지원되지 않는 파일 형식입니다. JPG, PNG, GIF, WEBP 형식만 업로드할 수 있습니다.",
-          severity: "error",
-        });
+        enqueueSnackbar(
+          "지원되지 않는 파일 형식입니다. JPG, PNG, GIF, WEBP 형식만 업로드할 수 있습니다.",
+          { variant: "error" }
+        );
         return;
       }
 
@@ -190,10 +176,8 @@ const Myinformation = () => {
 
         // 파일 크기 검증 (4MB)
         if (compressedFile.size > 4 * 1024 * 1024) {
-          setSnackbar({
-            open: true,
-            message: "파일 크기는 4MB를 초과할 수 없습니다.",
-            severity: "error",
+          enqueueSnackbar("파일 크기는 4MB를 초과할 수 없습니다.", {
+            variant: "error",
           });
           return;
         }
@@ -228,28 +212,24 @@ const Myinformation = () => {
           setImageVersion((prev) => prev + 1);
 
           // 성공 메시지 표시
-          setSnackbar({
-            open: true,
-            message: "프로필 이미지가 성공적으로 업로드되었습니다.",
-            severity: "success",
+          enqueueSnackbar("프로필 이미지가 성공적으로 업로드되었습니다.", {
+            variant: "success",
           });
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         console.error("프로필 이미지 업로드 실패:", err);
-        setSnackbar({
-          open: true,
-          message:
-            err.response?.data?.message || "이미지 업로드에 실패했습니다.",
-          severity: "error",
-        });
+        enqueueSnackbar(
+          err.response?.data?.message || "이미지 업로드에 실패했습니다.",
+          { variant: "error" }
+        );
       } finally {
         setIsUploading(false);
         // 파일 입력 초기화
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
-    []
+    [enqueueSnackbar]
   );
 
   // 닉네임 변경 입력
@@ -264,11 +244,7 @@ const Myinformation = () => {
   const handleUpdateNickname = useCallback(async () => {
     // 입력값 검증
     if (!nickname.trim()) {
-      setSnackbar({
-        open: true,
-        message: "닉네임을 입력해주세요.",
-        severity: "error",
-      });
+      enqueueSnackbar("닉네임을 입력해주세요.", { variant: "error" });
       return;
     }
 
@@ -286,10 +262,8 @@ const Myinformation = () => {
       );
 
       if (response.data.success) {
-        setSnackbar({
-          open: true,
-          message: "닉네임이 성공적으로 변경되었습니다.",
-          severity: "success",
+        enqueueSnackbar("닉네임이 성공적으로 변경되었습니다.", {
+          variant: "success",
         });
 
         // 사용자 정보 다시 불러오기
@@ -298,15 +272,14 @@ const Myinformation = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("닉네임 변경 실패:", err);
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || "닉네임 변경에 실패했습니다.",
-        severity: "error",
-      });
+      enqueueSnackbar(
+        err.response?.data?.message || "닉네임 변경에 실패했습니다.",
+        { variant: "error" }
+      );
     } finally {
       setIsNicknameUpdating(false);
     }
-  }, [nickname, fetchUserInfo]);
+  }, [nickname, enqueueSnackbar, fetchUserInfo]);
 
   // 비밀번호 변경 입력 핸들러
   const handlePasswordChange = useCallback(
@@ -333,38 +306,26 @@ const Myinformation = () => {
   const handleUpdatePassword = useCallback(async () => {
     // 입력값 검증
     if (!currentPassword) {
-      setSnackbar({
-        open: true,
-        message: "현재 비밀번호를 입력해주세요.",
-        severity: "error",
-      });
+      enqueueSnackbar("현재 비밀번호를 입력해주세요.", { variant: "error" });
       return;
     }
 
     if (!newPassword) {
-      setSnackbar({
-        open: true,
-        message: "새 비밀번호를 입력해주세요.",
-        severity: "error",
-      });
+      enqueueSnackbar("새 비밀번호를 입력해주세요.", { variant: "error" });
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setSnackbar({
-        open: true,
-        message: "새 비밀번호와 확인 비밀번호가 일치하지 않습니다.",
-        severity: "error",
+      enqueueSnackbar("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.", {
+        variant: "error",
       });
       return;
     }
 
     // 현재 비밀번호와 새 비밀번호가 동일한지 확인
     if (currentPassword === newPassword) {
-      setSnackbar({
-        open: true,
-        message: "새 비밀번호는 현재 비밀번호와 달라야 합니다.",
-        severity: "error",
+      enqueueSnackbar("새 비밀번호는 기존 비밀번호와 달라야 합니다.", {
+        variant: "error",
       });
       return;
     }
@@ -407,10 +368,8 @@ const Myinformation = () => {
       );
 
       if (response.data.success) {
-        setSnackbar({
-          open: true,
-          message: "비밀번호가 성공적으로 변경되었습니다.",
-          severity: "success",
+        enqueueSnackbar("비밀번호가 성공적으로 변경되었습니다.", {
+          variant: "success",
         });
 
         // 비밀번호 입력 필드 초기화
@@ -421,15 +380,14 @@ const Myinformation = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("비밀번호 변경 실패:", err);
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || "비밀번호 변경에 실패했습니다.",
-        severity: "error",
-      });
+      enqueueSnackbar(
+        err.response?.data?.message || "비밀번호 변경에 실패했습니다.",
+        { variant: "error" }
+      );
     } finally {
       setIsPasswordUpdating(false);
     }
-  }, [currentPassword, newPassword, confirmNewPassword]);
+  }, [currentPassword, newPassword, confirmNewPassword, enqueueSnackbar]);
 
   // 계정 탈퇴 다이얼로그 열기
   const handleOpenDeleteDialog = () => {
@@ -447,10 +405,8 @@ const Myinformation = () => {
   const handleDeleteAccount = useCallback(async () => {
     // 일반 계정이고 비밀번호가 비어있으면 검증
     if (loginState.loginType === "normal" && !deleteConfirmPassword.trim()) {
-      setSnackbar({
-        open: true,
-        message: "계정 탈퇴를 위해 비밀번호를 입력해주세요.",
-        severity: "error",
+      enqueueSnackbar("계정 탈퇴를 위해 비밀번호를 입력해주세요.", {
+        variant: "error",
       });
       return;
     }
@@ -482,25 +438,20 @@ const Myinformation = () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("계정 탈퇴 실패:", err);
-      setSnackbar({
-        open: true,
-        message: err.response?.data?.message || "계정 탈퇴에 실패했습니다.",
-        severity: "error",
-      });
+      enqueueSnackbar(
+        err.response?.data?.message || "계정 탈퇴에 실패했습니다.",
+        { variant: "error" }
+      );
     } finally {
       setIsDeleting(false);
     }
   }, [
     loginState.loginType,
     deleteConfirmPassword,
+    enqueueSnackbar,
     setWannaTripLoginState,
     navigate,
   ]);
-
-  // 스낵바 닫기 핸들러
-  const handleCloseSnackbar = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
 
   // 로딩 중 표시
   if (isLoading) {
@@ -816,22 +767,6 @@ const Myinformation = () => {
           </DialogActions>
         </Dialog>
       </Stack>
-
-      {/* 알림 스낵바 */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };

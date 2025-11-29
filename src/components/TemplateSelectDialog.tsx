@@ -21,11 +21,12 @@ interface TemplateSelectDialogProps {
 
 // 템플릿 타입 정의
 interface Template {
-  template_id: number;
-  template_uuid: string;
+  uuid: string;
   title: string;
   created_at: string;
   updated_at: string;
+  sharedCount: number;
+  thumbnailUrl?: string; // 썸네일 URL
 }
 
 const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
@@ -104,11 +105,11 @@ const TemplateSelectDialog = (props: TemplateSelectDialogProps) => {
         >
           {myTemplates.map((template) => (
             <SquareTemplateCard
-              key={`template-${template.template_id}`}
-              id={template.template_id}
+              key={`template-${template.uuid}`}
               title={template.title}
-              color={getRandomColor(template.template_id)}
-              onClick={() => handleTemplateClick(template.template_uuid)}
+              color={getRandomColor(template.uuid)}
+              thumbnailUrl={template.thumbnailUrl}
+              onClick={() => handleTemplateClick(template.uuid)}
               cardSize={isMobile ? 110 : 150}
             />
           ))}

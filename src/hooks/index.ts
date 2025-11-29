@@ -1,5 +1,10 @@
 import { useTheme, useMediaQuery } from "@mui/material";
 
+// 소켓 및 알림 훅 export
+export * from "./socket";
+export * from "./template";
+export * from "./notification";
+
 /** 현재 브라우저의 MUI breakpoint 이름을 반환 */
 export const useBreakpoint = (): "xs" | "sm" | "md" | "lg" | "xl" => {
   const theme = useTheme();

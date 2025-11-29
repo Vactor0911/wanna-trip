@@ -3,6 +3,7 @@ import minMax from "dayjs/plugin/minMax";
 import { LoginState } from "../state";
 import { setAccessToken } from "./accessToken";
 import { getDefaultStore } from "jotai/vanilla"; // vanilla 버전은 React에 의존하지 않음
+import { SERVER_HOST } from "./axiosInstance";
 
 dayjs.extend(minMax);
 
@@ -137,8 +138,10 @@ export const getRandomColor = (seed?: string | number): string => {
   // 랜덤 색상 반환
   if (seed) {
     if (typeof seed === "string") {
-      const index = seed.length % COLORS.length;
-      return COLORS[index];
+      const hash = seed
+        .split("")
+        .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return COLORS[hash % COLORS.length];
     } else if (typeof seed === "number") {
       return COLORS[seed % COLORS.length];
     }
@@ -146,4 +149,14 @@ export const getRandomColor = (seed?: string | number): string => {
 
   const randInt = Math.floor(Math.random() * COLORS.length);
   return COLORS[randInt];
+};
+
+/**
+ * 사용자 프로필 이미지 URL을 반환하는 함수
+ * @param profileImageSrc 프로필 이미지 소스
+ * @returns 프로필 이미지 URL
+ */
+export const getUserProfileImageUrl = (profileImageSrc: string) => {
+  const imageUrl = `${SERVER_HOST}${profileImageSrc}?t=${new Date().getTime()}`;
+  return imageUrl;
 };

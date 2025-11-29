@@ -2,45 +2,49 @@ import {
   Box,
   Button,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Paper,
   Stack,
   StackProps,
   Typography,
+  useTheme,
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import Tooltip from "./Tooltip";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import Tooltip from "../Tooltip";
 import Card from "./Card";
-import { theme } from "../utils/theme";
-import { useAtom } from "jotai";
-import { useCallback } from "react";
-import { checkTimeOverlap, MAX_BOARDS } from "../utils/template";
+import { useAtom, useAtomValue } from "jotai";
+import { useCallback, useMemo, useState, memo } from "react";
+import { checkTimeOverlap, MAX_BOARDS } from "../../utils/template";
 import {
   BoardInterface,
   cardEditDialogOpenAtom,
-  CardInterface,
   currentEditCardAtom,
+  editingCardsAtom,
   templateAtom,
-} from "../state/template";
-import axiosInstance, { getCsrfToken } from "../utils/axiosInstance";
+} from "../../state/template";
+import { wannaTripLoginStateAtom } from "../../state";
+import axiosInstance, { getCsrfToken } from "../../utils/axiosInstance";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
-import { useAddCard } from "../hooks/template";
-import SortMenu from "./SortMenu";
+import { useAddCard } from "../../hooks/template";
+import SortMenu from "../SortMenu";
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
+import { useSnackbar } from "notistack";
+import CopyToMyTemplateDialog from "../CopyToMyTemplateDialog";
 
 interface BoardProps extends StackProps {
   day: number;
   boardData: BoardInterface; // 보드 데이터 직접 전달
   fetchTemplateData: () => Promise<void>; // 함수 타입 추가
   isOwner: boolean; // 소유자 여부 추가
-  showSnackbar: (
-    message: string,
-    severity?: "success" | "error" | "warning" | "info"
-  ) => void;
-  // showSnackbar 함수 타입 추가
   id?: string; // ID 속성 추가 (선택적 속성으로 설정)
+  emitFetch: () => void; // 템플릿 데이터 다시 불러오기 이벤트 전송 함수
 }
 
 const Board = (props: BoardProps) => {
@@ -49,20 +53,27 @@ const Board = (props: BoardProps) => {
     boardData,
     fetchTemplateData,
     isOwner,
-    showSnackbar,
     id, // ID 속성 추가 (선택적 속성으로 설정)
+    emitFetch,
     ...others
   } = props;
+
+  const theme = useTheme();
+
   const [template] = useAtom(templateAtom); // 템플릿 상태
+  const editingCards = useAtomValue(editingCardsAtom);
+  const loginState = useAtomValue(wannaTripLoginStateAtom); // 로그인 상태
 
   const [, setCurrentEditCard] = useAtom(currentEditCardAtom);
   const [, setCardEditDialogOpen] = useAtom(cardEditDialogOpenAtom);
 
   const addCard = useAddCard();
+  const { enqueueSnackbar } = useSnackbar();
 
-  // 시간 중복 체크 결과
-  const { hasOverlap, overlappingCardIds } = checkTimeOverlap(
-    boardData.cards || []
+  // 시간 중복 체크 결과 (useMemo로 최적화)
+  const { hasOverlap, overlappingCardIds } = useMemo(
+    () => checkTimeOverlap(boardData.cards || []),
+    [boardData.cards]
   );
 
   // 카드 클릭 핸들러
@@ -76,9 +87,9 @@ const Board = (props: BoardProps) => {
       const card = boardData.cards[cardIndex];
       if (card) {
         setCurrentEditCard({
-          cardId: card.id,
-          boardId: boardData.id,
-          orderIndex: card.orderIndex || cardIndex,
+          cardUuid: card.uuid,
+          boardUuid: boardData.uuid,
+          orderIndex: card.orderIndex!,
         });
         setCardEditDialogOpen(true);
       }
@@ -86,7 +97,7 @@ const Board = (props: BoardProps) => {
     [
       isOwner,
       boardData.cards,
-      boardData.id,
+      boardData.uuid,
       setCurrentEditCard,
       setCardEditDialogOpen,
     ]
@@ -94,39 +105,52 @@ const Board = (props: BoardProps) => {
 
   // 카드 생성 버튼 클릭 핸들러
   const handleAddCardButtonClick = useCallback(async () => {
-    // 보드 Id가 없으면 중단
-    if (!boardData.id) {
+    // 보드 Uuid가 없으면 중단
+    if (!boardData.uuid) {
       return;
     }
 
-    // 생성할 새 카드
-    const newCard: CardInterface = {
-      content: "",
-      startTime: dayjs(),
-      endTime: dayjs().add(1, "hour"),
-      isLocked: false,
-    };
+    // 보드 내 마지막 카드의 종료 시간 추출
+    const lastCardEndTime = boardData.cards.length
+      ? dayjs(boardData.cards[boardData.cards.length - 1].endTime)
+      : dayjs().hour(9).minute(0).second(0);
 
     // 카드 추가 훅 호출
     try {
-      const newCardId = await addCard(newCard, boardData.id);
+      const newCardUuid = await addCard(
+        boardData.uuid,
+        lastCardEndTime,
+        boardData.cards.length + 1
+      );
+      await fetchTemplateData();
+      emitFetch();
 
       // 카드 편집 대화상자 열기
       setCurrentEditCard({
-        cardId: newCardId,
-        boardId: boardData.id,
+        cardUuid: newCardUuid,
+        boardUuid: boardData.uuid,
         orderIndex: boardData.cards.length,
       });
-      setCardEditDialogOpen(true);
     } catch (error) {
       console.error("카드 추가 중 오류 발생:", error);
     }
-  }, [boardData, setCurrentEditCard, setCardEditDialogOpen, addCard]);
+  }, [
+    boardData.uuid,
+    boardData.cards,
+    addCard,
+    fetchTemplateData,
+    emitFetch,
+    setCurrentEditCard,
+  ]);
 
   // 보드 추가 버튼 클릭 - 현재 보드 바로 뒤에 새 보드 추가
   const handleAddBoardButtonClick = useCallback(async () => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
+      enqueueSnackbar(
+        `최대 ${MAX_BOARDS}일차까지 등록할 수 있습니다. 기존 일정을 정리한 후 다시 시도해주세요.`,
+        { variant: "warning" }
+      );
       return;
     }
 
@@ -136,85 +160,104 @@ const Board = (props: BoardProps) => {
 
       // 백엔드 API 호출하여 현재 보드 뒤에 새 보드 생성
       const response = await axiosInstance.post(
-        `/board/after/${boardData.id}`,
-        {}, // 빈 객체 전송
+        `/board`,
+        {
+          templateUuid: template.uuid,
+          dayNumber: day + 1,
+        }, // 빈 객체 전송
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
+        // 변경된 보드 상태 반영
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 추가 오류:", error);
     }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
+  }, [
+    day,
+    emitFetch,
+    enqueueSnackbar,
+    fetchTemplateData,
+    template.boards.length,
+    template.uuid,
+  ]);
 
   // 보드 복제 버튼 클릭 - 현재 보드를 복제하여 바로 뒤에 배치
   const handleCopyBoardButtonClick = useCallback(async () => {
     // 보드 개수가 최대 개수보다 많으면 중단
     if (template.boards.length >= MAX_BOARDS) {
+      enqueueSnackbar(
+        `최대 ${MAX_BOARDS}일차까지 등록할 수 있습니다. 기존 일정을 정리한 후 다시 시도해주세요.`,
+        { variant: "warning" }
+      );
       return;
     }
 
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 백엔드 API 호출하여 현재 보드 복제 (newTitle 필드 제거)
       const response = await axiosInstance.post(
-        `/board/duplicate/${boardData.id}`,
+        `/board/copy/${boardUuid}`,
         {}, // 빈 객체 전송 (title 필드 제거)
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
-        // 템플릿 데이터 새로 불러오기
+        // 변경된 보드 상태 반영
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 복제 오류:", error);
     }
-  }, [boardData.id, fetchTemplateData, template.boards.length]);
+  }, [boardData.uuid, emitFetch, enqueueSnackbar, fetchTemplateData, template.boards.length]);
 
   // 보드 삭제 버튼 클릭
   const handleDeleteBoardButtonClick = useCallback(async () => {
     try {
       // CSRF 토큰 가져오기
       const csrfToken = await getCsrfToken();
+      const boardUuid = boardData.uuid;
 
       // 보드 개수가 최소 개수보다 적으면
       if (template.boards.length <= 1) {
         // 카드가 있다면 보드 카드 모두 삭제 API 호출
         if (template.boards[0].cards.length > 0) {
-          const response = await axiosInstance.delete(
-            `/board/${boardData.id}/cards`,
-            {
-              headers: { "X-CSRF-Token": csrfToken },
-            }
+          const response = await axiosInstance.put(
+            `/board/clear/${boardUuid}`,
+            {},
+            { headers: { "X-CSRF-Token": csrfToken } }
           );
 
           if (response.data.success) {
             // 템플릿 데이터 새로 불러오기
             await fetchTemplateData();
+            emitFetch();
           }
         }
         return;
       }
 
       // 보드 개수가 2개 이상일 경우 보드 자체를 삭제
-      const response = await axiosInstance.delete(`/board/${boardData.id}`, {
+      const response = await axiosInstance.delete(`/board/${boardUuid}`, {
         headers: { "X-CSRF-Token": csrfToken },
       });
 
       if (response.data.success) {
         // 템플릿 데이터 새로 불러오기
         await fetchTemplateData();
+        emitFetch();
       }
     } catch (error) {
       console.error("보드 삭제 오류:", error);
     }
-  }, [template, boardData, fetchTemplateData]);
+  }, [boardData.uuid, template.boards, fetchTemplateData, emitFetch]);
 
   // 보드 내 카드 시작 시간순 정렬 함수
   const handleSortByStartTime = useCallback(async () => {
@@ -223,48 +266,28 @@ const Board = (props: BoardProps) => {
       const csrfToken = await getCsrfToken();
 
       // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/board/${boardData.id}/sort`,
-        { sortBy: "start_time" },
+      const response = await axiosInstance.put(
+        `/board/sort/${boardData.uuid}`,
+        {},
         { headers: { "X-CSRF-Token": csrfToken } }
       );
 
       if (response.data.success) {
         // 정렬 후 템플릿 데이터 다시 가져오기
         await fetchTemplateData();
+        emitFetch();
 
-        showSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", "success");
+        enqueueSnackbar("카드가 시작 시간 순으로 정렬되었습니다.", {
+          variant: "success",
+        });
       }
     } catch (error) {
       console.error("카드 정렬 오류:", error);
-      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
+      enqueueSnackbar("카드 정렬 중 오류가 발생했습니다.", {
+        variant: "error",
+      });
     }
-  }, [boardData.id, fetchTemplateData, showSnackbar]);
-
-  // 보드 내 카드 종료 시간순 정렬 함수
-  const handleSortByEndTime = useCallback(async () => {
-    try {
-      // CSRF 토큰 가져오기
-      const csrfToken = await getCsrfToken();
-
-      // 백엔드 API 호출
-      const response = await axiosInstance.post(
-        `/board/${boardData.id}/sort`,
-        { sortBy: "end_time" },
-        { headers: { "X-CSRF-Token": csrfToken } }
-      );
-
-      if (response.data.success) {
-        // 정렬 후 템플릿 데이터 다시 가져오기
-        await fetchTemplateData();
-
-        showSnackbar("카드가 종료 시간 순으로 정렬되었습니다.", "success");
-      }
-    } catch (error) {
-      console.error("카드 정렬 오류:", error);
-      showSnackbar("카드 정렬 중 오류가 발생했습니다.", "error");
-    }
-  }, [boardData.id, fetchTemplateData, showSnackbar]);
+  }, [boardData.uuid, fetchTemplateData, emitFetch, enqueueSnackbar]);
 
   // 보드 스크롤 함수 추가 (Board 컴포넌트 내부에 추가)
   const scrollToFirstOverlappingCard = useCallback(() => {
@@ -282,7 +305,9 @@ const Board = (props: BoardProps) => {
         cardElement.scrollIntoView({ behavior: "smooth", block: "center" });
 
         // 사용자에게 피드백 제공 (옵션)
-        showSnackbar("시간이 중복된 카드로 이동했습니다.", "info");
+        enqueueSnackbar("시간이 중복된 카드로 이동했습니다.", {
+          variant: "info",
+        });
 
         // 시각적 효과로 카드 강조 (선택 사항)
         cardElement.classList.add("highlight-card");
@@ -291,7 +316,47 @@ const Board = (props: BoardProps) => {
         }, 2000);
       }
     }
-  }, [overlappingCardIds, showSnackbar]);
+  }, [overlappingCardIds, enqueueSnackbar]);
+
+  // 열람 모드용 보드 복사 상태 및 핸들러
+  const [viewMenuAnchor, setViewMenuAnchor] = useState<null | HTMLElement>(null);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
+
+  const handleViewMenuOpen = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
+    setViewMenuAnchor(event.currentTarget);
+  }, []);
+
+  const handleViewMenuClose = useCallback(() => {
+    setViewMenuAnchor(null);
+  }, []);
+
+  const handleCopyToMyTemplate = useCallback(() => {
+    // 로그인 상태 확인
+    if (!loginState.isLoggedIn) {
+      enqueueSnackbar("로그인이 필요한 기능입니다.", {
+        variant: "warning",
+      });
+      handleViewMenuClose();
+      return;
+    }
+    handleViewMenuClose();
+    setCopyDialogOpen(true);
+  }, [handleViewMenuClose, loginState.isLoggedIn, enqueueSnackbar]);
+
+  const handleCopyDialogClose = useCallback(() => {
+    setCopyDialogOpen(false);
+  }, []);
+
+  // 복사 성공 핸들러
+  const handleCopySuccess = useCallback(() => {
+    enqueueSnackbar("보드가 성공적으로 복사되었습니다.", {
+      variant: "success",
+    });
+    // 현재 템플릿 데이터 다시 불러오기 (실시간 업데이트)
+    fetchTemplateData();
+    emitFetch();
+  }, [enqueueSnackbar, fetchTemplateData, emitFetch]);
 
   return (
     <Stack height="100%" id={id} {...others}>
@@ -317,7 +382,6 @@ const Board = (props: BoardProps) => {
               {isOwner && (
                 <SortMenu
                   onSortStart={handleSortByStartTime}
-                  onSortEnd={handleSortByEndTime}
                   tooltipTitle="보드 내 정렬하기"
                 />
               )}
@@ -380,11 +444,18 @@ const Board = (props: BoardProps) => {
                 </Tooltip>
               </Stack>
             )}
+
+            {/* 열람 모드일 때 더보기 메뉴 */}
+            {!isOwner && (
+              <IconButton size="small" onClick={handleViewMenuOpen}>
+                <MoreHorizRoundedIcon fontSize="small" />
+              </IconButton>
+            )}
           </Stack>
 
           {/* 카드 드롭 영역 */}
           <Droppable
-            droppableId={String(boardData.id)}
+            droppableId={String(boardData.uuid)}
             type="card"
             isDropDisabled={!isOwner} // 소유자가 아니면 드롭 불가능
           >
@@ -403,31 +474,45 @@ const Board = (props: BoardProps) => {
                 {/* 카드 목록 렌더링 */}
                 {(boardData?.cards || []).map((card, index) => (
                   <Draggable
-                    key={`card-${card.id}`}
-                    draggableId={`card-${card.id}`}
+                    key={`card-${card.uuid}`}
+                    draggableId={`${card.uuid}`}
                     index={index}
-                    isDragDisabled={!isOwner} // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
+                    isDragDisabled={
+                      !isOwner || !!editingCards.get(card.uuid)?.userUuid
+                    } // 소유자가 아닐 때만 드래그 불가능, 잠긴 카드 조건 제거
                   >
                     {(provided) => (
                       <Box
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        id={`card-${card.id}`} // ID 속성 추가
+                        id={`card-${card.uuid}`} // ID 속성 추가
                         sx={{
                           borderRadius: "8px",
                         }}
                       >
                         <Card
-                          key={`card-${card.id}`}
+                          key={`card-${card.uuid}`}
+                          cardUuid={card.uuid}
+                          boardUuid={boardData.uuid}
+                          templateUuid={template.uuid}
                           content={card.content || ""}
                           startTime={card.startTime}
                           endTime={card.endTime}
-                          isLocked={card.isLocked}
-                          location={card.location}
+                          isLocked={card.locked}
+                          isNowEditing={!!editingCards.get(card.uuid)}
+                          editingUserColor={editingCards.get(card.uuid)?.color}
+                          location={card.location || undefined}
                           onClick={() => handleCardClick(index)}
                           isOwner={isOwner}
-                          isTimeOverlapping={card.id !== undefined && overlappingCardIds.includes(card.id)}
+                          isTimeOverlapping={
+                            card.uuid !== undefined &&
+                            overlappingCardIds.includes(card.uuid)
+                          }
+                          onCopySuccess={() => {
+                            fetchTemplateData();
+                            emitFetch();
+                          }}
                         />
                       </Box>
                     )}
@@ -450,8 +535,39 @@ const Board = (props: BoardProps) => {
           )}
         </Stack>
       </Paper>
+
+      {/* 열람 모드 더보기 메뉴 */}
+      <Menu
+        anchorEl={viewMenuAnchor}
+        open={Boolean(viewMenuAnchor)}
+        onClose={handleViewMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+      >
+        <MenuItem onClick={handleCopyToMyTemplate}>
+          <ListItemIcon>
+            <ContentCopyRoundedIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>내 템플릿으로 복사</ListItemText>
+        </MenuItem>
+      </Menu>
+
+      {/* 복사 다이얼로그 */}
+      <CopyToMyTemplateDialog
+        open={copyDialogOpen}
+        onClose={handleCopyDialogClose}
+        onSuccess={handleCopySuccess}
+        copyType="board"
+        sourceUuid={boardData.uuid}
+      />
     </Stack>
   );
 };
 
-export default Board;
+export default memo(Board);

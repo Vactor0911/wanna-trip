@@ -90,23 +90,23 @@ export const insertNewCard = (
 /**
  * 보드 내 카드들의 시간 중복 여부를 체크하는 함수
  * @param cards 체크할 카드 배열
- * @returns {hasOverlap: boolean, overlappingCardIds: number[]} 중복 여부와 중복된 카드 ID 배열
+ * @returns {hasOverlap: boolean, overlappingCardIds: string[]} 중복 여부와 중복된 카드 ID 배열
  */
 export const checkTimeOverlap = (
   cards: CardInterface[]
 ): {
   hasOverlap: boolean;
-  overlappingCardIds: number[];
+  overlappingCardIds: string[];
 } => {
   // 시간 중복이 있는 카드들의 ID를 저장할 배열
-  const overlappingCardIds: number[] = [];
+  const overlappingCardIds: string[] = [];
 
   // 각 카드에 대해 다른 카드와 시간 중복 여부 확인
   for (let i = 0; i < cards.length; i++) {
     const card1 = cards[i];
 
     // ID가 없는 카드는 건너뜀
-    if (!card1.id) continue;
+    if (!card1.uuid) continue;
 
     const card1Start = card1.startTime;
     const card1End = card1.endTime;
@@ -115,20 +115,24 @@ export const checkTimeOverlap = (
       const card2 = cards[j];
 
       // ID가 없는 카드는 건너뜀
-      if (!card2.id) continue;
+      if (!card2.uuid) continue;
 
       const card2Start = card2.startTime;
       const card2End = card2.endTime;
 
       // 시간 중복 검사:
       // (카드1의 시작이 카드2의 끝보다 이전 && 카드1의 끝이 카드2의 시작보다 이후)
-      if (card1Start.isBefore(card2End) && card1End.isAfter(card2Start)) {
+      if (
+        card1Start.isBefore(card2End) &&
+        card1End.isAfter(card2Start) &&
+        !(card1Start.isSame(card2Start) && card1End.isSame(card2End))
+      ) {
         // 중복된 카드 ID 저장 - 잠김 여부에 관계 없이 모든 카드 추가
-        if (!overlappingCardIds.includes(card1.id)) {
-          overlappingCardIds.push(card1.id);
+        if (!overlappingCardIds.includes(card1.uuid)) {
+          overlappingCardIds.push(card1.uuid);
         }
-        if (!overlappingCardIds.includes(card2.id)) {
-          overlappingCardIds.push(card2.id);
+        if (!overlappingCardIds.includes(card2.uuid)) {
+          overlappingCardIds.push(card2.uuid);
         }
       }
     }
@@ -143,24 +147,24 @@ export const checkTimeOverlap = (
 /**
  * 템플릿 내 모든 보드의 시간 중복 여부를 체크하는 함수
  * @param template 템플릿 객체
- * @returns {boardOverlaps: {boardId: number, hasOverlap: boolean, overlappingCardIds: number[]}[]} 각 보드별 중복 정보
+ * @returns { boardOverlaps: { boardUuid: string; hasOverlap: boolean; overlappingCardIds: string[] }[] } 각 보드의 시간 중복 정보 배열
  */
 export const checkTemplateTimeOverlaps = (
   template: TemplateInterface
 ): {
   boardOverlaps: {
-    boardId: number;
+    boardUuid: string;
     hasOverlap: boolean;
-    overlappingCardIds: number[];
+    overlappingCardIds: string[];
   }[];
 } => {
-  const boardOverlaps = template.boards
-    // 1. id가 없는 보드는 제외
-    .filter((board) => board.id !== undefined)
+  const boardOverlaps = template
+    .boards! // 1. uuid가 없는 보드는 제외
+    .filter((board) => board.uuid !== undefined)
     .map((board) => {
-      const overlapInfo = checkTimeOverlap(board.cards);
+      const overlapInfo = checkTimeOverlap(board.cards || []);
       return {
-        boardId: board.id as number, // TypeScript에 id가 반드시 있음을 알림
+        boardUuid: board.uuid as string, // TypeScript에 uuid가 반드시 있음을 알림
         hasOverlap: overlapInfo.hasOverlap,
         overlappingCardIds: overlapInfo.overlappingCardIds,
       };

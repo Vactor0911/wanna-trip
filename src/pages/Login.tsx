@@ -9,6 +9,7 @@ import {
   InputAdornment,
   Stack,
   Typography,
+  useTheme,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -23,7 +24,6 @@ import { wannaTripLoginStateAtom, kakaoLoginStateAtom } from "../state";
 import { jwtDecode } from "jwt-decode";
 
 import { getCsrfToken } from "../utils/axiosInstance";
-import { theme } from "../utils/theme";
 import OutlinedTextField from "../components/OutlinedTextField";
 import PlainLink from "../components/PlainLinkProps";
 import SectionHeader from "../components/SectionHeader";
@@ -35,12 +35,15 @@ import {
   normalLogin,
   processLoginSuccess,
 } from "../utils/loginUtils";
+import { useSnackbar } from "notistack";
 
 const Login = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const redirectTo = searchParams.get("redirectTo") ?? undefined;
 
   const navigate = useNavigate();
+  const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoginLoading, setIsLoginLoading] = useState(false); // 로그인 로딩 상태
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -58,7 +61,8 @@ const Login = () => {
       navigate(`/${redirectTo}`);
       return;
     }
-    navigate(-1);
+    // 기본 페이지로 이동 (외부 로그인 후 navigate(-1)은 외부 사이트로 돌아갈 수 있음)
+    navigate("/template");
   }, [navigate, redirectTo]);
 
   // 로그인 기능 추가
@@ -123,7 +127,7 @@ const Login = () => {
           decoded = jwtDecode(credentialResponse.credential);
         } catch (error) {
           console.error("구글 Credential 디코딩 실패:", error);
-          alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+          enqueueSnackbar("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
           return;
         }
 
@@ -164,14 +168,14 @@ const Login = () => {
           { email: googleEmail, loginType: "google" }
         );
 
-        alert(`${loginState.userName}님 환영합니다!`);
+        enqueueSnackbar(`${loginState.userName}님 환영합니다!`, { variant: "success" });
         handleRedirect();
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
-        alert("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+        enqueueSnackbar("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
       }
     },
-    [handleRedirect, setWannaTripLoginState]
+    [enqueueSnackbar, handleRedirect, setWannaTripLoginState]
   );
 
   // 구글 로그인 버튼 클릭 시 호출
@@ -236,14 +240,15 @@ const Login = () => {
       );
 
       window.history.replaceState(null, "", "/login");
-      alert(`[ ${loginState.userName} ]님 환영합니다!`);
+      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, { variant: "success" });
       handleRedirect();
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       setKakaoLoginState(""); // 오류 시 상태 초기화
-      alert("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+      enqueueSnackbar("카카오 로그인에 실패했습니다. 다시 시도해주세요.", { variant: "error" });
     }
   }, [
+    enqueueSnackbar,
     kakaoLoginState,
     handleRedirect,
     setKakaoLoginState,
@@ -275,7 +280,7 @@ const Login = () => {
   // 로그인 버튼 클릭
   const handleLoginButtonClick = useCallback(async () => {
     if (!email || !password) {
-      alert("이메일과 비밀번호를 입력해 주세요.");
+      enqueueSnackbar("이메일과 비밀번호를 입력해 주세요.", { variant: "warning" });
       return;
     }
 
@@ -299,15 +304,15 @@ const Login = () => {
         { email, loginType: "normal" }
       );
 
-      alert(`[ ${loginState.userName} ]님 환영합니다!`);
+      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, { variant: "success" });
       handleRedirect();
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("서버 오류:", error.response.data.message);
-        alert(error.response.data.message || "로그인 실패");
+        enqueueSnackbar(error.response.data.message || "로그인 실패", { variant: "error" });
       } else {
         console.error("요청 오류:", (error as Error).message);
-        alert("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.");
+        enqueueSnackbar("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" });
       }
 
       setPassword("");
@@ -321,6 +326,7 @@ const Login = () => {
     setWannaTripLoginState,
     isLoginStateSave,
     handleRedirect,
+    enqueueSnackbar,
   ]);
 
   // 엔터 입력시 로그인 처리

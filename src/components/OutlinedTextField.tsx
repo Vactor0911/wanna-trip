@@ -1,18 +1,21 @@
 import {
   FormControl,
+  FormHelperText,
   InputLabel,
   OutlinedInput,
   OutlinedInputProps,
+  useTheme,
 } from "@mui/material";
-import { theme } from "../utils/theme";
 
 interface OutlinedTextFieldProps extends OutlinedInputProps {
   label: string;
   endAdornment?: React.ReactNode;
+  helperText?: string;
 }
 
 const OutlinedTextField = (props: OutlinedTextFieldProps) => {
-  const { label, endAdornment, ...others } = props;
+  const { label, endAdornment, helperText, error, sx, ...others } = props;
+  const theme = useTheme();
 
   return (
     <FormControl
@@ -29,23 +32,25 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
         "& legend": {
           display: "none",
         },
+        ...sx,
       }}
     >
-      <InputLabel>{label}</InputLabel>
+      <InputLabel error={error}>{label}</InputLabel>
       <OutlinedInput
         endAdornment={endAdornment}
         label={label}
+        error={error}
         {...others}
         sx={{
           fontWeight: 700,
           color: others.readOnly
-            ? "rgba(0, 0, 0, 0.38)"
-            : theme.palette.black.main,
+            ? theme.palette.text.disabled
+            : theme.palette.text.primary,
           borderRadius: "8px",
           overflow: "hidden",
           backgroundColor: others.readOnly
             ? theme.palette.secondary.main
-            : "white",
+            : theme.palette.background.paper,
           "& input": {
             padding: "21.5px 14px 11.5px 14px",
           },
@@ -54,6 +59,7 @@ const OutlinedTextField = (props: OutlinedTextFieldProps) => {
           },
         }}
       />
+      <FormHelperText error={error}>{helperText}</FormHelperText>
     </FormControl>
   );
 };
