@@ -227,7 +227,7 @@ export const reorderBoardCardsAtom = atom(null, (get, set) => {
     (board): BoardInterface => ({
       ...(board as BoardInterface),
       cards: [...(board.cards || [])].sort(
-        (a, b) => (a.orderIndex || 1) - (b.orderIndex || 1)
+        (a, b) => (a.orderIndex ?? 1) - (b.orderIndex ?? 1)
       ),
     })
   );
