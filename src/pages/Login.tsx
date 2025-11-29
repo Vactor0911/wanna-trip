@@ -69,7 +69,7 @@ const Login = () => {
   const [email, setEmail] = useState(""); // 이메일 값
   const [password, setPassword] = useState(""); // 사용자 비밀번호
   const [isEmailSaved, setIsEmailSaved] = useState(false); // 이메일 저장 여부
-  const [isLoginStateSave, setIsLoginStateSave] = useState(false); // 로그인 상태 유지 여부
+  const [isLoginStateSave, setIsLoginStateSave] = useState(true); // 로그인 상태 유지 여부
   const setWannaTripLoginState = useSetAtom(wannaTripLoginStateAtom); // 로그인 상태
 
   // 카카오 간편 로그인
