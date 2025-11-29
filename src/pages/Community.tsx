@@ -568,7 +568,7 @@ const Community = () => {
                 {popularPosts.map((post, index) => (
                   <Paper
                     key={`popular-post-${index}`}
-                    elevation={0}
+                    elevation={3}
                     sx={{
                       borderRadius: 3,
                       overflow: "hidden",
@@ -576,8 +576,8 @@ const Community = () => {
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       cursor: "pointer",
                       "&:hover": {
-                        transform: "translateY(-8px)",
-                        boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+                        transform: "scale(1.01)",
+                        boxShadow: 5,
                       },
                     }}
                   >

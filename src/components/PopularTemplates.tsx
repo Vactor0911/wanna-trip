@@ -1,4 +1,10 @@
-import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+} from "react";
 import {
   Box,
   IconButton,
@@ -60,7 +66,7 @@ const PopularTemplates = ({
   const theme = useTheme();
   const navigate = useNavigate();
   const breakpoint = useBreakpoint();
-  
+
   // 캐러셀 상태
   const [itemCounts, setItemCounts] = useState(3); // 화면 크기에 따라 보이는 카드 수
   const x = useMotionValue(0); // 트랙 X 위치
@@ -168,18 +174,22 @@ const PopularTemplates = ({
   }, [totalPages, showNavigationButtons]);
 
   // 카드 클릭 핸들러
-  const handleCardClick = useCallback((templateId: string) => {
-    if (onCardClick) {
-      onCardClick(templateId);
-    } else {
-      navigate(`/template/${templateId}`);
-    }
-  }, [onCardClick, navigate]);
+  const handleCardClick = useCallback(
+    (templateId: string) => {
+      if (onCardClick) {
+        onCardClick(templateId);
+      } else {
+        navigate(`/template/${templateId}`);
+      }
+    },
+    [onCardClick, navigate]
+  );
 
   // 카드 높이 계산 (최대 높이 제한)
   const getCardHeight = () => {
     if (!firstItemRef.current) return 250;
-    const calculatedHeight = firstItemRef.current.offsetWidth / CARD_ASPECT_RATIO;
+    const calculatedHeight =
+      firstItemRef.current.offsetWidth / CARD_ASPECT_RATIO;
     return Math.min(calculatedHeight, MAX_CARD_HEIGHT);
   };
 
@@ -195,7 +205,10 @@ const PopularTemplates = ({
           py: 6,
           px: 3,
           borderRadius: 4,
-          background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.05)} 0%, ${alpha("#ff8e53", 0.02)} 100%)`,
+          background: `linear-gradient(135deg, ${alpha(
+            "#ff6b6b",
+            0.05
+          )} 0%, ${alpha("#ff8e53", 0.02)} 100%)`,
           border: `2px dashed ${alpha("#ff6b6b", 0.25)}`,
           textAlign: "center",
           position: "relative",
@@ -212,7 +225,10 @@ const PopularTemplates = ({
             width: 120,
             height: 120,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.1)} 0%, ${alpha("#ff8e53", 0.05)} 100%)`,
+            background: `linear-gradient(135deg, ${alpha(
+              "#ff6b6b",
+              0.1
+            )} 0%, ${alpha("#ff8e53", 0.05)} 100%)`,
           }}
         />
         <Box
@@ -223,10 +239,13 @@ const PopularTemplates = ({
             width: 80,
             height: 80,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${alpha("#ff8e53", 0.08)} 0%, ${alpha("#ffc107", 0.05)} 100%)`,
+            background: `linear-gradient(135deg, ${alpha(
+              "#ff8e53",
+              0.08
+            )} 0%, ${alpha("#ffc107", 0.05)} 100%)`,
           }}
         />
-        
+
         <Box
           sx={{
             display: "flex",
@@ -235,15 +254,18 @@ const PopularTemplates = ({
             width: 80,
             height: 80,
             borderRadius: "50%",
-            background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.15)} 0%, ${alpha("#ff8e53", 0.1)} 100%)`,
+            background: `linear-gradient(135deg, ${alpha(
+              "#ff6b6b",
+              0.15
+            )} 0%, ${alpha("#ff8e53", 0.1)} 100%)`,
             mb: 2,
           }}
         >
-          <TravelExploreIcon 
-            sx={{ 
-              fontSize: 40, 
+          <TravelExploreIcon
+            sx={{
+              fontSize: 40,
               color: alpha("#ff6b6b", 0.6),
-            }} 
+            }}
           />
         </Box>
         <Typography variant="h6" color="text.secondary" mb={1} fontWeight={600}>
@@ -257,10 +279,7 @@ const PopularTemplates = ({
   }
 
   return (
-    <Box
-      position="relative"
-      {...boxProps}
-    >
+    <Box position="relative" {...boxProps}>
       {/* 이전 버튼 - 아이템이 visibleCount보다 많을 때만 표시 */}
       {showNavigationButtons && (
         <Paper
@@ -318,17 +337,17 @@ const PopularTemplates = ({
               key={tpl.id}
               ref={i === 0 ? firstItemRef : undefined}
               component={motion.div}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
               sx={{
                 flex: "0 0 auto",
-                width: `calc((100% - ${(itemCounts - 1) * GAP}px) / ${itemCounts})`,
+                width: `calc((100% - ${
+                  (itemCounts - 1) * GAP
+                }px) / ${itemCounts})`,
                 cursor: "pointer",
               }}
               onClick={() => handleCardClick(tpl.id)}
             >
               <Paper
-                elevation={2}
+                elevation={3}
                 sx={{
                   width: "100%",
                   height: getCardHeight(),
@@ -350,6 +369,14 @@ const PopularTemplates = ({
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   position: "relative",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: 5,
+                  },
+                  "&:active": {
+                    transform: "scale(0.97)",
+                  },
                 }}
               >
                 {/* 카드 하단 정보 */}
@@ -366,7 +393,13 @@ const PopularTemplates = ({
                   }}
                 >
                   {/* 좌측: 아바타, 제목/작성자 */}
-                  <Box display="flex" alignItems="center" gap={1.5} flex={1} minWidth={0}>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    gap={1.5}
+                    flex={1}
+                    minWidth={0}
+                  >
                     {tpl.userProfileImage ? (
                       <Avatar
                         src={`${SERVER_HOST}${tpl.userProfileImage}`}
