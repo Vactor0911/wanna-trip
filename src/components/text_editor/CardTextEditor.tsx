@@ -142,7 +142,15 @@ const CardTextEditor = (props: CardTextEditorProps) => {
   }, [cloud, isLayoutReady]);
 
   return (
-    <div className="main-container">
+    <div
+      className="main-container"
+      css={{
+        "& .ck-content h1, & .ck-content h2, & .ck-content h3, & .ck-content h4, & .ck-content h5, & .ck-content h6, & .ck-content p":
+          {
+            margin: "0",
+          },
+      }}
+    >
       <div
         className="editor-container editor-container_classic-editor"
         ref={editorContainerRef}
