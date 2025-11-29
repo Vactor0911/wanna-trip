@@ -572,7 +572,7 @@
 ## 🏗️ 시스템 아키텍처
 
 <p align="center">
-  <img width="900" alt="시스템 아키텍처" src="https://github.com/user-attachments/assets/31d32627-9793-416d-b169-4a3ae8c06185" />
+  <img width="900" alt="시스템 아키텍처" src="[https://github.com/user-attachments/assets/31d32627-9793-416d-b169-4a3ae8c06185](https://github.com/user-attachments/assets/db0de0c3-3008-4c82-82d5-52c14d704923)" />
 </p>
 
 
