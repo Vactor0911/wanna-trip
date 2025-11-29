@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import MainImage1 from "../assets/images/main1.png";
 import MainImage2 from "../assets/images/main2.png";
-import { ReactNode, useCallback, useEffect } from "react";
+import { ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router";
 import Marquee from "react-fast-marquee";
 import MockupPhone from "../assets/images/mockup_phone.png";
@@ -23,7 +23,6 @@ import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import { motion } from "framer-motion";
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../state";
-import { useRedirectPage } from "../hooks";
 
 // COMMUNITY 데이터
 const communityData = [
@@ -166,12 +165,11 @@ const Main = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
-  const redirectPage = useRedirectPage();
 
-  // GitHub Pages 대응 리다이렉트 훅 실행
-  useEffect(() => {
-    redirectPage();
-  }, [redirectPage]);
+  // // GitHub Pages 대응 리다이렉트 훅 실행
+  // useEffect(() => {
+  //   redirectPage();
+  // }, [redirectPage]);
 
   // 시작하기 버튼 클릭
   const handleStartButtonClick = useCallback(() => {
