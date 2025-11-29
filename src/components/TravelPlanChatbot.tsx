@@ -19,7 +19,10 @@ import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import FaceRoundedIcon from "@mui/icons-material/FaceRounded";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
-import axiosInstance, { getCsrfToken, SERVER_HOST } from "../utils/axiosInstance";
+import axiosInstance, {
+  getCsrfToken,
+  SERVER_HOST,
+} from "../utils/axiosInstance";
 import { useSnackbar } from "notistack";
 
 // 메시지 타입 정의
@@ -77,7 +80,9 @@ const TravelPlanChatbot = ({
       });
 
       if (response.data.success && response.data.data.profileImage) {
-        const imageUrl = `${SERVER_HOST}${response.data.data.profileImage}?t=${new Date().getTime()}`;
+        const imageUrl = `${SERVER_HOST}${
+          response.data.data.profileImage
+        }?t=${new Date().getTime()}`;
         setProfileImage(imageUrl);
       }
     } catch (err) {
@@ -173,11 +178,12 @@ const TravelPlanChatbot = ({
     } catch (error) {
       console.error("메시지 전송 오류:", error);
       setError("서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.");
-      
+
       const tempMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "죄송합니다. 서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.",
+        content:
+          "죄송합니다. 서버 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, tempMessage]);
@@ -221,28 +227,37 @@ const TravelPlanChatbot = ({
     } catch (error) {
       console.error("여행 계획 생성 오류:", error);
       setError("여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.");
-      enqueueSnackbar("여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
+      enqueueSnackbar(
+        "여행 계획 생성 중 오류가 발생했습니다. 다시 시도해주세요.",
+        { variant: "error" }
+      );
     } finally {
       setIsGenerating(false);
     }
   }, [enqueueSnackbar, messages, onComplete, templateName]);
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 4,
           overflow: "hidden",
-        }
+        },
       }}
     >
       <DialogTitle
         sx={{
-          background: `linear-gradient(135deg, ${alpha("#1976d2", 0.15)} 0%, ${alpha("#2196f3", 0.08)} 50%, ${alpha("#42a5f5", 0.05)} 100%)`,
+          background: `linear-gradient(135deg, ${alpha(
+            "#1976d2",
+            0.15
+          )} 0%, ${alpha("#2196f3", 0.08)} 50%, ${alpha(
+            "#42a5f5",
+            0.05
+          )} 100%)`,
           borderBottom: `1px solid ${alpha("#1976d2", 0.1)}`,
           position: "relative",
           overflow: "hidden",
@@ -259,7 +274,13 @@ const TravelPlanChatbot = ({
             transform: "rotate(15deg)",
           }}
         />
-        <Stack direction="row" alignItems="center" gap={1.5} position="relative" zIndex={1}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          gap={1.5}
+          position="relative"
+          zIndex={1}
+        >
           <Box
             sx={{
               display: "flex",
@@ -274,23 +295,36 @@ const TravelPlanChatbot = ({
           >
             <SmartToyIcon sx={{ color: "white", fontSize: 26 }} />
           </Box>
-          <Box>
-            <Typography variant="h6" fontWeight={700}>🤖 AI 여행 계획 만들기</Typography>
+          <Stack>
+            <Typography variant="h6" fontWeight={700}>
+              AI 여행 계획 만들기
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               AI와 대화하며 맞춤형 여행 계획을 만들어보세요
             </Typography>
-          </Box>
+          </Stack>
         </Stack>
       </DialogTitle>
 
-      <DialogContent sx={{ height: "60vh", display: "flex", flexDirection: "column", pt: 2, bgcolor: (theme) => theme.palette.mode === "dark" ? alpha("#1e293b", 0.5) : alpha("#f8fafc", 0.5) }}>
+      <DialogContent
+        sx={{
+          height: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          mt: 2,
+          bgcolor: (theme) =>
+            theme.palette.mode === "dark"
+              ? alpha("#1e293b", 0.5)
+              : alpha("#f8fafc", 0.5),
+        }}
+      >
         {/* 에러 메시지 */}
         {error && (
-          <Box 
-            sx={{ 
-              mb: 2, 
-              p: 1.5, 
-              bgcolor: alpha("#ef4444", 0.1), 
+          <Box
+            sx={{
+              mb: 2,
+              p: 1.5,
+              bgcolor: alpha("#ef4444", 0.1),
               borderRadius: 2,
               border: `1px solid ${alpha("#ef4444", 0.2)}`,
             }}
@@ -303,17 +337,19 @@ const TravelPlanChatbot = ({
 
         {/* 대화 횟수 제한 경고 */}
         {isNearLimit && !error && (
-          <Box 
-            sx={{ 
-              mb: 2, 
-              p: 1.5, 
-              bgcolor: alpha("#f59e0b", 0.1), 
+          <Box
+            sx={{
+              mb: 2,
+              p: 1.5,
+              bgcolor: alpha("#f59e0b", 0.1),
               borderRadius: 2,
               border: `1px solid ${alpha("#f59e0b", 0.2)}`,
             }}
           >
             <Typography color="#d97706" variant="body2" fontWeight={500}>
-              ⚠️ 대화 횟수가 {conversationCount}/{MAX_CONVERSATIONS}회입니다. 곧 제한에 도달합니다. 정보가 충분하다면 '여행 계획 생성' 버튼을 눌러주세요.
+              ⚠️ 대화 횟수가 {conversationCount}/{MAX_CONVERSATIONS}회입니다. 곧
+              제한에 도달합니다. 정보가 충분하다면 '여행 계획 생성' 버튼을
+              눌러주세요.
             </Typography>
           </Box>
         )}
@@ -357,20 +393,26 @@ const TravelPlanChatbot = ({
                     p: 2,
                     maxWidth: "75%",
                     borderRadius: 3,
-                    ...(message.role === "user" 
+                    ...(message.role === "user"
                       ? {
-                          background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                          background:
+                            "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                           color: "white",
                           boxShadow: `0 4px 14px ${alpha("#1976d2", 0.3)}`,
                         }
                       : {
                           bgcolor: "background.paper",
-                          border: (theme) => `1px solid ${theme.palette.mode === "dark" ? alpha("#90caf9", 0.3) : alpha("#1976d2", 0.15)}`,
-                          boxShadow: (theme) => theme.palette.mode === "dark" 
-                            ? `0 2px 8px ${alpha("#000", 0.3)}` 
-                            : `0 2px 8px ${alpha("#000", 0.05)}`,
-                        }
-                    ),
+                          border: (theme) =>
+                            `1px solid ${
+                              theme.palette.mode === "dark"
+                                ? alpha("#90caf9", 0.3)
+                                : alpha("#1976d2", 0.15)
+                            }`,
+                          boxShadow: (theme) =>
+                            theme.palette.mode === "dark"
+                              ? `0 2px 8px ${alpha("#000", 0.3)}`
+                              : `0 2px 8px ${alpha("#000", 0.05)}`,
+                        }),
                   }}
                 >
                   <Stack direction="row" spacing={1} alignItems="flex-start">
@@ -380,14 +422,25 @@ const TravelPlanChatbot = ({
                           width: 24,
                           height: 24,
                           borderRadius: 1.5,
-                          bgcolor: (theme) => theme.palette.mode === "dark" ? alpha("#90caf9", 0.2) : alpha("#1976d2", 0.1),
+                          bgcolor: (theme) =>
+                            theme.palette.mode === "dark"
+                              ? alpha("#90caf9", 0.2)
+                              : alpha("#1976d2", 0.1),
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           mt: 0.25,
                         }}
                       >
-                        <SmartToyIcon sx={{ fontSize: 16, color: (theme) => theme.palette.mode === "dark" ? "#90caf9" : "#1976d2" }} />
+                        <SmartToyIcon
+                          sx={{
+                            fontSize: 16,
+                            color: (theme) =>
+                              theme.palette.mode === "dark"
+                                ? "#90caf9"
+                                : "#1976d2",
+                          }}
+                        />
                       </Box>
                     )}
                     {message.role === "user" && (
@@ -403,8 +456,7 @@ const TravelPlanChatbot = ({
                         {!profileImage && (
                           <FaceRoundedIcon
                             sx={{
-                              width: "90%",
-                              height: "90%",
+                              fontSize: 16,
                               color: "white",
                             }}
                           />
@@ -413,7 +465,13 @@ const TravelPlanChatbot = ({
                     )}
                     <Typography
                       variant="body1"
-                      sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                      sx={{
+                        display: "inline-flex",
+                        flex: 1,
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "keep-all",
+                        lineHeight: "1.5em",
+                      }}
                     >
                       {message.content}
                     </Typography>
@@ -423,13 +481,18 @@ const TravelPlanChatbot = ({
             ))}
             {isLoading && (
               <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-                <Paper 
-                  elevation={0} 
-                  sx={{ 
-                    p: 2, 
-                    borderRadius: 3, 
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: 3,
                     bgcolor: "background.paper",
-                    border: (theme) => `1px solid ${theme.palette.mode === "dark" ? alpha("#90caf9", 0.3) : alpha("#1976d2", 0.15)}`,
+                    border: (theme) =>
+                      `1px solid ${
+                        theme.palette.mode === "dark"
+                          ? alpha("#90caf9", 0.3)
+                          : alpha("#1976d2", 0.15)
+                      }`,
                   }}
                 >
                   <Stack direction="row" spacing={1.5} alignItems="center">
@@ -465,15 +528,26 @@ const TravelPlanChatbot = ({
                 bgcolor: "background.paper",
                 transition: "all 0.2s ease",
                 "& fieldset": {
-                  borderColor: (theme) => theme.palette.mode === "dark" ? alpha("#90caf9", 0.3) : alpha("#1976d2", 0.2),
+                  borderColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? alpha("#90caf9", 0.3)
+                      : alpha("#1976d2", 0.2),
                   borderWidth: 1.5,
                 },
                 "&:hover fieldset": {
-                  borderColor: (theme) => theme.palette.mode === "dark" ? alpha("#90caf9", 0.5) : alpha("#1976d2", 0.4),
+                  borderColor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? alpha("#90caf9", 0.5)
+                      : alpha("#1976d2", 0.4),
                 },
                 "&.Mui-focused fieldset": {
-                  borderColor: (theme) => theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
-                  boxShadow: (theme) => `0 0 0 3px ${alpha(theme.palette.mode === "dark" ? "#90caf9" : "#1976d2", 0.1)}`,
+                  borderColor: (theme) =>
+                    theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
+                  boxShadow: (theme) =>
+                    `0 0 0 3px ${alpha(
+                      theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
+                      0.1
+                    )}`,
                 },
               },
             }}
@@ -505,15 +579,18 @@ const TravelPlanChatbot = ({
         </Stack>
       </DialogContent>
 
-      <DialogActions 
-        sx={{ 
-          p: 2.5, 
+      <DialogActions
+        sx={{
+          p: 2.5,
           borderTop: `1px solid ${alpha("#1976d2", 0.1)}`,
-          background: `linear-gradient(135deg, ${alpha("#1976d2", 0.03)} 0%, ${alpha("#fff", 1)} 100%)`,
+          background: `linear-gradient(135deg, ${alpha(
+            "#1976d2",
+            0.03
+          )} 0%, ${alpha("#fff", 1)} 100%)`,
         }}
       >
-        <Button 
-          onClick={onClose} 
+        <Button
+          onClick={onClose}
           disabled={isGenerating}
           sx={{
             borderRadius: 2,
