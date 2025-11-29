@@ -329,7 +329,7 @@ const TemplateShareDialog = (props: DialogProps) => {
               input: {
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchRoundedIcon />
+                    <SearchRoundedIcon color="primary" />
                   </InputAdornment>
                 ),
                 sx: {

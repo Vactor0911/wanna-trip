@@ -9,7 +9,6 @@ import {
   Typography,
   Button,
   Divider,
-  TextField,
   Box,
   CircularProgress,
 } from "@mui/material";
@@ -24,6 +23,7 @@ import {
   useCopyBoardToTemplate,
   useCopyCardToBoard,
 } from "../hooks/template";
+import OutlinedTextField from "./OutlinedTextField";
 
 interface CopyToMyTemplateDialogProps {
   open: boolean;
@@ -280,7 +280,7 @@ const CopyToMyTemplateDialog = (props: CopyToMyTemplateDialogProps) => {
             <Typography variant="body2" color="text.secondary">
               이 여행 일정을 내 템플릿으로 복사합니다.
             </Typography>
-            <TextField
+            <OutlinedTextField
               label="새 템플릿 제목"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
