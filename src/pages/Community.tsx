@@ -1,4 +1,5 @@
 import {
+  alpha,
   Avatar,
   Box,
   Button,
@@ -9,6 +10,7 @@ import {
   Fab,
   IconButton,
   InputAdornment,
+  keyframes,
   OutlinedInput,
   Paper,
   Skeleton,
@@ -33,6 +35,8 @@ import axios from "axios";
 import { useAtomValue } from "jotai";
 import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { enqueueSnackbar } from "notistack";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -71,6 +75,16 @@ const getLikedStatus = (postUuid: string): boolean => {
     return false;
   }
 };
+
+// 펄스 애니메이션 정의
+const pulse = keyframes`
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+`;
 
 const Community = () => {
   const navigate = useNavigate();
@@ -149,9 +163,7 @@ const Community = () => {
 
         // 게시글 목록 불러오기 API 호출
         const response = await axiosInstance.get(
-          `${endpoint}/?${
-            !keyword ? "" : `keyword=${keyword}&`
-          }page=${page}`
+          `${endpoint}/?${!keyword ? "" : `keyword=${keyword}&`}page=${page}`
         );
 
         // 게시글 목록 업데이트
@@ -414,7 +426,8 @@ const Community = () => {
             position: "relative",
             borderRadius: 4,
             p: 3,
-            background: "linear-gradient(135deg, rgba(255,107,107,0.08) 0%, rgba(255,142,83,0.08) 50%, rgba(255,193,7,0.08) 100%)",
+            background:
+              "linear-gradient(135deg, rgba(255,107,107,0.08) 0%, rgba(255,142,83,0.08) 50%, rgba(255,193,7,0.08) 100%)",
             overflow: "hidden",
           }}
         >
@@ -427,31 +440,27 @@ const Community = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 40,
-                  height: 40,
-                  borderRadius: 2,
-                  background: "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
-                  boxShadow: "0 4px 12px rgba(255,107,107,0.4)",
-                  animation: "pulse 2s ease-in-out infinite",
-                  "@keyframes pulse": {
-                    "0%, 100%": {
-                      transform: "scale(1)",
-                      boxShadow: "0 4px 12px rgba(255,107,107,0.4)",
-                    },
-                    "50%": {
-                      transform: "scale(1.05)",
-                      boxShadow: "0 6px 20px rgba(255,107,107,0.6)",
-                    },
-                  },
+                  width: 48,
+                  height: 48,
+                  borderRadius: 3,
+                  background:
+                    "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
+                  boxShadow: `0 4px 14px ${alpha("#ff6b6b", 0.4)}`,
                 }}
               >
-                <Typography sx={{ fontSize: "1.5rem" }}>🔥</Typography>
+                <WhatshotIcon
+                  sx={{
+                    color: "white",
+                    fontSize: 28,
+                    animation: `${pulse} 1.5s ease-in-out infinite`,
+                  }}
+                />
               </Box>
               <Stack>
                 <Typography variant="h5" fontWeight="bold">
                   실시간 인기 게시글
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="body2" color="text.secondary">
                   지금 가장 뜨거운 여행 이야기
                 </Typography>
               </Stack>
@@ -497,8 +506,16 @@ const Community = () => {
                       />
                       <Stack gap={1} padding={2} pl={8} flex={1}>
                         <Stack position="relative">
-                          <Skeleton variant="text" width="200px" animation="wave" />
-                          <Skeleton variant="text" width="100px" animation="wave" />
+                          <Skeleton
+                            variant="text"
+                            width="200px"
+                            animation="wave"
+                          />
+                          <Skeleton
+                            variant="text"
+                            width="100px"
+                            animation="wave"
+                          />
                           <Skeleton
                             variant="circular"
                             width={42}
@@ -513,10 +530,27 @@ const Community = () => {
                           />
                         </Stack>
                         <Skeleton variant="text" width="80%" animation="wave" />
-                        <Stack direction="row" gap={1.5} justifyContent="flex-end" alignItems="center">
-                          <Skeleton variant="text" width="60px" animation="wave" />
-                          <Skeleton variant="text" width="60px" animation="wave" />
-                          <Skeleton variant="text" width="60px" animation="wave" />
+                        <Stack
+                          direction="row"
+                          gap={1.5}
+                          justifyContent="flex-end"
+                          alignItems="center"
+                        >
+                          <Skeleton
+                            variant="text"
+                            width="60px"
+                            animation="wave"
+                          />
+                          <Skeleton
+                            variant="text"
+                            width="60px"
+                            animation="wave"
+                          />
+                          <Skeleton
+                            variant="text"
+                            width="60px"
+                            animation="wave"
+                          />
                         </Stack>
                       </Stack>
                     </Stack>
@@ -534,7 +568,7 @@ const Community = () => {
                 {popularPosts.map((post, index) => (
                   <Paper
                     key={`popular-post-${index}`}
-                    elevation={0}
+                    elevation={3}
                     sx={{
                       borderRadius: 3,
                       overflow: "hidden",
@@ -542,8 +576,8 @@ const Community = () => {
                       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                       cursor: "pointer",
                       "&:hover": {
-                        transform: "translateY(-8px)",
-                        boxShadow: "0 12px 40px rgba(0,0,0,0.15)",
+                        transform: "scale(1.01)",
+                        boxShadow: 5,
                       },
                     }}
                   >
@@ -603,10 +637,17 @@ const Community = () => {
                         {/* 게시글 정보 */}
                         <Stack gap={1} padding={2} pl={8} flex={1}>
                           <Stack position="relative">
-                            <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                            <Typography
+                              variant="subtitle1"
+                              fontWeight="bold"
+                              noWrap
+                            >
                               {post.title}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {post.authorName}
                             </Typography>
                             <Avatar
@@ -624,7 +665,11 @@ const Community = () => {
                             />
                           </Stack>
 
-                          <Typography variant="body2" color="text.secondary" noWrap>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            noWrap
+                          >
                             {stripHtml(post.content)}
                           </Typography>
 
@@ -636,34 +681,73 @@ const Community = () => {
                             alignItems="center"
                             mt="auto"
                           >
-                            <Stack direction="row" alignItems="center" gap={0.5}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                            >
                               {post.liked ? (
-                                <FavoriteRoundedIcon color="error" sx={{ fontSize: 18 }} />
+                                <FavoriteRoundedIcon
+                                  color="error"
+                                  sx={{ fontSize: 18 }}
+                                />
                               ) : (
-                                <FavoriteBorderRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                                <FavoriteBorderRoundedIcon
+                                  sx={{ fontSize: 18, color: "text.secondary" }}
+                                />
                               )}
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {post.likes}
                               </Typography>
                             </Stack>
 
-                            <Stack direction="row" alignItems="center" gap={0.5}>
-                              <IosShareRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                              <Typography variant="caption" color="text.secondary">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                            >
+                              <IosShareRoundedIcon
+                                sx={{ fontSize: 18, color: "text.secondary" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {post.shares}
                               </Typography>
                             </Stack>
 
-                            <Stack direction="row" alignItems="center" gap={0.5}>
-                              <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                              <Typography variant="caption" color="text.secondary">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                            >
+                              <ChatBubbleOutlineRoundedIcon
+                                sx={{ fontSize: 18, color: "text.secondary" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {post.comments}
                               </Typography>
                             </Stack>
 
-                            <Stack direction="row" alignItems="center" gap={0.5}>
-                              <VisibilityOutlinedIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                              <Typography variant="caption" color="text.secondary">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                            >
+                              <VisibilityOutlinedIcon
+                                sx={{ fontSize: 18, color: "text.secondary" }}
+                              />
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {post.views}
                               </Typography>
                             </Stack>
@@ -684,7 +768,8 @@ const Community = () => {
             position: "relative",
             borderRadius: 4,
             p: 3,
-            background: "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.06) 50%, rgba(66,165,245,0.06) 100%)",
+            background:
+              "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.06) 50%, rgba(66,165,245,0.06) 100%)",
             overflow: "hidden",
           }}
         >
@@ -702,20 +787,21 @@ const Community = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 40,
-                    height: 40,
-                    borderRadius: 2,
-                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
-                    boxShadow: "0 4px 12px rgba(25,118,210,0.4)",
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                    background:
+                      "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    boxShadow: `0 4px 14px ${alpha("#1976d2", 0.4)}`,
                   }}
                 >
-                  <Typography sx={{ fontSize: "1.5rem" }}>📝</Typography>
+                  <NoteAltIcon sx={{ color: "white", fontSize: 28 }} />
                 </Box>
                 <Stack>
                   <Typography variant="h5" fontWeight="bold">
                     일반 게시판
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary">
                     여행자들의 다양한 이야기
                   </Typography>
                 </Stack>
@@ -849,11 +935,7 @@ const Community = () => {
                       />
 
                       {/* 게시글 정보 */}
-                      <Stack
-                        flex={1}
-                        py={0.5}
-                        minWidth={0}
-                      >
+                      <Stack flex={1} py={0.5} minWidth={0}>
                         {/* 제목 */}
                         <Typography
                           variant="h6"
@@ -928,7 +1010,11 @@ const Community = () => {
                             )}
 
                             {/* 좋아요 수 */}
-                            <Stack direction="row" alignItems="center" gap={0.5}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                            >
                               {post.liked ? (
                                 <FavoriteRoundedIcon
                                   color="error"
@@ -939,40 +1025,67 @@ const Community = () => {
                                   sx={{ fontSize: 20, color: "text.secondary" }}
                                 />
                               )}
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 {post.likes}
                               </Typography>
                             </Stack>
 
                             {/* 공유 수 */}
-                            <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                              ml={1}
+                            >
                               <IosShareRoundedIcon
                                 sx={{
                                   fontSize: 20,
                                   color: "text.secondary",
                                 }}
                               />
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 {post.shares}
                               </Typography>
                             </Stack>
 
                             {/* 댓글 수 */}
-                            <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                              ml={1}
+                            >
                               <ChatBubbleOutlineRoundedIcon
                                 sx={{ fontSize: 20, color: "text.secondary" }}
                               />
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 {post.comments}
                               </Typography>
                             </Stack>
 
                             {/* 조회수 */}
-                            <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                              ml={1}
+                            >
                               <VisibilityOutlinedIcon
                                 sx={{ fontSize: 20, color: "text.secondary" }}
                               />
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                              >
                                 {post.views}
                               </Typography>
                             </Stack>
@@ -1012,10 +1125,12 @@ const Community = () => {
                     <Typography sx={{ fontSize: "2.5rem" }}>📭</Typography>
                   </Box>
                   <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {searchKeyword ? "검색 결과가 없습니다" : "아직 게시글이 없습니다"}
+                    {searchKeyword
+                      ? "검색 결과가 없습니다"
+                      : "아직 게시글이 없습니다"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" mb={3}>
-                    {searchKeyword 
+                    {searchKeyword
                       ? `"${searchKeyword}"에 대한 검색 결과를 찾을 수 없어요.`
                       : "첫 번째 여행 이야기를 공유해보세요!"}
                   </Typography>
@@ -1028,10 +1143,12 @@ const Community = () => {
                         borderRadius: 3,
                         px: 4,
                         py: 1.25,
-                        background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                        background:
+                          "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                         boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
                         "&:hover": {
-                          background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                          background:
+                            "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                           boxShadow: "0 6px 16px rgba(25,118,210,0.4)",
                         },
                       }}
@@ -1068,7 +1185,7 @@ const Community = () => {
                 </Paper>
               )}
 
-          {/* 게시글 로딩 중 */}
+              {/* 게시글 로딩 중 */}
               {isPostLoading &&
                 Array.from({ length: 3 }).map((_, index) => (
                   <Paper
@@ -1145,10 +1262,26 @@ const Community = () => {
                               animation="wave"
                               sx={{ mr: "auto" }}
                             />
-                            <Skeleton variant="text" width="40px" animation="wave" />
-                            <Skeleton variant="text" width="40px" animation="wave" />
-                            <Skeleton variant="text" width="40px" animation="wave" />
-                            <Skeleton variant="text" width="40px" animation="wave" />
+                            <Skeleton
+                              variant="text"
+                              width="40px"
+                              animation="wave"
+                            />
+                            <Skeleton
+                              variant="text"
+                              width="40px"
+                              animation="wave"
+                            />
+                            <Skeleton
+                              variant="text"
+                              width="40px"
+                              animation="wave"
+                            />
+                            <Skeleton
+                              variant="text"
+                              width="40px"
+                              animation="wave"
+                            />
                           </Stack>
                         </Box>
                       </Stack>
@@ -1168,10 +1301,12 @@ const Community = () => {
                     px: 5,
                     py: 1.5,
                     borderRadius: 3,
-                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    background:
+                      "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                     boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
                     "&:hover": {
-                      background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                      background:
+                        "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                       boxShadow: "0 6px 16px rgba(25,118,210,0.4)",
                     },
                   }}

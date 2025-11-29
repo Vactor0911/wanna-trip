@@ -103,7 +103,9 @@ const UserTemplates = () => {
   const [nameError, setNameError] = useState("");
 
   // 선택 모드 관련 상태
-  const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(new Set());
+  const [selectedTemplates, setSelectedTemplates] = useState<Set<string>>(
+    new Set()
+  );
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
@@ -163,7 +165,10 @@ const UserTemplates = () => {
       setPopularError(null);
 
       // 인기 공개 템플릿 목록 가져오기 (퍼가기 횟수 기준)
-      const response = await axiosInstance.get("/template/popular/public?limit=5", {});
+      const response = await axiosInstance.get(
+        "/template/popular/public?limit=5",
+        {}
+      );
 
       if (response.data.success) {
         // API 응답 데이터를 PopularTemplateData 형식으로 변환
@@ -226,7 +231,13 @@ const UserTemplates = () => {
     if (isAuthInitialized) {
       fetchPopularTemplates();
     }
-  }, [fetchPopularTemplates, fetchTemplates, fetchSharedTemplatesList, isAuthInitialized, loginState.isLoggedIn]);
+  }, [
+    fetchPopularTemplates,
+    fetchTemplates,
+    fetchSharedTemplatesList,
+    isAuthInitialized,
+    loginState.isLoggedIn,
+  ]);
 
   // 다이얼로그 열기
   const handleOpenDialog = useCallback(() => {
@@ -340,7 +351,10 @@ const UserTemplates = () => {
     const sorted = [...myTemplates];
     switch (sortType) {
       case "latest":
-        return sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
       case "name":
         return sorted.sort((a, b) => a.title.localeCompare(b.title));
       default:
@@ -351,21 +365,27 @@ const UserTemplates = () => {
   // 날짜 포맷 함수
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}.${String(date.getDate()).padStart(2, "0")}`;
   }, []);
 
   // 템플릿 선택 핸들러
-  const handleSelectTemplate = useCallback((templateUuid: string, selected: boolean) => {
-    setSelectedTemplates((prev) => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(templateUuid);
-      } else {
-        newSet.delete(templateUuid);
-      }
-      return newSet;
-    });
-  }, []);
+  const handleSelectTemplate = useCallback(
+    (templateUuid: string, selected: boolean) => {
+      setSelectedTemplates((prev) => {
+        const newSet = new Set(prev);
+        if (selected) {
+          newSet.add(templateUuid);
+        } else {
+          newSet.delete(templateUuid);
+        }
+        return newSet;
+      });
+    },
+    []
+  );
 
   // 전체 선택/해제 핸들러
   const handleSelectAll = useCallback(() => {
@@ -400,7 +420,10 @@ const UserTemplates = () => {
 
       if (response.data.success) {
         // 삭제 성공 시 목록 새로고침 및 선택 초기화
-        enqueueSnackbar(`${response.data.successCount}개의 템플릿이 삭제되었습니다.`, { variant: "success" });
+        enqueueSnackbar(
+          `${response.data.successCount}개의 템플릿이 삭제되었습니다.`,
+          { variant: "success" }
+        );
         fetchTemplates();
         setSelectedTemplates(new Set());
       } else {
@@ -447,11 +470,14 @@ const UserTemplates = () => {
   }, [deleteTemplateUuid, fetchTemplates]);
 
   // 복사 버튼 클릭 시 다이얼로그 열기
-  const handleCopyButtonClick = useCallback((templateUuid: string, title: string) => {
-    setCopyTemplateUuid(templateUuid);
-    setCopyTemplateTitle(title);
-    setIsCopyDialogOpen(true);
-  }, []);
+  const handleCopyButtonClick = useCallback(
+    (templateUuid: string, title: string) => {
+      setCopyTemplateUuid(templateUuid);
+      setCopyTemplateTitle(title);
+      setIsCopyDialogOpen(true);
+    },
+    []
+  );
 
   // 복사 다이얼로그 닫기
   const handleCloseCopyDialog = useCallback(() => {
@@ -461,23 +487,31 @@ const UserTemplates = () => {
   }, []);
 
   // 템플릿 복사 실행
-  const handleCopyTemplate = useCallback(async (newTitle: string) => {
-    if (!copyTemplateUuid) return;
+  const handleCopyTemplate = useCallback(
+    async (newTitle: string) => {
+      if (!copyTemplateUuid) return;
 
-    try {
-      await copyTemplateMutation.mutateAsync({
-        sourceTemplateUuid: copyTemplateUuid,
-        title: newTitle,
-      });
-      
-      // 복사 성공 시 목록 새로고침
-      fetchTemplates();
-      handleCloseCopyDialog();
-    } catch (err) {
-      console.error("템플릿 복사 오류:", err);
-      setError("템플릿 복사 중 오류가 발생했습니다.");
-    }
-  }, [copyTemplateUuid, copyTemplateMutation, fetchTemplates, handleCloseCopyDialog]);
+      try {
+        await copyTemplateMutation.mutateAsync({
+          sourceTemplateUuid: copyTemplateUuid,
+          title: newTitle,
+        });
+
+        // 복사 성공 시 목록 새로고침
+        fetchTemplates();
+        handleCloseCopyDialog();
+      } catch (err) {
+        console.error("템플릿 복사 오류:", err);
+        setError("템플릿 복사 중 오류가 발생했습니다.");
+      }
+    },
+    [
+      copyTemplateUuid,
+      copyTemplateMutation,
+      fetchTemplates,
+      handleCloseCopyDialog,
+    ]
+  );
 
   return (
     <Container maxWidth="xl">
@@ -486,7 +520,13 @@ const UserTemplates = () => {
         <Stack gap={4}>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.15)} 0%, ${alpha("#ff8e53", 0.08)} 50%, ${alpha("#ffc107", 0.05)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha(
+                "#ff6b6b",
+                0.15
+              )} 0%, ${alpha("#ff8e53", 0.08)} 50%, ${alpha(
+                "#ffc107",
+                0.05
+              )} 100%)`,
               borderRadius: 4,
               p: 3,
               position: "relative",
@@ -512,11 +552,20 @@ const UserTemplates = () => {
                 width: 80,
                 height: 80,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${alpha("#ff8e53", 0.15)} 0%, ${alpha("#ffc107", 0.1)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#ff8e53",
+                  0.15
+                )} 0%, ${alpha("#ffc107", 0.1)} 100%)`,
               }}
             />
-            
-            <Stack direction="row" alignItems="center" gap={1.5} position="relative" zIndex={1}>
+
+            <Stack
+              direction="row"
+              alignItems="center"
+              gap={1.5}
+              position="relative"
+              zIndex={1}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -525,34 +574,38 @@ const UserTemplates = () => {
                   width: 48,
                   height: 48,
                   borderRadius: 3,
-                  background: "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
+                  background:
+                    "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
                   boxShadow: `0 4px 14px ${alpha("#ff6b6b", 0.4)}`,
                 }}
               >
-                <WhatshotIcon 
-                  sx={{ 
-                    color: "white", 
+                <WhatshotIcon
+                  sx={{
+                    color: "white",
                     fontSize: 28,
                     animation: `${pulse} 1.5s ease-in-out infinite`,
-                  }} 
+                  }}
                 />
               </Box>
               <Box>
                 <Stack direction="row" alignItems="center" gap={1}>
-                  <Typography variant="h5" fontWeight={700}>🔥 인기 템플릿</Typography>
-                  <Chip 
-                    label="HOT" 
-                    size="small" 
-                    sx={{ 
-                      background: "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
-                      color: "white", 
+                  <Typography variant="h5" fontWeight={700}>
+                    인기 템플릿
+                  </Typography>
+                  <Chip
+                    label="HOT"
+                    size="small"
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%)",
+                      color: "white",
                       fontWeight: 700,
                       fontSize: 11,
                       height: 24,
                       "& .MuiChip-label": {
                         px: 1.5,
                       },
-                    }} 
+                    }}
                   />
                 </Stack>
                 <Typography variant="body2" color="text.secondary" mt={0.3}>
@@ -562,14 +615,17 @@ const UserTemplates = () => {
             </Stack>
           </Box>
           {isPopularLoading ? (
-            <Box 
-              display="flex" 
-              justifyContent="center" 
+            <Box
+              display="flex"
+              justifyContent="center"
               alignItems="center"
               py={6}
               sx={{
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha("#ff6b6b", 0.03)} 0%, ${alpha("#ff8e53", 0.01)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#ff6b6b",
+                  0.03
+                )} 0%, ${alpha("#ff8e53", 0.01)} 100%)`,
               }}
             >
               <CircularProgress sx={{ color: "#ff6b6b" }} />
@@ -580,7 +636,10 @@ const UserTemplates = () => {
                 py: 4,
                 px: 3,
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#ef4444",
+                  0.08
+                )} 0%, ${alpha("#f87171", 0.04)} 100%)`,
                 textAlign: "center",
               }}
             >
@@ -602,7 +661,13 @@ const UserTemplates = () => {
         <Stack gap={4}>
           <Box
             sx={{
-              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.15)} 0%, ${alpha("#2196f3", 0.08)} 50%, ${alpha("#42a5f5", 0.05)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha(
+                "#1976d2",
+                0.15
+              )} 0%, ${alpha("#2196f3", 0.08)} 50%, ${alpha(
+                "#42a5f5",
+                0.05
+              )} 100%)`,
               borderRadius: 4,
               p: 3,
               position: "relative",
@@ -628,16 +693,19 @@ const UserTemplates = () => {
                 width: 80,
                 height: 80,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${alpha("#2196f3", 0.15)} 0%, ${alpha("#42a5f5", 0.1)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#2196f3",
+                  0.15
+                )} 0%, ${alpha("#42a5f5", 0.1)} 100%)`,
               }}
             />
-            
-            <Stack 
-              direction={{ xs: "column", sm: "row" }} 
-              alignItems={{ xs: "flex-start", sm: "center" }} 
-              justifyContent="space-between" 
+
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+              justifyContent="space-between"
               gap={2}
-              position="relative" 
+              position="relative"
               zIndex={1}
             >
               <Stack direction="row" alignItems="center" gap={1.5}>
@@ -649,7 +717,8 @@ const UserTemplates = () => {
                     width: 48,
                     height: 48,
                     borderRadius: 3,
-                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    background:
+                      "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                     boxShadow: `0 4px 14px ${alpha("#1976d2", 0.4)}`,
                   }}
                 >
@@ -657,13 +726,18 @@ const UserTemplates = () => {
                 </Box>
                 <Box>
                   <Stack direction="row" alignItems="center" gap={1}>
-                    <Typography variant="h5" fontWeight={700}>📁 내 템플릿</Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                      내 템플릿
+                    </Typography>
                     {loginState.isLoggedIn && !isLoading && !error && (
                       <Chip
                         label={`${myTemplates.length}개`}
                         size="small"
                         sx={{
-                          background: `linear-gradient(135deg, ${alpha("#1976d2", 0.2)} 0%, ${alpha("#2196f3", 0.15)} 100%)`,
+                          background: `linear-gradient(135deg, ${alpha(
+                            "#1976d2",
+                            0.2
+                          )} 0%, ${alpha("#2196f3", 0.15)} 100%)`,
                           color: "#1976d2",
                           fontWeight: 700,
                           fontSize: 12,
@@ -678,17 +752,23 @@ const UserTemplates = () => {
                   </Typography>
                 </Box>
               </Stack>
-              
+
               {loginState.isLoggedIn && !isLoading && !error && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>정렬</Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
+                    정렬
+                  </Typography>
                   <FormControl size="small" sx={{ minWidth: 110 }}>
                     <Select
                       value={sortType}
                       onChange={handleSortChange}
                       variant="outlined"
-                      sx={{ 
-                        fontSize: 14, 
+                      sx={{
+                        fontSize: 14,
                         bgcolor: theme.palette.background.paper,
                         borderRadius: 2,
                         "& .MuiOutlinedInput-notchedOutline": {
@@ -722,7 +802,10 @@ const UserTemplates = () => {
                 py: 8,
                 px: 3,
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha("#1976d2", 0.05)} 0%, ${alpha("#2196f3", 0.02)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#1976d2",
+                  0.05
+                )} 0%, ${alpha("#2196f3", 0.02)} 100%)`,
                 border: `2px dashed ${alpha("#1976d2", 0.25)}`,
                 textAlign: "center",
                 position: "relative",
@@ -738,7 +821,10 @@ const UserTemplates = () => {
                   width: 120,
                   height: 120,
                   borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#1976d2",
+                    0.1
+                  )} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
                 }}
               />
               <Box
@@ -749,10 +835,13 @@ const UserTemplates = () => {
                   width: 80,
                   height: 80,
                   borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${alpha("#2196f3", 0.08)} 0%, ${alpha("#42a5f5", 0.05)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#2196f3",
+                    0.08
+                  )} 0%, ${alpha("#42a5f5", 0.05)} 100%)`,
                 }}
               />
-              
+
               <Box
                 sx={{
                   display: "flex",
@@ -761,18 +850,26 @@ const UserTemplates = () => {
                   width: 80,
                   height: 80,
                   borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${alpha("#1976d2", 0.15)} 0%, ${alpha("#2196f3", 0.1)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#1976d2",
+                    0.15
+                  )} 0%, ${alpha("#2196f3", 0.1)} 100%)`,
                   mb: 2,
                 }}
               >
-                <FolderSpecialIcon 
-                  sx={{ 
-                    fontSize: 40, 
+                <FolderSpecialIcon
+                  sx={{
+                    fontSize: 40,
                     color: alpha("#1976d2", 0.6),
-                  }} 
+                  }}
                 />
               </Box>
-              <Typography variant="h6" color="text.secondary" mb={1} fontWeight={600}>
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                mb={1}
+                fontWeight={600}
+              >
                 템플릿을 만들고 관리하려면 로그인이 필요합니다
               </Typography>
               <Typography variant="body2" color="text.disabled" mb={3}>
@@ -786,11 +883,13 @@ const UserTemplates = () => {
                   px: 5,
                   py: 1.5,
                   borderRadius: 3,
-                  background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                  background:
+                    "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                   boxShadow: `0 4px 14px ${alpha("#1976d2", 0.4)}`,
                   fontWeight: 600,
                   "&:hover": {
-                    background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                    background:
+                      "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                     boxShadow: `0 6px 20px ${alpha("#1976d2", 0.5)}`,
                   },
                 }}
@@ -799,14 +898,17 @@ const UserTemplates = () => {
               </Button>
             </Box>
           ) : isLoading ? (
-            <Box 
-              display="flex" 
-              justifyContent="center" 
+            <Box
+              display="flex"
+              justifyContent="center"
               alignItems="center"
               py={6}
               sx={{
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha("#1976d2", 0.03)} 0%, ${alpha("#2196f3", 0.01)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#1976d2",
+                  0.03
+                )} 0%, ${alpha("#2196f3", 0.01)} 100%)`,
               }}
             >
               <CircularProgress sx={{ color: "#1976d2" }} />
@@ -817,7 +919,10 @@ const UserTemplates = () => {
                 py: 4,
                 px: 3,
                 borderRadius: 4,
-                background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#ef4444",
+                  0.08
+                )} 0%, ${alpha("#f87171", 0.04)} 100%)`,
                 textAlign: "center",
               }}
             >
@@ -848,10 +953,14 @@ const UserTemplates = () => {
                   date={formatDate(template.updatedAt)}
                   onClick={() => handleTemplateClick(template.uuid)}
                   onDelete={() => handleDeleteButtonClick(template.uuid)}
-                  onCopy={() => handleCopyButtonClick(template.uuid, template.title)}
+                  onCopy={() =>
+                    handleCopyButtonClick(template.uuid, template.title)
+                  }
                   selectable
                   selected={selectedTemplates.has(template.uuid)}
-                  onSelect={(checked) => handleSelectTemplate(template.uuid, checked)}
+                  onSelect={(checked) =>
+                    handleSelectTemplate(template.uuid, checked)
+                  }
                 />
               ))}
             </Box>
@@ -863,7 +972,13 @@ const UserTemplates = () => {
           <Stack gap={4}>
             <Box
               sx={{
-                background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.15)} 0%, ${alpha("#ba68c8", 0.08)} 50%, ${alpha("#ce93d8", 0.05)} 100%)`,
+                background: `linear-gradient(135deg, ${alpha(
+                  "#9c27b0",
+                  0.15
+                )} 0%, ${alpha("#ba68c8", 0.08)} 50%, ${alpha(
+                  "#ce93d8",
+                  0.05
+                )} 100%)`,
                 borderRadius: 4,
                 p: 3,
                 position: "relative",
@@ -889,11 +1004,20 @@ const UserTemplates = () => {
                   width: 80,
                   height: 80,
                   borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${alpha("#ba68c8", 0.15)} 0%, ${alpha("#ce93d8", 0.1)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#ba68c8",
+                    0.15
+                  )} 0%, ${alpha("#ce93d8", 0.1)} 100%)`,
                 }}
               />
 
-              <Stack direction="row" alignItems="center" gap={1.5} position="relative" zIndex={1}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                gap={1.5}
+                position="relative"
+                zIndex={1}
+              >
                 <Box
                   sx={{
                     display: "flex",
@@ -902,7 +1026,8 @@ const UserTemplates = () => {
                     width: 48,
                     height: 48,
                     borderRadius: 3,
-                    background: "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)",
+                    background:
+                      "linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%)",
                     boxShadow: `0 4px 14px ${alpha("#9c27b0", 0.4)}`,
                   }}
                 >
@@ -910,13 +1035,18 @@ const UserTemplates = () => {
                 </Box>
                 <Box>
                   <Stack direction="row" alignItems="center" gap={1}>
-                    <Typography variant="h5" fontWeight={700}>👥 공유 받은 템플릿</Typography>
+                    <Typography variant="h5" fontWeight={700}>
+                      👥 공유 받은 템플릿
+                    </Typography>
                     {!isSharedLoading && !sharedError && (
                       <Chip
                         label={`${sharedTemplates.length}개`}
                         size="small"
                         sx={{
-                          background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.2)} 0%, ${alpha("#ba68c8", 0.15)} 100%)`,
+                          background: `linear-gradient(135deg, ${alpha(
+                            "#9c27b0",
+                            0.2
+                          )} 0%, ${alpha("#ba68c8", 0.15)} 100%)`,
                           color: "#9c27b0",
                           fontWeight: 700,
                           fontSize: 12,
@@ -941,7 +1071,10 @@ const UserTemplates = () => {
                 py={6}
                 sx={{
                   borderRadius: 4,
-                  background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.03)} 0%, ${alpha("#ba68c8", 0.01)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#9c27b0",
+                    0.03
+                  )} 0%, ${alpha("#ba68c8", 0.01)} 100%)`,
                 }}
               >
                 <CircularProgress sx={{ color: "#9c27b0" }} />
@@ -952,7 +1085,10 @@ const UserTemplates = () => {
                   py: 4,
                   px: 3,
                   borderRadius: 4,
-                  background: `linear-gradient(135deg, ${alpha("#ef4444", 0.08)} 0%, ${alpha("#f87171", 0.04)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#ef4444",
+                    0.08
+                  )} 0%, ${alpha("#f87171", 0.04)} 100%)`,
                   textAlign: "center",
                 }}
               >
@@ -970,7 +1106,10 @@ const UserTemplates = () => {
                   py: 6,
                   px: 3,
                   borderRadius: 4,
-                  background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.05)} 0%, ${alpha("#ba68c8", 0.02)} 100%)`,
+                  background: `linear-gradient(135deg, ${alpha(
+                    "#9c27b0",
+                    0.05
+                  )} 0%, ${alpha("#ba68c8", 0.02)} 100%)`,
                   border: `2px dashed ${alpha("#9c27b0", 0.25)}`,
                   textAlign: "center",
                 }}
@@ -983,7 +1122,10 @@ const UserTemplates = () => {
                     width: 64,
                     height: 64,
                     borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${alpha("#9c27b0", 0.15)} 0%, ${alpha("#ba68c8", 0.1)} 100%)`,
+                    background: `linear-gradient(135deg, ${alpha(
+                      "#9c27b0",
+                      0.15
+                    )} 0%, ${alpha("#ba68c8", 0.1)} 100%)`,
                     mb: 2,
                   }}
                 >
@@ -994,7 +1136,11 @@ const UserTemplates = () => {
                     }}
                   />
                 </Box>
-                <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                <Typography
+                  variant="body1"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
                   아직 공유 받은 템플릿이 없습니다
                 </Typography>
                 <Typography variant="body2" color="text.disabled" mt={1}>
@@ -1027,21 +1173,24 @@ const UserTemplates = () => {
         )}
 
         {/* 템플릿 이름 입력 다이얼로그 */}
-        <Dialog 
-          open={isDialogOpen} 
-          onClose={handleCloseDialog} 
-          maxWidth="sm" 
+        <Dialog
+          open={isDialogOpen}
+          onClose={handleCloseDialog}
+          maxWidth="sm"
           fullWidth
           PaperProps={{
             sx: {
               borderRadius: 4,
               overflow: "hidden",
-            }
+            },
           }}
         >
-          <DialogTitle 
-            sx={{ 
-              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${alpha(
+                "#1976d2",
+                0.1
+              )} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
               fontWeight: 700,
               pb: 2,
             }}
@@ -1050,16 +1199,28 @@ const UserTemplates = () => {
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
             {/* 생성 방식 선택 */}
-            <Typography variant="subtitle1" sx={{ mt: 1, mb: 2, fontWeight: 600 }}>
+            <Typography
+              variant="subtitle1"
+              sx={{ mt: 1, mb: 2, fontWeight: 600 }}
+            >
               생성 방식을 선택하세요
             </Typography>
             <RadioGroup
               value={creationType}
-              onChange={(e) => setCreationType(e.target.value as TemplateCreationType)}
+              onChange={(e) =>
+                setCreationType(e.target.value as TemplateCreationType)
+              }
             >
               <FormControlLabel
                 value={TemplateCreationType.EMPTY}
-                control={<Radio sx={{ color: "#1976d2", "&.Mui-checked": { color: "#1976d2" } }} />}
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                  />
+                }
                 label={
                   <Box>
                     <Typography variant="body1" fontWeight={600}>
@@ -1070,7 +1231,7 @@ const UserTemplates = () => {
                     </Typography>
                   </Box>
                 }
-                sx={{ 
+                sx={{
                   mb: 2,
                   p: 1.5,
                   borderRadius: 2,
@@ -1082,7 +1243,14 @@ const UserTemplates = () => {
               />
               <FormControlLabel
                 value={TemplateCreationType.AI_GENERATED}
-                control={<Radio sx={{ color: "#1976d2", "&.Mui-checked": { color: "#1976d2" } }} />}
+                control={
+                  <Radio
+                    sx={{
+                      color: "#1976d2",
+                      "&.Mui-checked": { color: "#1976d2" },
+                    }}
+                  />
+                }
                 label={
                   <Box>
                     <Typography variant="body1" fontWeight={600}>
@@ -1093,7 +1261,7 @@ const UserTemplates = () => {
                     </Typography>
                   </Box>
                 }
-                sx={{ 
+                sx={{
                   p: 1.5,
                   borderRadius: 2,
                   transition: "background-color 0.2s",
@@ -1119,7 +1287,7 @@ const UserTemplates = () => {
               }}
               error={!!nameError}
               helperText={nameError}
-              sx={{ 
+              sx={{
                 mt: 3,
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
@@ -1134,10 +1302,10 @@ const UserTemplates = () => {
             />
           </DialogContent>
           <DialogActions sx={{ p: 2.5, gap: 1 }}>
-            <Button 
-              onClick={handleCloseDialog} 
+            <Button
+              onClick={handleCloseDialog}
               color="inherit"
-              sx={{ 
+              sx={{
                 borderRadius: 2,
                 px: 3,
               }}
@@ -1152,43 +1320,51 @@ const UserTemplates = () => {
                 px: 3,
                 background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                  background:
+                    "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                 },
               }}
             >
-              {creationType === TemplateCreationType.AI_GENERATED ? "다음" : "생성"}
+              {creationType === TemplateCreationType.AI_GENERATED
+                ? "다음"
+                : "생성"}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* 템플릿 삭제 확인 대화상자 */}
-        <Dialog 
-          open={isDeleteDialogOpen} 
+        <Dialog
+          open={isDeleteDialogOpen}
           onClose={handleCloseDeleteDialog}
           PaperProps={{
             sx: {
               borderRadius: 4,
               overflow: "hidden",
-            }
+            },
           }}
         >
-          <DialogTitle 
-            sx={{ 
-              background: `linear-gradient(135deg, ${alpha("#ef4444", 0.1)} 0%, ${alpha("#f87171", 0.05)} 100%)`,
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${alpha(
+                "#ef4444",
+                0.1
+              )} 0%, ${alpha("#f87171", 0.05)} 100%)`,
               fontWeight: 700,
             }}
           >
             ⚠️ 템플릿 삭제
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Typography fontWeight={500}>정말로 이 템플릿을 삭제하시겠습니까?</Typography>
+            <Typography fontWeight={500}>
+              정말로 이 템플릿을 삭제하시겠습니까?
+            </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               삭제한 템플릿은 복구할 수 없습니다.
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 2.5, gap: 1 }}>
-            <Button 
-              onClick={handleCloseDeleteDialog} 
+            <Button
+              onClick={handleCloseDeleteDialog}
               color="inherit"
               sx={{ borderRadius: 2, px: 3 }}
             >
@@ -1202,7 +1378,8 @@ const UserTemplates = () => {
                 px: 3,
                 background: "linear-gradient(135deg, #ef4444 0%, #f87171 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
+                  background:
+                    "linear-gradient(135deg, #dc2626 0%, #ef4444 100%)",
                 },
               }}
             >
@@ -1229,12 +1406,15 @@ const UserTemplates = () => {
             sx: {
               borderRadius: 4,
               overflow: "hidden",
-            }
+            },
           }}
         >
           <DialogTitle
             sx={{
-              background: `linear-gradient(135deg, ${alpha("#1976d2", 0.1)} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
+              background: `linear-gradient(135deg, ${alpha(
+                "#1976d2",
+                0.1
+              )} 0%, ${alpha("#2196f3", 0.05)} 100%)`,
               fontWeight: 700,
               pb: 2,
             }}
@@ -1244,8 +1424,7 @@ const UserTemplates = () => {
           <DialogContent sx={{ pt: 3 }}>
             <Typography variant="body2" color="text.secondary" mb={2}>
               "{copyTemplateTitle}" 템플릿을 복사합니다.
-              <br />
-              새 템플릿의 이름을 입력해주세요.
+              <br />새 템플릿의 이름을 입력해주세요.
             </Typography>
             <TextField
               autoFocus
@@ -1279,7 +1458,9 @@ const UserTemplates = () => {
             </Button>
             <Button
               onClick={() => {
-                const input = document.getElementById("copy-template-title") as HTMLInputElement;
+                const input = document.getElementById(
+                  "copy-template-title"
+                ) as HTMLInputElement;
                 if (input?.value.trim()) {
                   handleCopyTemplate(input.value.trim());
                 }
@@ -1291,7 +1472,8 @@ const UserTemplates = () => {
                 px: 3,
                 background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                  background:
+                    "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                 },
               }}
             >
@@ -1311,12 +1493,15 @@ const UserTemplates = () => {
           sx: {
             borderRadius: 4,
             overflow: "hidden",
-          }
+          },
         }}
       >
         <DialogTitle
           sx={{
-            background: `linear-gradient(135deg, ${alpha("#d32f2f", 0.1)} 0%, ${alpha("#f44336", 0.05)} 100%)`,
+            background: `linear-gradient(135deg, ${alpha(
+              "#d32f2f",
+              0.1
+            )} 0%, ${alpha("#f44336", 0.05)} 100%)`,
             fontWeight: 700,
             pb: 2,
           }}
@@ -1325,7 +1510,11 @@ const UserTemplates = () => {
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
           <Typography variant="body1" color="text.secondary">
-            선택한 <strong style={{ color: "#d32f2f" }}>{selectedTemplates.size}개</strong>의 템플릿을 삭제하시겠습니까?
+            선택한{" "}
+            <strong style={{ color: "#d32f2f" }}>
+              {selectedTemplates.size}개
+            </strong>
+            의 템플릿을 삭제하시겠습니까?
           </Typography>
           <Typography variant="body2" color="error" sx={{ mt: 1 }}>
             삭제된 템플릿은 복구할 수 없습니다.
@@ -1359,14 +1548,19 @@ const UserTemplates = () => {
       </Dialog>
 
       {/* 하단 선택 바 */}
-      <Slide direction="up" in={selectedTemplates.size > 0} mountOnEnter unmountOnExit>
+      <Slide
+        direction="up"
+        in={selectedTemplates.size > 0}
+        mountOnEnter
+        unmountOnExit
+      >
         <Box
           sx={{
             position: "fixed",
             bottom: 0,
             left: 0,
             right: 0,
-            bgcolor: alpha("#1976d2", 0.95),
+            bgcolor: alpha("#2196f3", 0.75),
             backdropFilter: "blur(8px)",
             boxShadow: "0 -4px 20px rgba(0,0,0,0.15)",
             py: 2,
@@ -1431,9 +1625,9 @@ const UserTemplates = () => {
                   sx={{
                     borderRadius: 2,
                     px: 2,
-                    bgcolor: "#d32f2f",
+                    bgcolor: "#ff5555",
                     "&:hover": {
-                      bgcolor: "#c62828",
+                      bgcolor: "#ef5350",
                     },
                   }}
                 >
