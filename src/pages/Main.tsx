@@ -166,6 +166,11 @@ const Main = () => {
   const theme = useTheme();
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
 
+  // // GitHub Pages 대응 리다이렉트 훅 실행
+  // useEffect(() => {
+  //   redirectPage();
+  // }, [redirectPage]);
+
   // 시작하기 버튼 클릭
   const handleStartButtonClick = useCallback(() => {
     // 이미 로그인 상태라면 템플릿 페이지로 이동
