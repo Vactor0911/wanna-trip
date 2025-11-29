@@ -66,67 +66,82 @@ const LikedPosts = () => {
   }, [isAuthInitialized, loginState.isLoggedIn, navigate]);
 
   // 좋아요 한 게시글 불러오기
-  const fetchLikedPosts = useCallback(async (page: number) => {
-    if (isLoading || !loginState.isLoggedIn) {
-      return;
-    }
+  const fetchLikedPosts = useCallback(
+    async (page: number) => {
+      if (isLoading || !loginState.isLoggedIn) {
+        return;
+      }
 
-    try {
-      setIsLoading(true);
+      try {
+        setIsLoading(true);
 
-      const response = await axiosInstance.get(
-        `/post/likes/posts?page=${page}`
-      );
-
-      if (response.data.success) {
-        const responsePosts: LikedPostInterface[] = response.data.posts.map(
-          (post: LikedPostInterface) => ({
-            uuid: post.uuid,
-            title: post.title,
-            authorName: post.authorName,
-            authorProfileImage: post.authorProfileImage,
-            content: post.content,
-            tags: post.tags || [],
-            liked: post.liked,
-            likes: post.likes,
-            shares: post.shares,
-            comments: post.comments,
-            thumbnail: post.thumbnail,
-            likedAt: post.likedAt,
-          })
+        const response = await axiosInstance.get(
+          `/post/likes/posts?page=${page}`
         );
 
-        // 중복 게시글 제거
-        setPosts((prev) => {
-          const existingUuids = new Set(prev.map((p) => p.uuid));
-          const newPosts = responsePosts.filter(
-            (p) => !existingUuids.has(p.uuid)
+        if (response.data.success) {
+          const responsePosts: LikedPostInterface[] = response.data.posts.map(
+            (post: LikedPostInterface) => ({
+              uuid: post.uuid,
+              title: post.title,
+              authorName: post.authorName,
+              authorProfileImage: post.authorProfileImage,
+              content: post.content,
+              tags: post.tags || [],
+              liked: post.liked,
+              likes: post.likes,
+              shares: post.shares,
+              comments: post.comments,
+              thumbnail: post.thumbnail,
+              likedAt: post.likedAt,
+            })
           );
-          return [...prev, ...newPosts];
-        });
 
-        // hasMore 상태 설정
-        setHasNextPage(response.data.hasMore);
+          // 중복 게시글 제거
+          setPosts((prev) => {
+            const existingUuids = new Set(prev.map((p) => p.uuid));
+            const newPosts = responsePosts.filter(
+              (p) => !existingUuids.has(p.uuid)
+            );
+            return [...prev, ...newPosts];
+          });
 
-        // 페이지 증가
-        setLoadedPages(page + 1);
+          // hasMore 상태 설정
+          setHasNextPage(response.data.hasMore);
+
+          // 페이지 증가
+          setLoadedPages(page + 1);
+          setIsInitialLoaded(true);
+        }
+      } catch (error) {
+        console.error("좋아요 한 게시글 불러오기 실패:", error);
+        setHasNextPage(false);
         setIsInitialLoaded(true);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("좋아요 한 게시글 불러오기 실패:", error);
-      setHasNextPage(false);
-      setIsInitialLoaded(true);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, loginState.isLoggedIn]);
+    },
+    [isLoading, loginState.isLoggedIn]
+  );
 
   // 초기 로딩
   useEffect(() => {
-    if (isAuthInitialized && loginState.isLoggedIn && !isInitialLoaded && !isLoading) {
+    if (
+      isAuthInitialized &&
+      loginState.isLoggedIn &&
+      !isInitialLoaded &&
+      !isLoading
+    ) {
       fetchLikedPosts(loadedPages);
     }
-  }, [isAuthInitialized, loginState.isLoggedIn, isInitialLoaded, isLoading, loadedPages, fetchLikedPosts]);
+  }, [
+    isAuthInitialized,
+    loginState.isLoggedIn,
+    isInitialLoaded,
+    isLoading,
+    loadedPages,
+    fetchLikedPosts,
+  ]);
 
   // 더보기 버튼 클릭
   const handleLoadMore = useCallback(() => {
@@ -164,17 +179,9 @@ const LikedPosts = () => {
             position: "relative",
             borderRadius: 4,
             p: 3,
-            background: "linear-gradient(135deg, rgba(244,63,94,0.06) 0%, rgba(251,113,133,0.06) 50%, rgba(253,164,175,0.06) 100%)",
+            background:
+              "linear-gradient(135deg, rgba(244,63,94,0.06) 0%, rgba(251,113,133,0.06) 50%, rgba(253,164,175,0.06) 100%)",
             overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "4px",
-              background: "linear-gradient(90deg, #f43f5e, #fb7185, #fda4af)",
-            },
           }}
         >
           <Stack gap={3}>
@@ -186,20 +193,21 @@ const LikedPosts = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
                   borderRadius: 2,
-                  background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                  background:
+                    "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
                   boxShadow: "0 4px 12px rgba(244,63,94,0.4)",
                 }}
               >
-                <Typography sx={{ fontSize: "1.5rem" }}>❤️</Typography>
+                <FavoriteRoundedIcon sx={{ color: "white", fontSize: 28 }} />
               </Box>
               <Stack>
                 <Typography variant="h5" fontWeight="bold">
                   좋아요 한 게시글
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="body2" color="text.secondary">
                   내가 좋아요 누른 여행 이야기
                 </Typography>
               </Stack>
@@ -234,10 +242,12 @@ const LikedPosts = () => {
                     px: 4,
                     py: 1.5,
                     borderRadius: 3,
-                    background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                    background:
+                      "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
                     boxShadow: "0 4px 12px rgba(244,63,94,0.3)",
                     "&:hover": {
-                      background: "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
+                      background:
+                        "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
                       boxShadow: "0 6px 16px rgba(244,63,94,0.4)",
                     },
                   }}
@@ -301,11 +311,7 @@ const LikedPosts = () => {
                         />
 
                         {/* 게시글 정보 */}
-                        <Stack
-                          flex={1}
-                          py={0.5}
-                          minWidth={0}
-                        >
+                        <Stack flex={1} py={0.5} minWidth={0}>
                           {/* 제목 */}
                           <Typography
                             variant="h6"
@@ -317,7 +323,12 @@ const LikedPosts = () => {
                           </Typography>
 
                           {/* 작성자 정보 */}
-                          <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            gap={1}
+                            mb={0.5}
+                          >
                             <Avatar
                               src={
                                 post.authorProfileImage
@@ -393,32 +404,55 @@ const LikedPosts = () => {
                               )}
 
                               {/* 좋아요 수 */}
-                              <Stack direction="row" alignItems="center" gap={0.5}>
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                gap={0.5}
+                              >
                                 <FavoriteRoundedIcon
                                   color="error"
                                   sx={{ fontSize: 20 }}
                                 />
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
                                   {post.likes}
                                 </Typography>
                               </Stack>
 
                               {/* 공유 수 */}
-                              <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                gap={0.5}
+                                ml={1}
+                              >
                                 <IosShareRoundedIcon
                                   sx={{ fontSize: 20, color: "text.secondary" }}
                                 />
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
                                   {post.shares}
                                 </Typography>
                               </Stack>
 
                               {/* 댓글 수 */}
-                              <Stack direction="row" alignItems="center" gap={0.5} ml={1}>
+                              <Stack
+                                direction="row"
+                                alignItems="center"
+                                gap={0.5}
+                                ml={1}
+                              >
                                 <ChatBubbleOutlineRoundedIcon
                                   sx={{ fontSize: 20, color: "text.secondary" }}
                                 />
-                                <Typography variant="body2" color="text.secondary">
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                >
                                   {post.comments}
                                 </Typography>
                               </Stack>
@@ -477,7 +511,12 @@ const LikedPosts = () => {
                           />
 
                           {/* 작성자 */}
-                          <Stack direction="row" alignItems="center" gap={1} mt={0.5}>
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            gap={1}
+                            mt={0.5}
+                          >
                             <Skeleton
                               variant="circular"
                               width={24}
@@ -522,9 +561,21 @@ const LikedPosts = () => {
                                 animation="wave"
                                 sx={{ mr: "auto" }}
                               />
-                              <Skeleton variant="text" width="40px" animation="wave" />
-                              <Skeleton variant="text" width="40px" animation="wave" />
-                              <Skeleton variant="text" width="40px" animation="wave" />
+                              <Skeleton
+                                variant="text"
+                                width="40px"
+                                animation="wave"
+                              />
+                              <Skeleton
+                                variant="text"
+                                width="40px"
+                                animation="wave"
+                              />
+                              <Skeleton
+                                variant="text"
+                                width="40px"
+                                animation="wave"
+                              />
                             </Stack>
                           </Box>
                         </Stack>
@@ -544,10 +595,12 @@ const LikedPosts = () => {
                       px: 5,
                       py: 1.5,
                       borderRadius: 3,
-                      background: "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
+                      background:
+                        "linear-gradient(135deg, #f43f5e 0%, #fb7185 100%)",
                       boxShadow: "0 4px 12px rgba(244,63,94,0.3)",
                       "&:hover": {
-                        background: "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
+                        background:
+                          "linear-gradient(135deg, #e11d48 0%, #f43f5e 100%)",
                         boxShadow: "0 6px 16px rgba(244,63,94,0.4)",
                       },
                     }}
