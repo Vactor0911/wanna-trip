@@ -194,7 +194,6 @@ const CardEditDialog = (props: CardEditDialogProps) => {
 
   const [currentEditCard] = useAtom(currentEditCardAtom); // 현재 편집 중인 카드 정보
   const [template] = useAtom(templateAtom); // 템플릿 상태 추가
-  const [isOwner, setIsOwner] = useState(true); // 템플릿 소유자 여부
 
   // 현재 보드 정보 찾기
   const currentBoard = template.boards.find(
@@ -219,25 +218,12 @@ const CardEditDialog = (props: CardEditDialogProps) => {
     emitCardEditingEnd,
   ]);
 
-  // isOwner 상태 설정
-  useEffect(() => {
-    // localStorage에서 template_isOwner 값 가져오기
-    const ownerStatus = localStorage.getItem("template_isOwner");
-    setIsOwner(ownerStatus !== "false"); // 'false'가 아니면 true로 설정
-
-    // 소유자가 아니면 컨트롤 비활성화
-    if (ownerStatus === "false") {
-      setIsCardLocked(true); // 카드를 잠금 상태로 설정
-    }
-  }, []);
-
   // 동적 제목 생성 수정
   const dialogTitle = useMemo(() => {
-    if (!isOwner) return "계획 보기 (읽기 전용)";
     return currentBoard
       ? `${currentBoard.dayNumber || "N"}일차`
       : "새 카드 작성";
-  }, [currentBoard, isOwner]);
+  }, [currentBoard]);
 
   // 대화상자 열 때 시간 초기화
   useEffect(() => {
@@ -577,24 +563,22 @@ const CardEditDialog = (props: CardEditDialogProps) => {
           <Stack gap={1}>
             <Stack direction="row" alignItems="center" gap={1}>
               {/* 카드 잠금 버튼 - 소유자일 때만 표시 */}
-              {isOwner && (
-                <Tooltip
-                  title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
-                  placement="top"
+              <Tooltip
+                title={isCardLocked ? "카드 잠금 풀기" : "카드 잠그기"}
+                placement="top"
+              >
+                <IconButton
+                  color="primary"
+                  size="small"
+                  onClick={handleCardLockToggle}
                 >
-                  <IconButton
-                    color="primary"
-                    size="small"
-                    onClick={handleCardLockToggle}
-                  >
-                    {isCardLocked ? (
-                      <LockOutlineRoundedIcon fontSize="large" />
-                    ) : (
-                      <LockOpenRoundedIcon fontSize="large" />
-                    )}
-                  </IconButton>
-                </Tooltip>
-              )}
+                  {isCardLocked ? (
+                    <LockOutlineRoundedIcon fontSize="large" />
+                  ) : (
+                    <LockOpenRoundedIcon fontSize="large" />
+                  )}
+                </IconButton>
+              </Tooltip>
 
               {/* 카드 제목 */}
               <Typography variant="h4">{dialogTitle}</Typography>
@@ -807,22 +791,20 @@ const CardEditDialog = (props: CardEditDialogProps) => {
               }}
               onClick={handleCardEditDialogClose}
             >
-              <Typography>{isOwner ? "취소" : "닫기"}</Typography>
+              <Typography>취소</Typography>
             </Button>
 
             {/* 저장 버튼 - 소유자일 때만 표시 */}
-            {isOwner && (
-              <Button
-                variant="contained"
-                sx={{
-                  px: 3,
-                }}
-                onClick={handleSaveButtonClick}
-                disabled={isSaving}
-              >
-                <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
-              </Button>
-            )}
+            <Button
+              variant="contained"
+              sx={{
+                px: 3,
+              }}
+              onClick={handleSaveButtonClick}
+              disabled={isSaving}
+            >
+              <Typography>{isSaving ? "저장 중..." : "저장"}</Typography>
+            </Button>
           </Stack>
         </Stack>
       </Dialog>
@@ -835,25 +817,21 @@ const CardEditDialog = (props: CardEditDialogProps) => {
       >
         <MenuList disablePadding>
           {/* 카드 잠금/해제 - 소유자일 때만 표시 */}
-          {isOwner && (
-            <MenuItem
-              onClick={() => {
-                handleCardLockToggle();
-                handleMoreMenuClose();
-              }}
-            >
-              <ListItemIcon>
-                {isCardLocked ? (
-                  <LockOpenRoundedIcon />
-                ) : (
-                  <LockOutlineRoundedIcon />
-                )}
-              </ListItemIcon>
-              <ListItemText>
-                {isCardLocked ? "잠금 해제" : "잠그기"}
-              </ListItemText>
-            </MenuItem>
-          )}
+          <MenuItem
+            onClick={() => {
+              handleCardLockToggle();
+              handleMoreMenuClose();
+            }}
+          >
+            <ListItemIcon>
+              {isCardLocked ? (
+                <LockOpenRoundedIcon />
+              ) : (
+                <LockOutlineRoundedIcon />
+              )}
+            </ListItemIcon>
+            <ListItemText>{isCardLocked ? "잠금 해제" : "잠그기"}</ListItemText>
+          </MenuItem>
 
           {/* 카드 복제 */}
           <MenuItem

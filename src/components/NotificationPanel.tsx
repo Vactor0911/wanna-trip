@@ -63,7 +63,15 @@ const getNotificationIcon = (type: Notification["type"]) => {
 // 시간 포맷팅
 const formatTime = (dateString: string) => {
   try {
-    return formatDistanceToNow(new Date(dateString), {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 2) {
+      return "방금";
+    }
+    
+    return formatDistanceToNow(date, {
       addSuffix: true,
       locale: ko,
     });
