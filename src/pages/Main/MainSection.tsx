@@ -112,7 +112,10 @@ const MainSection = () => {
             </Stack>
 
             {/* 우측 컨테이너 */}
-            <Stack direction="row" alignItems="center" gap={5}>
+            <Stack display={{
+              xs: "none",
+              md: "flex",
+            }} direction="row" alignItems="center" gap={5}>
               {/* TODO: 샘플 이미지 요소를 실제 이미지로 교체 */}
               {Array.from({ length: 2 }).map((_, index) => (
                 <Box
