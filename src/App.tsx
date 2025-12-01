@@ -27,6 +27,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useAtomValue } from "jotai";
 import { themeModeAtom } from "./state";
 import { useMemo } from "react";
+import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +58,9 @@ function App() {
                 </IconButton>
               )}
             >
+              {/* 헤더 */}
               <Header />
+
               <Routes>
                 <Route path="/" element={<Main />} />
                 <Route path="/login" element={<Login />} />
@@ -83,6 +86,9 @@ function App() {
                 />
                 <Route path="/news/:newsUuid" element={<NewsPost />} />
               </Routes>
+
+              {/* 푸터 */}
+              <Footer />
             </SnackbarProvider>
           </TokenRefresher>
         </BrowserRouter>
