@@ -1,6 +1,7 @@
 import { Stack } from "@mui/material";
 import Page1 from "./Page1";
 import Page2 from "./Page2";
+import EndingSection from "./EndingSection";
 
 const Main = () => {
   return (
@@ -9,6 +10,7 @@ const Main = () => {
       <Page2 />
       <Page2 />
       <Page2 />
+      <EndingSection />
     </Stack>
   );
 };
