@@ -1,8 +1,25 @@
 import { Button, Container, Stack, Typography, useTheme } from "@mui/material";
 import Pages from "../../assets/images/pages.webp";
+import { useNavigate } from "react-router";
+import { useAtomValue } from "jotai";
+import { useCallback } from "react";
+import { wannaTripLoginStateAtom } from "../../state";
 
 const EndingSection = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
+
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+
+  // 바로 시작하기 버튼 클릭
+  const handleStartButtonClick = useCallback(() => {
+    if (wannaTripLoginState.isLoggedIn) {
+      navigate("/template");
+      return;
+    }
+
+    navigate("/login");
+  }, [navigate, wannaTripLoginState.isLoggedIn]);
 
   return (
     <Stack minHeight="100vh" justifyContent="center" py={7}>
@@ -56,6 +73,7 @@ const EndingSection = () => {
               my: 5,
               borderRadius: 3,
             }}
+            onClick={handleStartButtonClick}
           >
             <Typography variant="h5">바로 시작하기</Typography>
           </Button>

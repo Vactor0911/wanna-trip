@@ -10,6 +10,10 @@ import {
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import PlaneIcon from "../../assets/icons/plane.svg";
+import { useNavigate } from "react-router";
+import { useAtomValue } from "jotai";
+import { wannaTripLoginStateAtom } from "../../state";
+import { useCallback } from "react";
 
 // 비행기 통통 튀는 애니메이션
 const planeBounceAnimation = keyframes`
@@ -26,6 +30,19 @@ const planeBounceAnimation = keyframes`
 
 const MainSection = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
+
+  const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+
+  // 바로 시작하기 버튼 클릭
+  const handleStartButtonClick = useCallback(() => {
+    if (wannaTripLoginState.isLoggedIn) {
+      navigate("/template");
+      return;
+    }
+
+    navigate("/login");
+  }, [navigate, wannaTripLoginState.isLoggedIn]);
 
   return (
     <>
@@ -100,6 +117,7 @@ const MainSection = () => {
                     "& .MuiSvgIcon-root": { fontSize: "2em" },
                   }}
                   endIcon={<ArrowForwardRoundedIcon />}
+                  onClick={handleStartButtonClick}
                 >
                   <Typography variant="h5" mr={10}>
                     바로 시작하기
