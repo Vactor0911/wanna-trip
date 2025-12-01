@@ -14,13 +14,13 @@ import PlaneIcon from "../../assets/icons/plane.svg";
 // 비행기 통통 튀는 애니메이션
 const planeBounceAnimation = keyframes`
   0% {
-    transform: translate(-50%, 70%);
+    transform: translate(-50%, -70%);
   }
   50% {
-    transform: translate(-50%, 30%);
+    transform: translate(-50%, -30%);
   }
   100% {
-    transform: translate(-50%, 70%);
+    transform: translate(-50%, -70%);
   }
 `;
 
@@ -54,7 +54,7 @@ const Page1 = () => {
             direction="row"
             gap={5}
             justifyContent="space-between"
-            py={15}
+            pt={20}
             position="relative"
           >
             {/* 좌측 컨테이너 */}
@@ -123,28 +123,29 @@ const Page1 = () => {
                 />
               ))}
             </Stack>
-
-            {/* 비행기 아이콘 */}
-            <Box
-              component="img"
-              src={PlaneIcon}
-              position="absolute"
-              bottom={0}
-              left="50%"
-              sx={{
-                transform: "translate(-50%, 50%)",
-                color: "white",
-                animation: `${planeBounceAnimation} 1s ease-in-out infinite`,
-              }}
-            />
           </Stack>
         </Container>
 
         {/* 아래로 볼록한 곡선 여백 */}
         <Box height="20vh" />
+
+        {/* 비행기 아이콘 */}
+        <Box
+          component="img"
+          src={PlaneIcon}
+          width="80px"
+          position="sticky"
+          bottom={0}
+          left="50%"
+          sx={{
+            transform: "translateX(-50%)",
+            color: "white",
+            animation: `${planeBounceAnimation} 1s ease-in-out infinite`,
+          }}
+        />
       </Box>
 
-      <Box height="calc(100vh - 160px + 20vh)" />
+      <Box height="calc(100vh - 80px + 20vh)" />
     </>
   );
 };
