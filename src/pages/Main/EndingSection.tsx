@@ -5,11 +5,12 @@ const EndingSection = () => {
   const theme = useTheme();
 
   return (
-    <Stack height="100vh" justifyContent="center">
+    <Stack minHeight="100vh" justifyContent="center" py={7}>
       <Stack
-        height="70vh"
+        minHeight="70vh"
         position="relative"
         overflow="hidden"
+        py={3}
         sx={{
           "&:before": {
             content: '""',
@@ -28,8 +29,8 @@ const EndingSection = () => {
         <Container
           maxWidth="md"
           sx={{
-            height: "100%",
             display: "flex",
+            flex: 1,
             flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",

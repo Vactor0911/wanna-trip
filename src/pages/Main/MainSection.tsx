@@ -97,9 +97,9 @@ const MainSection = () => {
                     p: 2.5,
                     px: 4,
                     borderRadius: 3,
-                    "& .MuiSvgIcon-root": { fontSize: "1.75rem" },
+                    "& .MuiSvgIcon-root": { fontSize: "2em" },
                   }}
-                  endIcon={<ArrowForwardRoundedIcon fontSize="large" />}
+                  endIcon={<ArrowForwardRoundedIcon />}
                 >
                   <Typography variant="h5" mr={10}>
                     바로 시작하기
@@ -112,10 +112,15 @@ const MainSection = () => {
             </Stack>
 
             {/* 우측 컨테이너 */}
-            <Stack display={{
-              xs: "none",
-              md: "flex",
-            }} direction="row" alignItems="center" gap={5}>
+            <Stack
+              display={{
+                xs: "none",
+                md: "flex",
+              }}
+              direction="row"
+              alignItems="center"
+              gap={5}
+            >
               {/* TODO: 샘플 이미지 요소를 실제 이미지로 교체 */}
               {Array.from({ length: 2 }).map((_, index) => (
                 <Box
@@ -136,7 +141,11 @@ const MainSection = () => {
         <Box
           component="img"
           src={PlaneIcon}
-          width="80px"
+          draggable={false}
+          width={{
+            xs: "50px",
+            md: "80px",
+          }}
           position="sticky"
           bottom={0}
           left="50%"
