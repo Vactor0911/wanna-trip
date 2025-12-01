@@ -1,7 +1,7 @@
 import { Container, Stack } from "@mui/material";
 import SlideSection from "./SlideSection";
 
-const Page2 = () => {
+const PresentationSection = () => {
   return (
     <Container maxWidth="xl">
       <Stack minHeight="100vh" py={10}>
@@ -11,4 +11,4 @@ const Page2 = () => {
   );
 };
 
-export default Page2;
+export default PresentationSection;

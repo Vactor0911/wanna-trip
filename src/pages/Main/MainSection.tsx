@@ -24,7 +24,7 @@ const planeBounceAnimation = keyframes`
   }
 `;
 
-const Page1 = () => {
+const MainSection = () => {
   const theme = useTheme();
 
   return (
@@ -150,4 +150,4 @@ const Page1 = () => {
   );
 };
 
-export default Page1;
+export default MainSection;
