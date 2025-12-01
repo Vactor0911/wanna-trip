@@ -4,8 +4,10 @@ import Page2 from "./Page2";
 
 const Main = () => {
   return (
-    <Stack>
+    <Stack gap="10vh">
       <Page1 />
+      <Page2 />
+      <Page2 />
       <Page2 />
     </Stack>
   );
