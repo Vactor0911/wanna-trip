@@ -1180,12 +1180,18 @@ const UserTemplates = () => {
         <Dialog
           open={isDialogOpen}
           onClose={handleCloseDialog}
-          maxWidth="sm"
+          maxWidth="xs"
           fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: 4,
-              overflow: "hidden",
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 4,
+                overflow: "hidden",
+                minWidth: {
+                  xs: "0",
+                  sm: "400px",
+                },
+              },
             },
           }}
         >
@@ -1345,11 +1351,16 @@ const UserTemplates = () => {
         <Dialog
           open={isDeleteDialogOpen}
           onClose={handleCloseDeleteDialog}
+          maxWidth="xs"
           slotProps={{
             paper: {
               sx: {
                 borderRadius: 4,
                 overflow: "hidden",
+                minWidth: {
+                  xs: "0",
+                  sm: "400px",
+                },
               },
             },
           }}
@@ -1415,12 +1426,18 @@ const UserTemplates = () => {
         <Dialog
           open={isCopyDialogOpen}
           onClose={handleCloseCopyDialog}
-          maxWidth="sm"
+          maxWidth="xs"
           fullWidth
-          PaperProps={{
-            sx: {
-              borderRadius: 4,
-              overflow: "hidden",
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 4,
+                overflow: "hidden",
+                minWidth: {
+                  xs: "0",
+                  sm: "400px",
+                },
+              },
             },
           }}
         >
@@ -1496,10 +1513,16 @@ const UserTemplates = () => {
         onClose={() => setIsBulkDeleteDialogOpen(false)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            overflow: "hidden",
+        slotProps={{
+          paper: {
+            sx: {
+              borderRadius: 4,
+              overflow: "hidden",
+              minWidth: {
+                xs: "0",
+                sm: "400px",
+              },
+            },
           },
         }}
       >
@@ -1510,12 +1533,15 @@ const UserTemplates = () => {
               0.1
             )} 0%, ${alpha("#f44336", 0.05)} 100%)`,
             fontWeight: 700,
-            pb: 2,
+            display: "flex",
+            gap: 1,
+            alignItems: "center",
           }}
         >
-          🗑️ 템플릿 일괄 삭제
+          <DeleteForeverRoundedIcon color="error" />
+          템플릿 일괄 삭제
         </DialogTitle>
-        <DialogContent sx={{ pt: 3 }}>
+        <DialogContent sx={{ mt: 3 }}>
           <Typography variant="body1" color="text.secondary">
             선택한{" "}
             <strong style={{ color: "#d32f2f" }}>
