@@ -6,10 +6,6 @@ export * from "./notification";
 // 다크모드 상태
 export type ThemeMode = "light" | "dark";
 
-// LocalStorage에서 테마 상태 불러오기
-const savedThemeMode = localStorage.getItem("themeMode") as ThemeMode | null;
-export const themeModeAtom = atom<ThemeMode>(savedThemeMode || "light");
-
 // 로그인 상태
 export enum Permission {
   USER = "user",

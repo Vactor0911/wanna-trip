@@ -189,4 +189,9 @@ export const createDarkTheme = () =>
   );
 
 // 기본 내보내기 (라이트 테마) - 기존 코드 호환성 유지
-export const theme = createLightTheme();
+export const theme = createTheme({
+  colorSchemes: {
+    light: createLightTheme(),
+    dark: createDarkTheme(),
+  },
+});
