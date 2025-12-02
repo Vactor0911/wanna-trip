@@ -2,7 +2,6 @@ import {
   Box,
   ButtonBase,
   Container,
-  Divider,
   Paper,
   Stack,
   Typography,
@@ -12,7 +11,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 const TRANSITION_DURATION = "0.3s";
 
-const PresentationSection = () => {
+interface PresentationSectionProps {
+  title: string;
+  subTitle: string;
+  description: string | React.ReactNode;
+  options: Array<{
+    title: string;
+    description: string;
+    videoSrc: string;
+  }>;
+}
+
+const PresentationSection = (props: PresentationSectionProps) => {
+  const { title, subTitle, description, options } = props;
+
   const theme = useTheme();
 
   const [slide, setSlide] = useState(0);
@@ -21,11 +33,11 @@ const PresentationSection = () => {
   // 자동 슬라이드 전환
   useEffect(() => {
     const interval = setInterval(() => {
-      setSlide((prev) => (prev + 1) % 5);
+      setSlide((prev) => (prev + 1) % options.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [options.length]);
 
   // 슬라이드 선택 버튼 클릭
   const handleSlideSelect = useCallback((index: number) => {
@@ -55,17 +67,15 @@ const PresentationSection = () => {
         >
           {/* 섹션 헤더 */}
           <Typography variant="h4" color="primary">
-            나만의 AI 가이드
+            {title}
           </Typography>
 
           {/* 슬로건 */}
-          <Typography variant="h3">검색보다 빠른 여행 준비</Typography>
+          <Typography variant="h3">{subTitle}</Typography>
 
           {/* 설명 */}
           <Typography variant="h5" color="text.secondary">
-            어디 갈지, 뭘 먹을지 고민할 필요 없이,
-            <br />
-            AI 챗봇이 당신의 취향을 분석해 최적의 코스를 제안합니다.
+            {description}
           </Typography>
 
           {/* 전환 리스트 */}
@@ -74,22 +84,12 @@ const PresentationSection = () => {
               xs: "none",
               md: "flex",
             }}
-            gap={1.5}
+            gap={3}
             mt={5}
-            divider={
-              <Divider
-                orientation="horizontal"
-                flexItem
-                sx={{
-                  borderColor: "grey.300",
-                  borderWidth: "1px",
-                }}
-              />
-            }
           >
-            {Array.from({ length: 5 }).map((_, index) => (
+            {options.map((option, index) => (
               <ButtonBase
-                key={`slide-${index}`}
+                key={`${title}-slide-${index}`}
                 sx={{
                   borderRadius: 1,
                 }}
@@ -126,11 +126,11 @@ const PresentationSection = () => {
                     px={3}
                   >
                     {/* 슬라이드 헤더 */}
-                    <Typography variant="h5">챗봇 대화</Typography>
+                    <Typography variant="h5">{option.title}</Typography>
 
                     {/* 설명 */}
                     <Typography variant="body1">
-                      AI와 소통을 통해 계획을 간단히 구성해보세요.
+                      {option.description}
                     </Typography>
                   </Stack>
                 </Paper>
@@ -173,9 +173,9 @@ const PresentationSection = () => {
             gap={1}
             px={1.5}
           >
-            {Array.from({ length: 5 }).map((_, index) => (
+            {options.map((_, index) => (
               <ButtonBase
-                key={`pagination-${index}`}
+                key={`$${title}-pagination-${index}`}
                 disabled={index === slide}
                 sx={{
                   borderRadius: "50px",
