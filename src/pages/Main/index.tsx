@@ -5,7 +5,7 @@ import EndingSection from "./EndingSection";
 
 const Main = () => {
   return (
-    <Stack gap="10vh">
+    <Stack gap="15vh">
       <MainSection />
       <PresentationSection />
       <PresentationSection />

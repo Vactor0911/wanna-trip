@@ -13,7 +13,7 @@ import PlaneIcon from "../../assets/icons/plane.svg";
 import { useNavigate } from "react-router";
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../../state";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // 비행기 통통 튀는 애니메이션
 const planeBounceAnimation = keyframes`
@@ -33,6 +33,23 @@ const MainSection = () => {
   const navigate = useNavigate();
 
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [rootHeight, setRootHeight] = useState(0);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (rootRef.current) {
+        setRootHeight(rootRef.current.clientHeight);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   // 바로 시작하기 버튼 클릭
   const handleStartButtonClick = useCallback(() => {
@@ -47,13 +64,14 @@ const MainSection = () => {
   return (
     <>
       <Box
+        ref={rootRef}
         width="100%"
         sx={{
           position: "absolute",
           top: "0",
           background: "linear-gradient(180deg, #FFFFFF 0%, #A2C9FF 100%)",
-          borderBottomLeftRadius: "50% calc(20vh - 80px)",
-          borderBottomRightRadius: "50% calc(20vh - 80px)",
+          borderBottomLeftRadius: "50% max(calc(20vh - 80px), 30px)",
+          borderBottomRightRadius: "50% max(calc(20vh - 80px), 30px)",
         }}
       >
         {/* 메인 컨텐츠 */}
@@ -62,7 +80,7 @@ const MainSection = () => {
           sx={{
             display: "flex",
             flexDirection: "column",
-            height: "calc(100vh - 80px)",
+            minHeight: "calc(100vh - 80px)",
             position: "sticky",
             top: "0",
           }}
@@ -73,6 +91,11 @@ const MainSection = () => {
             justifyContent="space-between"
             pt={20}
             position="relative"
+            sx={{
+              "@media (max-width: 900px) and (orientation: landscape)": {
+                pt: "60px",
+              },
+            }}
           >
             {/* 좌측 컨테이너 */}
             <Stack alignItems="flex-start" gap={2} py={5}>
@@ -93,7 +116,14 @@ const MainSection = () => {
               </Stack>
 
               {/* 슬로건 */}
-              <Typography variant="h2">
+              <Typography
+                variant="h2"
+                sx={{
+                  "@media (max-width: 900px) and (orientation: landscape)": {
+                    fontSize: "2rem",
+                  },
+                }}
+              >
                 세상에서 제일{" "}
                 <span css={{ color: theme.palette.primary.main }}>
                   간단한 계획서
@@ -107,26 +137,30 @@ const MainSection = () => {
               </Typography>
 
               {/* 바로 시작하기 버튼 */}
-              <Stack flex={1} justifyContent="space-around">
-                <Button
-                  variant="contained"
+              <Button
+                variant="contained"
+                sx={{
+                  p: 2.5,
+                  px: 4,
+                  mt: 3,
+                  borderRadius: 3,
+                  "& .MuiSvgIcon-root": { fontSize: "2em" },
+                }}
+                endIcon={<ArrowForwardRoundedIcon />}
+                onClick={handleStartButtonClick}
+              >
+                <Typography
+                  variant="h5"
+                  mr={10}
                   sx={{
-                    p: 2.5,
-                    px: 4,
-                    borderRadius: 3,
-                    "& .MuiSvgIcon-root": { fontSize: "2em" },
+                    "@media (max-width: 900px) and (orientation: landscape)": {
+                      mr: 3,
+                    },
                   }}
-                  endIcon={<ArrowForwardRoundedIcon />}
-                  onClick={handleStartButtonClick}
                 >
-                  <Typography variant="h5" mr={10}>
-                    바로 시작하기
-                  </Typography>
-                </Button>
-
-                {/* 여백용 요소 */}
-                <Box />
-              </Stack>
+                  바로 시작하기
+                </Typography>
+              </Button>
             </Stack>
 
             {/* 우측 컨테이너 */}
@@ -175,7 +209,7 @@ const MainSection = () => {
         />
       </Box>
 
-      <Box height="calc(100vh - 80px + 20vh)" />
+      <Box height={rootHeight ?? "calc(100vh - 80px + 20vh)"} />
     </>
   );
 };
