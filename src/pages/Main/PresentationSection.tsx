@@ -47,7 +47,6 @@ const PresentationSection = (props: PresentationSectionProps) => {
   return (
     <Container maxWidth="xl">
       <Stack
-        minHeight="100vh"
         py={10}
         direction={{
           xs: "column",
@@ -101,6 +100,8 @@ const PresentationSection = (props: PresentationSectionProps) => {
                   sx={{
                     width: "100%",
                     borderRadius: 1,
+                    bgcolor:
+                      index === slide ? "background.paper" : "transparent",
                     overflow: "hidden",
                     position: "relative",
                     transition: `box-shadow ${TRANSITION_DURATION} ease-in-out`,

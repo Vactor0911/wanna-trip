@@ -58,8 +58,9 @@ const EndingSection = () => {
           <Typography variant="h3" color="white">
             <span
               css={{
-                color: theme.palette.primary.main,
-                textShadow: `0 0 4px rgba(255, 255, 255, 0.3)`,
+                color: theme.palette.primary.light,
+                textShadow:
+                  "0 0 20px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)",
               }}
             >
               여행갈래
