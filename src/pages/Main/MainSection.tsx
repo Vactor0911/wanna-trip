@@ -103,6 +103,9 @@ const MainSection = () => {
             minHeight: "calc(100vh - 80px)",
             position: "sticky",
             top: "0",
+            "@media (max-width: 900px) and (orientation: landscape)": {
+              position: "relative",
+            },
           }}
         >
           <Stack
@@ -114,7 +117,8 @@ const MainSection = () => {
             position="relative"
             sx={{
               "@media (max-width: 900px) and (orientation: landscape)": {
-                pt: "60px",
+                pt: 15,
+                pb: 0,
               },
             }}
           >
