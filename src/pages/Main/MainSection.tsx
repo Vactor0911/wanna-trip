@@ -144,7 +144,7 @@ const MainSection = () => {
                   px: 4,
                   mt: 3,
                   borderRadius: 3,
-                  "& .MuiSvgIcon-root": { fontSize: "2em" },
+                  "& .MuiSvgIcon-root": { fontSize: "2rem" },
                 }}
                 endIcon={<ArrowForwardRoundedIcon />}
                 onClick={handleStartButtonClick}
