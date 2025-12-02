@@ -56,8 +56,15 @@ const EndingSection = () => {
           }}
         >
           <Typography variant="h3" color="white">
-            <span css={{ color: theme.palette.primary.main }}>여행갈래</span>의
-            새로운 계획 시작
+            <span
+              css={{
+                color: theme.palette.primary.main,
+                textShadow: `0 0 4px rgba(255, 255, 255, 0.3)`,
+              }}
+            >
+              여행갈래
+            </span>
+            의 새로운 계획 시작
           </Typography>
 
           <Typography variant="h5" mt={2} color="white">

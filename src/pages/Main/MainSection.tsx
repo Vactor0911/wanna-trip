@@ -3,6 +3,7 @@ import {
   Button,
   Container,
   keyframes,
+  Paper,
   Stack,
   Typography,
   useTheme,
@@ -14,6 +15,12 @@ import { useNavigate } from "react-router";
 import { useAtomValue } from "jotai";
 import { wannaTripLoginStateAtom } from "../../state";
 import { useCallback, useEffect, useRef, useState } from "react";
+import useThemeMode from "../../hooks/theme";
+
+import Day1Light from "../../assets/images/day1_light.webp";
+import Day2Light from "../../assets/images/day2_light.webp";
+import Day1Dark from "../../assets/images/day1_dark.webp";
+import Day2Dark from "../../assets/images/day2_dark.webp";
 
 // 비행기 통통 튀는 애니메이션
 const planeBounceAnimation = keyframes`
@@ -30,6 +37,7 @@ const planeBounceAnimation = keyframes`
 
 const MainSection = () => {
   const theme = useTheme();
+  const { themeMode } = useThemeMode();
   const navigate = useNavigate();
 
   const wannaTripLoginState = useAtomValue(wannaTripLoginStateAtom);
@@ -63,17 +71,29 @@ const MainSection = () => {
 
   return (
     <>
-      <Box
-        ref={rootRef}
-        width="100%"
-        sx={{
-          position: "absolute",
-          top: "0",
-          background: "linear-gradient(180deg, #FFFFFF 0%, #A2C9FF 100%)",
-          borderBottomLeftRadius: "50% max(calc(20vh - 80px), 30px)",
-          borderBottomRightRadius: "50% max(calc(20vh - 80px), 30px)",
-        }}
-      >
+      <Box ref={rootRef} width="100%" top={0} left={0} position="absolute">
+        {/* 그라데이션 배경 */}
+        {[
+          "linear-gradient(180deg, #ffffff 0%, #A2C9FF 100%)",
+          "linear-gradient(180deg, #1f1f1f 0%, #5A8DC9 100%)",
+        ].map((background, index) => (
+          <Box
+            key={`main-section-background-${index}`}
+            width="100%"
+            height="100%"
+            position="absolute"
+            top={0}
+            left={0}
+            sx={{
+              opacity: Math.abs(index - (themeMode === "light" ? 1 : 0)),
+              background: background,
+              borderBottomLeftRadius: "50% max(calc(20vh - 80px), 30px)",
+              borderBottomRightRadius: "50% max(calc(20vh - 80px), 30px)",
+              transition: "opacity 0.3s ease",
+            }}
+          />
+        ))}
+
         {/* 메인 컨텐츠 */}
         <Container
           maxWidth="xl"
@@ -89,7 +109,7 @@ const MainSection = () => {
             direction="row"
             gap={5}
             justifyContent="space-between"
-            pt={20}
+            pt={25}
             position="relative"
             sx={{
               "@media (max-width: 900px) and (orientation: landscape)": {
@@ -98,7 +118,7 @@ const MainSection = () => {
             }}
           >
             {/* 좌측 컨테이너 */}
-            <Stack alignItems="flex-start" gap={2} py={5}>
+            <Stack alignItems="flex-start">
               {/* Trip AI 배지 */}
               <Stack
                 direction="row"
@@ -118,6 +138,7 @@ const MainSection = () => {
               {/* 슬로건 */}
               <Typography
                 variant="h2"
+                mt={3}
                 sx={{
                   "@media (max-width: 900px) and (orientation: landscape)": {
                     fontSize: "2rem",
@@ -137,50 +158,89 @@ const MainSection = () => {
               </Typography>
 
               {/* 바로 시작하기 버튼 */}
-              <Button
-                variant="contained"
-                sx={{
-                  p: 2.5,
-                  px: 4,
-                  mt: 3,
-                  borderRadius: 3,
-                  "& .MuiSvgIcon-root": { fontSize: "2rem" },
-                }}
-                endIcon={<ArrowForwardRoundedIcon />}
-                onClick={handleStartButtonClick}
-              >
-                <Typography
-                  variant="h5"
-                  mr={10}
+              <Stack justifyContent="space-evenly" flex={1}>
+                <Button
+                  variant="contained"
                   sx={{
-                    "@media (max-width: 900px) and (orientation: landscape)": {
-                      mr: 3,
+                    p: 2.5,
+                    px: 4,
+                    mt: {
+                      xs: 7,
+                      sm: 10,
+                      md: 0,
                     },
+                    borderRadius: 3,
+                    "& .MuiSvgIcon-root": { fontSize: "32px !important" },
                   }}
+                  endIcon={<ArrowForwardRoundedIcon fontSize="large" />}
+                  onClick={handleStartButtonClick}
                 >
-                  바로 시작하기
-                </Typography>
-              </Button>
+                  <Typography
+                    variant="h5"
+                    mr={10}
+                    sx={{
+                      "@media (max-width: 900px) and (orientation: landscape)":
+                        {
+                          mr: 3,
+                        },
+                    }}
+                  >
+                    바로 시작하기
+                  </Typography>
+                </Button>
+
+                {/* 여백용 요소 */}
+                <Box />
+              </Stack>
             </Stack>
 
             {/* 우측 컨테이너 */}
             <Stack
               display={{
                 xs: "none",
-                md: "flex",
+                lg: "flex",
               }}
               direction="row"
               alignItems="center"
               gap={5}
             >
-              {/* TODO: 샘플 이미지 요소를 실제 이미지로 교체 */}
-              {Array.from({ length: 2 }).map((_, index) => (
-                <Box
-                  key={`page1-image-${index}`}
-                  width="250px"
-                  height="60vh"
-                  bgcolor="blue"
-                />
+              {[
+                [Day1Light, Day1Dark],
+                [Day2Light, Day2Dark],
+              ].map((imageSet, index) => (
+                <Paper
+                  key={`main-section-image-${index}`}
+                  elevation={5}
+                  sx={{
+                    display: "flex",
+                    borderRadius: 3,
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={imageSet[0]}
+                    width="280px"
+                    sx={{
+                      opacity: themeMode === "light" ? 1 : 0,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                  <Box
+                    component="img"
+                    src={imageSet[1]}
+                    width="100%"
+                    height="100%"
+                    position="absolute"
+                    top={0}
+                    left={0}
+                    sx={{
+                      opacity: themeMode !== "light" ? 1 : 0,
+                      transition: "opacity 0.3s ease",
+                    }}
+                  />
+                </Paper>
               ))}
             </Stack>
           </Stack>

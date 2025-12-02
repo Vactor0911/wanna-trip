@@ -28,12 +28,13 @@ import axiosInstance, {
   SERVER_HOST,
 } from "../utils/axiosInstance";
 import { resetStates } from "../utils";
-import { isAuthInitializedAtom, themeModeAtom, wannaTripLoginStateAtom } from "../state";
+import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { useAtom, useAtomValue } from "jotai";
 import Logo from "/icons/logo.svg";
 import { useSnackbar } from "notistack";
 import NotificationPanel from "./NotificationPanel";
 import Tooltip from "./Tooltip";
+import useThemeMode from "../hooks/theme";
 
 const Links = [
   { text: "템플릿", to: "/template" },
@@ -59,7 +60,7 @@ const StyledLink = (props: StyledLinkProps) => {
   const { to, children, onClick, themeMode = "light", ...others } = props;
   const textColor = themeMode === "dark" ? "#e0e0e0" : "#404040";
   const activeColor = "#3288ff";
-  
+
   return (
     <NavLink
       to={to}
@@ -92,6 +93,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate(); // 네비게이션 훅
   const theme = useTheme();
+  const { themeMode, toggleThemeMode } = useThemeMode();
   const { enqueueSnackbar } = useSnackbar();
   const profileAnchorElement = useRef<HTMLButtonElement | null>(null); // 프로필 메뉴 앵커 요소
   const navMenuButtonAnchorElement = useRef<HTMLButtonElement | null>(null); // 네비게이션 메뉴 버튼 앵커 요소
@@ -102,17 +104,6 @@ const Header = () => {
   const [loginState, setWannaTripLoginState] = useAtom(wannaTripLoginStateAtom); // 로그인 상태
   const { isLoggedIn } = loginState; // 로그인 상태에서 isLoggedIn 추출
   const isAuthInitialized = useAtomValue(isAuthInitializedAtom); // 인증 초기화 완료 상태
-
-  // 다크모드 상태
-  const [themeMode, setThemeMode] = useAtom(themeModeAtom);
-  const isDarkMode = themeMode === "dark";
-
-  // 다크모드 토글 핸들러
-  const handleThemeModeToggle = useCallback(() => {
-    const newMode = isDarkMode ? "light" : "dark";
-    setThemeMode(newMode);
-    localStorage.setItem("themeMode", newMode);
-  }, [isDarkMode, setThemeMode]);
 
   // 프로필 이미지 관련련
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -230,7 +221,7 @@ const Header = () => {
         // Jotai 상태
         await resetStates(setWannaTripLoginState); // 상태 초기화
         setIsProfileMenuOpen(false);
-        
+
         // 프로필 정보 초기화
         setProfileImage(null);
         setUserName("사용자");
@@ -242,15 +233,25 @@ const Header = () => {
           navigate("/");
         }
 
-        enqueueSnackbar("로그아웃이 성공적으로 완료되었습니다.", { variant: "success" }); // 성공 메시지
+        enqueueSnackbar("로그아웃이 성공적으로 완료되었습니다.", {
+          variant: "success",
+        }); // 성공 메시지
       } else {
         enqueueSnackbar("로그아웃 처리에 실패했습니다.", { variant: "error" }); // 실패 메시지
       }
     } catch (error) {
       console.error("로그아웃 중 오류 발생:", error);
-      enqueueSnackbar("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" }); // 에러 메시지
+      enqueueSnackbar("로그아웃 중 오류가 발생했습니다. 다시 시도해 주세요.", {
+        variant: "error",
+      }); // 에러 메시지
     }
-  }, [isLoggedIn, location.pathname, navigate, setWannaTripLoginState, enqueueSnackbar]);
+  }, [
+    isLoggedIn,
+    location.pathname,
+    navigate,
+    setWannaTripLoginState,
+    enqueueSnackbar,
+  ]);
   // 로그아웃 기능 구현 끝
 
   // 로그인, 회원가입 페이지에서는 헤더 숨김
@@ -272,7 +273,11 @@ const Header = () => {
         <Box
           sx={{
             borderBottom: `1px solid ${theme.palette.divider}`,
-            boxShadow: `0 2px 8px -2px ${theme.palette.mode === "dark" ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.08)"}`,
+            boxShadow: `0 2px 8px -2px ${
+              theme.palette.mode === "dark"
+                ? "rgba(0,0,0,0.3)"
+                : "rgba(0,0,0,0.08)"
+            }`,
           }}
         >
           <Container maxWidth="xl">
@@ -317,7 +322,11 @@ const Header = () => {
                 }}
               >
                 {Links.map((link, index) => (
-                  <StyledLink key={`nav-link-${index}`} to={link.to} themeMode={themeMode}>
+                  <StyledLink
+                    key={`nav-link-${index}`}
+                    to={link.to}
+                    themeMode={themeMode}
+                  >
                     <Typography variant="h5" fontWeight={700}>
                       {link.text}
                     </Typography>
@@ -349,13 +358,23 @@ const Header = () => {
                 }}
               >
                 {/* 라이트/다크 모드 버튼 */}
-                <Tooltip title={isDarkMode ? "라이트 모드로 전환" : "다크 모드로 전환"}>
-                  <IconButton 
-                    color="inherit" 
+                <Tooltip
+                  title={
+                    themeMode === "dark"
+                      ? "라이트 모드로 전환"
+                      : "다크 모드로 전환"
+                  }
+                >
+                  <IconButton
+                    color="inherit"
                     size="small"
-                    onClick={handleThemeModeToggle}
+                    onClick={toggleThemeMode}
                   >
-                    {isDarkMode ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+                    {themeMode === "dark" ? (
+                      <LightModeOutlinedIcon />
+                    ) : (
+                      <DarkModeOutlinedIcon />
+                    )}
                   </IconButton>
                 </Tooltip>
 
