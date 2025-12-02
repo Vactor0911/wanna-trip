@@ -110,6 +110,7 @@ const MainSection = () => {
             gap={5}
             justifyContent="space-between"
             pt={25}
+            pb={15}
             position="relative"
             sx={{
               "@media (max-width: 900px) and (orientation: landscape)": {
