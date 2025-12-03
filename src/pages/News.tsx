@@ -202,7 +202,7 @@ const News = () => {
                             <Box>
                                 <Stack direction="row" alignItems="center" gap={1}>
                                     <Typography
-                                        variant="h4"
+                                        variant="h5"
                                         fontWeight={700}
                                         color="text.primary"
                                     >
@@ -219,7 +219,7 @@ const News = () => {
                                         }}
                                     />
                                 </Stack>
-                                <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                <Typography variant="body2" color="text.secondary">
                                     여행갈래의 새로운 소식을 확인하세요
                                 </Typography>
                             </Box>

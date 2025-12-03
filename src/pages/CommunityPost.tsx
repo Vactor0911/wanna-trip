@@ -1,4 +1,5 @@
 import {
+  alpha,
   Avatar,
   Box,
   Button,
@@ -52,6 +53,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import { useSnackbar } from "notistack";
 import TemplateViewer from "../components/TemplateViewer";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
 // 댓글 인터페이스
 interface Comment {
@@ -788,21 +790,28 @@ const CommunityPost = () => {
             sx={{
               borderRadius: 4,
               p: 3,
-              background: (theme) => theme.palette.mode === "dark"
-                ? "linear-gradient(135deg, rgba(25,118,210,0.1) 0%, rgba(33,150,243,0.05) 100%)"
-                : "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.03) 100%)",
-              border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+              background: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, rgba(25,118,210,0.1) 0%, rgba(33,150,243,0.05) 100%)"
+                  : "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.03) 100%)",
+              border: (theme) =>
+                `1px solid ${
+                  theme.palette.mode === "dark"
+                    ? "rgba(144,202,249,0.2)"
+                    : "rgba(25,118,210,0.12)"
+                }`,
             }}
           >
             {/* 게시글 제목 */}
-            <Typography 
-              variant="h4" 
+            <Typography
+              variant="h4"
               fontWeight="bold"
-              sx={{ 
+              sx={{
                 mb: 3,
-                background: (theme) => theme.palette.mode === "dark"
-                  ? "linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)"
-                  : "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                background: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "linear-gradient(135deg, #90caf9 0%, #64b5f6 100%)"
+                    : "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -812,15 +821,20 @@ const CommunityPost = () => {
             </Typography>
 
             {/* 작성 정보 */}
-            <Stack 
-              direction="row" 
-              alignItems="center" 
+            <Stack
+              direction="row"
+              alignItems="center"
               gap={2}
               sx={{
                 p: 2,
                 borderRadius: 3,
                 bgcolor: "background.paper",
-                border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.15)" : "rgba(25,118,210,0.08)"}`,
+                border: (theme) =>
+                  `1px solid ${
+                    theme.palette.mode === "dark"
+                      ? "rgba(144,202,249,0.15)"
+                      : "rgba(25,118,210,0.08)"
+                  }`,
               }}
             >
               {/* 작성자 프로필 이미지 */}
@@ -848,13 +862,19 @@ const CommunityPost = () => {
               </Stack>
 
               {/* 더보기 메뉴 */}
-              <IconButton 
-                onClick={handleMoreButtonClick} 
+              <IconButton
+                onClick={handleMoreButtonClick}
                 ref={moreButtonRef}
                 sx={{
-                  bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(144,202,249,0.1)" : "rgba(25,118,210,0.08)",
+                  bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "rgba(144,202,249,0.1)"
+                      : "rgba(25,118,210,0.08)",
                   "&:hover": {
-                    bgcolor: (theme) => theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.15)",
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark"
+                        ? "rgba(144,202,249,0.2)"
+                        : "rgba(25,118,210,0.15)",
                   },
                 }}
               >
@@ -928,7 +948,11 @@ const CommunityPost = () => {
                     <Typography variant="subtitle2" color="error">
                       삭제하기
                     </Typography>
-                    <DeleteOutlineRoundedIcon fontSize="small" color="error" sx={{ ml: "auto" }} />
+                    <DeleteOutlineRoundedIcon
+                      fontSize="small"
+                      color="error"
+                      sx={{ ml: "auto" }}
+                    />
                   </MenuItem>
                 )}
               </Menu>
@@ -1054,10 +1078,16 @@ const CommunityPost = () => {
             sx={{
               borderRadius: 4,
               p: 3,
-              background: (theme) => theme.palette.mode === "dark" 
-                ? "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.04) 100%)"
-                : "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.03) 100%)",
-              border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.1)"}`,
+              background: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, rgba(25,118,210,0.08) 0%, rgba(33,150,243,0.04) 100%)"
+                  : "linear-gradient(135deg, rgba(25,118,210,0.06) 0%, rgba(33,150,243,0.03) 100%)",
+              border: (theme) =>
+                `1px solid ${
+                  theme.palette.mode === "dark"
+                    ? "rgba(144,202,249,0.2)"
+                    : "rgba(25,118,210,0.1)"
+                }`,
             }}
           >
             <Stack gap={3}>
@@ -1071,11 +1101,14 @@ const CommunityPost = () => {
                     width: 36,
                     height: 36,
                     borderRadius: 2,
-                    background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                    background:
+                      "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                     boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
                   }}
                 >
-                  <ChatBubbleOutlineRoundedIcon sx={{ color: "white", fontSize: 20 }} />
+                  <ChatBubbleOutlineRoundedIcon
+                    sx={{ color: "white", fontSize: 20 }}
+                  />
                 </Box>
                 <Typography variant="h6" fontWeight="bold">
                   댓글 {comments.length}개
@@ -1105,9 +1138,18 @@ const CommunityPost = () => {
                           p: 2,
                           borderRadius: 3,
                           bgcolor: "background.paper",
-                          border: (theme) => comment.parentUuid 
-                            ? `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.15)" : "rgba(25,118,210,0.08)"}`
-                            : `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.12)"}`,
+                          border: (theme) =>
+                            comment.parentUuid
+                              ? `1px solid ${
+                                  theme.palette.mode === "dark"
+                                    ? "rgba(144,202,249,0.15)"
+                                    : "rgba(25,118,210,0.08)"
+                                }`
+                              : `1px solid ${
+                                  theme.palette.mode === "dark"
+                                    ? "rgba(144,202,249,0.2)"
+                                    : "rgba(25,118,210,0.12)"
+                                }`,
                           transition: "all 0.2s ease",
                           "&:hover": {
                             boxShadow: "0 4px 16px rgba(25,118,210,0.1)",
@@ -1116,7 +1158,7 @@ const CommunityPost = () => {
                       >
                         <Stack direction="row" gap={1.5}>
                           {/* 댓글 작성자 프로필 이미지 */}
-                          <Avatar 
+                          <Avatar
                             src={comment.authorProfile}
                             sx={{
                               width: 40,
@@ -1128,18 +1170,28 @@ const CommunityPost = () => {
 
                           <Stack flex={1} minWidth={0}>
                             {/* 작성자 정보 */}
-                            <Stack direction="row" alignItems="center" gap={1} mb={0.5}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={1}
+                              mb={0.5}
+                            >
                               <Typography variant="subtitle2" fontWeight="bold">
                                 {comment.authorName}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {formatRelativeTime(comment.createdAt)}
                               </Typography>
                             </Stack>
 
                             {/* 댓글 내용 */}
                             {editingCommentUuid === comment.uuid ? (
-                              <ClickAwayListener onClickAway={handleEditCommentClose}>
+                              <ClickAwayListener
+                                onClickAway={handleEditCommentClose}
+                              >
                                 <Box>
                                   <CommentInput
                                     key={`reply-edit-input-${comment.uuid}`}
@@ -1153,9 +1205,9 @@ const CommunityPost = () => {
                                 </Box>
                               </ClickAwayListener>
                             ) : (
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
+                              <Typography
+                                variant="body2"
+                                sx={{
                                   mb: 1.5,
                                   lineHeight: 1.6,
                                   wordBreak: "break-word",
@@ -1166,11 +1218,18 @@ const CommunityPost = () => {
                             )}
 
                             {/* 액션 버튼 */}
-                            <Stack direction="row" alignItems="center" gap={0.5} flexWrap="wrap">
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              gap={0.5}
+                              flexWrap="wrap"
+                            >
                               {/* 답글 쓰기 버튼 */}
                               <Button
                                 size="small"
-                                onClick={() => handleReplyButtonClick(comment.uuid)}
+                                onClick={() =>
+                                  handleReplyButtonClick(comment.uuid)
+                                }
                                 sx={{
                                   minWidth: "auto",
                                   px: 1.5,
@@ -1192,9 +1251,13 @@ const CommunityPost = () => {
                                 onClick={() => handleCommentLike(comment.uuid)}
                                 startIcon={
                                   comment.liked ? (
-                                    <FavoriteRoundedIcon sx={{ fontSize: 16 }} />
+                                    <FavoriteRoundedIcon
+                                      sx={{ fontSize: 16 }}
+                                    />
                                   ) : (
-                                    <FavoriteBorderRoundedIcon sx={{ fontSize: 16 }} />
+                                    <FavoriteBorderRoundedIcon
+                                      sx={{ fontSize: 16 }}
+                                    />
                                   )
                                 }
                                 sx={{
@@ -1203,10 +1266,12 @@ const CommunityPost = () => {
                                   py: 0.5,
                                   borderRadius: 2,
                                   fontSize: "0.75rem",
-                                  color: comment.liked ? "error.main" : "text.secondary",
+                                  color: comment.liked
+                                    ? "error.main"
+                                    : "text.secondary",
                                   "&:hover": {
-                                    bgcolor: comment.liked 
-                                      ? "rgba(239,68,68,0.08)" 
+                                    bgcolor: comment.liked
+                                      ? "rgba(239,68,68,0.08)"
                                       : "rgba(0,0,0,0.04)",
                                   },
                                 }}
@@ -1219,7 +1284,9 @@ const CommunityPost = () => {
                           {/* 더보기 메뉴 */}
                           <IconButton
                             size="small"
-                            onClick={(event) => handleCommentMoreButtonClick(event, comment)}
+                            onClick={(event) =>
+                              handleCommentMoreButtonClick(event, comment)
+                            }
                             sx={{
                               alignSelf: "flex-start",
                               color: "text.secondary",
@@ -1264,7 +1331,12 @@ const CommunityPost = () => {
                     borderRadius: 3,
                     bgcolor: "background.paper",
                     textAlign: "center",
-                    border: (theme) => `1px dashed ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.3)" : "rgba(25,118,210,0.2)"}`,
+                    border: (theme) =>
+                      `1px dashed ${
+                        theme.palette.mode === "dark"
+                          ? "rgba(144,202,249,0.3)"
+                          : "rgba(25,118,210,0.2)"
+                      }`,
                   }}
                 >
                   <Box
@@ -1280,9 +1352,15 @@ const CommunityPost = () => {
                       mb: 2,
                     }}
                   >
-                    <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 28, color: "#1976d2" }} />
+                    <ChatBubbleOutlineRoundedIcon
+                      sx={{ fontSize: 28, color: "#1976d2" }}
+                    />
                   </Box>
-                  <Typography variant="body1" color="text.secondary" fontWeight={500}>
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    fontWeight={500}
+                  >
                     첫 번째 댓글을 작성해보세요!
                   </Typography>
                 </Paper>
@@ -1295,7 +1373,12 @@ const CommunityPost = () => {
                   p: 2,
                   borderRadius: 3,
                   bgcolor: "background.paper",
-                  border: (theme) => `1px solid ${theme.palette.mode === "dark" ? "rgba(144,202,249,0.2)" : "rgba(25,118,210,0.15)"}`,
+                  border: (theme) =>
+                    `1px solid ${
+                      theme.palette.mode === "dark"
+                        ? "rgba(144,202,249,0.2)"
+                        : "rgba(25,118,210,0.15)"
+                    }`,
                 }}
               >
                 {loginState.isLoggedIn ? (
@@ -1308,16 +1391,18 @@ const CommunityPost = () => {
                     <Typography variant="body2" color="text.secondary">
                       댓글을 작성하려면 로그인이 필요합니다.
                     </Typography>
-                    <Button 
-                      variant="contained" 
+                    <Button
+                      variant="contained"
                       onClick={handleNavigateToLogin}
                       sx={{
                         borderRadius: 2,
                         px: 4,
-                        background: "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
+                        background:
+                          "linear-gradient(135deg, #1976d2 0%, #2196f3 100%)",
                         boxShadow: "0 4px 12px rgba(25,118,210,0.3)",
                         "&:hover": {
-                          background: "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
+                          background:
+                            "linear-gradient(135deg, #1565c0 0%, #1976d2 100%)",
                         },
                       }}
                     >
@@ -1401,11 +1486,37 @@ const CommunityPost = () => {
         <Dialog
           open={isDeleteDialogOpen}
           onClose={handleCloseDeleteDialog}
-          maxWidth="sm"
+          maxWidth="xs"
           fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                borderRadius: 4,
+                overflow: "hidden",
+                minWidth: {
+                  xs: "0",
+                  sm: "400px",
+                },
+              },
+            },
+          }}
         >
-          <DialogTitle>게시글 삭제</DialogTitle>
-          <DialogContent>
+          <DialogTitle
+            sx={{
+              background: `linear-gradient(135deg, ${alpha(
+                "#d32f2f",
+                0.1
+              )} 0%, ${alpha("#f44336", 0.05)} 100%)`,
+              fontWeight: 700,
+              display: "flex",
+              gap: 1,
+              alignItems: "center",
+            }}
+          >
+            <DeleteForeverRoundedIcon color="error" />
+            게시글 삭제
+          </DialogTitle>
+          <DialogContent sx={{ mt: 3 }}>
             <Typography variant="body1">
               이 게시글을 정말로 삭제하시겠습니까?
             </Typography>
@@ -1413,10 +1524,11 @@ const CommunityPost = () => {
               삭제한 게시글은 복구할 수 없습니다.
             </Typography>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
             <Button
               onClick={handleCloseDeleteDialog}
               color="inherit"
+              sx={{ borderRadius: 2, px: 3 }}
               disabled={isDeleting}
             >
               취소
@@ -1427,6 +1539,15 @@ const CommunityPost = () => {
               variant="contained"
               disabled={isDeleting}
               startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+              sx={{
+                borderRadius: 2,
+                px: 3,
+                background: "linear-gradient(135deg, #d32f2f 0%, #f44336 100%)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #c62828 0%, #d32f2f 100%)",
+                },
+              }}
             >
               {isDeleting ? "삭제 중..." : "삭제"}
             </Button>
