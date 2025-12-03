@@ -37,6 +37,7 @@ import {
 } from "../state";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
+import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
 
 // 알림 유형별 아이콘
 const getNotificationIcon = (type: Notification["type"]) => {
@@ -180,7 +181,7 @@ const NotificationPanel: React.FC = () => {
             max={99}
             invisible={unreadCount === 0}
           >
-            <NotificationsIcon />
+            <NotificationsNoneRoundedIcon />
           </Badge>
         </IconButton>
       </Tooltip>
