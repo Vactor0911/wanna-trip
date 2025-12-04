@@ -1,10 +1,22 @@
-import { Paper, Typography, Box, IconButton, useTheme, Menu, MenuItem, Divider, Checkbox, alpha } from "@mui/material";
+import {
+  Paper,
+  Typography,
+  Box,
+  IconButton,
+  useTheme,
+  Menu,
+  MenuItem,
+  Divider,
+  Checkbox,
+  alpha,
+} from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { SxProps } from "@mui/system";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import { useState } from "react";
+import SampleThumbnail from "../assets/images/sample-thumbnail.svg";
 
 interface TemplateCardProps {
   title?: string;
@@ -44,25 +56,25 @@ const SquareTemplateCard = ({
 }: TemplateCardProps) => {
   const theme = useTheme();
   const bgColor = color || theme.palette.info.main;
-  
+
   // 호버 상태
   const [isHovered, setIsHovered] = useState(false);
-  
+
   // 더보기 메뉴 상태
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
-  
+
   // 더보기 버튼 클릭
   const handleMoreClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setAnchorEl(e.currentTarget);
   };
-  
+
   // 메뉴 닫기
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   // 메뉴에서 삭제 클릭
   const handleMenuDelete = () => {
     handleMenuClose();
@@ -94,25 +106,27 @@ const SquareTemplateCard = ({
     <Box
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      sx={{ 
-        display: "flex", 
-        flexDirection: "column", 
+      sx={{
+        display: "flex",
+        flexDirection: "column",
         alignItems: "flex-start",
         p: 1,
         borderRadius: 3,
         bgcolor: selected
           ? alpha(theme.palette.primary.main, 0.1)
-          : theme.palette.mode === "dark" 
-            ? "rgba(255, 255, 255, 0.05)" 
-            : "rgba(0, 0, 0, 0.02)",
+          : theme.palette.mode === "dark"
+          ? "rgba(255, 255, 255, 0.05)"
+          : "rgba(0, 0, 0, 0.02)",
         transition: "background-color 0.2s",
-        border: selected ? `2px solid ${theme.palette.primary.main}` : "2px solid transparent",
+        border: selected
+          ? `2px solid ${theme.palette.primary.main}`
+          : "2px solid transparent",
         ":hover": {
           bgcolor: selected
             ? alpha(theme.palette.primary.main, 0.15)
-            : theme.palette.mode === "dark" 
-              ? "rgba(255, 255, 255, 0.08)" 
-              : "rgba(0, 0, 0, 0.04)",
+            : theme.palette.mode === "dark"
+            ? "rgba(255, 255, 255, 0.08)"
+            : "rgba(0, 0, 0, 0.04)",
         },
         position: "relative",
         ...sx,
@@ -156,22 +170,29 @@ const SquareTemplateCard = ({
           height: type === "new" ? cardSize + 60 : cardSize, // 새 템플릿은 하단 텍스트 영역만큼 더 높게
           borderRadius: 3,
           background: type === "new" ? theme.palette.background.paper : bgColor,
-          backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : undefined,
-          backgroundSize: "cover",
+          backgroundImage: thumbnailUrl
+            ? `url(${thumbnailUrl})`
+            : `url(${SampleThumbnail})`,
+          backgroundSize: thumbnailUrl ? "cover" : "contain",
           backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           gap: 1,
           boxShadow: type === "new" ? 0 : 2,
-          border: type === "new" ? `2px dashed ${theme.palette.divider}` : "none",
+          border:
+            type === "new" ? `2px dashed ${theme.palette.divider}` : "none",
           cursor: onClick ? "pointer" : "default",
           transition: "box-shadow 0.2s, border-color 0.2s",
-          ":hover": onClick ? { 
-            boxShadow: type === "new" ? 0 : 6,
-            borderColor: type === "new" ? theme.palette.primary.main : undefined,
-          } : {},
+          ":hover": onClick
+            ? {
+                boxShadow: type === "new" ? 0 : 6,
+                borderColor:
+                  type === "new" ? theme.palette.primary.main : undefined,
+              }
+            : {},
           position: "relative",
         }}
       >
@@ -218,7 +239,14 @@ const SquareTemplateCard = ({
           >
             {title}
           </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 0.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mt: 0.5,
+            }}
+          >
             <Typography
               variant="caption"
               color="text.secondary"
@@ -231,12 +259,12 @@ const SquareTemplateCard = ({
                 <IconButton
                   size="small"
                   onClick={handleMoreClick}
-                  sx={{ 
+                  sx={{
                     p: 0.25,
                     color: theme.palette.text.secondary,
                     ":hover": {
                       color: theme.palette.text.primary,
-                    }
+                    },
                   }}
                 >
                   <MoreHorizRoundedIcon fontSize="small" />
@@ -262,7 +290,10 @@ const SquareTemplateCard = ({
                   )}
                   {onCopy && onDelete && <Divider />}
                   {onDelete && (
-                    <MenuItem onClick={handleMenuDelete} sx={{ color: "error.main" }}>
+                    <MenuItem
+                      onClick={handleMenuDelete}
+                      sx={{ color: "error.main" }}
+                    >
                       <DeleteRoundedIcon fontSize="small" sx={{ mr: 1 }} />
                       삭제
                     </MenuItem>

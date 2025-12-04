@@ -124,15 +124,14 @@ export const stripHtml = (html: string | undefined | null): string => {
 export const getRandomColor = (seed?: string | number): string => {
   // 사용할 색상 배열
   const COLORS = [
-    "#A7C7FF",
-    "#FFF6A3",
-    "#FFB6E1",
-    "#FFB6B6",
-    "#FFD59E",
-    "#D6FFB7",
-    "#B6FFE4",
-    "#B6D9FF",
-    "#D9B6FF",
+    "#EEBD6A",
+    "#7EA6F4",
+    "#73E279",
+    "#F5BB9E",
+    "#64E2EB",
+    "#C4D45E",
+    "#DF98EF",
+    "#FEA0B3",
   ];
 
   // 랜덤 색상 반환
