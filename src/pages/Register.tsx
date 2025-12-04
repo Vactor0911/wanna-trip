@@ -44,7 +44,8 @@ const termsOfServices: TermsOfService[] = [
           1. 수집하는 개인정보 항목
         </Typography>
         <Typography variant="body2">
-          Wanna Trip은 회원가입, 서비스 이용을 위해 다음과 같은 개인정보를 수집합니다.
+          Wanna Trip은 회원가입, 서비스 이용을 위해 다음과 같은 개인정보를
+          수집합니다.
           <br />• 필수항목: 이메일 주소, 비밀번호, 닉네임
           <br />• 선택항목: 프로필 이미지
           <br />• 소셜 로그인 시: 소셜 계정 고유 식별자, 이름, 이메일
@@ -54,8 +55,10 @@ const termsOfServices: TermsOfService[] = [
           2. 개인정보의 수집 및 이용 목적
         </Typography>
         <Typography variant="body2">
-          • 회원 가입 및 관리: 회원제 서비스 제공, 본인 확인, 불량회원 부정이용 방지
-          <br />• 서비스 제공: 여행 계획 템플릿 생성/저장/공유, 커뮤니티 게시글 작성
+          • 회원 가입 및 관리: 회원제 서비스 제공, 본인 확인, 불량회원 부정이용
+          방지
+          <br />• 서비스 제공: 여행 계획 템플릿 생성/저장/공유, 커뮤니티 게시글
+          작성
           <br />• 고객 지원: 문의사항 처리, 공지사항 전달
         </Typography>
 
@@ -63,8 +66,8 @@ const termsOfServices: TermsOfService[] = [
           3. 개인정보의 보유 및 이용 기간
         </Typography>
         <Typography variant="body2">
-          회원 탈퇴 시까지 보유하며, 탈퇴 즉시 파기합니다.
-          단, 관계 법령에 따라 일정 기간 보존이 필요한 경우 해당 기간 동안 보관합니다.
+          회원 탈퇴 시까지 보유하며, 탈퇴 즉시 파기합니다. 단, 관계 법령에 따라
+          일정 기간 보존이 필요한 경우 해당 기간 동안 보관합니다.
         </Typography>
 
         <Typography variant="subtitle1" fontWeight="bold">
@@ -79,8 +82,8 @@ const termsOfServices: TermsOfService[] = [
           5. 이용자의 권리
         </Typography>
         <Typography variant="body2">
-          이용자는 언제든지 자신의 개인정보를 조회, 수정, 삭제할 수 있으며,
-          회원 탈퇴를 통해 개인정보 처리 정지를 요청할 수 있습니다.
+          이용자는 언제든지 자신의 개인정보를 조회, 수정, 삭제할 수 있으며, 회원
+          탈퇴를 통해 개인정보 처리 정지를 요청할 수 있습니다.
         </Typography>
       </Stack>
     ),
@@ -113,24 +116,24 @@ const termsOfServices: TermsOfService[] = [
           3. 위치정보의 보유 및 이용 기간
         </Typography>
         <Typography variant="body2">
-          위치정보는 해당 여행 계획 템플릿이 삭제될 때까지 보유되며,
-          회원 탈퇴 시 모든 위치정보가 함께 삭제됩니다.
+          위치정보는 해당 여행 계획 템플릿이 삭제될 때까지 보유되며, 회원 탈퇴
+          시 모든 위치정보가 함께 삭제됩니다.
         </Typography>
 
         <Typography variant="subtitle1" fontWeight="bold">
           4. 위치정보 이용 동의 철회
         </Typography>
         <Typography variant="body2">
-          이용자는 언제든지 위치정보 이용 동의를 철회할 수 있습니다.
-          동의 철회 시 장소 연동 기능이 제한될 수 있습니다.
+          이용자는 언제든지 위치정보 이용 동의를 철회할 수 있습니다. 동의 철회
+          시 장소 연동 기능이 제한될 수 있습니다.
         </Typography>
 
         <Typography variant="subtitle1" fontWeight="bold">
           5. 제3자 제공
         </Typography>
         <Typography variant="body2">
-          위치정보는 네이버 지도 API를 통해 처리되며,
-          이 외의 제3자에게 제공되지 않습니다.
+          위치정보는 네이버 지도 API를 통해 처리되며, 이 외의 제3자에게 제공되지
+          않습니다.
         </Typography>
       </Stack>
     ),
@@ -292,7 +295,9 @@ const Register: React.FC = () => {
       // 전송 전 입력값 검증
       if (!email || !password || !passwordConfirm) {
         console.error("이메일 또는 비밀번호가 비어있으면 안됩니다.");
-        enqueueSnackbar("이메일 또는 비밀번호가 비어있으면 안됩니다.", { variant: "warning" });
+        enqueueSnackbar("이메일 또는 비밀번호가 비어있으면 안됩니다.", {
+          variant: "warning",
+        });
         return;
       }
 
@@ -309,12 +314,16 @@ const Register: React.FC = () => {
       }
 
       if (password !== passwordConfirm) {
-        enqueueSnackbar("비밀번호가 일치하지 않습니다.", { variant: "warning" });
+        enqueueSnackbar("비밀번호가 일치하지 않습니다.", {
+          variant: "warning",
+        });
         return;
       }
 
       if (!allRequiredAgreed) {
-        enqueueSnackbar("필수 약관에 모두 동의해 주세요.", { variant: "warning" });
+        enqueueSnackbar("필수 약관에 모두 동의해 주세요.", {
+          variant: "warning",
+        });
         return;
       }
 
@@ -345,7 +354,9 @@ const Register: React.FC = () => {
         );
 
         // 성공 처리
-        enqueueSnackbar("회원가입이 성공적으로 완료되었습니다!", { variant: "success" });
+        enqueueSnackbar("회원가입이 성공적으로 완료되었습니다!", {
+          variant: "success",
+        });
         navigate("/login"); // 회원가입 성공 시 로그인 페이지로 이동
       } catch (error) {
         // 에러 처리
@@ -371,14 +382,19 @@ const Register: React.FC = () => {
             }
           } else {
             // 기존 메시지 표시
-            enqueueSnackbar(`Error: ${errorData.message}`, { variant: "error" });
+            enqueueSnackbar(`Error: ${errorData.message}`, {
+              variant: "error",
+            });
           }
         } else {
           console.error(
             "요청을 보내는 중 오류가 발생했습니다:",
             (error as Error).message
           );
-          enqueueSnackbar("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.", { variant: "error" });
+          enqueueSnackbar(
+            "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
+            { variant: "error" }
+          );
         }
       }
     },
@@ -405,7 +421,9 @@ const Register: React.FC = () => {
 
     // 이메일이 올바르지 않다면 종료
     if (!isEmailValid(email)) {
-      enqueueSnackbar("유효한 이메일 주소를 입력해주세요.", { variant: "warning" });
+      enqueueSnackbar("유효한 이메일 주소를 입력해주세요.", {
+        variant: "warning",
+      });
       return;
     }
 
@@ -432,7 +450,9 @@ const Register: React.FC = () => {
 
       setIsConfirmCodeSent(true); // 인증번호 전송 여부를 true로 설정
       setConfirmTimeLeft(300); // 타이머를 5분(300초)으로 초기화
-      enqueueSnackbar("인증번호가 이메일로 발송되었습니다.", { variant: "success" });
+      enqueueSnackbar("인증번호가 이메일로 발송되었습니다.", {
+        variant: "success",
+      });
     } catch (error) {
       // 요청 실패 시 알림
       if (axios.isAxiosError(error) && error.response) {
@@ -443,7 +463,10 @@ const Register: React.FC = () => {
         );
       } else {
         console.error("요청 오류:", (error as Error).message);
-        enqueueSnackbar("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" });
+        enqueueSnackbar(
+          "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.",
+          { variant: "error" }
+        );
       }
     } finally {
       setIsConfirmCodeSending(false);
@@ -477,7 +500,9 @@ const Register: React.FC = () => {
       );
 
       // 요청 성공 처리
-      enqueueSnackbar("인증번호 확인이 완료되었습니다.", { variant: "success" });
+      enqueueSnackbar("인증번호 확인이 완료되었습니다.", {
+        variant: "success",
+      });
       setIsConfirmCodeChecked(true); // 인증 성공
     } catch (error) {
       // 요청 실패 처리
@@ -488,7 +513,10 @@ const Register: React.FC = () => {
         );
       } else {
         console.error("요청 오류:", (error as Error).message);
-        enqueueSnackbar("예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.", { variant: "error" });
+        enqueueSnackbar(
+          "예기치 않은 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
+          { variant: "error" }
+        );
       }
     }
   }, [confirmCode, email, isConfirmCodeChecked, enqueueSnackbar]);
@@ -687,7 +715,7 @@ const Register: React.FC = () => {
                         {/* 선택/필수 */}
                         <Typography
                           variant="subtitle1"
-                          color={term.isOptional ? "divider" : "primary"}
+                          color={term.isOptional ? "text.secondary" : "primary"}
                           fontWeight="inherit"
                           whiteSpace="nowrap"
                         >
@@ -767,7 +795,7 @@ const Register: React.FC = () => {
             {/* 로그인 페이지 링크 */}
             <Box alignSelf="flex-end">
               <PlainLink to="/login">
-                <Typography variant="subtitle1" color="divider">
+                <Typography variant="subtitle1" color="text.secondary">
                   이미 계정이 있으신가요?
                 </Typography>
               </PlainLink>

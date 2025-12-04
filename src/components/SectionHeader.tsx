@@ -1,4 +1,10 @@
-import { Divider, Stack, Typography, TypographyProps, useTheme } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  TypographyProps,
+  useTheme,
+} from "@mui/material";
 
 interface SectionHeaderProps {
   title: string;
@@ -10,10 +16,9 @@ const SectionHeader = (props: SectionHeaderProps) => {
   const theme = useTheme();
 
   return (
-    <Stack>
+    <Stack position="relative">
       <Typography
         variant={variant}
-        display="inline"
         alignSelf="flex-start"
         padding="6px 32px"
         position="relative"
@@ -21,20 +26,27 @@ const SectionHeader = (props: SectionHeaderProps) => {
           "&:after": {
             content: '""',
             position: "absolute",
-            left: "0",
-            bottom: "-2.4px",
             width: "100%",
-            height: "2.4px",
-            background: theme.palette.primary.main,
-            borderTopLeftRadius: "50px",
-            borderBottomLeftRadius: "50px",
+            height: "2px",
+            bottom: 0,
+            left: 0,
+            bgcolor: theme.palette.primary.main,
+            borderRadius: "50px",
             zIndex: 2,
           },
         }}
       >
         {title}
       </Typography>
-      <Divider />
+      <Box
+        position="absolute"
+        width="100%"
+        height="2px"
+        bottom={0}
+        left={0}
+        bgcolor={theme.palette.text.secondary}
+        borderRadius="50px"
+      />
     </Stack>
   );
 };
