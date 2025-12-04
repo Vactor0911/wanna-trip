@@ -64,7 +64,7 @@
     "jspdf-font": "^1.0.7",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5"
+    "vite": "^6.4.1"
   },
   "homepage": "https://vactor0911.github.io/wanna-trip/"
 }
