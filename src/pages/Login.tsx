@@ -127,7 +127,10 @@ const Login = () => {
           decoded = jwtDecode(credentialResponse.credential);
         } catch (error) {
           console.error("구글 Credential 디코딩 실패:", error);
-          enqueueSnackbar("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
+          enqueueSnackbar(
+            "구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
+            { variant: "error" }
+          );
           return;
         }
 
@@ -168,11 +171,16 @@ const Login = () => {
           { email: googleEmail, loginType: "google" }
         );
 
-        enqueueSnackbar(`${loginState.userName}님 환영합니다!`, { variant: "success" });
+        enqueueSnackbar(`${loginState.userName}님 환영합니다!`, {
+          variant: "success",
+        });
         handleRedirect();
       } catch (error) {
         console.error("구글 로그인 처리 중 오류:", error);
-        enqueueSnackbar("구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.", { variant: "error" });
+        enqueueSnackbar(
+          "구글 로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
+          { variant: "error" }
+        );
       }
     },
     [enqueueSnackbar, handleRedirect, setWannaTripLoginState]
@@ -240,12 +248,16 @@ const Login = () => {
       );
 
       window.history.replaceState(null, "", "/login");
-      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, { variant: "success" });
+      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, {
+        variant: "success",
+      });
       handleRedirect();
     } catch (error) {
       console.error("카카오 로그인 실패:", error);
       setKakaoLoginState(""); // 오류 시 상태 초기화
-      enqueueSnackbar("카카오 로그인에 실패했습니다. 다시 시도해주세요.", { variant: "error" });
+      enqueueSnackbar("카카오 로그인에 실패했습니다. 다시 시도해주세요.", {
+        variant: "error",
+      });
     }
   }, [
     enqueueSnackbar,
@@ -280,7 +292,9 @@ const Login = () => {
   // 로그인 버튼 클릭
   const handleLoginButtonClick = useCallback(async () => {
     if (!email || !password) {
-      enqueueSnackbar("이메일과 비밀번호를 입력해 주세요.", { variant: "warning" });
+      enqueueSnackbar("이메일과 비밀번호를 입력해 주세요.", {
+        variant: "warning",
+      });
       return;
     }
 
@@ -304,15 +318,22 @@ const Login = () => {
         { email, loginType: "normal" }
       );
 
-      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, { variant: "success" });
+      enqueueSnackbar(`[ ${loginState.userName} ]님 환영합니다!`, {
+        variant: "success",
+      });
       handleRedirect();
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         console.error("서버 오류:", error.response.data.message);
-        enqueueSnackbar(error.response.data.message || "로그인 실패", { variant: "error" });
+        enqueueSnackbar(error.response.data.message || "로그인 실패", {
+          variant: "error",
+        });
       } else {
         console.error("요청 오류:", (error as Error).message);
-        enqueueSnackbar("예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.", { variant: "error" });
+        enqueueSnackbar(
+          "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.",
+          { variant: "error" }
+        );
       }
 
       setPassword("");
@@ -411,29 +432,14 @@ const Login = () => {
             </Button>
             <Stack direction="row">
               <Stack direction="row" gap={1} alignItems="center">
-                {/*
-                <PlainLink to="/">
-                  <Typography color="divider">아이디 찾기</Typography>
-                </PlainLink>
-
-                <Box
-                  width="1px"
-                  height="60%"
-                  borderRadius="50px"
-                  sx={{
-                    background: theme.palette.divider,
-                  }}
-                /> 
-                */}
-
                 <PlainLink to="/find-password">
-                  <Typography color="divider">비밀번호 찾기</Typography>
+                  <Typography color="text.secondary">비밀번호 찾기</Typography>
                 </PlainLink>
               </Stack>
 
               <Box flex={1} display="flex" justifyContent="flex-end">
                 <PlainLink to="/register">
-                  <Typography color="divider">회원가입</Typography>
+                  <Typography color="text.secondary">회원가입</Typography>
                 </PlainLink>
               </Box>
             </Stack>
@@ -447,7 +453,7 @@ const Login = () => {
                 height="1px"
                 borderRadius="50px"
                 sx={{
-                  background: theme.palette.divider,
+                  background: theme.palette.text.secondary,
                 }}
               />
               <Typography>간편 로그인</Typography>
@@ -456,7 +462,7 @@ const Login = () => {
                 height="1px"
                 borderRadius="50px"
                 sx={{
-                  background: theme.palette.divider,
+                  background: theme.palette.text.secondary,
                 }}
               />
             </Stack>
