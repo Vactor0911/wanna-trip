@@ -82,3 +82,44 @@
 ㅤ여행갈래로 계획하는 완벽한 여행, 당신의 특별한 여정을 지금 시작해 보세요.
 
 <a href="https://vactor0911.github.io/wanna-trip/" target="_blank">바로 시작하기</a>
+
+<br />
+
+## 개발팀
+
+<table style="text-align: center">
+    <tr>
+        <th style="text-align: center;">[ 팀장 ]<br />풀스택 / 서버</th>
+        <th style="text-align: center;">백엔드</th>
+        <th style="text-align: center;">UX/UI 디자인</th>
+        <th style="text-align: center;">프론트엔드</th>
+    <tr>
+    <tr>
+        <td>
+            <a href="https://github.com/Vactor0911" target="_blank"><img src="https://avatars.githubusercontent.com/u/85281049?v=4" alt="Vactor0911" width="100"></a>
+        </td>
+        <td>
+            <a href="https://github.com/L-Hits" target="_blank"><img src="https://avatars.githubusercontent.com/u/130430768?v=4" alt="L-Hits" width="100"></a>
+        </td>
+        <td>
+            <a href="https://github.com/JSukhen2" target="_blank"><img src="https://avatars.githubusercontent.com/u/151798040?v=4" alt="JSukhen2" width="100"></a>
+        </td>
+        <td>
+            <a href="https://github.com/costar011" target="_blank"><img src="https://avatars.githubusercontent.com/u/51503128?v=4" alt="costar011" width="100"></a>
+        </td>
+    </tr>
+    <tr>
+        <td style="text-align: center;">
+            <a href="https://github.com/Vactor0911" target="_blank">Vactor0911</a>
+        </td>
+        <td style="text-align: center;">
+            <a href="https://github.com/L-Hits" target="_blank">L-Hits</a>
+        </td>
+        <td style="text-align: center;">
+            <a href="https://github.com/JSukhen2" target="_blank">JSukhen2</a>
+        </td>
+        <td style="text-align: center;">
+            <a href="https://github.com/costar011" target="_blank">costar011</a>
+        </td>
+    </tr>
+</table>
