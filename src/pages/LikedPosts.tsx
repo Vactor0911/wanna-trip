@@ -300,7 +300,7 @@ const LikedPosts = () => {
                           borderRadius={2.5}
                           sx={{
                             flexShrink: 0,
-                            background: getRandomColor(post.title.length),
+                            background: getRandomColor(post.uuid),
                             backgroundImage: getThumbnailUrl(post)
                               ? `url(${getThumbnailUrl(post)})`
                               : undefined,

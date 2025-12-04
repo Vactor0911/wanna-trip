@@ -37,6 +37,7 @@ import { isAuthInitializedAtom, wannaTripLoginStateAtom } from "../state";
 import { enqueueSnackbar } from "notistack";
 import WhatshotIcon from "@mui/icons-material/Whatshot";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import SampleThumbnail from "../assets/images/sample-thumbnail.svg";
 
 interface PostInterface {
   uuid: string; // 게시글 UUID
@@ -596,7 +597,7 @@ const Community = () => {
                           height="55%"
                           sx={{
                             position: "relative",
-                            bgcolor: getRandomColor(post.title.length),
+                            bgcolor: getRandomColor(post.uuid),
                             backgroundImage: getThumbnailUrl(post)
                               ? `url(${getThumbnailUrl(post)})`
                               : undefined,
@@ -924,12 +925,15 @@ const Community = () => {
                         borderRadius={2.5}
                         sx={{
                           flexShrink: 0,
-                          background: getRandomColor(post.title.length),
+                          background: getRandomColor(post.uuid),
                           backgroundImage: getThumbnailUrl(post)
                             ? `url(${getThumbnailUrl(post)})`
-                            : undefined,
-                          backgroundSize: "cover",
+                            : `url(${SampleThumbnail})`,
+                          backgroundSize: getThumbnailUrl(post)
+                            ? "cover"
+                            : "80%",
                           backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                         }}
                       />
