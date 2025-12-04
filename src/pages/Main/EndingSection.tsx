@@ -58,18 +58,18 @@ const EndingSection = () => {
           <Typography variant="h3" color="white">
             <span
               css={{
-                color: theme.palette.primary.light,
-                textShadow:
-                  "0 0 20px rgba(0, 0, 0, 0.8), 0 2px 4px rgba(0, 0, 0, 0.6)",
+              color: theme.palette.primary.light,
+              textShadow:
+                "0 0 30px rgba(0, 0, 0, 1), 0 4px 8px rgba(0, 0, 0, 0.9), 0 2px 4px rgba(0, 0, 0, 0.8)",
               }}
             >
               여행갈래
             </span>
-            의 새로운 계획 시작
+            로 계획하는 완벽한 여행
           </Typography>
 
           <Typography variant="h5" mt={2} color="white">
-            다양한 서비스와 함께 여러 계획들도 같이 확인해보세요.
+            당신의 특별한 여정을 지금 시작해 보세요
           </Typography>
 
           <Button
