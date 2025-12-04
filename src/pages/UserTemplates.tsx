@@ -185,7 +185,7 @@ const UserTemplates = () => {
             return {
               id: templateUuid,
               bgColor: templateUuid
-                ? getRandomColor(templateUuid)
+                ? getRandomColor(template.uuid)
                 : getRandomColor(Math.floor(Math.random() * 100)), // ID가 없으면 랜덤 색상
               title: template.title,
               username: template.ownerName,
