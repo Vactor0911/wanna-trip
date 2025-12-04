@@ -123,3 +123,30 @@
         </td>
     </tr>
 </table>
+
+<br />
+
+## 기술 스택
+**FrontEnd**
+
+ㅤ[![React](https://img.shields.io/badge/REACT-61DAFB?style=for-the-badge&logo=react&logoColor=000)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/VITE-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev/guide/)
+[![TypeScript](https://img.shields.io/badge/TYPESCRIPT-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![GithubPages](https://img.shields.io/badge/GITHUB_PAGES-222222?style=for-the-badge&logo=githubpages&logoColor=white)](https://pages.github.com/)
+
+**BackEnd**
+
+ㅤ[![Ubuntu](https://img.shields.io/badge/UBUNTU-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+[![NodeJS](https://img.shields.io/badge/NODE.JS-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/en)
+[![TypeScript](https://img.shields.io/badge/TYPESCRIPT-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Pm2](https://img.shields.io/badge/PM2-%232B037A?style=for-the-badge&logo=pm2&logoColor=white)](https://pm2.keymetrics.io/)
+
+**Others**
+
+ㅤ[![Docker](https://img.shields.io/badge/DOCKER-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![MariaDB](https://img.shields.io/badge/MARIA%20DB-%23003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org/)
+
+<br />
+
+## 아키텍처 구조도
+![여행갈래 아키텍처 구조도](https://github.com/user-attachments/assets/5a601cd7-25a2-45a9-bef7-843ba878465e)
