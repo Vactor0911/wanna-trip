@@ -59,7 +59,7 @@
     "exceljs": "^4.4.0",
     "globals": "^16.0.0",
     "html2canvas": "^1.4.1",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "jspdf-font": "^1.0.7",
     "typescript": "~5.8.3",
